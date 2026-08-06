@@ -13,7 +13,7 @@ export async function SiteHeader() {
   ]);
 
   return (
-    <header className="sticky top-0 z-30 bg-ink">
+    <header className="sticky inset-x-0 top-0 z-30 w-full bg-ink">
       <div className="mx-auto flex max-w-6xl flex-wrap items-center gap-4 px-4 py-3 sm:gap-8">
         <Link href="/" className="flex shrink-0 items-center gap-2.5">
           <Image

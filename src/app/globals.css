@@ -26,10 +26,21 @@
   --font-mono: var(--font-geist-mono);
 }
 
+/* Guards against page-level horizontal scroll — any accidental overflow
+   (a too-wide table, a long unbroken string) has historically triggered a
+   Mobile Safari bug where the sticky header re-renders at a stale, wrong
+   width mid-scroll. All intentional horizontal scrolling in this app lives
+   inside its own overflow-x-auto container (category nav, brand list), not
+   the page body. */
+html {
+  overflow-x: hidden;
+}
+
 body {
   background: var(--background);
   color: var(--foreground);
   font-family: var(--font-geist-sans), -apple-system, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+  overflow-x: hidden;
 }
 
 @keyframes toast-in {

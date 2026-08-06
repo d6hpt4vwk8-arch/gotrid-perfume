@@ -119,7 +119,7 @@ export default async function CategoryPage({
           )}
 
           {totalPages > 1 && (
-            <div className="flex justify-center gap-2 pt-4">
+            <div className="flex flex-wrap justify-center gap-2 pt-4">
               {Array.from({ length: totalPages }, (_, i) => i + 1).map((p) => (
                 <Link
                   key={p}
