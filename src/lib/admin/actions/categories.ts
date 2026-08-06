@@ -1,7 +1,7 @@
 "use server";
 
 import { z } from "zod";
-import { revalidatePath } from "next/cache";
+import { revalidatePath, revalidateTag } from "next/cache";
 import { redirect } from "next/navigation";
 import { prisma } from "@/lib/prisma";
 import { slugify } from "@/lib/slug";
@@ -29,6 +29,7 @@ export async function createCategory(formData: FormData) {
   });
 
   revalidatePath("/admin/kategorie");
+  revalidateTag("category-nav");
   redirect("/admin/kategorie");
 }
 
@@ -46,6 +47,7 @@ export async function updateCategory(id: string, formData: FormData) {
   });
 
   revalidatePath("/admin/kategorie");
+  revalidateTag("category-nav");
 }
 
 export async function deleteCategory(id: string) {
@@ -59,4 +61,5 @@ export async function deleteCategory(id: string) {
 
   await prisma.category.delete({ where: { id } });
   revalidatePath("/admin/kategorie");
+  revalidateTag("category-nav");
 }

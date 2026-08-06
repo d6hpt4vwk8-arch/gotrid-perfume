@@ -1,7 +1,7 @@
 "use server";
 
 import { z } from "zod";
-import { revalidatePath } from "next/cache";
+import { revalidatePath, revalidateTag } from "next/cache";
 import { prisma } from "@/lib/prisma";
 
 const settingsSchema = z.object({
@@ -24,4 +24,5 @@ export async function updateSettings(formData: FormData) {
 
   revalidatePath("/admin/nastaveni");
   revalidatePath("/pokladna");
+  revalidateTag("shop-settings");
 }
