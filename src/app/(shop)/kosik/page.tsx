@@ -4,9 +4,11 @@ import Image from "next/image";
 import Link from "next/link";
 import { useCart } from "@/lib/cart-context";
 import { formatPrice } from "@/lib/format";
+import { TrustBadges } from "@/components/trust-badges";
 
 export default function CartPage() {
-  const { items, setQty, removeItem, total } = useCart();
+  const { items, setQty, removeItem, total, freeShippingThreshold } = useCart();
+  const remaining = freeShippingThreshold - total;
 
   if (items.length === 0) {
     return (
@@ -26,6 +28,24 @@ export default function CartPage() {
   return (
     <main className="mx-auto flex max-w-3xl flex-1 flex-col gap-6 px-4 py-10">
       <h1 className="text-2xl font-bold text-ink">Košík</h1>
+
+      <div className="flex flex-col gap-2 border border-line p-3 text-sm">
+        {remaining > 0 ? (
+          <>
+            <span className="text-ink">
+              Ještě <span className="font-semibold">{formatPrice(remaining)}</span> do dopravy zdarma
+            </span>
+            <div className="h-1.5 w-full overflow-hidden rounded-full bg-line">
+              <div
+                className="h-full rounded-full bg-accent transition-[width]"
+                style={{ width: `${Math.min(100, (total / freeShippingThreshold) * 100)}%` }}
+              />
+            </div>
+          </>
+        ) : (
+          <span className="font-semibold text-ok">Máte nárok na dopravu zdarma! 🎉</span>
+        )}
+      </div>
 
       <ul className="flex flex-col divide-y divide-line border-y border-line">
         {items.map((item) => (
@@ -74,6 +94,10 @@ export default function CartPage() {
       >
         Pokračovat k objednávce
       </Link>
+
+      <div className="flex justify-center border-t border-line pt-4">
+        <TrustBadges />
+      </div>
     </main>
   );
 }

@@ -1,4 +1,4 @@
-import { createReview, deleteReview } from "@/lib/admin/actions/reviews";
+import { createReview, deleteReview, setReviewPublished } from "@/lib/admin/actions/reviews";
 import { DeleteButton } from "@/components/admin/delete-button";
 
 interface ReviewData {
@@ -7,6 +7,7 @@ interface ReviewData {
   authorName: string | null;
   text: string | null;
   date: Date;
+  published: boolean;
 }
 
 export function ProductReviewsManager({
@@ -28,20 +29,32 @@ export function ProductReviewsManager({
               className="flex items-start justify-between gap-3 rounded-sm border border-line p-3 text-sm"
             >
               <div>
-                <div className="font-medium">
+                <div className="flex items-center font-medium">
                   {"★".repeat(r.rating)}
                   {"☆".repeat(5 - r.rating)}
                   {r.authorName && <span className="ml-2 font-normal text-accent-2">{r.authorName}</span>}
+                  {!r.published && (
+                    <span className="ml-2 rounded-full bg-line px-2 py-0.5 text-[10px] font-normal uppercase tracking-wide text-accent-2">
+                      Čeká na schválení
+                    </span>
+                  )}
                 </div>
                 {r.text && <p className="mt-1 text-accent-2">{r.text}</p>}
                 <span className="text-xs text-accent-2">
                   {new Date(r.date).toLocaleDateString("cs-CZ")}
                 </span>
               </div>
-              <DeleteButton
-                action={deleteReview.bind(null, r.id)}
-                confirmMessage="Smazat tuto recenzi?"
-              />
+              <div className="flex shrink-0 items-center gap-3">
+                <form action={setReviewPublished.bind(null, r.id, !r.published)}>
+                  <button type="submit" className="text-xs text-accent-2 underline hover:text-accent">
+                    {r.published ? "Skrýt" : "Zveřejnit"}
+                  </button>
+                </form>
+                <DeleteButton
+                  action={deleteReview.bind(null, r.id)}
+                  confirmMessage="Smazat tuto recenzi?"
+                />
+              </div>
             </li>
           ))}
         </ul>

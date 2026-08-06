@@ -38,7 +38,7 @@ export default async function AdminActivityLogPage({
       <h1 className="text-2xl font-bold text-ink">Log činností ({total})</h1>
 
       <div className="overflow-x-auto rounded-sm border border-line bg-white">
-        <table className="w-full text-sm">
+        <table className="w-full min-w-[600px] text-sm">
           <thead className="border-b border-line bg-white text-left text-xs uppercase text-accent-2">
             <tr>
               <th className="px-3 py-2">Datum</th>

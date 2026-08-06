@@ -6,9 +6,11 @@ import {
   useContext,
   useEffect,
   useMemo,
+  useRef,
   useState,
   type ReactNode,
 } from "react";
+import { formatPrice } from "@/lib/format";
 
 export interface CartItem {
   productId: string;
@@ -28,6 +30,8 @@ interface CartContextValue {
   clear: () => void;
   itemCount: number;
   total: number;
+  toast: string | null;
+  freeShippingThreshold: number;
 }
 
 const STORAGE_KEY = "gotrid-cart";
@@ -46,9 +50,18 @@ function readStoredCart(): CartItem[] {
   }
 }
 
-export function CartProvider({ children }: { children: ReactNode }) {
+export function CartProvider({
+  children,
+  freeShippingThreshold,
+}: {
+  children: ReactNode;
+  freeShippingThreshold: number;
+}) {
   const [items, setItems] = useState<CartItem[]>([]);
   const [hydrated, setHydrated] = useState(false);
+  const [toast, setToast] = useState<string | null>(null);
+  const totalRef = useRef(0);
+  const toastTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   useEffect(() => {
     setItems(readStoredCart());
@@ -60,19 +73,39 @@ export function CartProvider({ children }: { children: ReactNode }) {
     window.localStorage.setItem(STORAGE_KEY, JSON.stringify(items));
   }, [items, hydrated]);
 
-  const addItem = useCallback((item: Omit<CartItem, "qty">, qty = 1) => {
-    setItems((prev) => {
-      const existing = prev.find((i) => i.productId === item.productId);
-      if (existing) {
-        return prev.map((i) =>
-          i.productId === item.productId
-            ? { ...i, qty: Math.min(i.qty + qty, i.stock || i.qty + qty) }
-            : i,
-        );
-      }
-      return [...prev, { ...item, qty: Math.min(qty, item.stock || qty) }];
-    });
+  useEffect(() => {
+    return () => {
+      if (toastTimeoutRef.current) clearTimeout(toastTimeoutRef.current);
+    };
   }, []);
+
+  const addItem = useCallback(
+    (item: Omit<CartItem, "qty">, qty = 1) => {
+      setItems((prev) => {
+        const existing = prev.find((i) => i.productId === item.productId);
+        if (existing) {
+          return prev.map((i) =>
+            i.productId === item.productId
+              ? { ...i, qty: Math.min(i.qty + qty, i.stock || i.qty + qty) }
+              : i,
+          );
+        }
+        return [...prev, { ...item, qty: Math.min(qty, item.stock || qty) }];
+      });
+
+      const newTotal = totalRef.current + item.price * qty;
+      const remaining = freeShippingThreshold - newTotal;
+      const message =
+        remaining > 0
+          ? `Ještě ${formatPrice(remaining)} do dopravy zdarma`
+          : "Máte nárok na dopravu zdarma! 🎉";
+
+      if (toastTimeoutRef.current) clearTimeout(toastTimeoutRef.current);
+      setToast(message);
+      toastTimeoutRef.current = setTimeout(() => setToast(null), 3500);
+    },
+    [freeShippingThreshold],
+  );
 
   const removeItem = useCallback((productId: string) => {
     setItems((prev) => prev.filter((i) => i.productId !== productId));
@@ -96,9 +129,23 @@ export function CartProvider({ children }: { children: ReactNode }) {
     [items],
   );
 
+  useEffect(() => {
+    totalRef.current = total;
+  }, [total]);
+
   return (
     <CartContext.Provider
-      value={{ items, addItem, removeItem, setQty, clear, itemCount, total }}
+      value={{
+        items,
+        addItem,
+        removeItem,
+        setQty,
+        clear,
+        itemCount,
+        total,
+        toast,
+        freeShippingThreshold,
+      }}
     >
       {children}
     </CartContext.Provider>

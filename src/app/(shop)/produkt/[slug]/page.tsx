@@ -11,6 +11,9 @@ import { jsonLdScript } from "@/lib/json-ld";
 import { ProductCard } from "@/components/product-card";
 import { WishlistButton } from "@/components/wishlist-button";
 import { StockAlertForm } from "@/components/stock-alert-form";
+import { getProductSpecs } from "@/lib/product-specs";
+import { estimateDeliveryDate, formatDeliveryEstimate } from "@/lib/delivery-estimate";
+import { ReviewForm } from "@/components/review-form";
 
 async function getProduct(slug: string) {
   return prisma.product.findUnique({
@@ -18,7 +21,7 @@ async function getProduct(slug: string) {
     include: {
       brand: true,
       images: { orderBy: { sortOrder: "asc" } },
-      reviews: { orderBy: { date: "desc" }, take: 10 },
+      reviews: { where: { published: true }, orderBy: { date: "desc" }, take: 10 },
       categories: { include: { category: true } },
     },
   });
@@ -70,6 +73,9 @@ export default async function ProductPage({
     product.reviews.length > 0
       ? product.reviews.reduce((sum, r) => sum + r.rating, 0) / product.reviews.length
       : null;
+
+  const specs = getProductSpecs(product);
+  const deliveryEstimate = product.stock > 0 ? estimateDeliveryDate() : null;
 
   const jsonLd = {
     "@context": "https://schema.org",
@@ -174,6 +180,13 @@ export default async function ProductPage({
             {product.stock > 0 ? `Skladem (${product.stock} ks)` : "Vyprodáno"}
           </span>
 
+          {deliveryEstimate && (
+            <p className="text-sm text-accent-2">
+              Objednejte dnes — doručení{" "}
+              <span className="font-medium text-ink">{formatDeliveryEstimate(deliveryEstimate)}</span>
+            </p>
+          )}
+
           <div className="max-w-xs">
             <AddToCartButton
               product={{
@@ -193,24 +206,36 @@ export default async function ProductPage({
             </div>
           )}
 
-          {product.ean && (
-            <span className="text-xs text-accent-2">EAN: {product.ean}</span>
-          )}
-
           {product.description && (
             <div
               className="prose prose-neutral mt-4 max-w-none text-sm"
               dangerouslySetInnerHTML={{ __html: sanitizeDescription(product.description) }}
             />
           )}
+
+          {specs.length > 0 && (
+            <div className="mt-2">
+              <h2 className="mb-2 text-[11px] font-semibold tracking-wide text-accent-2 uppercase">
+                Parametry
+              </h2>
+              <dl className="divide-y divide-line border-y border-line text-sm">
+                {specs.map((spec) => (
+                  <div key={spec.label} className="flex justify-between gap-4 py-2">
+                    <dt className="text-accent-2">{spec.label}</dt>
+                    <dd className="text-right font-medium text-ink">{spec.value}</dd>
+                  </div>
+                ))}
+              </dl>
+            </div>
+          )}
         </div>
       </div>
 
-      {product.reviews.length > 0 && (
-        <section className="border-t border-line pt-6">
-          <h2 className="mb-4 text-lg font-bold text-ink">
-            Recenze {avgRating && `— ${avgRating.toFixed(1)} / 5`}
-          </h2>
+      <section className="flex flex-col gap-4 border-t border-line pt-6">
+        <h2 className="text-lg font-bold text-ink">
+          Recenze {avgRating && `— ${avgRating.toFixed(1)} / 5`}
+        </h2>
+        {product.reviews.length > 0 && (
           <ul className="flex flex-col gap-4">
             {product.reviews.map((review) => (
               <li key={review.id} className="border border-line p-4 text-sm">
@@ -222,8 +247,11 @@ export default async function ProductPage({
               </li>
             ))}
           </ul>
-        </section>
-      )}
+        )}
+        <div className="max-w-sm">
+          <ReviewForm productId={product.id} />
+        </div>
+      </section>
 
       {relatedProducts.length > 0 && (
         <section className="border-t border-line pt-6">

@@ -210,6 +210,11 @@ model Review {
   text       String?  @db.Text
   authorName String?
   date       DateTime @default(now())
+  // Customer-submitted reviews start unpublished pending admin approval;
+  // reviews the admin types directly into the admin panel are published
+  // immediately (createReview sets this explicitly — the DB default only
+  // covers the public submission path).
+  published  Boolean  @default(false)
 
   @@index([productId])
 }

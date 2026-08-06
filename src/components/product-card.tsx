@@ -21,7 +21,7 @@ export function ProductCard({ product }: { product: ProductCardData }) {
 
   return (
     <Link href={`/produkt/${product.slug}`} className="group flex flex-col">
-      <div className="relative aspect-square w-full bg-line/60">
+      <div className="relative aspect-square w-full overflow-hidden bg-line/60">
         <WishlistButton
           product={{
             productId: product.id,
@@ -38,7 +38,7 @@ export function ProductCard({ product }: { product: ProductCardData }) {
             alt={product.name}
             fill
             sizes="(min-width: 768px) 25vw, 50vw"
-            className="object-cover"
+            className="object-cover transition-transform duration-300 group-hover:scale-105"
           />
         ) : (
           <div className="flex h-full items-center justify-center text-xs text-accent-2">
@@ -52,7 +52,7 @@ export function ProductCard({ product }: { product: ProductCardData }) {
             {product.brand.name}
           </span>
         )}
-        <span className="text-sm font-semibold text-ink group-hover:underline">
+        <span className="line-clamp-2 text-sm font-semibold text-ink group-hover:underline">
           {product.name}
         </span>
         <div className="flex items-baseline gap-2">
@@ -71,7 +71,7 @@ export function ProductCard({ product }: { product: ProductCardData }) {
           />
           {product.stock > 0 ? "Skladem" : "Vyprodáno"}
         </span>
-        <div className="pt-2">
+        <div className="mt-auto pt-2">
           <AddToCartButton
             product={{
               productId: product.id,

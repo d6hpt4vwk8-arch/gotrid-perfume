@@ -10,10 +10,31 @@ import { PAYMENT_LABELS, SHIPPING_LABELS, getShippingPrice } from "@/lib/shippin
 import type { ShopSettings } from "@/lib/settings.server";
 import { ZasilkovnaPicker } from "@/components/zasilkovna-picker";
 import { CustomerLogoutButton } from "@/components/customer/logout-button";
+import { TrustBadges } from "@/components/trust-badges";
 import type { Customer } from "@prisma/client";
 
 type ShippingMethod = keyof typeof SHIPPING_LABELS;
 type PaymentMethod = keyof typeof PAYMENT_LABELS;
+
+function CheckoutSteps({ steps }: { steps: { label: string; done: boolean }[] }) {
+  return (
+    <div className="flex flex-wrap items-center gap-x-2 gap-y-1.5 text-xs font-medium">
+      {steps.map((step, i) => (
+        <div key={step.label} className="flex items-center gap-2">
+          <span
+            className={`flex h-5 w-5 shrink-0 items-center justify-center rounded-full text-[10px] ${
+              step.done ? "bg-ink text-white" : "border border-line text-accent-2"
+            }`}
+          >
+            {step.done ? "✓" : i + 1}
+          </span>
+          <span className={step.done ? "text-ink" : "text-accent-2"}>{step.label}</span>
+          {i < steps.length - 1 && <span className="h-px w-4 bg-line" aria-hidden />}
+        </div>
+      ))}
+    </div>
+  );
+}
 
 export function CheckoutForm({
   settings,
@@ -49,6 +70,22 @@ export function CheckoutForm({
     [shippingMethod, itemsTotal, settings],
   );
   const total = itemsTotal + shippingPrice - (coupon?.discountAmount ?? 0);
+
+  const contactDone = Boolean(email.trim() && phone.trim() && firstName.trim() && lastName.trim());
+  const shippingDone =
+    contactDone &&
+    (shippingMethod === "ZASILKOVNA"
+      ? Boolean(pickupPoint)
+      : Boolean(street.trim() && city.trim() && postalCode.trim()));
+  // Payment always has a pre-selected default, so it only counts as "reached"
+  // once the earlier steps are actually filled in — otherwise it'd show as
+  // done before the visitor has typed anything.
+  const steps = [
+    { label: "Kontakt", done: contactDone },
+    { label: "Doprava", done: shippingDone },
+    { label: "Platba", done: shippingDone },
+    { label: "Hotovo", done: false },
+  ];
 
   async function applyCoupon() {
     if (!couponInput.trim()) return;
@@ -135,6 +172,8 @@ export function CheckoutForm({
     <main className="mx-auto flex max-w-4xl flex-1 flex-col gap-8 px-4 py-10 md:flex-row">
       <form onSubmit={handleSubmit} className="flex flex-1 flex-col gap-6">
         <h1 className="text-2xl font-bold text-ink">Pokladna</h1>
+
+        <CheckoutSteps steps={steps} />
 
         {customer && (
           <div className="flex items-center justify-between rounded-sm border border-line bg-line/20 px-3 py-2 text-sm text-ink">
@@ -291,6 +330,8 @@ export function CheckoutForm({
         </fieldset>
 
         {error && <p className="text-sm text-red-600">{error}</p>}
+
+        <TrustBadges />
 
         <button
           type="submit"

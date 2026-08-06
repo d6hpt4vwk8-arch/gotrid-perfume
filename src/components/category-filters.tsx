@@ -58,6 +58,7 @@ export function CategoryFilters({
   const [priceMax, setPriceMax] = useState(searchParams.get("priceMax") ?? "");
   const [brandQuery, setBrandQuery] = useState("");
   const [showAllBrands, setShowAllBrands] = useState(false);
+  const [mobileOpen, setMobileOpen] = useState(false);
 
   function updateParams(mutate: (params: URLSearchParams) => void) {
     const params = new URLSearchParams(searchParams.toString());
@@ -174,6 +175,16 @@ export function CategoryFilters({
 
   return (
     <aside className="flex w-full flex-col gap-4 sm:w-60 sm:shrink-0">
+      <button
+        type="button"
+        onClick={() => setMobileOpen((open) => !open)}
+        className="flex items-center justify-between rounded-sm border border-line px-4 py-2.5 text-sm font-semibold text-ink sm:hidden"
+      >
+        <span>Filtrovat{activeChips.length > 0 && ` (${activeChips.length})`}</span>
+        <span className={`text-accent-2 transition ${mobileOpen ? "rotate-180" : ""}`}>⌄</span>
+      </button>
+
+      <div className={`${mobileOpen ? "flex" : "hidden"} flex-col gap-4 sm:flex`}>
       <div>
         <label className="text-[11px] font-semibold tracking-wide text-accent-2 uppercase">
           Řazení
@@ -404,6 +415,7 @@ export function CategoryFilters({
           </div>
         </FilterSection>
       )}
+      </div>
     </aside>
   );
 }

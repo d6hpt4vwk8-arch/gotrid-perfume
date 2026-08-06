@@ -3,6 +3,8 @@ import { SiteFooter } from "@/components/site-footer";
 import { Providers } from "@/components/providers";
 import { CookieBanner } from "@/components/cookie-banner";
 import { MetaPixel } from "@/components/meta-pixel";
+import { BenefitsBar } from "@/components/benefits-bar";
+import { getSettings } from "@/lib/settings.server";
 
 // Google Consent Mode v2 default signals — must be queued before any Google
 // tag loads (TZ §5.9), even though no GA4 property is wired up yet. Denied
@@ -20,12 +22,15 @@ const CONSENT_MODE_BOOTSTRAP = `
   window.gtag = gtag;
 `;
 
-export default function ShopLayout({ children }: { children: React.ReactNode }) {
+export default async function ShopLayout({ children }: { children: React.ReactNode }) {
+  const settings = await getSettings();
+
   return (
     <>
       <script dangerouslySetInnerHTML={{ __html: CONSENT_MODE_BOOTSTRAP }} />
-      <Providers>
+      <Providers freeShippingThreshold={settings.freeShippingThreshold}>
         <MetaPixel />
+        <BenefitsBar />
         <SiteHeader />
         {children}
         <SiteFooter />

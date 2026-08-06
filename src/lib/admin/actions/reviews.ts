@@ -20,6 +20,10 @@ export async function createReview(productId: string, formData: FormData) {
       rating: parsed.data.rating,
       authorName: parsed.data.authorName || null,
       text: parsed.data.text || null,
+      // Reviews typed directly into the admin panel are already vetted by
+      // the admin — unlike the public submission form, they don't need a
+      // separate approval step.
+      published: true,
     },
   });
 
@@ -29,6 +33,12 @@ export async function createReview(productId: string, formData: FormData) {
 
 export async function deleteReview(id: string) {
   const review = await prisma.review.delete({ where: { id } });
+  revalidatePath(`/admin/produkty/${review.productId}`);
+  revalidatePath("/");
+}
+
+export async function setReviewPublished(id: string, published: boolean) {
+  const review = await prisma.review.update({ where: { id }, data: { published } });
   revalidatePath(`/admin/produkty/${review.productId}`);
   revalidatePath("/");
 }

@@ -62,7 +62,7 @@ export default async function AdminProductsPage({
       </form>
 
       <div className="overflow-x-auto rounded-sm border border-line bg-white">
-        <table className="w-full text-sm">
+        <table className="w-full min-w-[700px] text-sm">
           <thead className="border-b border-line bg-white text-left text-xs uppercase text-accent-2">
             <tr>
               <th className="px-3 py-2">Produkt</th>

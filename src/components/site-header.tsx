@@ -58,14 +58,14 @@ export async function SiteHeader() {
           <CartIconLink />
         </div>
 
-        <nav className="order-4 flex w-full flex-wrap gap-x-5 gap-y-2 border-t border-white/10 pt-3 text-sm">
+        <nav className="order-4 flex w-full flex-nowrap gap-x-5 gap-y-2 overflow-x-auto border-t border-white/10 pt-3 text-sm sm:flex-wrap sm:overflow-visible">
           {categories
             .filter((c) => !c.hidden)
             .map((category) => (
               <Link
                 key={category.id}
                 href={`/kategorie/${category.fullSlug}`}
-                className="font-medium text-white/70 hover:text-white"
+                className="shrink-0 font-medium text-white/70 hover:text-white"
               >
                 {category.name}
               </Link>
