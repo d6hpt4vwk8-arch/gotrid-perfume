@@ -1,0 +1,422 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// ---------------------------------------------------------------------------
+// Brand
+// ---------------------------------------------------------------------------
+
+model Brand {
+  id        String    @id @default(cuid())
+  name      String    @unique
+  slug      String    @unique
+  products  Product[]
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+}
+
+// ---------------------------------------------------------------------------
+// Category — self-referencing tree, matches TZ §2.1 (Parfémy > Dámské parfémy > ...)
+// ---------------------------------------------------------------------------
+
+model Category {
+  id       String @id @default(cuid())
+  name     String
+  // Leaf slug — not unique on its own, several branches share leaf names
+  // (e.g. "Parfémované vody" under Dámské/Pánské/Unisex parfémy).
+  slug     String
+  // Materialized full path ("parfemy/damske-parfemy/parfemovane-vody"),
+  // globally unique. Used for URL routing and as the upsert key during
+  // import/seeding — avoids relying on a (parentId, slug) compound unique,
+  // which Prisma can't look up when parentId is null (root categories).
+  fullSlug String @unique
+
+  parentId String?
+  parent   Category?  @relation("CategoryToSubcategory", fields: [parentId], references: [id])
+  children Category[] @relation("CategoryToSubcategory")
+
+  sortOrder Int     @default(0)
+  hidden    Boolean @default(false)
+
+  products ProductCategory[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([parentId])
+}
+
+// ---------------------------------------------------------------------------
+// Product
+// ---------------------------------------------------------------------------
+
+model Product {
+  id       String  @id @default(cuid())
+  code     String  @unique
+  pairCode String?
+
+  name String
+  slug String  @unique
+  ean  String?
+
+  brandId String?
+  brand   Brand?  @relation(fields: [brandId], references: [id])
+
+  purchasePrice  Decimal  @default(0) @db.Decimal(10, 2)
+  price          Decimal  @db.Decimal(10, 2)
+  compareAtPrice Decimal? @db.Decimal(10, 2)
+  vatRate        Int      @default(21)
+
+  description String? @db.Text
+
+  images ProductImage[]
+
+  categories ProductCategory[]
+
+  stock   Int     @default(0)
+  visible Boolean @default(true)
+
+  reviews       Review[]
+  orderItems    OrderItem[]
+  stockAlerts   StockAlert[]
+  scentFamilies ProductScentFamily[]
+  skinTypes     ProductSkinType[]
+  concerns      ProductConcern[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([brandId])
+  @@index([slug])
+  @@index([ean])
+}
+
+// ---------------------------------------------------------------------------
+// ScentFamily — fragrance-note facet ("Charakter vůně") used to filter
+// Parfémy. Products are tagged either by the description-keyword backfill
+// script (scripts/tag-scent-families.mjs) or manually in the admin product
+// editor.
+// ---------------------------------------------------------------------------
+
+model ScentFamily {
+  id       String               @id @default(cuid())
+  name     String
+  slug     String               @unique
+  products ProductScentFamily[]
+}
+
+model ProductScentFamily {
+  productId     String
+  scentFamilyId String
+  product       Product     @relation(fields: [productId], references: [id], onDelete: Cascade)
+  scentFamily   ScentFamily @relation(fields: [scentFamilyId], references: [id], onDelete: Cascade)
+
+  @@id([productId, scentFamilyId])
+  @@index([scentFamilyId])
+}
+
+// ---------------------------------------------------------------------------
+// SkinType / Concern — "Typ pleti" and "Účel" facets used to filter
+// Kosmetika. Unlike ScentFamily there's no reliable signal to auto-tag these
+// from existing product text, so products are tagged manually in the admin
+// product editor only.
+// ---------------------------------------------------------------------------
+
+model SkinType {
+  id       String            @id @default(cuid())
+  name     String
+  slug     String            @unique
+  products ProductSkinType[]
+}
+
+model ProductSkinType {
+  productId  String
+  skinTypeId String
+  product    Product  @relation(fields: [productId], references: [id], onDelete: Cascade)
+  skinType   SkinType @relation(fields: [skinTypeId], references: [id], onDelete: Cascade)
+
+  @@id([productId, skinTypeId])
+  @@index([skinTypeId])
+}
+
+model Concern {
+  id       String           @id @default(cuid())
+  name     String
+  slug     String           @unique
+  products ProductConcern[]
+}
+
+model ProductConcern {
+  productId String
+  concernId String
+  product   Product @relation(fields: [productId], references: [id], onDelete: Cascade)
+  concern   Concern @relation(fields: [concernId], references: [id], onDelete: Cascade)
+
+  @@id([productId, concernId])
+  @@index([concernId])
+}
+
+// ---------------------------------------------------------------------------
+// StockAlert — "notify me when back in stock" email capture for
+// out-of-stock products. Notified in bulk when admin restocks (see
+// updateProduct action), not via a cron poll.
+// ---------------------------------------------------------------------------
+
+model StockAlert {
+  id        String   @id @default(cuid())
+  productId String
+  product   Product  @relation(fields: [productId], references: [id], onDelete: Cascade)
+  email     String
+  notified  Boolean  @default(false)
+  createdAt DateTime @default(now())
+
+  @@index([productId, notified])
+}
+
+model ProductImage {
+  id        String  @id @default(cuid())
+  productId String
+  product   Product @relation(fields: [productId], references: [id], onDelete: Cascade)
+  url       String
+  sortOrder Int     @default(0)
+
+  @@index([productId])
+}
+
+model ProductCategory {
+  productId  String
+  categoryId String
+  product    Product  @relation(fields: [productId], references: [id], onDelete: Cascade)
+  category   Category @relation(fields: [categoryId], references: [id], onDelete: Cascade)
+
+  @@id([productId, categoryId])
+  @@index([categoryId])
+}
+
+// ---------------------------------------------------------------------------
+// Review
+// ---------------------------------------------------------------------------
+
+model Review {
+  id         String   @id @default(cuid())
+  productId  String
+  product    Product  @relation(fields: [productId], references: [id], onDelete: Cascade)
+  rating     Int
+  text       String?  @db.Text
+  authorName String?
+  date       DateTime @default(now())
+
+  @@index([productId])
+}
+
+// ---------------------------------------------------------------------------
+// Customer — optional account; guest checkout is mandatory (TZ §5.6)
+// ---------------------------------------------------------------------------
+
+model Customer {
+  id           String  @id @default(cuid())
+  email        String  @unique
+  firstName    String?
+  lastName     String?
+  phone        String?
+  passwordHash String?
+
+  // Saved default shipping address, prefilled at checkout.
+  addressStreet     String?
+  addressCity       String?
+  addressPostalCode String?
+  addressCountry    String  @default("CZ")
+
+  orders              Order[]
+  passwordResetTokens PasswordResetToken[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+// ---------------------------------------------------------------------------
+// PasswordResetToken — single-use, time-limited "zapomenuté heslo" link.
+// Only the SHA-256 hash is stored so a DB leak alone can't be used to reset
+// accounts; the plaintext token only ever exists in the emailed URL.
+// ---------------------------------------------------------------------------
+
+model PasswordResetToken {
+  id         String    @id @default(cuid())
+  customerId String
+  customer   Customer  @relation(fields: [customerId], references: [id], onDelete: Cascade)
+  tokenHash  String    @unique
+  expiresAt  DateTime
+  usedAt     DateTime?
+  createdAt  DateTime  @default(now())
+
+  @@index([customerId])
+}
+
+// ---------------------------------------------------------------------------
+// Order
+// ---------------------------------------------------------------------------
+
+enum OrderStatus {
+  NEW
+  PAID
+  PROCESSING
+  SHIPPED
+  DELIVERED
+  CANCELLED
+  REFUNDED
+}
+
+enum ShippingMethod {
+  ZASILKOVNA
+  PPL
+  DPD
+  BALIKOVNA
+}
+
+enum PaymentMethod {
+  CARD
+  BANK_TRANSFER
+  CASH_ON_DELIVERY
+}
+
+model Order {
+  id          String @id @default(cuid())
+  number      String @unique
+  // Opaque secret required (alongside `number`) to view the guest order
+  // confirmation page or download the faktura — `number` alone has too little
+  // entropy (4 random digits/day) to double as an access secret.
+  accessToken String @unique @default(uuid())
+
+  customerId String?
+  customer   Customer? @relation(fields: [customerId], references: [id])
+
+  // guest checkout: contact fields are always stored on the order itself
+  email     String
+  phone     String
+  firstName String
+  lastName  String
+
+  items OrderItem[]
+
+  shippingMethod ShippingMethod
+  paymentMethod  PaymentMethod
+  pickupPointId  String?
+
+  shippingStreet     String?
+  shippingCity       String?
+  shippingPostalCode String?
+  shippingCountry    String  @default("CZ")
+
+  // Cookie-consent choice at time of order (TZ §5.9) — gates the server-side
+  // Meta Purchase event fired later from the Stripe webhook, which has no
+  // access to the original request's consent state otherwise.
+  marketingConsent Boolean @default(false)
+
+  status         OrderStatus @default(NEW)
+  trackingNumber String?
+
+  couponCode     String?
+  discountAmount Decimal @default(0) @db.Decimal(10, 2)
+
+  shippingPrice Decimal @default(0) @db.Decimal(10, 2)
+  itemsTotal    Decimal @db.Decimal(10, 2)
+  total         Decimal @db.Decimal(10, 2)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([customerId])
+  @@index([status])
+}
+
+// ---------------------------------------------------------------------------
+// Coupon — owner-managed discount codes, applied at checkout.
+// ---------------------------------------------------------------------------
+
+enum CouponType {
+  PERCENT
+  FIXED
+}
+
+model Coupon {
+  id            String     @id @default(cuid())
+  code          String     @unique
+  type          CouponType
+  value         Decimal    @db.Decimal(10, 2)
+  active        Boolean    @default(true)
+  minOrderValue Decimal?   @db.Decimal(10, 2)
+  usageLimit    Int?
+  usedCount     Int        @default(0)
+  expiresAt     DateTime?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model OrderItem {
+  id        String   @id @default(cuid())
+  orderId   String
+  order     Order    @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  productId String?
+  product   Product? @relation(fields: [productId], references: [id], onDelete: SetNull)
+
+  name      String
+  ean       String?
+  qty       Int
+  unitPrice Decimal @db.Decimal(10, 2)
+  vatRate   Int
+
+  @@index([orderId])
+}
+
+// ---------------------------------------------------------------------------
+// Rate limiting — DB-backed so it works correctly across serverless
+// invocations (an in-memory counter would reset per cold start on Vercel).
+// ---------------------------------------------------------------------------
+
+model RateLimitHit {
+  id        String   @id @default(cuid())
+  key       String
+  createdAt DateTime @default(now())
+
+  @@index([key, createdAt])
+}
+
+// ---------------------------------------------------------------------------
+// Settings — single-row table for owner-editable values that used to be
+// hardcoded (shipping prices/threshold). Row id is always "singleton".
+// ---------------------------------------------------------------------------
+
+model Settings {
+  id                      String  @id @default("singleton")
+  freeShippingThreshold   Decimal @default(1500) @db.Decimal(10, 2)
+  shippingPriceZasilkovna Decimal @default(79) @db.Decimal(10, 2)
+  shippingPricePpl        Decimal @default(90) @db.Decimal(10, 2)
+  shippingPriceDpd        Decimal @default(99) @db.Decimal(10, 2)
+  shippingPriceBalikovna  Decimal @default(69) @db.Decimal(10, 2)
+
+  updatedAt DateTime @updatedAt
+}
+
+// ---------------------------------------------------------------------------
+// AdminActivityLog — audit trail for sensitive admin mutations (price/stock
+// changes, order status/tracking edits, coupon changes). Read-only history,
+// no relations, so a deleted product/order doesn't cascade-delete its log.
+// ---------------------------------------------------------------------------
+
+model AdminActivityLog {
+  id         String   @id @default(cuid())
+  action     String
+  entityType String
+  entityId   String?
+  detail     String?  @db.Text
+  createdAt  DateTime @default(now())
+
+  @@index([createdAt])
+  @@index([entityType, entityId])
+}

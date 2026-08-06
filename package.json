@@ -1,26 +1,50 @@
 {
-  "name": "gotrid-tmp",
+  "name": "gotrid-eshop",
   "version": "0.1.0",
   "private": true,
   "scripts": {
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
-    "lint": "eslint"
+    "lint": "eslint",
+    "db:migrate": "prisma migrate dev",
+    "db:seed": "tsx prisma/seed.ts",
+    "db:studio": "prisma studio",
+    "import:xlsx": "tsx scripts/import-xlsx.ts",
+    "tag:scent-families": "tsx scripts/tag-scent-families.ts",
+    "seed:cosmetics-facets": "tsx scripts/seed-cosmetics-facets.ts"
   },
   "dependencies": {
-    "next": "16.2.12",
-    "react": "19.2.4",
-    "react-dom": "19.2.4"
+    "@prisma/client": "^6",
+    "@react-pdf/renderer": "^4",
+    "exceljs": "^4",
+    "next": "15.5.22",
+    "qrcode": "^1",
+    "react": "19.1.1",
+    "react-dom": "19.1.1",
+    "resend": "^4",
+    "sanitize-html": "^2.17.6",
+    "stripe": "^18",
+    "zod": "^3"
   },
   "devDependencies": {
+    "@eslint/eslintrc": "^3",
     "@tailwindcss/postcss": "^4",
     "@types/node": "^20",
+    "@types/qrcode": "^1",
     "@types/react": "^19",
     "@types/react-dom": "^19",
+    "@types/sanitize-html": "^2.16.1",
     "eslint": "^9",
-    "eslint-config-next": "16.2.12",
+    "eslint-config-next": "15.5.22",
+    "prisma": "^6",
     "tailwindcss": "^4",
+    "tsx": "^4",
     "typescript": "^5"
+  },
+  "overrides": {
+    "sharp": "^0.35.3",
+    "postcss": "^8.5.25",
+    "uuid": "^11.1.1"
   }
 }

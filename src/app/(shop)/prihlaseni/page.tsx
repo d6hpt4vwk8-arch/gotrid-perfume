@@ -1,0 +1,90 @@
+"use client";
+
+import Link from "next/link";
+import { Suspense, useState } from "react";
+import { useRouter, useSearchParams } from "next/navigation";
+
+function LoginForm() {
+  const router = useRouter();
+  const searchParams = useSearchParams();
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+  const [error, setError] = useState<string | null>(null);
+  const [submitting, setSubmitting] = useState(false);
+
+  async function handleSubmit(e: React.FormEvent) {
+    e.preventDefault();
+    setError(null);
+    setSubmitting(true);
+
+    try {
+      const res = await fetch("/api/customer/login", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email, password }),
+      });
+      const data = await res.json();
+      if (!res.ok) {
+        setError(data.error ?? "Přihlášení se nezdařilo.");
+        setSubmitting(false);
+        return;
+      }
+      router.push(searchParams.get("next") ?? "/muj-ucet");
+      router.refresh();
+    } catch {
+      setError("Přihlášení se nezdařilo, zkuste to prosím znovu.");
+      setSubmitting(false);
+    }
+  }
+
+  return (
+    <main className="mx-auto flex max-w-sm flex-1 flex-col justify-center gap-4 px-4 py-20">
+      <h1 className="text-2xl font-bold text-ink">Přihlášení</h1>
+      <p className="text-sm text-accent-2">
+        Nemáte účet?{" "}
+        <Link href="/registrace" className="text-ink underline hover:text-accent">
+          Zaregistrujte se
+        </Link>
+        .
+      </p>
+      <form onSubmit={handleSubmit} className="flex flex-col gap-3">
+        <input
+          required
+          type="email"
+          autoFocus
+          placeholder="E-mail"
+          value={email}
+          onChange={(e) => setEmail(e.target.value)}
+          className="rounded-sm border border-line px-3 py-2 text-sm text-ink"
+        />
+        <input
+          required
+          type="password"
+          placeholder="Heslo"
+          value={password}
+          onChange={(e) => setPassword(e.target.value)}
+          className="rounded-sm border border-line px-3 py-2 text-sm text-ink"
+        />
+        {error && <p className="text-sm text-red-600">{error}</p>}
+        <button
+          type="submit"
+          disabled={submitting}
+          className="rounded-sm bg-ink px-4 py-2 text-sm font-semibold text-white hover:bg-accent disabled:cursor-not-allowed disabled:bg-line disabled:text-accent-2"
+        >
+          {submitting ? "Přihlašuji…" : "Přihlásit se"}
+        </button>
+      </form>
+      <Link href="/zapomenute-heslo" className="text-sm text-accent-2 hover:text-accent hover:underline">
+        Zapomenuté heslo?
+      </Link>
+    </main>
+  );
+}
+
+export default function LoginPage() {
+  return (
+    <Suspense>
+      <LoginForm />
+    </Suspense>
+  );
+}

@@ -32,9 +32,17 @@ yarn-error.log*
 
 # env files (can opt-in for committing if needed)
 .env*
+!.env.example
 
 # vercel
 .vercel
+
+# claude
+.claude/settings.local.json
+
+# local uploads (product images downloaded during xlsx import)
+/public/uploads/*
+!/public/uploads/.gitkeep
 
 # typescript
 *.tsbuildinfo
