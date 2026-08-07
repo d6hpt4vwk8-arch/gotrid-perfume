@@ -3,6 +3,7 @@
 import Image from "next/image";
 import { Suspense, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
+import { getSafeRedirectPath } from "@/lib/safe-redirect";
 
 function LoginForm() {
   const router = useRouter();
@@ -29,7 +30,7 @@ function LoginForm() {
       return;
     }
 
-    router.push(searchParams.get("next") ?? "/admin");
+    router.push(getSafeRedirectPath(searchParams.get("next"), "/admin"));
     router.refresh();
   }
 

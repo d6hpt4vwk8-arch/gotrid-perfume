@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { Suspense, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
+import { getSafeRedirectPath } from "@/lib/safe-redirect";
 
 function LoginForm() {
   const router = useRouter();
@@ -29,7 +30,7 @@ function LoginForm() {
         setSubmitting(false);
         return;
       }
-      router.push(searchParams.get("next") ?? "/muj-ucet");
+      router.push(getSafeRedirectPath(searchParams.get("next"), "/muj-ucet"));
       router.refresh();
     } catch {
       setError("Přihlášení se nezdařilo, zkuste to prosím znovu.");
