@@ -5,6 +5,7 @@ import { revalidatePath, revalidateTag } from "next/cache";
 import { redirect } from "next/navigation";
 import { prisma } from "@/lib/prisma";
 import { slugify } from "@/lib/slug";
+import { requireAdmin } from "@/lib/admin/require-admin";
 
 const categorySchema = z.object({
   name: z.string().trim().min(1, "Název je povinný.").max(200),
@@ -12,6 +13,7 @@ const categorySchema = z.object({
 });
 
 export async function createCategory(formData: FormData) {
+  await requireAdmin();
   const parsed = categorySchema.safeParse(Object.fromEntries(formData));
   if (!parsed.success) throw new Error(parsed.error.issues[0]?.message ?? "Neplatná data.");
   const { name, sortOrder } = parsed.data;
@@ -36,6 +38,7 @@ export async function createCategory(formData: FormData) {
 // Renaming keeps the existing slug/fullSlug (and therefore the public URL and
 // any children's materialized paths) stable — only display fields change.
 export async function updateCategory(id: string, formData: FormData) {
+  await requireAdmin();
   const parsed = categorySchema.safeParse(Object.fromEntries(formData));
   if (!parsed.success) throw new Error(parsed.error.issues[0]?.message ?? "Neplatná data.");
   const { name, sortOrder } = parsed.data;
@@ -51,6 +54,7 @@ export async function updateCategory(id: string, formData: FormData) {
 }
 
 export async function deleteCategory(id: string) {
+  await requireAdmin();
   const [childCount, productCount] = await Promise.all([
     prisma.category.count({ where: { parentId: id } }),
     prisma.productCategory.count({ where: { categoryId: id } }),

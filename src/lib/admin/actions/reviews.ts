@@ -3,6 +3,7 @@
 import { z } from "zod";
 import { revalidatePath } from "next/cache";
 import { prisma } from "@/lib/prisma";
+import { requireAdmin } from "@/lib/admin/require-admin";
 
 const reviewSchema = z.object({
   rating: z.coerce.number().int().min(1, "Hodnocení musí být 1–5.").max(5, "Hodnocení musí být 1–5."),
@@ -11,6 +12,7 @@ const reviewSchema = z.object({
 });
 
 export async function createReview(productId: string, formData: FormData) {
+  await requireAdmin();
   const parsed = reviewSchema.safeParse(Object.fromEntries(formData));
   if (!parsed.success) throw new Error(parsed.error.issues[0]?.message ?? "Neplatná data recenze.");
 
@@ -32,12 +34,14 @@ export async function createReview(productId: string, formData: FormData) {
 }
 
 export async function deleteReview(id: string) {
+  await requireAdmin();
   const review = await prisma.review.delete({ where: { id } });
   revalidatePath(`/admin/produkty/${review.productId}`);
   revalidatePath("/");
 }
 
 export async function setReviewPublished(id: string, published: boolean) {
+  await requireAdmin();
   const review = await prisma.review.update({ where: { id }, data: { published } });
   revalidatePath(`/admin/produkty/${review.productId}`);
   revalidatePath("/");

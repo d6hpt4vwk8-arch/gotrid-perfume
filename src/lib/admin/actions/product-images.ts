@@ -4,8 +4,10 @@ import { unlink } from "node:fs/promises";
 import path from "node:path";
 import { revalidatePath } from "next/cache";
 import { prisma } from "@/lib/prisma";
+import { requireAdmin } from "@/lib/admin/require-admin";
 
 export async function deleteProductImage(imageId: string) {
+  await requireAdmin();
   const image = await prisma.productImage.delete({ where: { id: imageId } });
 
   // Best-effort local file cleanup — a missing file (already deleted, or a
@@ -19,6 +21,7 @@ export async function deleteProductImage(imageId: string) {
 }
 
 export async function moveProductImage(imageId: string, direction: "up" | "down") {
+  await requireAdmin();
   const image = await prisma.productImage.findUniqueOrThrow({ where: { id: imageId } });
   const siblings = await prisma.productImage.findMany({
     where: { productId: image.productId },

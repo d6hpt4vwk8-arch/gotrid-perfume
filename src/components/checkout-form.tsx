@@ -1,7 +1,6 @@
 "use client";
 
 import Link from "next/link";
-import { useRouter } from "next/navigation";
 import { useMemo, useState } from "react";
 import { useCart } from "@/lib/cart-context";
 import { useConsent } from "@/lib/consent-context";
@@ -45,7 +44,6 @@ export function CheckoutForm({
 }) {
   const { items, total: itemsTotal, clear } = useCart();
   const { consent } = useConsent();
-  const router = useRouter();
 
   const [email, setEmail] = useState(customer?.email ?? "");
   const [phone, setPhone] = useState(customer?.phone ?? "");
@@ -160,7 +158,10 @@ export function CheckoutForm({
       if (data.redirectUrl) {
         window.location.href = data.redirectUrl;
       } else {
-        router.push(`/objednavka/${data.orderNumber}?token=${data.accessToken}`);
+        // Full navigation (not router.push) so the browser actually hits the
+        // Route Handler and picks up the HttpOnly access cookie it sets —
+        // keeps the token out of the URL bar/history, see that route's comment.
+        window.location.href = `/api/orders/${data.orderNumber}/access?token=${data.accessToken}`;
       }
     } catch {
       setError("Objednávku se nepodařilo odeslat, zkuste to prosím znovu.");

@@ -71,7 +71,9 @@ export async function POST(req: NextRequest) {
       orderId: order.id,
       amountCzk: Number(order.total),
       customerEmail: order.email,
-      successUrl: `${origin}/objednavka/${order.number}?token=${order.accessToken}`,
+      // Routes through the access-exchange endpoint so the token becomes an
+      // HttpOnly cookie instead of landing in Stripe's own redirect/logs.
+      successUrl: `${origin}/api/orders/${order.number}/access?token=${order.accessToken}`,
       cancelUrl: `${origin}/kosik`,
     });
     // Purchase fires from the Stripe webhook instead — card orders aren't

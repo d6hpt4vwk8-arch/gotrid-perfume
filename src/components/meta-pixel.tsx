@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect } from "react";
+import { usePathname } from "next/navigation";
 import { useConsent } from "@/lib/consent-context";
 
 const PIXEL_ID = process.env.NEXT_PUBLIC_META_PIXEL_ID;
@@ -34,15 +35,23 @@ function loadPixel(pixelId: string) {
   window.fbq?.("track", "PageView");
 }
 
-/** Loads Meta Pixel only after marketing consent (TZ §5.9: block trackers until Souhlasím). */
+/**
+ * Loads Meta Pixel only after marketing consent (TZ §5.9: block trackers
+ * until Souhlasím) — and never on the order confirmation page, which is
+ * PII-bearing and shouldn't hand its URL to a third-party script (security
+ * audit finding: order page + Pixel PageView). Purchase is still reported
+ * there via server-side Conversions API (src/lib/analytics/meta-capi.ts).
+ */
 export function MetaPixel() {
   const { consent } = useConsent();
+  const pathname = usePathname();
+  const isOrderPage = pathname?.startsWith("/objednavka");
 
   useEffect(() => {
-    if (consent?.marketing && PIXEL_ID) {
+    if (consent?.marketing && PIXEL_ID && !isOrderPage) {
       loadPixel(PIXEL_ID);
     }
-  }, [consent?.marketing]);
+  }, [consent?.marketing, isOrderPage]);
 
   return null;
 }

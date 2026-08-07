@@ -7,6 +7,7 @@ import { prisma } from "@/lib/prisma";
 import { slugify } from "@/lib/slug";
 import { notifyStockAlerts } from "@/lib/stock-alerts";
 import { logAdminActivity } from "@/lib/admin/activity-log";
+import { requireAdmin } from "@/lib/admin/require-admin";
 
 const emptyToUndefined = (v: unknown) => (v === "" ? undefined : v);
 
@@ -78,6 +79,7 @@ async function setConcerns(productId: string, formData: FormData) {
 }
 
 export async function createProduct(formData: FormData) {
+  await requireAdmin();
   const data = parseProductForm(formData);
   const slug = `${slugify(data.name)}-${data.code.toLowerCase()}`;
 
@@ -107,6 +109,7 @@ export async function createProduct(formData: FormData) {
 }
 
 export async function updateProduct(id: string, formData: FormData) {
+  await requireAdmin();
   const data = parseProductForm(formData);
   const before = await prisma.product.findUniqueOrThrow({ where: { id } });
 
@@ -159,6 +162,7 @@ export async function updateProduct(id: string, formData: FormData) {
 }
 
 export async function deleteProduct(id: string) {
+  await requireAdmin();
   const product = await prisma.product.delete({ where: { id } });
   await logAdminActivity({
     action: "product.delete",
@@ -171,6 +175,7 @@ export async function deleteProduct(id: string) {
 }
 
 export async function toggleProductVisible(id: string, visible: boolean) {
+  await requireAdmin();
   await prisma.product.update({ where: { id }, data: { visible } });
   revalidatePath("/admin/produkty");
 }

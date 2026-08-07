@@ -2,7 +2,12 @@ import { NextRequest, NextResponse } from "next/server";
 import { renderToBuffer } from "@react-pdf/renderer";
 import { prisma } from "@/lib/prisma";
 import { FakturaDocument } from "@/lib/pdf/faktura";
-import { ADMIN_COOKIE_NAME, verifyOrderAccess } from "@/lib/orders/verify-access";
+import { getCurrentCustomerId } from "@/lib/customer/get-current-customer";
+import {
+  ADMIN_COOKIE_NAME,
+  ORDER_ACCESS_COOKIE_NAME,
+  verifyOrderAccess,
+} from "@/lib/orders/verify-access";
 
 export async function GET(
   req: NextRequest,
@@ -18,12 +23,12 @@ export async function GET(
     return NextResponse.json({ error: "Objednávka nenalezena." }, { status: 404 });
   }
 
-  const token = req.nextUrl.searchParams.get("token");
-  const hasAccess = await verifyOrderAccess(
-    order,
-    token,
-    req.cookies.get(ADMIN_COOKIE_NAME)?.value,
-  );
+  const customerId = await getCurrentCustomerId();
+  const hasAccess = await verifyOrderAccess(order, {
+    cookieToken: req.cookies.get(ORDER_ACCESS_COOKIE_NAME)?.value,
+    adminCookie: req.cookies.get(ADMIN_COOKIE_NAME)?.value,
+    customerId,
+  });
   if (!hasAccess) {
     return NextResponse.json({ error: "Neautorizováno." }, { status: 401 });
   }

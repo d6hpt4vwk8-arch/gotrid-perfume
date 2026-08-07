@@ -35,7 +35,7 @@ export async function sendCustomerOrderConfirmation(order: OrderWithItems) {
       <p>Platba: ${PAYMENT_LABELS[order.paymentMethod]}</p>
       <p><strong>Celkem: ${formatPrice(order.total)}</strong></p>
       <p>O odeslání zásilky vás budeme informovat samostatným e-mailem.</p>
-      <p><a href="${SITE_URL}/objednavka/${order.number}?token=${order.accessToken}">Zobrazit objednávku a stáhnout fakturu</a></p>
+      <p><a href="${SITE_URL}/api/orders/${order.number}/access?token=${order.accessToken}">Zobrazit objednávku a stáhnout fakturu</a></p>
     `,
   });
   // The Resend SDK returns { data, error } instead of throwing on API-level

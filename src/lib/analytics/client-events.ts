@@ -57,8 +57,3 @@ export function trackAddToCart(product: { id: string; name: string; price: numbe
     value: product.price * product.qty,
   });
 }
-
-/** Purchase is fired server-side (order creation / Stripe webhook, see src/lib/analytics/meta-capi.ts) — this only mirrors it to the on-page Pixel for browser-side attribution. */
-export function trackPurchasePixelOnly(order: { number: string; total: number }) {
-  window.fbq?.("track", "Purchase", { currency: "CZK", value: order.total }, { eventID: order.number });
-}

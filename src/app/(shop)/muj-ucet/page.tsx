@@ -36,7 +36,7 @@ export default async function AccountPage() {
               <li key={order.id} className="flex items-center justify-between py-3 text-sm">
                 <div className="flex flex-col gap-0.5">
                   <Link
-                    href={`/objednavka/${order.number}?token=${order.accessToken}`}
+                    href={`/objednavka/${order.number}`}
                     className="font-semibold text-ink hover:underline"
                   >
                     {order.number}

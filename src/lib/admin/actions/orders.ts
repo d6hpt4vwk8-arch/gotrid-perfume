@@ -3,6 +3,7 @@
 import { revalidatePath } from "next/cache";
 import { prisma } from "@/lib/prisma";
 import { logAdminActivity } from "@/lib/admin/activity-log";
+import { requireAdmin } from "@/lib/admin/require-admin";
 import type { OrderStatus } from "@prisma/client";
 
 const VALID_STATUSES: OrderStatus[] = [
@@ -16,6 +17,7 @@ const VALID_STATUSES: OrderStatus[] = [
 ];
 
 export async function updateOrderStatus(id: string, formData: FormData) {
+  await requireAdmin();
   const status = String(formData.get("status") ?? "");
   const trackingNumber = String(formData.get("trackingNumber") ?? "").trim() || null;
   if (!VALID_STATUSES.includes(status as OrderStatus)) {

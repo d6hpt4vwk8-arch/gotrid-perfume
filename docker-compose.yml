@@ -3,11 +3,14 @@ services:
     image: postgres:16-alpine
     restart: unless-stopped
     environment:
-      POSTGRES_USER: gotrid
-      POSTGRES_PASSWORD: gotrid
-      POSTGRES_DB: gotrid
+      POSTGRES_USER: ${POSTGRES_USER:-gotrid}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?Set POSTGRES_PASSWORD in .env — see .env.example}
+      POSTGRES_DB: ${POSTGRES_DB:-gotrid}
     ports:
-      - "5432:5432"
+      # Bound to loopback only — Docker publishes to 0.0.0.0 by default,
+      # which exposes the DB to the whole network/internet on hosts without
+      # a firewall. Only needed for local dev; production uses managed Neon.
+      - "127.0.0.1:5432:5432"
     volumes:
       - gotrid_postgres_data:/var/lib/postgresql/data
 

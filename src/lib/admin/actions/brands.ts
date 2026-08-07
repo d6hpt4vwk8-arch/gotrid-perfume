@@ -4,6 +4,7 @@ import { z } from "zod";
 import { revalidatePath } from "next/cache";
 import { prisma } from "@/lib/prisma";
 import { slugify } from "@/lib/slug";
+import { requireAdmin } from "@/lib/admin/require-admin";
 
 const brandSchema = z.object({
   name: z.string().trim().min(1, "Název je povinný.").max(150),
@@ -16,18 +17,21 @@ function parseName(formData: FormData): string {
 }
 
 export async function createBrand(formData: FormData) {
+  await requireAdmin();
   const name = parseName(formData);
   await prisma.brand.create({ data: { name, slug: slugify(name) } });
   revalidatePath("/admin/znacky");
 }
 
 export async function updateBrand(id: string, formData: FormData) {
+  await requireAdmin();
   const name = parseName(formData);
   await prisma.brand.update({ where: { id }, data: { name } });
   revalidatePath("/admin/znacky");
 }
 
 export async function deleteBrand(id: string) {
+  await requireAdmin();
   const productCount = await prisma.product.count({ where: { brandId: id } });
   if (productCount > 0) {
     throw new Error("Ke značce jsou přiřazeny produkty — nejdřív jim změňte značku.");

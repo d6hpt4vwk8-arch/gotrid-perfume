@@ -4,6 +4,7 @@ import { z } from "zod";
 import { revalidatePath } from "next/cache";
 import { prisma } from "@/lib/prisma";
 import { logAdminActivity } from "@/lib/admin/activity-log";
+import { requireAdmin } from "@/lib/admin/require-admin";
 
 const emptyToUndefined = (v: unknown) => (v === "" ? undefined : v);
 
@@ -32,6 +33,7 @@ function parseCouponForm(formData: FormData) {
 }
 
 export async function createCoupon(formData: FormData) {
+  await requireAdmin();
   const data = parseCouponForm(formData);
 
   const coupon = await prisma.coupon.create({
@@ -56,6 +58,7 @@ export async function createCoupon(formData: FormData) {
 }
 
 export async function updateCoupon(id: string, formData: FormData) {
+  await requireAdmin();
   const data = parseCouponForm(formData);
 
   await prisma.coupon.update({
@@ -81,6 +84,7 @@ export async function updateCoupon(id: string, formData: FormData) {
 }
 
 export async function deleteCoupon(id: string) {
+  await requireAdmin();
   const coupon = await prisma.coupon.delete({ where: { id } });
   await logAdminActivity({
     action: "coupon.delete",
