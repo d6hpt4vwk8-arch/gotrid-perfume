@@ -189,6 +189,8 @@ export function CheckoutForm({
           <input
             required
             type="email"
+            name="email"
+            autoComplete="email"
             placeholder="E-mail"
             value={email}
             onChange={(e) => setEmail(e.target.value)}
@@ -197,6 +199,8 @@ export function CheckoutForm({
           <input
             required
             type="tel"
+            name="tel"
+            autoComplete="tel"
             placeholder="Telefon"
             value={phone}
             onChange={(e) => setPhone(e.target.value)}
@@ -205,6 +209,8 @@ export function CheckoutForm({
           <div className="flex gap-3">
             <input
               required
+              name="given-name"
+              autoComplete="given-name"
               placeholder="Jméno"
               value={firstName}
               onChange={(e) => setFirstName(e.target.value)}
@@ -212,6 +218,8 @@ export function CheckoutForm({
             />
             <input
               required
+              name="family-name"
+              autoComplete="family-name"
               placeholder="Příjmení"
               value={lastName}
               onChange={(e) => setLastName(e.target.value)}
@@ -249,6 +257,8 @@ export function CheckoutForm({
             <div className="flex flex-col gap-2 pt-2">
               <input
                 required
+                name="street-address"
+                autoComplete="street-address"
                 placeholder="Ulice a číslo popisné"
                 value={street}
                 onChange={(e) => setStreet(e.target.value)}
@@ -257,6 +267,8 @@ export function CheckoutForm({
               <div className="flex gap-3">
                 <input
                   required
+                  name="address-level2"
+                  autoComplete="address-level2"
                   placeholder="Město"
                   value={city}
                   onChange={(e) => setCity(e.target.value)}
@@ -264,6 +276,8 @@ export function CheckoutForm({
                 />
                 <input
                   required
+                  name="postal-code"
+                  autoComplete="postal-code"
                   placeholder="PSČ"
                   value={postalCode}
                   onChange={(e) => setPostalCode(e.target.value)}

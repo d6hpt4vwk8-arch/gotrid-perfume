@@ -1,4 +1,3 @@
-import Image from "next/image";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import type { Metadata } from "next";
@@ -14,6 +13,7 @@ import { StockAlertForm } from "@/components/stock-alert-form";
 import { getProductSpecs } from "@/lib/product-specs";
 import { estimateDeliveryDate, formatDeliveryEstimate } from "@/lib/delivery-estimate";
 import { ReviewForm } from "@/components/review-form";
+import { ProductGallery } from "@/components/product-gallery";
 
 async function getProduct(slug: string) {
   return prisma.product.findUnique({
@@ -115,29 +115,7 @@ export default async function ProductPage({
       />
 
       <div className="grid gap-8 md:grid-cols-2">
-        <div className="grid grid-cols-4 gap-2">
-          <div className="relative col-span-4 aspect-square overflow-hidden bg-line/60">
-            {product.images[0] ? (
-              <Image
-                src={product.images[0].url}
-                alt={product.name}
-                fill
-                sizes="(min-width: 768px) 50vw, 100vw"
-                className="object-cover"
-                priority
-              />
-            ) : (
-              <div className="flex h-full items-center justify-center text-sm text-accent-2">
-                Bez obrázku
-              </div>
-            )}
-          </div>
-          {product.images.slice(1, 5).map((image) => (
-            <div key={image.id} className="relative aspect-square overflow-hidden bg-line/60">
-              <Image src={image.url} alt={product.name} fill sizes="12vw" className="object-cover" />
-            </div>
-          ))}
-        </div>
+        <ProductGallery images={product.images} alt={product.name} />
 
         <div className="flex flex-col gap-4">
           {product.brand && (
