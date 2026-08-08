@@ -54,5 +54,35 @@ export async function POST(req: NextRequest) {
     }
   }
 
+  // Card orders decrement stock at creation, before payment — if the
+  // customer never pays (session times out, ~24h by default), that stock
+  // was reserved forever with nothing to release it (security audit
+  // finding: stock committed before a successful charge). Restoring it here
+  // only if the order is still NEW makes this safe against Stripe's webhook
+  // retries: a second delivery of the same event finds status already
+  // CANCELLED and no-ops.
+  if (event.type === "checkout.session.expired") {
+    const session = event.data.object as Stripe.Checkout.Session;
+    const orderId = session.metadata?.orderId;
+    if (orderId) {
+      await prisma.$transaction(async (tx) => {
+        const claimed = await tx.order.updateMany({
+          where: { id: orderId, status: "NEW" },
+          data: { status: "CANCELLED" },
+        });
+        if (claimed.count === 0) return;
+
+        const items = await tx.orderItem.findMany({ where: { orderId } });
+        for (const item of items) {
+          if (!item.productId) continue; // product was deleted since the order was placed
+          await tx.product.updateMany({
+            where: { id: item.productId },
+            data: { stock: { increment: item.qty } },
+          });
+        }
+      });
+    }
+  }
+
   return NextResponse.json({ received: true });
 }

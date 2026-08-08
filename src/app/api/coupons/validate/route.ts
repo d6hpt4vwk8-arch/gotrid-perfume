@@ -6,7 +6,7 @@ import { isRateLimited, recordRateLimitHit, getClientIp } from "@/lib/rate-limit
 
 const bodySchema = z.object({
   code: z.string().trim().min(1).max(50),
-  itemsTotal: z.coerce.number().min(0),
+  itemsTotal: z.coerce.number().min(0).max(10_000_000),
 });
 
 const MAX_ATTEMPTS = 20;

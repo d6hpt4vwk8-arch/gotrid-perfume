@@ -4,8 +4,8 @@ import { prisma } from "@/lib/prisma";
 import { isRateLimited, recordRateLimitHit, getClientIp } from "@/lib/rate-limit";
 
 const bodySchema = z.object({
-  productId: z.string().min(1),
-  email: z.string().email("Zadejte platný e-mail."),
+  productId: z.string().min(1).max(200),
+  email: z.string().trim().max(320).email("Zadejte platný e-mail."),
 });
 
 const MAX_ATTEMPTS = 10;

@@ -2,26 +2,27 @@ import { z } from "zod";
 
 export const checkoutSchema = z
   .object({
-    email: z.string().email("Zadejte platný e-mail."),
-    phone: z.string().min(9, "Zadejte platné telefonní číslo."),
-    firstName: z.string().min(1, "Zadejte jméno."),
-    lastName: z.string().min(1, "Zadejte příjmení."),
+    email: z.string().max(320).email("Zadejte platný e-mail."),
+    phone: z.string().min(9, "Zadejte platné telefonní číslo.").max(30),
+    firstName: z.string().min(1, "Zadejte jméno.").max(100),
+    lastName: z.string().min(1, "Zadejte příjmení.").max(100),
     shippingMethod: z.enum(["ZASILKOVNA", "PPL", "DPD", "BALIKOVNA"]),
     paymentMethod: z.enum(["CARD", "BANK_TRANSFER", "CASH_ON_DELIVERY"]),
-    pickupPointId: z.string().optional(),
-    shippingStreet: z.string().optional(),
-    shippingCity: z.string().optional(),
-    shippingPostalCode: z.string().optional(),
+    pickupPointId: z.string().max(50).optional(),
+    shippingStreet: z.string().max(200).optional(),
+    shippingCity: z.string().max(100).optional(),
+    shippingPostalCode: z.string().max(20).optional(),
     marketingConsent: z.boolean().optional().default(false),
     couponCode: z.string().trim().max(50).optional(),
     items: z
       .array(
         z.object({
-          productId: z.string().min(1),
-          qty: z.number().int().positive(),
+          productId: z.string().min(1).max(200),
+          qty: z.number().int().positive().max(999),
         }),
       )
-      .min(1, "Košík je prázdný."),
+      .min(1, "Košík je prázdný.")
+      .max(200),
   })
   .superRefine((data, ctx) => {
     if (data.shippingMethod === "ZASILKOVNA" && !data.pickupPointId) {
