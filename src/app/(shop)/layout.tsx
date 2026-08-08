@@ -1,3 +1,4 @@
+import { headers } from "next/headers";
 import { SiteHeader } from "@/components/site-header";
 import { SiteFooter } from "@/components/site-footer";
 import { Providers } from "@/components/providers";
@@ -24,10 +25,11 @@ const CONSENT_MODE_BOOTSTRAP = `
 
 export default async function ShopLayout({ children }: { children: React.ReactNode }) {
   const settings = await getSettings();
+  const nonce = (await headers()).get("x-nonce") ?? undefined;
 
   return (
     <>
-      <script dangerouslySetInnerHTML={{ __html: CONSENT_MODE_BOOTSTRAP }} />
+      <script nonce={nonce} dangerouslySetInnerHTML={{ __html: CONSENT_MODE_BOOTSTRAP }} />
       <Providers freeShippingThreshold={settings.freeShippingThreshold}>
         <MetaPixel />
         <BenefitsBar />

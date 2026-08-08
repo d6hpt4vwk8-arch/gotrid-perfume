@@ -3,23 +3,67 @@ import { ADMIN_COOKIE_NAME, verifySessionToken } from "@/lib/admin-auth";
 
 const PUBLIC_PATHS = new Set(["/admin/login", "/api/admin/login", "/api/admin/logout"]);
 
+// Next.js hydrates via inline <script> payloads — without a nonce, CSP has
+// to fall back to 'unsafe-inline' for script-src, which barely constrains
+// anything (security audit finding M-05). Generating a per-request nonce
+// here and reading it via headers()/x-nonce in layouts lets script-src drop
+// 'unsafe-inline' entirely; 'strict-dynamic' covers scripts those inline
+// scripts create at runtime (Meta Pixel, the Packeta widget loader), so the
+// explicit https:// origins only matter as a fallback for browsers that
+// don't support strict-dynamic yet.
+const isDev = process.env.NODE_ENV !== "production";
+
+function buildCsp(nonce: string): string {
+  return [
+    "default-src 'self'",
+    `script-src 'self' 'nonce-${nonce}' 'strict-dynamic' ${isDev ? "'unsafe-eval' " : ""}https://connect.facebook.net https://widget.packeta.com`,
+    "style-src 'self' 'unsafe-inline'",
+    "img-src 'self' data: https:",
+    "font-src 'self' data:",
+    "connect-src 'self' https://connect.facebook.net https://widget.packeta.com https://*.packeta.com https://*.tile.openstreetmap.org",
+    "frame-src 'self' https://widget.packeta.com",
+    "frame-ancestors 'self'",
+    "base-uri 'self'",
+    "form-action 'self'",
+  ].join("; ");
+}
+
 export async function middleware(req: NextRequest) {
   const { pathname } = req.nextUrl;
 
-  if (PUBLIC_PATHS.has(pathname)) return NextResponse.next();
+  const nonce = crypto.randomUUID();
+  const csp = buildCsp(nonce);
 
-  const isAuthed = await verifySessionToken(req.cookies.get(ADMIN_COOKIE_NAME)?.value);
-  if (isAuthed) return NextResponse.next();
+  const requestHeaders = new Headers(req.headers);
+  requestHeaders.set("x-nonce", nonce);
+  requestHeaders.set("Content-Security-Policy", csp);
 
-  if (pathname.startsWith("/api/admin")) {
-    return NextResponse.json({ error: "Neautorizováno." }, { status: 401 });
+  const isAdminPath = pathname.startsWith("/admin") || pathname.startsWith("/api/admin");
+  if (isAdminPath && !PUBLIC_PATHS.has(pathname)) {
+    const isAuthed = await verifySessionToken(req.cookies.get(ADMIN_COOKIE_NAME)?.value);
+    if (!isAuthed) {
+      if (pathname.startsWith("/api/admin")) {
+        const res = NextResponse.json({ error: "Neautorizováno." }, { status: 401 });
+        res.headers.set("Content-Security-Policy", csp);
+        return res;
+      }
+      const loginUrl = new URL("/admin/login", req.url);
+      loginUrl.searchParams.set("next", pathname);
+      const res = NextResponse.redirect(loginUrl);
+      res.headers.set("Content-Security-Policy", csp);
+      return res;
+    }
   }
 
-  const loginUrl = new URL("/admin/login", req.url);
-  loginUrl.searchParams.set("next", pathname);
-  return NextResponse.redirect(loginUrl);
+  const response = NextResponse.next({ request: { headers: requestHeaders } });
+  response.headers.set("Content-Security-Policy", csp);
+  return response;
 }
 
 export const config = {
-  matcher: ["/admin/:path*", "/api/admin/:path*"],
+  matcher: [
+    // Everything except Next's own static/image assets — those are served
+    // straight from disk/CDN, not through a page render that could use nonce.
+    "/((?!_next/static|_next/image|favicon.ico|icon.svg).*)",
+  ],
 };
