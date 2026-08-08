@@ -230,6 +230,11 @@ model Customer {
   lastName     String?
   phone        String?
   passwordHash String?
+  // Bumped on password reset so every other outstanding session cookie
+  // (e.g. a stolen one) is rejected by verifyCustomerSessionToken instead
+  // of staying valid until its 30-day expiry (security audit: sessions
+  // couldn't be revoked).
+  sessionVersion Int @default(1)
 
   // Saved default shipping address, prefilled at checkout.
   addressStreet     String?

@@ -1,6 +1,10 @@
 import ExcelJS from "exceljs";
 import type { ImportRawRow } from "./types";
 
+// Real supplier catalogs run a few thousand rows — this bounds memory/time
+// on a maliciously huge sheet (security audit finding: import had no limit).
+const MAX_ROWS = 20_000;
+
 // Maps the known Shoptet export header spellings (TZ §6.2) to our internal field names.
 const HEADER_ALIASES: Record<string, keyof ImportRawRow> = {
   code: "code",
@@ -58,6 +62,10 @@ export async function parseXlsxRows(buffer: Buffer): Promise<{
     if (rowNumber === 1) return; // header
     const isEmpty = row.cellCount === 0;
     if (isEmpty) return;
+
+    if (rows.length >= MAX_ROWS) {
+      throw new Error(`Soubor má příliš mnoho řádků (limit ${MAX_ROWS}).`);
+    }
 
     const record: Partial<ImportRawRow> = {};
     columnIndexToField.forEach((field, colNumber) => {

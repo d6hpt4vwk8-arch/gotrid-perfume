@@ -49,12 +49,16 @@ export async function POST(req: NextRequest) {
   });
 
   const res = NextResponse.json({ ok: true });
-  res.cookies.set(CUSTOMER_COOKIE_NAME, await createCustomerSessionToken(customer.id), {
-    httpOnly: true,
-    secure: process.env.NODE_ENV === "production",
-    sameSite: "lax",
-    path: "/",
-    maxAge: 60 * 60 * 24 * 30,
-  });
+  res.cookies.set(
+    CUSTOMER_COOKIE_NAME,
+    await createCustomerSessionToken(customer.id, customer.sessionVersion),
+    {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === "production",
+      sameSite: "lax",
+      path: "/",
+      maxAge: 60 * 60 * 24 * 30,
+    },
+  );
   return res;
 }

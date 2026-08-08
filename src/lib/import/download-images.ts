@@ -1,9 +1,12 @@
 import { createHash } from "node:crypto";
 import { mkdir, writeFile } from "node:fs/promises";
 import path from "node:path";
+import { assertPublicHost, UnsafeUrlError } from "./ssrf-guard";
 
 const UPLOAD_ROOT = path.join(process.cwd(), "public", "uploads", "products");
 const MAX_IMAGE_BYTES = 15 * 1024 * 1024; // 15 MB guard against runaway downloads
+const FETCH_TIMEOUT_MS = 10_000;
+const MAX_REDIRECTS = 3;
 
 const EXT_BY_CONTENT_TYPE: Record<string, string> = {
   "image/jpeg": "jpg",
@@ -15,6 +18,36 @@ const EXT_BY_CONTENT_TYPE: Record<string, string> = {
 function extensionFromUrl(url: string): string | null {
   const match = /\.([a-z0-9]{2,4})(?:\?.*)?$/i.exec(url);
   return match ? match[1].toLowerCase() : null;
+}
+
+/**
+ * Resolves + fetches a URL, re-validating (SSRF) and re-fetching by hand on
+ * every redirect hop instead of letting `fetch` follow them blind — a
+ * redirect is just as capable of pointing at an internal address as the
+ * original URL.
+ */
+async function fetchPublicUrl(url: URL): Promise<Response> {
+  let current = url;
+  for (let hop = 0; ; hop++) {
+    if (current.protocol !== "http:" && current.protocol !== "https:") {
+      throw new UnsafeUrlError(`nepodporované schéma URL (${current.protocol})`);
+    }
+    await assertPublicHost(current.hostname);
+
+    const res = await fetch(current.toString(), {
+      redirect: "manual",
+      signal: AbortSignal.timeout(FETCH_TIMEOUT_MS),
+    });
+
+    if (res.status >= 300 && res.status < 400) {
+      const location = res.headers.get("location");
+      if (!location) return res;
+      if (hop >= MAX_REDIRECTS) throw new UnsafeUrlError("příliš mnoho přesměrování");
+      current = new URL(location, current);
+      continue;
+    }
+    return res;
+  }
 }
 
 /**
@@ -42,12 +75,7 @@ export async function downloadProductImages(
   for (const [index, sourceUrl] of sourceUrls.entries()) {
     try {
       const parsed = new URL(sourceUrl);
-      if (parsed.protocol !== "http:" && parsed.protocol !== "https:") {
-        errors.push(`Obrázek ${index + 1}: nepodporované schéma URL (${parsed.protocol})`);
-        continue;
-      }
-
-      const res = await fetch(parsed.toString());
+      const res = await fetchPublicUrl(parsed);
       if (!res.ok || !res.body) {
         errors.push(`Obrázek ${index + 1}: stažení selhalo (HTTP ${res.status})`);
         continue;
@@ -79,9 +107,13 @@ export async function downloadProductImages(
 
       urls.push(`/uploads/products/${encodeURIComponent(productCode)}/${filename}`);
     } catch (err) {
-      errors.push(
-        `Obrázek ${index + 1}: ${err instanceof Error ? err.message : "neznámá chyba"}`,
-      );
+      const message =
+        err instanceof UnsafeUrlError
+          ? err.message
+          : err instanceof Error
+            ? err.message
+            : "neznámá chyba";
+      errors.push(`Obrázek ${index + 1}: ${message}`);
     }
   }
 

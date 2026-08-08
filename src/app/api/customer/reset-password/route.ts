@@ -38,18 +38,25 @@ export async function POST(req: NextRequest) {
   }
 
   const passwordHash = await hashPassword(parsed.data.password);
+  // Bumping sessionVersion invalidates every other outstanding session
+  // cookie immediately (verifyCustomerSessionToken checks it) — the token
+  // issued just below uses the new value, so only this browser stays in.
   const customer = await prisma.customer.update({
     where: { id: customerId },
-    data: { passwordHash },
+    data: { passwordHash, sessionVersion: { increment: 1 } },
   });
 
   const res = NextResponse.json({ ok: true });
-  res.cookies.set(CUSTOMER_COOKIE_NAME, await createCustomerSessionToken(customer.id), {
-    httpOnly: true,
-    secure: process.env.NODE_ENV === "production",
-    sameSite: "lax",
-    path: "/",
-    maxAge: 60 * 60 * 24 * 30,
-  });
+  res.cookies.set(
+    CUSTOMER_COOKIE_NAME,
+    await createCustomerSessionToken(customer.id, customer.sessionVersion),
+    {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === "production",
+      sameSite: "lax",
+      path: "/",
+      maxAge: 60 * 60 * 24 * 30,
+    },
+  );
   return res;
 }
