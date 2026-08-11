@@ -178,6 +178,21 @@ const KNOWN_BRAND_PREFIXES = [
   "Papilion",
   "B.U",
   "Adidas",
+  "Pink Elephant",
+  "Deep Fresh",
+  "Organic Shop",
+  "Cit",
+  "Lavonea",
+  "Naturalis",
+  "Air Wick",
+  "Air Plus Botanica",
+  "Pasta del Capitano",
+  "White Glo",
+  "Atlantic",
+  "Herbal care",
+  "OralB",
+  "Garnier",
+  "Rebi Dental",
 ];
 
 function parseVatIncludedPrice(priceInclVat: number): { purchasePrice: number; sellPrice: number } {
@@ -224,12 +239,20 @@ function resolvePerfumeCategory(name: string): string {
   return `parfemy/${genderSlug}/${concentrationSlug}`;
 }
 
+// Tamda's "Sprej" (spray) bucket, like "Vůně", isn't purely air fresheners —
+// it also holds deodorant/antiperspirant body sprays (e.g. several Old Spice
+// "deodorant 150ml" entries showed up there instead of under Deodoranty).
+const DEODORANT_MARKER = /\b(deodorant|antiperspirant)\b/i;
+
 function resolveCategoryTarget(item: RawItem): { fullSlug?: string; newPath?: string } {
   if (item.category === "Vůně (Parfémy)") {
     if (AIR_FRESHENER_REFILL_MARKER.test(item.name)) {
       return { newPath: "domacnost/osvezovace-vzduchu::Pro pokoje" };
     }
     return { fullSlug: resolvePerfumeCategory(item.name) };
+  }
+  if (item.category === "Sprej" && DEODORANT_MARKER.test(item.name)) {
+    return { fullSlug: "kosmetika/telo/deodoranty" };
   }
   const mapped = CATEGORY_MAP[item.category];
   if (!mapped) return { fullSlug: "kosmetika" };
@@ -240,8 +263,17 @@ function resolveCategoryTarget(item: RawItem): { fullSlug?: string; newPath?: st
   return { fullSlug: mapped };
 }
 
-function resolveBrandName(name: string): string | null {
+// Existing DB brand names (from prior imports — SP Venture, the legacy
+// Shoptet catalog, etc.) checked before the curated list, longest first so
+// e.g. "Old Spice" wins over any shorter accidental prefix. Missing this
+// check the first time around left ~40% of new Tamda rows brandless even
+// though their brand ("Old Spice" among them) already existed in the DB.
+function resolveBrandName(name: string, existingBrandNames: string[]): string | null {
   const lower = name.toLowerCase();
+  for (const brand of existingBrandNames) {
+    const bl = brand.toLowerCase();
+    if (lower === bl || lower.startsWith(bl + " ")) return brand;
+  }
   for (const brand of KNOWN_BRAND_PREFIXES) {
     const bl = brand.toLowerCase();
     if (lower === bl || lower.startsWith(bl + " ")) return brand;
@@ -360,6 +392,10 @@ async function main() {
     return;
   }
 
+  const existingBrandNames = (await prisma.brand.findMany({ select: { name: true } }))
+    .map((b) => b.name)
+    .sort((a, b) => b.length - a.length);
+
   // Two-level categories (domacnost/osvezovace-vzduchu) need their
   // intermediate parent to exist before getOrCreateCategoryId's one-level
   // NEW: mechanism can create the leaf children under it.
@@ -410,7 +446,7 @@ async function main() {
       } else {
         const categoryTarget = resolveCategoryTarget(item);
         const categoryId = await getOrCreateCategoryId(categoryCache, categoryTarget);
-        const brandName = resolveBrandName(item.name);
+        const brandName = resolveBrandName(item.name, existingBrandNames);
         const brandId = brandName ? await resolveBrandId(brandCache, brandName) : null;
 
         const code = `TDE-${item.id}`;
