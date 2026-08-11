@@ -38,8 +38,11 @@ export async function getPerfumeStructureFacets(
     const count = await prisma.product.count({
       where: {
         visible: true,
-        ...baseWhere,
-        categories: { some: { categoryId: { in: descendantIds } } },
+        // AND (not a second `categories` key) — baseWhere already has its
+        // own `categories` filter (the current page's scope), and spreading
+        // both into one object would let this one silently clobber it,
+        // making every option count catalog-wide instead of within scope.
+        AND: [baseWhere, { categories: { some: { categoryId: { in: descendantIds } } } }],
       },
     });
     if (count > 0) genderOptions.push({ slug: cat.slug, name: cat.name, count });
@@ -59,7 +62,10 @@ export async function getPerfumeStructureFacets(
   const concentrationOptions: StructureFacetOption[] = [];
   for (const [slug, { name, ids }] of bySlug) {
     const count = await prisma.product.count({
-      where: { visible: true, ...baseWhere, categories: { some: { categoryId: { in: ids } } } },
+      where: {
+        visible: true,
+        AND: [baseWhere, { categories: { some: { categoryId: { in: ids } } } }],
+      },
     });
     if (count > 0) concentrationOptions.push({ slug, name, count });
   }

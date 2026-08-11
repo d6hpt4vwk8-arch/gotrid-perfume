@@ -18,6 +18,7 @@ import {
 } from "@/lib/product-filters";
 import { ProductCard } from "@/components/product-card";
 import { CategoryFilters } from "@/components/category-filters";
+import { Pagination } from "@/components/pagination";
 
 const PAGE_SIZE = 24;
 
@@ -61,23 +62,18 @@ export default async function CategoryPage({
 
   const totalPages = Math.ceil(total / PAGE_SIZE);
 
-  const pageHref = (page: number) => {
-    const params = new URLSearchParams();
-    filters.brandSlugs.forEach((b) => params.append("brand", b));
-    filters.scentSlugs.forEach((s) => params.append("scent", s));
-    filters.genderSlugs.forEach((g) => params.append("gender", g));
-    filters.concentrationSlugs.forEach((c) => params.append("concentration", c));
-    filters.skinTypeSlugs.forEach((s) => params.append("skinType", s));
-    filters.concernSlugs.forEach((c) => params.append("concern", c));
-    if (filters.priceMin !== null) params.set("priceMin", String(filters.priceMin));
-    if (filters.priceMax !== null) params.set("priceMax", String(filters.priceMax));
-    if (filters.inStockOnly) params.set("inStock", "1");
-    if (filters.saleOnly) params.set("sale", "1");
-    if (filters.sort !== "newest") params.set("sort", filters.sort);
-    if (page > 1) params.set("page", String(page));
-    const qs = params.toString();
-    return `/kategorie/${fullSlug}${qs ? `?${qs}` : ""}`;
-  };
+  const paginationQuery = new URLSearchParams();
+  filters.brandSlugs.forEach((b) => paginationQuery.append("brand", b));
+  filters.scentSlugs.forEach((s) => paginationQuery.append("scent", s));
+  filters.genderSlugs.forEach((g) => paginationQuery.append("gender", g));
+  filters.concentrationSlugs.forEach((c) => paginationQuery.append("concentration", c));
+  filters.skinTypeSlugs.forEach((s) => paginationQuery.append("skinType", s));
+  filters.concernSlugs.forEach((c) => paginationQuery.append("concern", c));
+  if (filters.priceMin !== null) paginationQuery.set("priceMin", String(filters.priceMin));
+  if (filters.priceMax !== null) paginationQuery.set("priceMax", String(filters.priceMax));
+  if (filters.inStockOnly) paginationQuery.set("inStock", "1");
+  if (filters.saleOnly) paginationQuery.set("sale", "1");
+  if (filters.sort !== "newest") paginationQuery.set("sort", filters.sort);
 
   return (
     <main className="mx-auto flex max-w-6xl flex-1 flex-col gap-6 px-4 py-10">
@@ -118,21 +114,12 @@ export default async function CategoryPage({
             </div>
           )}
 
-          {totalPages > 1 && (
-            <div className="flex flex-wrap justify-center gap-2 pt-4">
-              {Array.from({ length: totalPages }, (_, i) => i + 1).map((p) => (
-                <Link
-                  key={p}
-                  href={pageHref(p)}
-                  className={`rounded-sm px-3 py-1 text-sm ${
-                    p === filters.page ? "bg-ink text-white" : "border border-line text-ink"
-                  }`}
-                >
-                  {p}
-                </Link>
-              ))}
-            </div>
-          )}
+          <Pagination
+            totalPages={totalPages}
+            currentPage={filters.page}
+            basePath={`/kategorie/${fullSlug}`}
+            queryString={paginationQuery.toString()}
+          />
         </div>
       </div>
     </main>
