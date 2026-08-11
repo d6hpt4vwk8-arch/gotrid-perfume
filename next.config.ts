@@ -5,6 +5,15 @@ import productRedirects from "./src/lib/redirects/product-redirects.json";
 // here — it needs a fresh nonce on every request (script-src has no
 // 'unsafe-inline'), which a static header list can't produce.
 const nextConfig: NextConfig = {
+  images: {
+    // All product photos are self-hosted originals under /uploads (already
+    // web-sized, no resizing needed) — running them through Vercel's paid
+    // per-image optimizer isn't worth it, and the ~7800-photo catalog blew
+    // through the plan's monthly optimization quota (402
+    // OPTIMIZED_IMAGE_REQUEST_PAYMENT_REQUIRED on new images) the day it was
+    // imported. Serve them unoptimized straight from the CDN instead.
+    unoptimized: true,
+  },
   async headers() {
     return [
       {
