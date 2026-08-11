@@ -82,20 +82,20 @@ function isSkipped(category: string): boolean {
 const CATEGORY_MAP: Record<string, string> = {
   "PERFUMES | Women's perfumes | Eau de perfumes": "parfemy/damske-parfemy/parfemovane-vody",
   "PERFUMES | Women's perfumes | Eau de toilettes": "parfemy/damske-parfemy/toaletni-vody",
-  "PERFUMES | Women's perfumes | Niche perfumes": "parfemy/damske-parfemy",
+  "PERFUMES | Women's perfumes | Niche perfumes": "nisove-parfemy",
   "PERFUMES | Women's perfumes | Gift sets": "parfemy/darkove-sady",
   "PERFUMES | Women's perfumes | Perfume testers": "parfemy/damske-parfemy",
   "PERFUMES | Women's perfumes": "parfemy/damske-parfemy",
   "PERFUMES | Men's perfumes  | Eau de perfumes": "parfemy/panske-parfemy/parfemovane-vody",
   "PERFUMES | Men's perfumes  | Eau de toilettes": "parfemy/panske-parfemy/toaletni-vody",
-  "PERFUMES | Men's perfumes  | Niche perfumes": "parfemy/panske-parfemy",
+  "PERFUMES | Men's perfumes  | Niche perfumes": "nisove-parfemy",
   "PERFUMES | Men's perfumes  | Gift sets": "parfemy/darkove-sady",
   "PERFUMES | Men's perfumes  | Eau de colognes": "parfemy/panske-parfemy",
   "PERFUMES | Men's perfumes  | Perfume testers": "parfemy/panske-parfemy",
   "PERFUMES | Men's perfumes ": "parfemy/panske-parfemy",
   "PERFUMES | Unisex perfumes | Eau de perfumes": "parfemy/unisex-parfemy/parfemovane-vody",
   "PERFUMES | Unisex perfumes | Eau de toilettes": "parfemy/unisex-parfemy/toaletni-vody",
-  "PERFUMES | Unisex perfumes | Niche perfumes": "parfemy/unisex-parfemy",
+  "PERFUMES | Unisex perfumes | Niche perfumes": "nisove-parfemy",
   "PERFUMES | Unisex perfumes | Gift sets": "parfemy/darkove-sady",
   "PERFUMES | Unisex perfumes": "parfemy/unisex-parfemy",
   "PERFUMES | Car and house perfumes | Scented candles": "vonne-svicky",
@@ -254,7 +254,11 @@ function resolveCategoryTarget(category: string): { fullSlug?: string; newPath?:
   return { fullSlug: topFallback[top] ?? "kosmetika" };
 }
 
-const PERFUME_MARKERS = /\b(EDP|EDT|EDC|parf[ée]m|toaletn[íi] voda|cologne|parf[ée]movan[áa])\b/i;
+// Matches both Czech ("parfém") and international ("Parfum") spellings —
+// the first import run only recognized the Czech one and silently dropped
+// "Nové"-branch perfumes named e.g. "... Elixir Parfum W 50ml" into bare
+// Kosmetika (fixed after the fact by scripts/fix-spv-categories.ts).
+const PERFUME_MARKERS = /\b(EDP|EDT|EDC|parf[uée]m|toaletn[íi] voda|cologne|parf[ée]movan[áa]|elixir|extrait)\b/i;
 
 function resolveNoveCategory(productName: string): { fullSlug?: string; newPath?: string } {
   return PERFUME_MARKERS.test(productName) ? { fullSlug: "parfemy" } : { fullSlug: "kosmetika" };
