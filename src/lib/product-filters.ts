@@ -73,12 +73,21 @@ export function parseFilterParams(params: CategoryFilterParams): ParsedFilters {
  * active) — passed in rather than derived here since resolving it requires a
  * DB round trip.
  */
+/**
+ * Same-fragrance-different-size products (scripts/group-product-variants.ts)
+ * only get one grid card — the rest are reachable via its size selector on
+ * the product page, not as their own listing entries.
+ */
+export const primaryVariantWhere: Prisma.ProductWhereInput = {
+  OR: [{ variantGroupKey: null }, { isPrimaryVariant: true }],
+};
+
 export function buildProductWhere(
   baseWhere: Prisma.ProductWhereInput,
   filters: ParsedFilters,
   perfumeCategoryIds?: string[] | null,
 ): Prisma.ProductWhereInput {
-  const and: Prisma.ProductWhereInput[] = [baseWhere];
+  const and: Prisma.ProductWhereInput[] = [baseWhere, primaryVariantWhere];
 
   if (filters.brandSlugs.length > 0) {
     and.push({ brand: { slug: { in: filters.brandSlugs } } });

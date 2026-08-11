@@ -81,6 +81,13 @@ model Product {
   stock   Int     @default(0)
   visible Boolean @default(true)
 
+  // Same-fragrance-different-size grouping (scripts/group-product-variants.ts).
+  // Flat string key rather than a join table — null means "no sibling sizes".
+  // isPrimaryVariant marks which one gets its own grid card; the others are
+  // only reachable via its size selector on the product page.
+  variantGroupKey  String?
+  isPrimaryVariant Boolean @default(true)
+
   reviews       Review[]
   orderItems    OrderItem[]
   stockAlerts   StockAlert[]
@@ -94,6 +101,7 @@ model Product {
   @@index([brandId])
   @@index([slug])
   @@index([ean])
+  @@index([variantGroupKey])
 }
 
 // ---------------------------------------------------------------------------

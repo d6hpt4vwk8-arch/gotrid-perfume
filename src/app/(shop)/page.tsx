@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { prisma } from "@/lib/prisma";
 import { getCategoryNavTree } from "@/lib/categories.server";
+import { primaryVariantWhere } from "@/lib/product-filters";
 import { ProductCard } from "@/components/product-card";
 
 async function getBestsellers() {
@@ -17,7 +18,7 @@ async function getBestsellers() {
 
   const ids = grouped.map((g) => g.productId!).filter(Boolean);
   const products = await prisma.product.findMany({
-    where: { id: { in: ids }, visible: true },
+    where: { id: { in: ids }, visible: true, ...primaryVariantWhere },
     include: { brand: true, images: { orderBy: { sortOrder: "asc" }, take: 1 } },
   });
   const byId = new Map(products.map((p) => [p.id, p]));
@@ -28,7 +29,7 @@ export default async function HomePage() {
   const [categories, newestProducts, bestsellers, latestReviews] = await Promise.all([
     getCategoryNavTree(),
     prisma.product.findMany({
-      where: { visible: true },
+      where: { visible: true, ...primaryVariantWhere },
       orderBy: { createdAt: "desc" },
       take: 12,
       include: { brand: true, images: { orderBy: { sortOrder: "asc" }, take: 1 } },

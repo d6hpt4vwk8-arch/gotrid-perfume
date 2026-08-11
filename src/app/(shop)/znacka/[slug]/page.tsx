@@ -1,5 +1,6 @@
 import { notFound } from "next/navigation";
 import { prisma } from "@/lib/prisma";
+import { primaryVariantWhere } from "@/lib/product-filters";
 import { ProductCard } from "@/components/product-card";
 
 export default async function BrandPage({
@@ -12,7 +13,7 @@ export default async function BrandPage({
   if (!brand) notFound();
 
   const products = await prisma.product.findMany({
-    where: { visible: true, brandId: brand.id },
+    where: { visible: true, brandId: brand.id, ...primaryVariantWhere },
     orderBy: { createdAt: "desc" },
     include: { brand: true, images: { orderBy: { sortOrder: "asc" }, take: 1 } },
   });

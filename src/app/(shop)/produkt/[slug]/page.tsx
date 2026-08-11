@@ -11,9 +11,11 @@ import { ProductCard } from "@/components/product-card";
 import { WishlistButton } from "@/components/wishlist-button";
 import { StockAlertForm } from "@/components/stock-alert-form";
 import { getProductSpecs } from "@/lib/product-specs";
+import { parseVolumeMl, formatVolumeLabel } from "@/lib/parse-volume";
 import { estimateDeliveryDate, formatDeliveryEstimate } from "@/lib/delivery-estimate";
 import { ReviewForm } from "@/components/review-form";
 import { ProductGallery } from "@/components/product-gallery";
+import { primaryVariantWhere } from "@/lib/product-filters";
 
 async function getProduct(slug: string) {
   return prisma.product.findUnique({
@@ -27,6 +29,16 @@ async function getProduct(slug: string) {
   });
 }
 
+/** Other bottle sizes of this same fragrance (scripts/group-product-variants.ts) — includes the current product itself, sorted smallest to largest. */
+async function getSizeVariants(variantGroupKey: string | null) {
+  if (!variantGroupKey) return [];
+  const products = await prisma.product.findMany({
+    where: { variantGroupKey },
+    select: { id: true, slug: true, name: true, stock: true },
+  });
+  return products.sort((a, b) => (parseVolumeMl(a.name) ?? 0) - (parseVolumeMl(b.name) ?? 0));
+}
+
 async function getRelatedProducts(productId: string, categoryIds: string[]) {
   if (categoryIds.length === 0) return [];
   return prisma.product.findMany({
@@ -34,6 +46,7 @@ async function getRelatedProducts(productId: string, categoryIds: string[]) {
       id: { not: productId },
       visible: true,
       categories: { some: { categoryId: { in: categoryIds } } },
+      ...primaryVariantWhere,
     },
     include: { brand: true, images: { orderBy: { sortOrder: "asc" }, take: 1 } },
     orderBy: { createdAt: "desc" },
@@ -64,10 +77,13 @@ export default async function ProductPage({
   const product = await getProduct(slug);
   if (!product) notFound();
 
-  const relatedProducts = await getRelatedProducts(
-    product.id,
-    product.categories.map((c) => c.categoryId),
-  );
+  const [relatedProducts, sizeVariants] = await Promise.all([
+    getRelatedProducts(
+      product.id,
+      product.categories.map((c) => c.categoryId),
+    ),
+    getSizeVariants(product.variantGroupKey),
+  ]);
 
   const avgRating =
     product.reviews.length > 0
@@ -148,6 +164,41 @@ export default async function ProductPage({
               </span>
             )}
           </div>
+
+          {sizeVariants.length > 1 && (
+            <div className="flex flex-col gap-2">
+              <span className="text-[11px] font-semibold tracking-wide text-accent-2 uppercase">
+                Velikost
+              </span>
+              <div className="flex flex-wrap gap-2">
+                {sizeVariants.map((variant) => {
+                  const label = formatVolumeLabel(variant.name) ?? variant.name;
+                  if (variant.id === product.id) {
+                    return (
+                      <span
+                        key={variant.id}
+                        className="rounded-sm border border-ink bg-ink px-3 py-1.5 text-sm font-medium text-white"
+                      >
+                        {label}
+                      </span>
+                    );
+                  }
+                  return (
+                    <Link
+                      key={variant.id}
+                      href={`/produkt/${variant.slug}`}
+                      className="rounded-sm border border-line px-3 py-1.5 text-sm font-medium text-ink hover:border-accent"
+                    >
+                      {label}
+                      {variant.stock <= 0 && (
+                        <span className="text-accent-2"> (vyprodáno)</span>
+                      )}
+                    </Link>
+                  );
+                })}
+              </div>
+            </div>
+          )}
 
           <span
             className={`flex items-center gap-1.5 text-sm ${product.stock > 0 ? "text-ok" : "text-accent-2"}`}
