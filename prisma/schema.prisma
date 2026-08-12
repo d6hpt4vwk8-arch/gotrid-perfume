@@ -438,3 +438,28 @@ model AdminActivityLog {
   @@index([createdAt])
   @@index([entityType, entityId])
 }
+
+// ---------------------------------------------------------------------------
+// BalikovnaPoint — Balíkovna pickup-point directory, synced from Česká
+// pošta's own e-shop-integration data feed (napostu.ceskaposta.cz) via
+// scripts/sync-balikovna-points.ts. `id` is the feed's own per-location code
+// (its "PSC" field — not a real postal code, just their stable row ID).
+// Only actual pickup points are stored (kind "balíkovna partner" /
+// "balíkovna-BOX") — plain post offices and internal depots from the same
+// feed are skipped since they're a different delivery method.
+// ---------------------------------------------------------------------------
+
+model BalikovnaPoint {
+  id           String   @id
+  name         String
+  address      String
+  kind         String
+  lat          Float
+  lng          Float
+  city         String
+  cityPart     String
+  openingHours Json?
+  updatedAt    DateTime @updatedAt
+
+  @@index([city])
+}

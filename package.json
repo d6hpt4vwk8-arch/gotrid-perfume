@@ -13,12 +13,14 @@
     "db:studio": "prisma studio",
     "import:xlsx": "tsx scripts/import-xlsx.ts",
     "tag:scent-families": "tsx scripts/tag-scent-families.ts",
-    "seed:cosmetics-facets": "tsx scripts/seed-cosmetics-facets.ts"
+    "seed:cosmetics-facets": "tsx scripts/seed-cosmetics-facets.ts",
+    "sync:balikovna": "tsx scripts/sync-balikovna-points.ts"
   },
   "dependencies": {
     "@prisma/client": "^6",
     "@react-pdf/renderer": "^4",
     "exceljs": "^4",
+    "fast-xml-parser": "^5.10.1",
     "next": "15.5.22",
     "next-intl": "^4.13.6",
     "qrcode": "^1",
