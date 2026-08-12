@@ -1,4 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
+import createIntlMiddleware from "next-intl/middleware";
+import { routing } from "@/i18n/routing";
 import { ADMIN_COOKIE_NAME, verifySessionToken } from "@/lib/admin-auth";
 
 const PUBLIC_PATHS = new Set(["/admin/login", "/api/admin/login", "/api/admin/logout"]);
@@ -28,6 +30,25 @@ function buildCsp(nonce: string): string {
   ].join("; ");
 }
 
+const intlMiddleware = createIntlMiddleware(routing);
+
+// next-intl's middleware builds its own NextResponse internally (rewrite
+// for the default locale, redirect for prefixed locales), so the usual
+// `NextResponse.next({ request: { headers } })` shortcut can't be used to
+// forward our nonce header through it. This reapplies the same
+// request-header-override mechanism Next.js itself uses for that shortcut
+// (see node_modules/next/dist/server/web/spec-extension/response.js,
+// handleMiddlewareField) directly to whatever response next-intl returns.
+function overrideRequestHeaders(response: NextResponse, headers: Headers): NextResponse {
+  const keys: string[] = [];
+  headers.forEach((value, key) => {
+    response.headers.set(`x-middleware-request-${key}`, value);
+    keys.push(key);
+  });
+  response.headers.set("x-middleware-override-headers", keys.join(","));
+  return response;
+}
+
 export async function middleware(req: NextRequest) {
   const { pathname } = req.nextUrl;
 
@@ -53,6 +74,25 @@ export async function middleware(req: NextRequest) {
       res.headers.set("Content-Security-Policy", csp);
       return res;
     }
+  }
+
+  // Only the storefront (routed under src/app/[locale]/(shop)) is
+  // locale-aware — /admin, /api, /feeds, and the root-level sitemap/robots
+  // routes all live outside [locale] and must never be rewritten/redirected
+  // by next-intl (next-intl would otherwise try to match them against a
+  // locale-prefixed route that doesn't exist and 404 them).
+  const NON_LOCALE_EXACT_PATHS = new Set(["/sitemap.xml", "/robots.txt"]);
+  const isLocaleAware =
+    !pathname.startsWith("/admin") &&
+    !pathname.startsWith("/api") &&
+    !pathname.startsWith("/feeds") &&
+    !NON_LOCALE_EXACT_PATHS.has(pathname);
+
+  if (isLocaleAware) {
+    const response = intlMiddleware(req);
+    overrideRequestHeaders(response, requestHeaders);
+    response.headers.set("Content-Security-Policy", csp);
+    return response;
   }
 
   const response = NextResponse.next({ request: { headers: requestHeaders } });

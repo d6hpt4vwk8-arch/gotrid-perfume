@@ -1,5 +1,8 @@
 import type { NextConfig } from "next";
+import createNextIntlPlugin from "next-intl/plugin";
 import productRedirects from "./src/lib/redirects/product-redirects.json";
+
+const withNextIntl = createNextIntlPlugin();
 
 // Content-Security-Policy is set per-request in src/middleware.ts instead of
 // here — it needs a fresh nonce on every request (script-src has no
@@ -58,4 +61,4 @@ const nextConfig: NextConfig = {
   },
 };
 
-export default nextConfig;
+export default withNextIntl(nextConfig);
