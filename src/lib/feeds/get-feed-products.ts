@@ -1,10 +1,12 @@
 import { prisma } from "@/lib/prisma";
+import { feedDescription } from "./xml";
 
 export interface FeedProduct {
   code: string;
   name: string;
   slug: string;
-  description: string | null;
+  /** Always non-empty and unique across the returned list — see feedDescription()/disambiguateDescriptions() below. */
+  description: string;
   price: number;
   compareAtPrice: number | null;
   stock: number;
@@ -54,7 +56,7 @@ export async function getFeedProducts(): Promise<FeedProduct[]> {
     code: p.code,
     name: p.name,
     slug: p.slug,
-    description: p.description,
+    description: feedDescription(p),
     price: Number(p.price),
     compareAtPrice: p.compareAtPrice ? Number(p.compareAtPrice) : null,
     stock: p.stock,
@@ -66,7 +68,7 @@ export async function getFeedProducts(): Promise<FeedProduct[]> {
       : null,
   }));
 
-  return disambiguateNames(feedProducts);
+  return disambiguateDescriptions(disambiguateNames(feedProducts));
 }
 
 // A handful of products (different EAN/price, genuinely distinct SKUs —
@@ -86,5 +88,25 @@ function disambiguateNames(products: FeedProduct[]): FeedProduct[] {
     const index = (seen.get(p.name) ?? 0) + 1;
     seen.set(p.name, index);
     return index === 1 ? p : { ...p, name: `${p.name} (${p.code})` };
+  });
+}
+
+// Several supplier feeds (mainly SP Venture) reuse identical boilerplate
+// description text across genuinely distinct products — e.g. 62 different
+// perfumes whose entire DESCRIPTION is just the literal string "Eau De
+// Parfum". Heureka/Zboží both flag repeated DESCRIPTION values. Rather than
+// fabricate per-product copy, every description beyond the first in a
+// collision group gets the product's own (already-disambiguated) name
+// appended — true, sourced-from-the-product-itself text, not invented.
+function disambiguateDescriptions(products: FeedProduct[]): FeedProduct[] {
+  const counts = new Map<string, number>();
+  for (const p of products) counts.set(p.description, (counts.get(p.description) ?? 0) + 1);
+
+  const seen = new Map<string, number>();
+  return products.map((p) => {
+    if ((counts.get(p.description) ?? 0) < 2) return p;
+    const index = (seen.get(p.description) ?? 0) + 1;
+    seen.set(p.description, index);
+    return index === 1 ? p : { ...p, description: `${p.description} — ${p.name}` };
   });
 }

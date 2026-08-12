@@ -1,5 +1,5 @@
 import type { FeedProduct } from "./get-feed-products";
-import { cdata, escapeXml, feedDescription, isValidEan } from "./xml";
+import { cdata, escapeXml, isValidEan } from "./xml";
 import { SITE_URL } from "@/lib/site";
 
 /**
@@ -17,7 +17,7 @@ export function buildGoogleShoppingRss(products: FeedProduct[]): string {
       return `    <item>
       <g:id>${escapeXml(p.code)}</g:id>
       <title>${escapeXml(p.name)}</title>
-      <description>${cdata(feedDescription(p))}</description>
+      <description>${cdata(p.description)}</description>
       <link>${escapeXml(url)}</link>
       ${image ? `<g:image_link>${escapeXml(image)}</g:image_link>` : ""}
 ${extraImages.map((img) => `      <g:additional_image_link>${escapeXml(img)}</g:additional_image_link>`).join("\n")}

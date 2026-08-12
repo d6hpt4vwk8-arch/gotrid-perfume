@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import { getFeedProducts } from "@/lib/feeds/get-feed-products";
-import { cdata, escapeXml, feedDescription, isValidEan } from "@/lib/feeds/xml";
+import { cdata, escapeXml, isValidEan } from "@/lib/feeds/xml";
 import { SITE_URL } from "@/lib/site";
 import { getSettings } from "@/lib/settings.server";
 
@@ -33,7 +33,7 @@ export async function GET() {
       return `  <SHOPITEM>
     <ITEM_ID>${escapeXml(p.code)}</ITEM_ID>
     <PRODUCTNAME>${escapeXml(p.name)}</PRODUCTNAME>
-    <DESCRIPTION>${cdata(feedDescription(p))}</DESCRIPTION>
+    <DESCRIPTION>${cdata(p.description)}</DESCRIPTION>
     <URL>${escapeXml(url)}</URL>
     ${mainImage ? `<IMGURL>${escapeXml(mainImage)}</IMGURL>` : ""}
 ${altImages.map((img) => `    <IMGURL_ALTERNATIVE>${escapeXml(img)}</IMGURL_ALTERNATIVE>`).join("\n")}
