@@ -4,6 +4,7 @@ import { SiteFooter } from "@/components/site-footer";
 import { Providers } from "@/components/providers";
 import { CookieBanner } from "@/components/cookie-banner";
 import { MetaPixel } from "@/components/meta-pixel";
+import { SklikPixel } from "@/components/sklik-pixel";
 import { BenefitsBar } from "@/components/benefits-bar";
 import { getSettings } from "@/lib/settings.server";
 
@@ -32,6 +33,7 @@ export default async function ShopLayout({ children }: { children: React.ReactNo
       <script nonce={nonce} dangerouslySetInnerHTML={{ __html: CONSENT_MODE_BOOTSTRAP }} />
       <Providers freeShippingThreshold={settings.freeShippingThreshold}>
         <MetaPixel />
+        <SklikPixel />
         <BenefitsBar />
         <SiteHeader />
         {children}
