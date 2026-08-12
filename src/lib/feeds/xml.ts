@@ -19,3 +19,13 @@ export function stripHtml(html: string): string {
     .replace(/\s+/g, " ")
     .trim();
 }
+
+// Only ~11% of products have a real description — Zboží.cz's schema treats
+// DESCRIPTION as a required element per item (unlike Heureka's, which
+// tolerates omitting it), so a missing description fails their feed
+// validator outright ("Expecting an element DESCRIPTION, got nothing").
+// Falling back to the product name keeps every item's DESCRIPTION non-empty
+// without inventing content.
+export function feedDescription(product: { name: string; description: string | null }): string {
+  return product.description ? stripHtml(product.description).slice(0, 5000) : product.name;
+}
