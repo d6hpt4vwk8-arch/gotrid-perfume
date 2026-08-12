@@ -9,7 +9,14 @@ declare global {
   interface Window {
     rc?: {
       retargetingHit: (conf: { rtgId: number; consent: 0 | 1 }) => void;
-      conversionHit: (conf: { id: number; value?: number; orderId?: string; consent: 0 | 1 }) => void;
+      conversionHit: (conf: {
+        id?: number;
+        zboziId?: number;
+        zboziType?: "standard" | "limited" | "sandbox";
+        value?: number;
+        orderId?: string;
+        consent: 0 | 1;
+      }) => void;
     };
   }
 }

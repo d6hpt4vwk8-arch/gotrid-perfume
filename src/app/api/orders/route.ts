@@ -7,6 +7,7 @@ import {
   sendOwnerNewOrderNotification,
 } from "@/lib/email/send-order-emails";
 import { sendMetaCapiEvent } from "@/lib/analytics/meta-capi";
+import { sendZboziConversion } from "@/lib/analytics/zbozi-conversion";
 import { SITE_URL } from "@/lib/site";
 import { isRateLimited, recordRateLimitHit, getClientIp } from "@/lib/rate-limit";
 import { getCurrentCustomerId } from "@/lib/customer/get-current-customer";
@@ -107,6 +108,22 @@ export async function POST(req: NextRequest) {
       num_items: order.items.reduce((sum, i) => sum + i.qty, 0),
     },
   }).catch((err) => console.error(`[meta-capi] purchase event failed for ${order.number}`, err));
+
+  void sendZboziConversion({
+    orderId: order.number,
+    items: order.items.map((i) => ({
+      productId: i.productId,
+      name: i.name,
+      ean: i.ean,
+      qty: i.qty,
+      unitPrice: Number(i.unitPrice),
+    })),
+    email: order.email,
+    deliveryType: order.shippingMethod,
+    deliveryPrice: Number(order.shippingPrice),
+    otherCosts: Number(order.discountAmount) > 0 ? -Number(order.discountAmount) : undefined,
+    paymentType: order.paymentMethod,
+  }).catch((err) => console.error(`[zbozi-conversion] failed for ${order.number}`, err));
 
   return NextResponse.json({ orderNumber: order.number, accessToken: order.accessToken });
 }
