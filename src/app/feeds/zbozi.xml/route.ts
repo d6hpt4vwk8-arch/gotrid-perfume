@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import { getFeedProducts } from "@/lib/feeds/get-feed-products";
-import { cdata, escapeXml, feedDescription } from "@/lib/feeds/xml";
+import { cdata, escapeXml, feedDescription, isValidEan } from "@/lib/feeds/xml";
 import { SITE_URL } from "@/lib/site";
 import { getSettings } from "@/lib/settings.server";
 
@@ -26,7 +26,7 @@ export async function GET() {
     ${image ? `<IMGURL>${escapeXml(image)}</IMGURL>` : ""}
     <PRICE_VAT>${p.price.toFixed(2)}</PRICE_VAT>
     ${p.brandName ? `<MANUFACTURER>${escapeXml(p.brandName)}</MANUFACTURER>` : ""}
-    ${p.ean ? `<EAN>${escapeXml(p.ean)}</EAN>` : ""}
+    ${p.ean && isValidEan(p.ean) ? `<EAN>${escapeXml(p.ean)}</EAN>` : ""}
     ${p.categoryBreadcrumb ? `<CATEGORYTEXT>${escapeXml(p.categoryBreadcrumb)}</CATEGORYTEXT>` : ""}
     <DELIVERY_DATE>${p.stock > 0 ? "1" : "7"}</DELIVERY_DATE>
     <DELIVERY>

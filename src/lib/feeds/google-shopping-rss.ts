@@ -1,5 +1,5 @@
 import type { FeedProduct } from "./get-feed-products";
-import { cdata, escapeXml, feedDescription } from "./xml";
+import { cdata, escapeXml, feedDescription, isValidEan } from "./xml";
 import { SITE_URL } from "@/lib/site";
 
 /**
@@ -25,9 +25,9 @@ ${extraImages.map((img) => `      <g:additional_image_link>${escapeXml(img)}</g:
       <g:price>${p.price.toFixed(2)} CZK</g:price>
       <g:condition>new</g:condition>
       ${p.brandName ? `<g:brand>${escapeXml(p.brandName)}</g:brand>` : ""}
-      ${p.ean ? `<g:gtin>${escapeXml(p.ean)}</g:gtin>` : ""}
+      ${p.ean && isValidEan(p.ean) ? `<g:gtin>${escapeXml(p.ean)}</g:gtin>` : ""}
       ${p.categoryBreadcrumb ? `<g:product_type>${escapeXml(p.categoryBreadcrumb)}</g:product_type>` : ""}
-      <g:identifier_exists>${p.ean ? "true" : "false"}</g:identifier_exists>
+      <g:identifier_exists>${p.ean && isValidEan(p.ean) ? "true" : "false"}</g:identifier_exists>
     </item>`;
     })
     .join("\n");
