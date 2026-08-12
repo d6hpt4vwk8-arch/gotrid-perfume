@@ -50,7 +50,7 @@ export async function getFeedProducts(): Promise<FeedProduct[]> {
     buildCategoryBreadcrumbs(),
   ]);
 
-  return products.map((p) => ({
+  const feedProducts = products.map((p) => ({
     code: p.code,
     name: p.name,
     slug: p.slug,
@@ -65,4 +65,26 @@ export async function getFeedProducts(): Promise<FeedProduct[]> {
       ? (breadcrumbs.get(p.categories[0].categoryId) ?? null)
       : null,
   }));
+
+  return disambiguateNames(feedProducts);
+}
+
+// A handful of products (different EAN/price, genuinely distinct SKUs —
+// e.g. several car-freshener scent refills that were never given
+// distinguishing names on import) share an identical name string.
+// Zboží.cz's feed validator rejects a feed with any duplicate PRODUCTNAME
+// value, so — for feed output only, the stored Product.name / storefront
+// display is untouched — every name beyond the first in a collision group
+// gets its product code appended to make it unique.
+function disambiguateNames(products: FeedProduct[]): FeedProduct[] {
+  const counts = new Map<string, number>();
+  for (const p of products) counts.set(p.name, (counts.get(p.name) ?? 0) + 1);
+
+  const seen = new Map<string, number>();
+  return products.map((p) => {
+    if ((counts.get(p.name) ?? 0) < 2) return p;
+    const index = (seen.get(p.name) ?? 0) + 1;
+    seen.set(p.name, index);
+    return index === 1 ? p : { ...p, name: `${p.name} (${p.code})` };
+  });
 }
