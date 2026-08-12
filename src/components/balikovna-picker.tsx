@@ -27,6 +27,11 @@ export function BalikovnaPicker({
   const [results, setResults] = useState<BalikovnaResult[]>([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  // Once a point is picked, collapse to a summary (mirrors ZasilkovnaPicker's
+  // widget closing after a pick) instead of leaving the open list sitting
+  // there — otherwise there's no visual confirmation a click "stuck", since
+  // nothing but a text line below the list changes.
+  const [reopened, setReopened] = useState(false);
   const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   useEffect(() => {
@@ -82,6 +87,28 @@ export function BalikovnaPicker({
     );
   }
 
+  function handleSelect(p: BalikovnaResult) {
+    onSelect({ id: p.id, name: `${p.name}, ${p.address}` });
+    setReopened(false);
+  }
+
+  if (selectedPointName && !reopened) {
+    return (
+      <div className="flex flex-col gap-2">
+        <div className="flex items-center justify-between rounded-sm border border-ok/40 bg-ok/10 px-3 py-2 text-sm">
+          <span className="text-ink">Vybráno: {selectedPointName}</span>
+          <button
+            type="button"
+            onClick={() => setReopened(true)}
+            className="shrink-0 text-xs text-accent-2 underline hover:text-accent"
+          >
+            Změnit výdejní místo
+          </button>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="flex flex-col gap-2">
       <div className="flex gap-2">
@@ -109,7 +136,7 @@ export function BalikovnaPicker({
             <li key={p.id}>
               <button
                 type="button"
-                onClick={() => onSelect({ id: p.id, name: `${p.name}, ${p.address}` })}
+                onClick={() => handleSelect(p)}
                 className="flex w-full flex-col gap-0.5 border-b border-line px-3 py-2 text-left text-sm last:border-b-0 hover:bg-line/30"
               >
                 <span className="font-medium text-ink">
@@ -128,8 +155,6 @@ export function BalikovnaPicker({
           ))}
         </ul>
       )}
-
-      {selectedPointName && <p className="text-sm text-ink/80">Vybráno: {selectedPointName}</p>}
     </div>
   );
 }

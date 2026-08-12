@@ -43,7 +43,10 @@ export async function GET(req: NextRequest) {
         ],
       },
       select: { id: true, name: true, address: true, kind: true, city: true },
-      orderBy: { city: "asc" },
+      // Secondary sort by id: without a stable tiebreaker, Postgres can
+      // return same-city rows in a different order across otherwise
+      // identical requests, making the list reshuffle while typing.
+      orderBy: [{ city: "asc" }, { id: "asc" }],
       take: RESULT_LIMIT,
     });
     return NextResponse.json({ points });
