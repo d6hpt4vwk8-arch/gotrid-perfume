@@ -77,16 +77,22 @@ export async function middleware(req: NextRequest) {
   }
 
   // Only the storefront (routed under src/app/[locale]/(shop)) is
-  // locale-aware — /admin, /api, /feeds, and the root-level sitemap/robots
-  // routes all live outside [locale] and must never be rewritten/redirected
-  // by next-intl (next-intl would otherwise try to match them against a
-  // locale-prefixed route that doesn't exist and 404 them).
-  const NON_LOCALE_EXACT_PATHS = new Set(["/sitemap.xml", "/robots.txt"]);
+  // locale-aware — /admin, /api, /feeds, root-level routes like
+  // sitemap.xml/robots.txt, and every static file under /public (favicon,
+  // logo, and critically /uploads/products/** — ALL product images) live
+  // outside [locale] and must never be rewritten/redirected by next-intl.
+  // Static files are excluded generally (anything with a file extension in
+  // its last path segment) rather than by an exact-path list: a hardcoded
+  // list silently stops covering new assets (this is exactly how
+  // /uploads/** — i.e. every product photo on the site — went unnoticed
+  // and 404'd site-wide for hours after the [locale] migration, since
+  // /uploads wasn't on the original list).
+  const hasFileExtension = /\.[a-zA-Z0-9]+$/.test(pathname);
   const isLocaleAware =
     !pathname.startsWith("/admin") &&
     !pathname.startsWith("/api") &&
     !pathname.startsWith("/feeds") &&
-    !NON_LOCALE_EXACT_PATHS.has(pathname);
+    !hasFileExtension;
 
   if (isLocaleAware) {
     const response = intlMiddleware(req);
