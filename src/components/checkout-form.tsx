@@ -8,6 +8,7 @@ import { formatPrice } from "@/lib/format";
 import { PAYMENT_LABELS, SHIPPING_LABELS, getShippingPrice } from "@/lib/shipping";
 import type { ShopSettings } from "@/lib/settings.server";
 import { ZasilkovnaPicker } from "@/components/zasilkovna-picker";
+import { BalikovnaPicker } from "@/components/balikovna-picker";
 import { CustomerLogoutButton } from "@/components/customer/logout-button";
 import { TrustBadges } from "@/components/trust-badges";
 import type { Customer } from "@prisma/client";
@@ -69,10 +70,12 @@ export function CheckoutForm({
   );
   const total = itemsTotal + shippingPrice - (coupon?.discountAmount ?? 0);
 
+  const usesPickupPoint = shippingMethod === "ZASILKOVNA" || shippingMethod === "BALIKOVNA";
+
   const contactDone = Boolean(email.trim() && phone.trim() && firstName.trim() && lastName.trim());
   const shippingDone =
     contactDone &&
-    (shippingMethod === "ZASILKOVNA"
+    (usesPickupPoint
       ? Boolean(pickupPoint)
       : Boolean(street.trim() && city.trim() && postalCode.trim()));
   // Payment always has a pre-selected default, so it only counts as "reached"
@@ -137,10 +140,10 @@ export function CheckoutForm({
           lastName,
           shippingMethod,
           paymentMethod,
-          pickupPointId: shippingMethod === "ZASILKOVNA" ? pickupPoint?.id : undefined,
-          shippingStreet: shippingMethod !== "ZASILKOVNA" ? street : undefined,
-          shippingCity: shippingMethod !== "ZASILKOVNA" ? city : undefined,
-          shippingPostalCode: shippingMethod !== "ZASILKOVNA" ? postalCode : undefined,
+          pickupPointId: usesPickupPoint ? pickupPoint?.id : undefined,
+          shippingStreet: !usesPickupPoint ? street : undefined,
+          shippingCity: !usesPickupPoint ? city : undefined,
+          shippingPostalCode: !usesPickupPoint ? postalCode : undefined,
           items: items.map((i) => ({ productId: i.productId, qty: i.qty })),
           marketingConsent: Boolean(consent?.marketing),
           couponCode: coupon?.code,
@@ -237,7 +240,13 @@ export function CheckoutForm({
                 type="radio"
                 name="shippingMethod"
                 checked={shippingMethod === method}
-                onChange={() => setShippingMethod(method)}
+                onChange={() => {
+                  setShippingMethod(method);
+                  // Point IDs are method-specific (Zásilkovna's widget ID vs.
+                  // a Balíkovna address string) — carrying a stale selection
+                  // across a method switch would submit it under the wrong method.
+                  setPickupPoint(null);
+                }}
                 className="accent-accent"
               />
               {SHIPPING_LABELS[method]} —{" "}
@@ -250,6 +259,13 @@ export function CheckoutForm({
           {shippingMethod === "ZASILKOVNA" ? (
             <div className="pt-2">
               <ZasilkovnaPicker
+                selectedPointName={pickupPoint?.name ?? null}
+                onSelect={setPickupPoint}
+              />
+            </div>
+          ) : shippingMethod === "BALIKOVNA" ? (
+            <div className="pt-2">
+              <BalikovnaPicker
                 selectedPointName={pickupPoint?.name ?? null}
                 onSelect={setPickupPoint}
               />
@@ -350,7 +366,7 @@ export function CheckoutForm({
 
         <button
           type="submit"
-          disabled={submitting || (shippingMethod === "ZASILKOVNA" && !pickupPoint)}
+          disabled={submitting || (usesPickupPoint && !pickupPoint)}
           className="rounded-sm bg-ink px-5 py-3 text-sm font-semibold text-white hover:bg-accent disabled:cursor-not-allowed disabled:bg-line disabled:text-accent-2"
         >
           {submitting ? "Odesílám…" : `Závazně objednat — ${formatPrice(total)}`}

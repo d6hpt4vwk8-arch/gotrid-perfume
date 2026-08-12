@@ -25,14 +25,15 @@ export const checkoutSchema = z
       .max(200),
   })
   .superRefine((data, ctx) => {
-    if (data.shippingMethod === "ZASILKOVNA" && !data.pickupPointId) {
+    const usesPickupPoint = data.shippingMethod === "ZASILKOVNA" || data.shippingMethod === "BALIKOVNA";
+    if (usesPickupPoint && !data.pickupPointId) {
       ctx.addIssue({
         code: z.ZodIssueCode.custom,
         path: ["pickupPointId"],
-        message: "Vyberte výdejní místo Zásilkovny.",
+        message: "Vyberte výdejní místo.",
       });
     }
-    if (data.shippingMethod !== "ZASILKOVNA") {
+    if (!usesPickupPoint) {
       if (!data.shippingStreet || !data.shippingCity || !data.shippingPostalCode) {
         ctx.addIssue({
           code: z.ZodIssueCode.custom,

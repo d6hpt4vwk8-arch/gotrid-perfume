@@ -17,6 +17,7 @@ export async function GET() {
     { id: "ZASILKOVNA", price: settings.shippingPrices.ZASILKOVNA },
     { id: "PPL", price: settings.shippingPrices.PPL },
     { id: "DPD", price: settings.shippingPrices.DPD },
+    { id: "CESKA_POSTA", price: settings.shippingPrices.BALIKOVNA },
   ];
 
   const allProducts = await getFeedProducts();
