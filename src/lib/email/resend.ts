@@ -16,5 +16,5 @@ export function getResendClient(): Resend {
   return client;
 }
 
-export const EMAIL_FROM = process.env.RESEND_FROM_EMAIL ?? "Gotrid Perfume <objednavky@gotridperfume.eu>";
+export const EMAIL_FROM = process.env.RESEND_FROM_EMAIL ?? "Gotrid Perfume <objednavky@gotridperfume.cz>";
 export const OWNER_EMAIL = "pavlohrytsan@gmail.com";

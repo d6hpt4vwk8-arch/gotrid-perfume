@@ -15,7 +15,7 @@ export default function OchranaOsobnichUdajuPage() {
         Praha 3-Žižkov (dále jen „správce“).
       </p>
       <p>
-        2. Kontaktní údaje správce: Gotrid Perfume, www.gotridperfume.eu, email
+        2. Kontaktní údaje správce: Gotrid Perfume, www.gotridperfume.cz, email
         pavlohrytsan@gmail.com, telefon +420 735 583 527.
       </p>
       <p>

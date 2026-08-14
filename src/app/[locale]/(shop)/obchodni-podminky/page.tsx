@@ -19,13 +19,13 @@ export default function ObchodniPodminkyPage() {
         <br />
         Kontaktní údaje: email: pavlohrytsan@gmail.com, telefon: +420 735 583 527
         <br />
-        https://www.gotridperfume.eu/ (dále jen „prodávající“)
+        https://www.gotridperfume.cz/ (dále jen „prodávající“)
       </p>
       <p>
         2. Tyto obchodní podmínky upravují vzájemná práva a povinnosti prodávajícího a fyzické
         osoby, která uzavírá kupní smlouvu mimo svoji podnikatelskou činnost jako spotřebitel, nebo
         v rámci své podnikatelské činnosti (dále jen: „kupující“) prostřednictvím webového rozhraní
-        umístěného na webové stránce dostupné na internetové adrese https://www.gotridperfume.eu/
+        umístěného na webové stránce dostupné na internetové adrese https://www.gotridperfume.cz/
         (dále je „internetový obchod“).
       </p>
       <p>
