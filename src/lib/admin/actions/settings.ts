@@ -11,6 +11,7 @@ const settingsSchema = z.object({
   shippingPricePpl: z.coerce.number().min(0).max(10_000),
   shippingPriceDpd: z.coerce.number().min(0).max(10_000),
   shippingPriceBalikovna: z.coerce.number().min(0).max(10_000),
+  codSurcharge: z.coerce.number().min(0).max(10_000),
 });
 
 export async function updateSettings(formData: FormData) {

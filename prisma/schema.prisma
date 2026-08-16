@@ -349,8 +349,13 @@ model Order {
   discountAmount Decimal @default(0) @db.Decimal(10, 2)
 
   shippingPrice Decimal @default(0) @db.Decimal(10, 2)
-  itemsTotal    Decimal @db.Decimal(10, 2)
-  total         Decimal @db.Decimal(10, 2)
+  // Extra fee for paying by CASH_ON_DELIVERY, snapshotted from
+  // Settings.codSurcharge at order time — kept separate from shippingPrice
+  // (carrier cost) so it stays accurate for reporting and the Heureka feed's
+  // DELIVERY_PRICE_COD even if the setting changes later.
+  codSurcharge Decimal @default(0) @db.Decimal(10, 2)
+  itemsTotal   Decimal @db.Decimal(10, 2)
+  total        Decimal @db.Decimal(10, 2)
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -424,6 +429,9 @@ model Settings {
   shippingPricePpl        Decimal @default(90) @db.Decimal(10, 2)
   shippingPriceDpd        Decimal @default(99) @db.Decimal(10, 2)
   shippingPriceBalikovna  Decimal @default(69) @db.Decimal(10, 2)
+  // Extra fee charged when paying by CASH_ON_DELIVERY, on top of the
+  // shipping price above — covers the higher handling/risk cost of COD.
+  codSurcharge            Decimal @default(30) @db.Decimal(10, 2)
 
   updatedAt DateTime @updatedAt
 }

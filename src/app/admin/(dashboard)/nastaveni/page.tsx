@@ -6,7 +6,7 @@ export default async function AdminSettingsPage() {
 
   return (
     <div className="flex flex-col gap-6">
-      <h1 className="text-2xl font-bold text-ink">Nastavení dopravy</h1>
+      <h1 className="text-2xl font-bold text-ink">Nastavení dopravy a plateb</h1>
 
       <form action={updateSettings} className="flex max-w-md flex-col gap-4 rounded-sm border border-line bg-white p-4">
         <label className="flex flex-col gap-1 text-sm">
@@ -56,6 +56,16 @@ export default async function AdminSettingsPage() {
             type="number"
             step="0.01"
             defaultValue={settings.shippingPrices.BALIKOVNA}
+            className="rounded-sm border border-line px-3 py-2"
+          />
+        </label>
+        <label className="flex flex-col gap-1 text-sm">
+          Příplatek za dobírku (Kč)
+          <input
+            name="codSurcharge"
+            type="number"
+            step="0.01"
+            defaultValue={settings.codSurcharge}
             className="rounded-sm border border-line px-3 py-2"
           />
         </label>

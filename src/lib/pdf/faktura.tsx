@@ -109,6 +109,12 @@ export function FakturaDocument({ order }: { order: Order & { items: OrderItem[]
             <Text>Doprava ({SHIPPING_LABELS[order.shippingMethod]})</Text>
             <Text>{formatPrice(order.shippingPrice)}</Text>
           </View>
+          {Number(order.codSurcharge) > 0 && (
+            <View style={styles.totalRow}>
+              <Text>Příplatek za dobírku</Text>
+              <Text>{formatPrice(order.codSurcharge)}</Text>
+            </View>
+          )}
           {Number(order.discountAmount) > 0 && (
             <View style={styles.totalRow}>
               <Text>Sleva {order.couponCode ? `(${order.couponCode})` : ""}</Text>

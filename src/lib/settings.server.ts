@@ -5,6 +5,7 @@ import type { ShippingMethod } from "@prisma/client";
 export interface ShopSettings {
   freeShippingThreshold: number;
   shippingPrices: Record<ShippingMethod, number>;
+  codSurcharge: number;
 }
 
 // Read on every storefront page (BenefitsBar, checkout, CartProvider) — like
@@ -27,6 +28,7 @@ export const getSettings = unstable_cache(
         DPD: Number(row.shippingPriceDpd),
         BALIKOVNA: Number(row.shippingPriceBalikovna),
       },
+      codSurcharge: Number(row.codSurcharge),
     };
   },
   ["shop-settings"],

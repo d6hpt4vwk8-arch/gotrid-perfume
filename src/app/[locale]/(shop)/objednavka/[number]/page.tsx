@@ -96,6 +96,12 @@ export default async function OrderConfirmationPage({
           <span>Platba</span>
           <span>{PAYMENT_LABELS[order.paymentMethod]}</span>
         </div>
+        {Number(order.codSurcharge) > 0 && (
+          <div className="flex justify-between">
+            <span>Příplatek za dobírku</span>
+            <span>{formatPrice(order.codSurcharge)}</span>
+          </div>
+        )}
         {Number(order.discountAmount) > 0 && (
           <div className="flex justify-between text-ok">
             <span>Sleva {order.couponCode && `(${order.couponCode})`}</span>

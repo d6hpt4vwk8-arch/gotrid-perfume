@@ -32,7 +32,7 @@ export async function sendCustomerOrderConfirmation(order: OrderWithItems) {
       <p>Objednávka <strong>${order.number}</strong> byla přijata.</p>
       ${itemsTableHtml(order.items)}
       <p>Doprava: ${SHIPPING_LABELS[order.shippingMethod]} — ${formatPrice(order.shippingPrice)}</p>
-      <p>Platba: ${PAYMENT_LABELS[order.paymentMethod]}</p>
+      <p>Platba: ${PAYMENT_LABELS[order.paymentMethod]}${Number(order.codSurcharge) > 0 ? ` (příplatek ${formatPrice(order.codSurcharge)})` : ""}</p>
       <p><strong>Celkem: ${formatPrice(order.total)}</strong></p>
       <p>O odeslání zásilky vás budeme informovat samostatným e-mailem.</p>
       <p><a href="${SITE_URL}/api/orders/${order.number}/access?token=${order.accessToken}">Zobrazit objednávku a stáhnout fakturu</a></p>
@@ -60,7 +60,7 @@ export async function sendOwnerNewOrderNotification(order: OrderWithItems) {
       <p>${order.firstName} ${order.lastName} — ${order.email} — ${order.phone}</p>
       ${itemsTableHtml(order.items)}
       <p>Doprava: ${SHIPPING_LABELS[order.shippingMethod]}</p>
-      <p>Platba: ${PAYMENT_LABELS[order.paymentMethod]}</p>
+      <p>Platba: ${PAYMENT_LABELS[order.paymentMethod]}${Number(order.codSurcharge) > 0 ? ` (příplatek ${formatPrice(order.codSurcharge)})` : ""}</p>
       <p><strong>Celkem: ${formatPrice(order.total)}</strong></p>
     `,
   });

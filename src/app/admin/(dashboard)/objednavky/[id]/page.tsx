@@ -72,6 +72,12 @@ export default async function AdminOrderDetailPage({
             <span>Doprava</span>
             <span>{formatPrice(order.shippingPrice)}</span>
           </div>
+          {Number(order.codSurcharge) > 0 && (
+            <div className="flex justify-between text-accent-2">
+              <span>Příplatek za dobírku</span>
+              <span>{formatPrice(order.codSurcharge)}</span>
+            </div>
+          )}
           {Number(order.discountAmount) > 0 && (
             <div className="flex justify-between text-green-700">
               <span>Sleva {order.couponCode && `(${order.couponCode})`}</span>

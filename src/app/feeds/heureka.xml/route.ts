@@ -48,7 +48,7 @@ ${DELIVERY_METHODS.map(
   (d) => `    <DELIVERY>
       <DELIVERY_ID>${d.id}</DELIVERY_ID>
       <DELIVERY_PRICE>${d.price.toFixed(2)}</DELIVERY_PRICE>
-      <DELIVERY_PRICE_COD>${d.price.toFixed(2)}</DELIVERY_PRICE_COD>
+      <DELIVERY_PRICE_COD>${(d.price + settings.codSurcharge).toFixed(2)}</DELIVERY_PRICE_COD>
     </DELIVERY>`,
 ).join("\n")}
     ${p.brandName ? `<PARAM><PARAM_NAME>Značka</PARAM_NAME><VAL>${escapeXml(p.brandName)}</VAL></PARAM>` : ""}

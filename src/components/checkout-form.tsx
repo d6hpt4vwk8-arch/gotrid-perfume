@@ -5,7 +5,7 @@ import { useMemo, useState } from "react";
 import { useCart } from "@/lib/cart-context";
 import { useConsent } from "@/lib/consent-context";
 import { formatPrice } from "@/lib/format";
-import { PAYMENT_LABELS, SHIPPING_LABELS, getShippingPrice } from "@/lib/shipping";
+import { PAYMENT_LABELS, SHIPPING_LABELS, getCodSurcharge, getShippingPrice } from "@/lib/shipping";
 import type { ShopSettings } from "@/lib/settings.server";
 import { ZasilkovnaPicker } from "@/components/zasilkovna-picker";
 import { BalikovnaPicker } from "@/components/balikovna-picker";
@@ -68,7 +68,11 @@ export function CheckoutForm({
     () => getShippingPrice(shippingMethod, itemsTotal, settings),
     [shippingMethod, itemsTotal, settings],
   );
-  const total = itemsTotal + shippingPrice - (coupon?.discountAmount ?? 0);
+  const codSurcharge = useMemo(
+    () => getCodSurcharge(paymentMethod, settings),
+    [paymentMethod, settings],
+  );
+  const total = itemsTotal + shippingPrice + codSurcharge - (coupon?.discountAmount ?? 0);
 
   const usesPickupPoint = shippingMethod === "ZASILKOVNA" || shippingMethod === "BALIKOVNA";
 
@@ -317,6 +321,9 @@ export function CheckoutForm({
                 className="accent-accent"
               />
               {PAYMENT_LABELS[method]}
+              {method === "CASH_ON_DELIVERY" &&
+                settings.codSurcharge > 0 &&
+                ` (+${formatPrice(settings.codSurcharge)})`}
             </label>
           ))}
         </fieldset>
@@ -394,6 +401,12 @@ export function CheckoutForm({
             <span>Doprava</span>
             <span>{shippingPrice === 0 ? "zdarma" : formatPrice(shippingPrice)}</span>
           </div>
+          {codSurcharge > 0 && (
+            <div className="flex justify-between">
+              <span>Příplatek za dobírku</span>
+              <span>{formatPrice(codSurcharge)}</span>
+            </div>
+          )}
           {coupon && (
             <div className="flex justify-between text-ok">
               <span>Sleva ({coupon.code})</span>

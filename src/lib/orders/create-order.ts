@@ -1,7 +1,7 @@
 import { Prisma } from "@prisma/client";
 import { prisma } from "@/lib/prisma";
 import { generateOrderNumber } from "./generate-order-number";
-import { getShippingPrice } from "@/lib/shipping";
+import { getCodSurcharge, getShippingPrice } from "@/lib/shipping";
 import { getSettings } from "@/lib/settings.server";
 import { validateCoupon } from "@/lib/coupons";
 import { CheckoutError } from "./checkout-error";
@@ -35,6 +35,7 @@ export async function createOrder(input: CheckoutInput, customerId?: string | nu
 
   const settings = await getSettings();
   const shippingPrice = getShippingPrice(input.shippingMethod, itemsTotal, settings);
+  const codSurcharge = getCodSurcharge(input.paymentMethod, settings);
 
   for (let attempt = 0; attempt < MAX_ORDER_NUMBER_ATTEMPTS; attempt++) {
     const number = generateOrderNumber();
@@ -58,7 +59,7 @@ export async function createOrder(input: CheckoutInput, customerId?: string | nu
           couponCode = result.code;
           discountAmount = result.discountAmount;
         }
-        const total = itemsTotal + shippingPrice - discountAmount;
+        const total = itemsTotal + shippingPrice + codSurcharge - discountAmount;
 
         const order = await tx.order.create({
           data: {
@@ -79,6 +80,7 @@ export async function createOrder(input: CheckoutInput, customerId?: string | nu
             discountAmount,
             itemsTotal,
             shippingPrice,
+            codSurcharge,
             total,
             items: {
               create: input.items.map((item) => {

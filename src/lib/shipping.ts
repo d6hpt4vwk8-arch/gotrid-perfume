@@ -24,3 +24,11 @@ export function getShippingPrice(
   if (itemsTotal >= settings.freeShippingThreshold) return 0;
   return settings.shippingPrices[method];
 }
+
+// Separate from getShippingPrice (carrier cost) so it stays accurate for
+// reporting and the Heureka feed's DELIVERY_PRICE_COD even as the setting
+// changes — applies regardless of the free-shipping threshold, since it
+// covers COD handling/risk, not delivery itself.
+export function getCodSurcharge(paymentMethod: string, settings: ShopSettings): number {
+  return paymentMethod === "CASH_ON_DELIVERY" ? settings.codSurcharge : 0;
+}
