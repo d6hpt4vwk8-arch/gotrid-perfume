@@ -49,7 +49,7 @@ async function getRelatedProducts(productId: string, categoryIds: string[]) {
       ...primaryVariantWhere,
     },
     include: { brand: true, images: { orderBy: { sortOrder: "asc" }, take: 1 } },
-    orderBy: { createdAt: "desc" },
+    orderBy: [{ priority: "desc" }, { createdAt: "desc" }],
     take: 8,
   });
 }

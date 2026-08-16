@@ -25,6 +25,7 @@ const productSchema = z.object({
   purchasePrice: z.coerce.number().min(0).max(10_000_000).default(0),
   vatRate: z.coerce.number().min(0, "DPH musí být mezi 0 a 100 %.").max(100),
   stock: z.coerce.number().int().min(0, "Sklad nemůže být záporný.").max(1_000_000),
+  priority: z.coerce.number().int().min(0).max(1000).default(0),
   visible: z.coerce.boolean().default(false),
   description: z.preprocess(emptyToUndefined, z.string().max(20_000).optional()),
 });
@@ -95,6 +96,7 @@ export async function createProduct(formData: FormData) {
       purchasePrice: data.purchasePrice,
       vatRate: data.vatRate,
       stock: data.stock,
+      priority: data.priority,
       visible: data.visible,
       description: data.description,
     },
@@ -125,6 +127,7 @@ export async function updateProduct(id: string, formData: FormData) {
       purchasePrice: data.purchasePrice,
       vatRate: data.vatRate,
       stock: data.stock,
+      priority: data.priority,
       visible: data.visible,
       description: data.description,
     },

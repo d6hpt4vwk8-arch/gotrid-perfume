@@ -30,7 +30,7 @@ export default async function HomePage() {
     getCategoryNavTree(),
     prisma.product.findMany({
       where: { visible: true, ...primaryVariantWhere },
-      orderBy: { createdAt: "desc" },
+      orderBy: [{ priority: "desc" }, { createdAt: "desc" }],
       take: 12,
       include: { brand: true, images: { orderBy: { sortOrder: "asc" }, take: 1 } },
     }),

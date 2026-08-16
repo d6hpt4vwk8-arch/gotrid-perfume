@@ -81,6 +81,13 @@ model Product {
   stock   Int     @default(0)
   visible Boolean @default(true)
 
+  // Manual merchandising override — higher shows first wherever products
+  // aren't sorted by an explicit visitor choice (price/newest toggle): the
+  // homepage "Novinky" section, a category's default listing order, and
+  // "related products" on the product page. 0 (default) means no override,
+  // falls back to createdAt like before.
+  priority Int @default(0)
+
   // Same-fragrance-different-size grouping (scripts/group-product-variants.ts).
   // Flat string key rather than a join table — null means "no sibling sizes".
   // isPrimaryVariant marks which one gets its own grid card; the others are

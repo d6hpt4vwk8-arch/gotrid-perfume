@@ -118,6 +118,22 @@ export function ProductForm({
         </label>
       </div>
 
+      <label className="flex flex-col gap-1 text-sm">
+        Priorita zobrazení
+        <input
+          name="priority"
+          type="number"
+          min={0}
+          max={1000}
+          defaultValue={product?.priority ?? 0}
+          className="w-40 rounded-sm border border-line px-3 py-2"
+        />
+        <span className="text-xs text-accent-2">
+          Vyšší číslo = produkt se zobrazí dřív (hlavní stránka, výpis kategorie, podobné
+          produkty). 0 = žádná priorita.
+        </span>
+      </label>
+
       <div className="grid grid-cols-2 gap-4">
         <label className="flex flex-col gap-1 text-sm">
           Značka

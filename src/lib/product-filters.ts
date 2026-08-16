@@ -129,14 +129,14 @@ export function buildProductWhere(
   return { visible: true, AND: and };
 }
 
-export function buildOrderBy(sort: SortOption): Prisma.ProductOrderByWithRelationInput {
+export function buildOrderBy(sort: SortOption): Prisma.ProductOrderByWithRelationInput[] {
   switch (sort) {
     case "price-asc":
-      return { price: "asc" };
+      return [{ price: "asc" }];
     case "price-desc":
-      return { price: "desc" };
+      return [{ price: "desc" }];
     case "newest":
     default:
-      return { createdAt: "desc" };
+      return [{ priority: "desc" }, { createdAt: "desc" }];
   }
 }
