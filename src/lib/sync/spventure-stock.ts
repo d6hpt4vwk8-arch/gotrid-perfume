@@ -18,8 +18,12 @@ import { prisma } from "@/lib/prisma";
 import { logAdminActivity } from "@/lib/admin/activity-log";
 import { notifyStockAlerts } from "@/lib/stock-alerts";
 
+// ?cy=czk pinned explicitly (SP Venture's own feed-customization docs, ISO
+// 4217) rather than relying on whatever their default happens to be — we
+// only read STOCK here so currency doesn't actually affect this sync, but
+// pinning it keeps this URL self-documenting and matches the price feed.
 const FEED_URL =
-  "https://www.perfumes-b2b.com/exchange/06560451-31AA-4C08-9B66-C149E1FF95DB/xml/product.xml";
+  "https://www.perfumes-b2b.com/exchange/06560451-31AA-4C08-9B66-C149E1FF95DB/xml/product.xml?cy=czk";
 const CODE_PREFIX = "SPV-";
 
 function decodeEntities(s: string): string {
