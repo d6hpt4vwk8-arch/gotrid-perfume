@@ -16,8 +16,9 @@ export function CookieBanner() {
         {!showSettings ? (
           <>
             <p className="text-sm text-neutral-700">
-              Používáme cookies pro analytiku a marketing (Meta Pixel), abychom mohli měřit
-              návštěvnost a zlepšovat nabídku. Nezbytné cookies (např. košík) běží vždy.
+              Používáme cookies pro analytiku a marketing (Meta Pixel, Microsoft Clarity),
+              abychom mohli měřit návštěvnost a zlepšovat nabídku. Nezbytné cookies (např. košík)
+              běží vždy.
             </p>
             <div className="flex flex-wrap gap-2">
               <button
@@ -51,7 +52,7 @@ export function CookieBanner() {
                 checked={analyticsChecked}
                 onChange={(e) => setAnalyticsChecked(e.target.checked)}
               />
-              Analytické a marketingové cookies (Meta Pixel)
+              Analytické a marketingové cookies (Meta Pixel, Microsoft Clarity)
             </label>
             <div className="flex flex-wrap gap-2">
               <button

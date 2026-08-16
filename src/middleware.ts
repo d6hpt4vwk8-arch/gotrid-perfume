@@ -18,11 +18,11 @@ const isDev = process.env.NODE_ENV !== "production";
 function buildCsp(nonce: string): string {
   return [
     "default-src 'self'",
-    `script-src 'self' 'nonce-${nonce}' 'strict-dynamic' ${isDev ? "'unsafe-eval' " : ""}https://connect.facebook.net https://widget.packeta.com https://c.seznam.cz`,
+    `script-src 'self' 'nonce-${nonce}' 'strict-dynamic' ${isDev ? "'unsafe-eval' " : ""}https://connect.facebook.net https://widget.packeta.com https://c.seznam.cz https://www.clarity.ms`,
     "style-src 'self' 'unsafe-inline'",
     "img-src 'self' data: https:",
     "font-src 'self' data:",
-    "connect-src 'self' https://connect.facebook.net https://widget.packeta.com https://*.packeta.com https://*.tile.openstreetmap.org https://c.seznam.cz https://h.seznam.cz",
+    "connect-src 'self' https://connect.facebook.net https://widget.packeta.com https://*.packeta.com https://*.tile.openstreetmap.org https://c.seznam.cz https://h.seznam.cz https://*.clarity.ms",
     "frame-src 'self' https://widget.packeta.com",
     "frame-ancestors 'self'",
     "base-uri 'self'",
