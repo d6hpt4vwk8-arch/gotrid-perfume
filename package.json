@@ -14,7 +14,8 @@
     "import:xlsx": "tsx scripts/import-xlsx.ts",
     "tag:scent-families": "tsx scripts/tag-scent-families.ts",
     "seed:cosmetics-facets": "tsx scripts/seed-cosmetics-facets.ts",
-    "sync:balikovna": "tsx scripts/sync-balikovna-points.ts"
+    "sync:balikovna": "tsx scripts/sync-balikovna-points.ts",
+    "sync:spventure": "tsx scripts/sync-spventure-stock.ts"
   },
   "dependencies": {
     "@prisma/client": "^6",
