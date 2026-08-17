@@ -6,7 +6,7 @@ export const checkoutSchema = z
     phone: z.string().min(9, "Zadejte platné telefonní číslo.").max(30),
     firstName: z.string().min(1, "Zadejte jméno.").max(100),
     lastName: z.string().min(1, "Zadejte příjmení.").max(100),
-    shippingMethod: z.enum(["ZASILKOVNA", "PPL", "DPD", "BALIKOVNA"]),
+    shippingMethod: z.enum(["ZASILKOVNA", "PPL", "DPD", "BALIKOVNA", "OSOBNI_ODBER"]),
     paymentMethod: z.enum(["CARD", "BANK_TRANSFER", "CASH_ON_DELIVERY"]),
     pickupPointId: z.string().max(50).optional(),
     shippingStreet: z.string().max(200).optional(),
@@ -26,6 +26,7 @@ export const checkoutSchema = z
   })
   .superRefine((data, ctx) => {
     const usesPickupPoint = data.shippingMethod === "ZASILKOVNA" || data.shippingMethod === "BALIKOVNA";
+    const usesAddress = data.shippingMethod === "PPL" || data.shippingMethod === "DPD";
     if (usesPickupPoint && !data.pickupPointId) {
       ctx.addIssue({
         code: z.ZodIssueCode.custom,
@@ -33,7 +34,7 @@ export const checkoutSchema = z
         message: "Vyberte výdejní místo.",
       });
     }
-    if (!usesPickupPoint) {
+    if (usesAddress) {
       if (!data.shippingStreet || !data.shippingCity || !data.shippingPostalCode) {
         ctx.addIssue({
           code: z.ZodIssueCode.custom,

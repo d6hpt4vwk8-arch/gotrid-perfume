@@ -6,7 +6,7 @@ import { prisma } from "@/lib/prisma";
 import { formatPrice } from "@/lib/format";
 import { calculateSklikConversionValue } from "@/lib/sklik";
 import { SklikConversion } from "@/components/sklik-conversion";
-import { PAYMENT_LABELS, SHIPPING_LABELS } from "@/lib/shipping";
+import { PAYMENT_LABELS, PICKUP_ADDRESS, SHIPPING_LABELS } from "@/lib/shipping";
 import { ORDER_STATUS_LABELS } from "@/lib/orders/status-labels";
 import { generateQrPlatbaDataUrl } from "@/lib/payments/qr-platba";
 import { getCurrentCustomerId } from "@/lib/customer/get-current-customer";
@@ -138,6 +138,13 @@ export default async function OrderConfirmationPage({
       {order.paymentMethod === "CASH_ON_DELIVERY" && (
         <p className="bg-line/30 p-4 text-sm text-ink/80">
           Objednávku zaplatíte v hotovosti nebo kartou při převzetí zásilky.
+        </p>
+      )}
+
+      {order.shippingMethod === "OSOBNI_ODBER" && (
+        <p className="bg-line/30 p-4 text-sm text-ink/80">
+          Zboží si vyzvednete osobně na adrese <strong className="text-ink">{PICKUP_ADDRESS}</strong>.
+          Jakmile bude objednávka připravená, ozveme se vám s termínem vyzvednutí.
         </p>
       )}
 

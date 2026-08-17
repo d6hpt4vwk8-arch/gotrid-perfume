@@ -1,11 +1,14 @@
 import type { ShippingMethod } from "@prisma/client";
 import type { ShopSettings } from "@/lib/settings.server";
 
+export const PICKUP_ADDRESS = "Na Jarově 2425/4, 130 00 Praha 3-Žižkov";
+
 export const SHIPPING_LABELS: Record<ShippingMethod, string> = {
   ZASILKOVNA: "Zásilkovna — výdejní místo",
   PPL: "PPL kurýr",
   DPD: "DPD kurýr",
   BALIKOVNA: "Balíkovna",
+  OSOBNI_ODBER: `Osobní odběr — ${PICKUP_ADDRESS}`,
 };
 
 export const PAYMENT_LABELS: Record<string, string> = {
@@ -21,8 +24,18 @@ export function getShippingPrice(
   itemsTotal: number,
   settings: ShopSettings,
 ): number {
+  // Picking up in person at our own address has no carrier cost — always
+  // free, not tied to the free-shipping threshold or Settings.
+  if (method === "OSOBNI_ODBER") return 0;
   if (itemsTotal >= settings.freeShippingThreshold) return 0;
   return settings.shippingPrices[method];
+}
+
+// Above the free-shipping threshold we don't offer COD — a bank
+// transfer/card is expected for higher-value orders, avoiding the
+// no-show/non-collection risk of a large COD parcel.
+export function canUseCod(itemsTotal: number, settings: ShopSettings): boolean {
+  return itemsTotal < settings.freeShippingThreshold;
 }
 
 // Separate from getShippingPrice (carrier cost) so it stays accurate for

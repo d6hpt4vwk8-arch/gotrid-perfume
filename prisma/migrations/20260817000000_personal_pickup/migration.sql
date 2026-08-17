@@ -1,0 +1,1 @@
+ALTER TYPE "ShippingMethod" ADD VALUE 'OSOBNI_ODBER';

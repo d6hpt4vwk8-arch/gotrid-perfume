@@ -1,7 +1,7 @@
 import { Prisma } from "@prisma/client";
 import { prisma } from "@/lib/prisma";
 import { generateOrderNumber } from "./generate-order-number";
-import { getCodSurcharge, getShippingPrice } from "@/lib/shipping";
+import { canUseCod, getCodSurcharge, getShippingPrice } from "@/lib/shipping";
 import { getSettings } from "@/lib/settings.server";
 import { validateCoupon } from "@/lib/coupons";
 import { CheckoutError } from "./checkout-error";
@@ -34,6 +34,13 @@ export async function createOrder(input: CheckoutInput, customerId?: string | nu
   }, 0);
 
   const settings = await getSettings();
+
+  if (input.paymentMethod === "CASH_ON_DELIVERY" && !canUseCod(itemsTotal, settings)) {
+    throw new CheckoutError(
+      `Dobírka není dostupná pro objednávky nad ${settings.freeShippingThreshold} Kč, zvolte prosím jiný způsob platby.`,
+    );
+  }
+
   const shippingPrice = getShippingPrice(input.shippingMethod, itemsTotal, settings);
   const codSurcharge = getCodSurcharge(input.paymentMethod, settings);
 

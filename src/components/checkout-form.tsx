@@ -1,11 +1,18 @@
 "use client";
 
 import Link from "next/link";
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useCart } from "@/lib/cart-context";
 import { useConsent } from "@/lib/consent-context";
 import { formatPrice } from "@/lib/format";
-import { PAYMENT_LABELS, SHIPPING_LABELS, getCodSurcharge, getShippingPrice } from "@/lib/shipping";
+import {
+  PAYMENT_LABELS,
+  PICKUP_ADDRESS,
+  SHIPPING_LABELS,
+  canUseCod,
+  getCodSurcharge,
+  getShippingPrice,
+} from "@/lib/shipping";
 import type { ShopSettings } from "@/lib/settings.server";
 import { ZasilkovnaPicker } from "@/components/zasilkovna-picker";
 import { BalikovnaPicker } from "@/components/balikovna-picker";
@@ -68,20 +75,34 @@ export function CheckoutForm({
     () => getShippingPrice(shippingMethod, itemsTotal, settings),
     [shippingMethod, itemsTotal, settings],
   );
+  const codAvailable = useMemo(() => canUseCod(itemsTotal, settings), [itemsTotal, settings]);
   const codSurcharge = useMemo(
     () => getCodSurcharge(paymentMethod, settings),
     [paymentMethod, settings],
   );
   const total = itemsTotal + shippingPrice + codSurcharge - (coupon?.discountAmount ?? 0);
 
+  // Above the free-shipping threshold COD stops being offered — if the cart
+  // grows past it while COD is already selected (e.g. visitor goes back and
+  // adds more), fall back to bank transfer rather than leave a now-invalid
+  // choice selected.
+  useEffect(() => {
+    if (paymentMethod === "CASH_ON_DELIVERY" && !codAvailable) {
+      setPaymentMethod("BANK_TRANSFER");
+    }
+  }, [paymentMethod, codAvailable]);
+
   const usesPickupPoint = shippingMethod === "ZASILKOVNA" || shippingMethod === "BALIKOVNA";
+  const isPersonalPickup = shippingMethod === "OSOBNI_ODBER";
 
   const contactDone = Boolean(email.trim() && phone.trim() && firstName.trim() && lastName.trim());
   const shippingDone =
     contactDone &&
-    (usesPickupPoint
-      ? Boolean(pickupPoint)
-      : Boolean(street.trim() && city.trim() && postalCode.trim()));
+    (isPersonalPickup
+      ? true
+      : usesPickupPoint
+        ? Boolean(pickupPoint)
+        : Boolean(street.trim() && city.trim() && postalCode.trim()));
   // Payment always has a pre-selected default, so it only counts as "reached"
   // once the earlier steps are actually filled in — otherwise it'd show as
   // done before the visitor has typed anything.
@@ -145,9 +166,9 @@ export function CheckoutForm({
           shippingMethod,
           paymentMethod,
           pickupPointId: usesPickupPoint ? pickupPoint?.id : undefined,
-          shippingStreet: !usesPickupPoint ? street : undefined,
-          shippingCity: !usesPickupPoint ? city : undefined,
-          shippingPostalCode: !usesPickupPoint ? postalCode : undefined,
+          shippingStreet: !usesPickupPoint && !isPersonalPickup ? street : undefined,
+          shippingCity: !usesPickupPoint && !isPersonalPickup ? city : undefined,
+          shippingPostalCode: !usesPickupPoint && !isPersonalPickup ? postalCode : undefined,
           items: items.map((i) => ({ productId: i.productId, qty: i.qty })),
           marketingConsent: Boolean(consent?.marketing),
           couponCode: coupon?.code,
@@ -254,7 +275,7 @@ export function CheckoutForm({
                 className="accent-accent"
               />
               {SHIPPING_LABELS[method]} —{" "}
-              {itemsTotal >= settings.freeShippingThreshold
+              {method === "OSOBNI_ODBER" || itemsTotal >= settings.freeShippingThreshold
                 ? "zdarma"
                 : formatPrice(settings.shippingPrices[method])}
             </label>
@@ -274,6 +295,11 @@ export function CheckoutForm({
                 onSelect={setPickupPoint}
               />
             </div>
+          ) : isPersonalPickup ? (
+            <p className="rounded-sm bg-line/30 p-3 text-sm text-ink/80">
+              Zboží si vyzvednete osobně na adrese <strong>{PICKUP_ADDRESS}</strong> — po
+              vyřízení objednávky vás budeme kontaktovat na dohodnutí termínu.
+            </p>
           ) : (
             <div className="flex flex-col gap-2 pt-2">
               <input
@@ -311,21 +337,31 @@ export function CheckoutForm({
 
         <fieldset className="flex flex-col gap-2">
           <legend className="mb-1 text-sm font-semibold text-ink">Platba</legend>
-          {(Object.keys(PAYMENT_LABELS) as PaymentMethod[]).map((method) => (
-            <label key={method} className="flex items-center gap-2 text-sm text-ink">
-              <input
-                type="radio"
-                name="paymentMethod"
-                checked={paymentMethod === method}
-                onChange={() => setPaymentMethod(method)}
-                className="accent-accent"
-              />
-              {PAYMENT_LABELS[method]}
-              {method === "CASH_ON_DELIVERY" &&
-                settings.codSurcharge > 0 &&
-                ` (+${formatPrice(settings.codSurcharge)})`}
-            </label>
-          ))}
+          {(Object.keys(PAYMENT_LABELS) as PaymentMethod[]).map((method) => {
+            const disabled = method === "CASH_ON_DELIVERY" && !codAvailable;
+            return (
+              <label
+                key={method}
+                className={`flex items-center gap-2 text-sm ${disabled ? "text-accent-2" : "text-ink"}`}
+              >
+                <input
+                  type="radio"
+                  name="paymentMethod"
+                  checked={paymentMethod === method}
+                  disabled={disabled}
+                  onChange={() => setPaymentMethod(method)}
+                  className="accent-accent"
+                />
+                {PAYMENT_LABELS[method]}
+                {method === "CASH_ON_DELIVERY" &&
+                  (disabled
+                    ? ` (nedostupné nad ${formatPrice(settings.freeShippingThreshold)})`
+                    : settings.codSurcharge > 0
+                      ? ` (+${formatPrice(settings.codSurcharge)})`
+                      : "")}
+              </label>
+            );
+          })}
         </fieldset>
 
         <fieldset className="flex flex-col gap-2">

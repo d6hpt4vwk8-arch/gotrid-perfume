@@ -301,6 +301,7 @@ enum ShippingMethod {
   PPL
   DPD
   BALIKOVNA
+  OSOBNI_ODBER
 }
 
 enum PaymentMethod {

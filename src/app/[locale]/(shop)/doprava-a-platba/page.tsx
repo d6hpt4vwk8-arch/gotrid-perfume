@@ -16,9 +16,11 @@ export default function DopravaAPlatbaPage() {
       <ul>
         <li>Zásilkovna — výdejní místo dle vašeho výběru: 79 Kč, doba doručení 2–4 pracovní dny,</li>
         <li>PPL kurýr — doručení na adresu: 90 Kč, doba doručení 2–4 pracovní dny,</li>
-        <li>Balíkovna — výdejní místo: 69 Kč, doba doručení 2–4 pracovní dny.</li>
+        <li>DPD kurýr — doručení na adresu: 99 Kč, doba doručení 2–4 pracovní dny,</li>
+        <li>Balíkovna — výdejní místo: 69 Kč, doba doručení 2–4 pracovní dny,</li>
+        <li>Osobní odběr — Na Jarově 2425/4, 130 00 Praha 3-Žižkov: zdarma, po předchozí domluvě termínu.</li>
       </ul>
-      <p>Doprava zdarma při objednávce nad určitou částku — přesný práh bude upřesněn.</p>
+      <p>Doprava zdarma při objednávce nad 1 500 Kč (netýká se osobního odběru, který je zdarma vždy).</p>
 
       <h2>2. Zpracování objednávky</h2>
       <p>
@@ -30,7 +32,7 @@ export default function DopravaAPlatbaPage() {
       <ul>
         <li>Platba kartou online — rychlá a bezpečná platba (podporuje i Apple Pay a Google Pay),</li>
         <li>Bankovní převod — QR platba s údaji zaslanými po dokončení objednávky,</li>
-        <li>Dobírka — platba v hotovosti při převzetí zásilky.</li>
+        <li>Dobírka — platba v hotovosti při převzetí zásilky (příplatek 30 Kč, dostupné jen do 1 500 Kč).</li>
       </ul>
 
       <h2>4. Důležité informace</h2>
