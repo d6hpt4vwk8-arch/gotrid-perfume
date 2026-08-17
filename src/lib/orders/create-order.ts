@@ -52,7 +52,7 @@ export async function createOrder(input: CheckoutInput, customerId?: string | nu
           const product = productById.get(item.productId)!;
           const updated = await tx.product.updateMany({
             where: { id: product.id, stock: { gte: item.qty } },
-            data: { stock: { decrement: item.qty } },
+            data: { stock: { decrement: item.qty }, salesCount: { increment: item.qty } },
           });
           if (updated.count === 0) {
             throw new CheckoutError(`Produkt "${product.name}" mezitím vyprodán.`);

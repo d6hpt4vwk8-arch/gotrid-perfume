@@ -1,6 +1,6 @@
 import type { Prisma } from "@prisma/client";
 
-export type SortOption = "newest" | "price-asc" | "price-desc";
+export type SortOption = "newest" | "price-asc" | "price-desc" | "bestsellers";
 
 export interface CategoryFilterParams {
   brand?: string | string[];
@@ -32,7 +32,7 @@ export interface ParsedFilters {
   page: number;
 }
 
-const SORT_OPTIONS: SortOption[] = ["newest", "price-asc", "price-desc"];
+const SORT_OPTIONS: SortOption[] = ["newest", "price-asc", "price-desc", "bestsellers"];
 
 function toArray(value: string | string[] | undefined): string[] {
   return Array.isArray(value) ? value : value ? [value] : [];
@@ -135,6 +135,8 @@ export function buildOrderBy(sort: SortOption): Prisma.ProductOrderByWithRelatio
       return [{ price: "asc" }];
     case "price-desc":
       return [{ price: "desc" }];
+    case "bestsellers":
+      return [{ salesCount: "desc" }, { createdAt: "desc" }];
     case "newest":
     default:
       return [{ priority: "desc" }, { createdAt: "desc" }];

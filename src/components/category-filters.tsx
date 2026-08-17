@@ -9,6 +9,7 @@ import type { CosmeticsFacets } from "@/lib/category-cosmetics-facets.server";
 
 const SORT_LABELS: Record<string, string> = {
   newest: "Novinky",
+  bestsellers: "Nejprodávanější",
   "price-asc": "Cena od nejnižší",
   "price-desc": "Cena od nejvyšší",
 };
