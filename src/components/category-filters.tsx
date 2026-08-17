@@ -1,11 +1,15 @@
 "use client";
 
+import Image from "next/image";
+import Link from "next/link";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { useMemo, useState, type ReactNode } from "react";
 import type { BrandFacet } from "@/lib/category-brands.server";
 import type { ScentFamilyFacet } from "@/lib/category-scent-facets.server";
 import type { PerfumeStructureFacets } from "@/lib/perfume-structure-facets.server";
 import type { CosmeticsFacets } from "@/lib/category-cosmetics-facets.server";
+import { formatPrice } from "@/lib/format";
+import type { ProductCardData } from "@/components/product-card";
 
 const SORT_LABELS: Record<string, string> = {
   newest: "Novinky",
@@ -39,11 +43,13 @@ export function CategoryFilters({
   scentFamilies,
   structure,
   cosmetics,
+  topProducts = [],
 }: {
   brands: BrandFacet[];
   scentFamilies: ScentFamilyFacet[];
   structure: PerfumeStructureFacets;
   cosmetics: CosmeticsFacets;
+  topProducts?: ProductCardData[];
 }) {
   const router = useRouter();
   const pathname = usePathname();
@@ -186,6 +192,37 @@ export function CategoryFilters({
       </button>
 
       <div className={`${mobileOpen ? "flex" : "hidden"} flex-col gap-4 sm:flex`}>
+      {topProducts.length > 0 && (
+        <div className="flex flex-col gap-2 border-b border-line pb-4">
+          <span className="text-[11px] font-semibold tracking-wide text-accent-2 uppercase">
+            Top prodejů
+          </span>
+          <ul className="flex flex-col gap-2">
+            {topProducts.map((product) => {
+              const image = product.images[0];
+              return (
+                <li key={product.slug}>
+                  <Link
+                    href={`/produkt/${product.slug}`}
+                    className="group flex items-center gap-2.5 rounded-sm py-1 text-sm hover:bg-line/30"
+                  >
+                    <span className="relative h-12 w-12 shrink-0 overflow-hidden bg-line/60">
+                      {image ? (
+                        <Image src={image.url} alt={product.name} fill sizes="48px" className="object-cover" />
+                      ) : null}
+                    </span>
+                    <span className="flex flex-col gap-0.5 overflow-hidden">
+                      <span className="line-clamp-2 text-ink group-hover:underline">{product.name}</span>
+                      <span className="font-semibold text-accent">{formatPrice(product.price)}</span>
+                    </span>
+                  </Link>
+                </li>
+              );
+            })}
+          </ul>
+        </div>
+      )}
+
       <div>
         <label className="text-[11px] font-semibold tracking-wide text-accent-2 uppercase">
           Řazení

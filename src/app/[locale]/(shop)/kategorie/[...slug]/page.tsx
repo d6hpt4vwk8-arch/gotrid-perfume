@@ -14,6 +14,7 @@ import {
   buildOrderBy,
   buildProductWhere,
   parseFilterParams,
+  primaryVariantWhere,
   type CategoryFilterParams,
 } from "@/lib/product-filters";
 import { ProductCard } from "@/components/product-card";
@@ -45,20 +46,31 @@ export default async function CategoryPage({
   );
   const where = buildProductWhere(baseWhere, filters, perfumeCategoryIds);
 
-  const [products, total, brands, scentFacets, structureFacets, cosmeticsFacets] = await Promise.all([
-    prisma.product.findMany({
-      where,
-      orderBy: buildOrderBy(filters.sort),
-      skip: (filters.page - 1) * PAGE_SIZE,
-      take: PAGE_SIZE,
-      include: { brand: true, images: { orderBy: { sortOrder: "asc" }, take: 1 } },
-    }),
-    prisma.product.count({ where }),
-    getAvailableBrands(baseWhere),
-    getScentFamilyFacets(baseWhere),
-    getPerfumeStructureFacets(baseWhere),
-    getCosmeticsFacets(baseWhere),
-  ]);
+  const [products, total, brands, scentFacets, structureFacets, cosmeticsFacets, topProducts] =
+    await Promise.all([
+      prisma.product.findMany({
+        where,
+        orderBy: buildOrderBy(filters.sort),
+        skip: (filters.page - 1) * PAGE_SIZE,
+        take: PAGE_SIZE,
+        include: { brand: true, images: { orderBy: { sortOrder: "asc" }, take: 1 } },
+      }),
+      prisma.product.count({ where }),
+      getAvailableBrands(baseWhere),
+      getScentFamilyFacets(baseWhere),
+      getPerfumeStructureFacets(baseWhere),
+      getCosmeticsFacets(baseWhere),
+      // Independent of the visitor's active filter selections — always
+      // reflects the category itself. Ties (e.g. everything at 0 sales for a
+      // freshly-added category) fall through to priority, so this doubles as
+      // the "nothing sold yet" fallback without extra branching.
+      prisma.product.findMany({
+        where: { visible: true, AND: [baseWhere, primaryVariantWhere] },
+        orderBy: [{ salesCount: "desc" }, { priority: "desc" }, { createdAt: "desc" }],
+        take: 4,
+        include: { brand: true, images: { orderBy: { sortOrder: "asc" }, take: 1 } },
+      }),
+    ]);
 
   const totalPages = Math.ceil(total / PAGE_SIZE);
 
@@ -99,6 +111,7 @@ export default async function CategoryPage({
           scentFamilies={scentFacets}
           structure={structureFacets}
           cosmetics={cosmeticsFacets}
+          topProducts={topProducts}
         />
 
         <div className="flex flex-1 flex-col gap-6">
