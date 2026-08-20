@@ -108,6 +108,7 @@ model Product {
   scentFamilies ProductScentFamily[]
   skinTypes     ProductSkinType[]
   concerns      ProductConcern[]
+  scentNotes    ProductScentNotes?
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -181,6 +182,32 @@ model ProductConcern {
 
   @@id([productId, concernId])
   @@index([concernId])
+}
+
+// ---------------------------------------------------------------------------
+// ProductScentNotes — top/middle/base fragrance note pyramid, sourced from a
+// third-party perfume data API (see scripts/fetch-scent-notes.ts). Pilot
+// batch only (20 well-known designer fragrances) — not run for the full
+// catalog. `topNotes`/`middleNotes`/`baseNotes` are JSON arrays of
+// {name, imageUrl}; `mainAccords` is a JSON array of {name, intensity}.
+// ---------------------------------------------------------------------------
+
+model ProductScentNotes {
+  id        String  @id @default(cuid())
+  productId String  @unique
+  product   Product @relation(fields: [productId], references: [id], onDelete: Cascade)
+
+  topNotes    Json
+  middleNotes Json
+  baseNotes   Json
+  mainAccords Json?
+
+  source      String  @default("fragella")
+  sourceName  String? // the fragrance name as matched in the source DB, for auditing
+  sourceUrl   String?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 }
 
 // ---------------------------------------------------------------------------

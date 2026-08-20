@@ -16,6 +16,7 @@ import { estimateDeliveryDate, formatDeliveryEstimate } from "@/lib/delivery-est
 import { ReviewForm } from "@/components/review-form";
 import { ProductGallery } from "@/components/product-gallery";
 import { primaryVariantWhere } from "@/lib/product-filters";
+import { ScentNotesPyramid } from "@/components/scent-notes-pyramid";
 
 async function getProduct(slug: string) {
   return prisma.product.findUnique({
@@ -25,6 +26,7 @@ async function getProduct(slug: string) {
       images: { orderBy: { sortOrder: "asc" } },
       reviews: { where: { published: true }, orderBy: { date: "desc" }, take: 10 },
       categories: { include: { category: true } },
+      scentNotes: true,
     },
   });
 }
@@ -259,6 +261,15 @@ export default async function ProductPage({
           )}
         </div>
       </div>
+
+      {product.scentNotes && (
+        <ScentNotesPyramid
+          topNotes={product.scentNotes.topNotes}
+          middleNotes={product.scentNotes.middleNotes}
+          baseNotes={product.scentNotes.baseNotes}
+          mainAccords={product.scentNotes.mainAccords}
+        />
+      )}
 
       <section className="flex flex-col gap-4 border-t border-line pt-6">
         <h2 className="text-lg font-bold text-ink">
