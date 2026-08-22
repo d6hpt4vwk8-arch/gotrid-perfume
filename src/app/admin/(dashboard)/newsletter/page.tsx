@@ -1,15 +1,42 @@
 import { prisma } from "@/lib/prisma";
 import { getNewsletterRecipientCount, sendNewsletterCampaign } from "@/lib/admin/actions/newsletter";
+import { previewSecondOrderCandidates } from "@/lib/marketing/second-order-campaign";
 
 export default async function AdminNewsletterPage() {
-  const [recipientCount, campaigns] = await Promise.all([
+  const [recipientCount, campaigns, upcomingSecondOrder] = await Promise.all([
     getNewsletterRecipientCount(),
     prisma.newsletterCampaign.findMany({ orderBy: { sentAt: "desc" }, take: 20 }),
+    previewSecondOrderCandidates(),
   ]);
 
   return (
     <div className="flex max-w-2xl flex-col gap-6">
       <h1 className="text-2xl font-bold text-ink">Newsletter</h1>
+
+      <div className="rounded-sm border border-line bg-white p-4">
+        <span className="mb-2 block text-xs font-semibold uppercase text-accent-2">
+          E-mail „druhá objednávka" — komu se pošle v příštím běhu ({upcomingSecondOrder.length})
+        </span>
+        {upcomingSecondOrder.length === 0 ? (
+          <p className="text-sm text-accent-2">Momentálně nikdo nesplňuje podmínky.</p>
+        ) : (
+          <ul className="flex flex-col divide-y divide-line text-sm">
+            {upcomingSecondOrder.map((c) => (
+              <li key={c.orderId} className="flex justify-between py-1.5">
+                <span>{c.firstName}</span>
+                <span className="text-accent-2">{c.email}</span>
+              </li>
+            ))}
+          </ul>
+        )}
+        <p className="mt-2 text-xs text-accent-2">
+          Reálně odeslané e-maily (s vygenerovaným kódem) najdete v{" "}
+          <a href="/admin/log" className="underline">
+            Logu činností
+          </a>
+          .
+        </p>
+      </div>
 
       <div className="rounded-sm border border-line bg-white p-4">
         <form action={sendNewsletterCampaign} className="flex flex-col gap-4">

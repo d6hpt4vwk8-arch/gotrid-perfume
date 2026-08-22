@@ -12,6 +12,9 @@ const ACTION_LABELS: Record<string, string> = {
   "coupon.create": "Vytvoření slevového kódu",
   "coupon.update": "Úprava slevového kódu",
   "coupon.delete": "Smazání slevového kódu",
+  "order.packeta_label_created": "Vytvoření štítku Zásilkovna",
+  "marketing.second_order_email": "E-mail druhá objednávka",
+  "newsletter.send": "Odeslání newsletteru",
 };
 
 export default async function AdminActivityLogPage({

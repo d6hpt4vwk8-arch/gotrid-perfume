@@ -88,15 +88,27 @@ export default async function AdminSettingsPage() {
           />
         </label>
         <label className="flex flex-col gap-1 text-sm">
-          Slevový kód v e-mailu
+          Výše slevy (%)
           <input
-            name="secondOrderCouponCode"
-            defaultValue={raw.secondOrderCouponCode}
+            name="secondOrderDiscountPercent"
+            type="number"
+            step="1"
+            min="1"
+            max="90"
+            defaultValue={raw.secondOrderDiscountPercent}
+            className="rounded-sm border border-line px-3 py-2"
+          />
+        </label>
+        <label className="flex flex-col gap-1 text-sm">
+          Předpona kódu
+          <input
+            name="secondOrderCouponPrefix"
+            defaultValue={raw.secondOrderCouponPrefix}
             className="rounded-sm border border-line px-3 py-2"
           />
           <span className="text-xs text-accent-2">
-            Pokud kód s tímto názvem neexistuje, vytvoří se automaticky (10 % sleva) — hodnotu a
-            limity pak lze upravit na stránce Slevové kódy.
+            Každý e-mail dostane vlastní jednorázový kód (např. {raw.secondOrderCouponPrefix}
+            X7K2Q9) — funguje jen jednou, nedá se sdílet ani používat opakovaně.
           </span>
         </label>
         <button

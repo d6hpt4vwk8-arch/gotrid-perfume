@@ -13,12 +13,13 @@ const settingsSchema = z.object({
   shippingPriceBalikovna: z.coerce.number().min(0).max(10_000),
   codSurcharge: z.coerce.number().min(0).max(10_000),
   secondOrderDelayDays: z.coerce.number().int().min(1).max(365),
-  secondOrderCouponCode: z
+  secondOrderDiscountPercent: z.coerce.number().int().min(1).max(90),
+  secondOrderCouponPrefix: z
     .string()
     .trim()
     .min(2)
-    .max(50)
-    .transform((v) => v.toUpperCase()),
+    .max(20)
+    .transform((v) => v.toUpperCase().replace(/[^A-Z0-9]/g, "")),
 });
 
 export async function updateSettings(formData: FormData) {

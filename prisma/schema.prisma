@@ -491,12 +491,13 @@ model Settings {
   codSurcharge            Decimal @default(30) @db.Decimal(10, 2)
 
   // "Come back and order again" email campaign — days after a customer's
-  // (only) order before we email them, and which Coupon.code to offer. The
-  // coupon is auto-created with sane defaults on first cron run if missing
-  // (see src/lib/marketing/second-order-campaign.ts); edit its value/limits
-  // via the normal Slevové kódy admin page.
-  secondOrderDelayDays   Int    @default(14)
-  secondOrderCouponCode  String @default("DRUHY10")
+  // (only) order before we email them. Each email gets its own freshly
+  // generated single-use coupon (prefix + random suffix, usageLimit 1) at
+  // this discount percentage, so the code can't be reused or shared for
+  // repeat discounts (see src/lib/marketing/second-order-campaign.ts).
+  secondOrderDelayDays       Int    @default(14)
+  secondOrderDiscountPercent Int    @default(5)
+  secondOrderCouponPrefix    String @default("DRUHY")
 
   updatedAt DateTime @updatedAt
 }
