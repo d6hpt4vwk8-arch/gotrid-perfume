@@ -1,3 +1,4 @@
+import Link from "next/link";
 import { notFound } from "next/navigation";
 import { prisma } from "@/lib/prisma";
 import { formatPrice } from "@/lib/format";
@@ -13,7 +14,12 @@ export default async function AdminOrderDetailPage({
   const { id } = await params;
   const order = await prisma.order.findUnique({
     where: { id },
-    include: { items: true, customer: true },
+    include: {
+      customer: true,
+      items: {
+        include: { product: { include: { images: { take: 1, orderBy: { sortOrder: "asc" } } } } },
+      },
+    },
   });
   if (!order) notFound();
 
@@ -70,14 +76,47 @@ export default async function AdminOrderDetailPage({
           Položky
         </span>
         <ul className="flex flex-col divide-y divide-line text-sm">
-          {order.items.map((item) => (
-            <li key={item.id} className="flex justify-between py-2">
-              <span>
-                {item.name} × {item.qty}
+          {order.items.map((item) => {
+            const image = item.product?.images[0];
+            const thumb = image ? (
+              // eslint-disable-next-line @next/next/no-img-element
+              <img
+                src={image.url}
+                alt=""
+                className="h-12 w-12 shrink-0 rounded-sm border border-line object-cover"
+              />
+            ) : (
+              <div className="h-12 w-12 shrink-0 rounded-sm border border-line bg-line/30" />
+            );
+            const details = (
+              <span className="flex flex-col">
+                <span>
+                  {item.name} × {item.qty}
+                </span>
+                {item.ean && <span className="text-xs text-accent-2">EAN: {item.ean}</span>}
               </span>
-              <span>{formatPrice(Number(item.unitPrice) * item.qty)}</span>
-            </li>
-          ))}
+            );
+            return (
+              <li key={item.id} className="flex items-center justify-between gap-3 py-2">
+                {item.productId ? (
+                  <Link
+                    href={`/admin/produkty/${item.productId}`}
+                    target="_blank"
+                    className="flex min-w-0 flex-1 items-center gap-3 hover:underline"
+                  >
+                    {thumb}
+                    {details}
+                  </Link>
+                ) : (
+                  <span className="flex min-w-0 flex-1 items-center gap-3">
+                    {thumb}
+                    {details}
+                  </span>
+                )}
+                <span className="shrink-0">{formatPrice(Number(item.unitPrice) * item.qty)}</span>
+              </li>
+            );
+          })}
         </ul>
         <div className="mt-3 flex flex-col gap-1 border-t border-line pt-3 text-sm">
           <div className="flex justify-between text-accent-2">
