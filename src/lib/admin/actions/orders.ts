@@ -20,6 +20,8 @@ export async function updateOrderStatus(id: string, formData: FormData) {
   await requireAdmin();
   const status = String(formData.get("status") ?? "");
   const trackingNumber = String(formData.get("trackingNumber") ?? "").trim() || null;
+  const weightRaw = String(formData.get("weight") ?? "").trim().replace(",", ".");
+  const weight = weightRaw && Number(weightRaw) > 0 ? weightRaw : "0.5";
   if (!VALID_STATUSES.includes(status as OrderStatus)) {
     throw new Error("Neplatný stav objednávky.");
   }
@@ -27,7 +29,7 @@ export async function updateOrderStatus(id: string, formData: FormData) {
   const before = await prisma.order.findUniqueOrThrow({ where: { id } });
   const order = await prisma.order.update({
     where: { id },
-    data: { status: status as OrderStatus, trackingNumber },
+    data: { status: status as OrderStatus, trackingNumber, weight },
   });
 
   if (before.status !== order.status) {

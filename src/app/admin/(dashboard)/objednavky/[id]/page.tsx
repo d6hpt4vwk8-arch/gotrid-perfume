@@ -21,14 +21,26 @@ export default async function AdminOrderDetailPage({
     <div className="flex max-w-3xl flex-col gap-6">
       <div className="flex items-center justify-between">
         <h1 className="text-2xl font-bold text-ink">Objednávka {order.number}</h1>
-        <a
-          href={`/api/orders/${order.number}/faktura`}
-          target="_blank"
-          rel="noreferrer"
-          className="text-sm font-medium underline"
-        >
-          Faktura (PDF)
-        </a>
+        <div className="flex items-center gap-4">
+          {order.shippingMethod === "ZASILKOVNA" && (
+            <a
+              href={`/api/admin/orders/${order.id}/label`}
+              target="_blank"
+              rel="noreferrer"
+              className="text-sm font-medium underline"
+            >
+              Štítek Zásilkovna (PDF)
+            </a>
+          )}
+          <a
+            href={`/api/orders/${order.number}/faktura`}
+            target="_blank"
+            rel="noreferrer"
+            className="text-sm font-medium underline"
+          >
+            Faktura (PDF)
+          </a>
+        </div>
       </div>
 
       <div className="grid grid-cols-2 gap-6 rounded-sm border border-line bg-white p-4 text-sm">
@@ -111,6 +123,19 @@ export default async function AdminOrderDetailPage({
             defaultValue={order.trackingNumber ?? ""}
             className="rounded-sm border border-line px-3 py-2 text-sm"
           />
+          {order.shippingMethod === "ZASILKOVNA" && (
+            <label className="flex items-center gap-2 text-sm text-accent-2">
+              Váha (kg)
+              <input
+                name="weight"
+                type="number"
+                step="0.1"
+                min="0.1"
+                defaultValue={order.weight.toString()}
+                className="w-20 rounded-sm border border-line px-3 py-2 text-sm"
+              />
+            </label>
+          )}
           <button
             type="submit"
             className="rounded-sm bg-ink px-4 py-2 text-sm font-medium text-white hover:bg-accent"
@@ -118,6 +143,9 @@ export default async function AdminOrderDetailPage({
             Uložit
           </button>
         </form>
+        {order.packetaId && (
+          <p className="mt-3 text-xs text-accent-2">Packeta ID zásilky: {order.packetaId}</p>
+        )}
       </div>
     </div>
   );
