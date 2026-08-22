@@ -13,6 +13,7 @@ const ACTION_LABELS: Record<string, string> = {
   "coupon.update": "Úprava slevového kódu",
   "coupon.delete": "Smazání slevového kódu",
   "order.packeta_label_created": "Vytvoření štítku Zásilkovna",
+  "order.auto_delivered": "Automaticky doručeno (Zásilkovna)",
   "marketing.second_order_email": "E-mail druhá objednávka",
   "newsletter.send": "Odeslání newsletteru",
 };

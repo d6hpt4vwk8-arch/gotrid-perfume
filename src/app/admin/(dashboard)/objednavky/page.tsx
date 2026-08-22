@@ -2,6 +2,7 @@ import Link from "next/link";
 import { prisma } from "@/lib/prisma";
 import { formatPrice } from "@/lib/format";
 import { ORDER_STATUS_LABELS } from "@/lib/orders/status-labels";
+import { getCustomerReputationMap } from "@/lib/customer-reputation";
 import type { OrderStatus } from "@prisma/client";
 
 const PAGE_SIZE = 30;
@@ -24,6 +25,7 @@ export default async function AdminOrdersPage({
     }),
     prisma.order.count({ where }),
   ]);
+  const reputationMap = await getCustomerReputationMap(orders.map((o) => o.email));
 
   const totalPages = Math.max(1, Math.ceil(total / PAGE_SIZE));
 
@@ -81,6 +83,16 @@ export default async function AdminOrdersPage({
                 </td>
                 <td className="px-3 py-2">
                   {o.firstName} {o.lastName}
+                  {reputationMap.get(o.email)?.risk && (
+                    <span title="Má zrušenou/vrácenou objednávku" className="ml-1.5">
+                      😠
+                    </span>
+                  )}
+                  {reputationMap.get(o.email)?.repeat && (
+                    <span title="Stálý zákazník (2+ objednávky)" className="ml-1.5">
+                      😊
+                    </span>
+                  )}
                 </td>
                 <td className="px-3 py-2">{formatPrice(o.total)}</td>
                 <td className="px-3 py-2">{ORDER_STATUS_LABELS[o.status]}</td>

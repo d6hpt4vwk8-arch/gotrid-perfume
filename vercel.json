@@ -7,7 +7,7 @@
       "schedule": "0 6 * * *"
     },
     {
-      "path": "/api/cron/second-order-campaign",
+      "path": "/api/cron/daily-tasks",
       "schedule": "0 8 * * *"
     }
   ]

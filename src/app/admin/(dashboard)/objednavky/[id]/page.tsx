@@ -5,6 +5,7 @@ import { formatPrice } from "@/lib/format";
 import { SHIPPING_LABELS, PAYMENT_LABELS } from "@/lib/shipping";
 import { ORDER_STATUS_LABELS } from "@/lib/orders/status-labels";
 import { updateOrderStatus } from "@/lib/admin/actions/orders";
+import { getCustomerReputationMap } from "@/lib/customer-reputation";
 
 export default async function AdminOrderDetailPage({
   params,
@@ -22,6 +23,7 @@ export default async function AdminOrderDetailPage({
     },
   });
   if (!order) notFound();
+  const reputation = (await getCustomerReputationMap([order.email])).get(order.email);
 
   return (
     <div className="flex max-w-3xl flex-col gap-6">
@@ -54,6 +56,16 @@ export default async function AdminOrderDetailPage({
           <span className="text-xs font-semibold uppercase text-accent-2">Zákazník</span>
           <span>
             {order.firstName} {order.lastName}
+            {reputation?.risk && (
+              <span title="Má zrušenou/vrácenou objednávku" className="ml-1.5">
+                😠
+              </span>
+            )}
+            {reputation?.repeat && (
+              <span title="Stálý zákazník (2+ objednávky)" className="ml-1.5">
+                😊
+              </span>
+            )}
           </span>
           <span>{order.email}</span>
           <span>{order.phone}</span>
