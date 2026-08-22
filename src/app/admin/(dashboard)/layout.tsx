@@ -9,6 +9,7 @@ const NAV_ITEMS = [
   { href: "/admin/znacky", label: "Značky" },
   { href: "/admin/objednavky", label: "Objednávky" },
   { href: "/admin/slevove-kody", label: "Slevové kódy" },
+  { href: "/admin/newsletter", label: "Newsletter" },
   { href: "/admin/import", label: "Import XLSX" },
   { href: "/admin/nastaveni", label: "Nastavení" },
   { href: "/admin/log", label: "Log činností" },

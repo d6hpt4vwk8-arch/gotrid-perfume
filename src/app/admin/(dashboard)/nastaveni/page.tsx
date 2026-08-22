@@ -1,8 +1,12 @@
+import { prisma } from "@/lib/prisma";
 import { getSettings } from "@/lib/settings.server";
 import { updateSettings } from "@/lib/admin/actions/settings";
 
 export default async function AdminSettingsPage() {
-  const settings = await getSettings();
+  const [settings, raw] = await Promise.all([
+    getSettings(),
+    prisma.settings.upsert({ where: { id: "singleton" }, update: {}, create: { id: "singleton" } }),
+  ]);
 
   return (
     <div className="flex flex-col gap-6">
@@ -68,6 +72,32 @@ export default async function AdminSettingsPage() {
             defaultValue={settings.codSurcharge}
             className="rounded-sm border border-line px-3 py-2"
           />
+        </label>
+        <div className="mt-2 border-t border-line pt-4 text-xs font-semibold uppercase text-accent-2">
+          E-mail „druhá objednávka"
+        </div>
+        <label className="flex flex-col gap-1 text-sm">
+          Odeslat po (dnech od první objednávky)
+          <input
+            name="secondOrderDelayDays"
+            type="number"
+            step="1"
+            min="1"
+            defaultValue={raw.secondOrderDelayDays}
+            className="rounded-sm border border-line px-3 py-2"
+          />
+        </label>
+        <label className="flex flex-col gap-1 text-sm">
+          Slevový kód v e-mailu
+          <input
+            name="secondOrderCouponCode"
+            defaultValue={raw.secondOrderCouponCode}
+            className="rounded-sm border border-line px-3 py-2"
+          />
+          <span className="text-xs text-accent-2">
+            Pokud kód s tímto názvem neexistuje, vytvoří se automaticky (10 % sleva) — hodnotu a
+            limity pak lze upravit na stránce Slevové kódy.
+          </span>
         </label>
         <button
           type="submit"

@@ -28,3 +28,15 @@ export async function updateSavedAddress(formData: FormData) {
 
   revalidatePath("/muj-ucet");
 }
+
+export async function updateMarketingOptIn(formData: FormData) {
+  const customerId = await getCurrentCustomerId();
+  if (!customerId) throw new Error("Nejste přihlášeni.");
+
+  await prisma.customer.update({
+    where: { id: customerId },
+    data: { marketingOptIn: formData.get("marketingOptIn") === "on" },
+  });
+
+  revalidatePath("/muj-ucet");
+}

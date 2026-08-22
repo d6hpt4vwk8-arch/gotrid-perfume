@@ -5,6 +5,10 @@
     {
       "path": "/api/cron/sync-spventure-stock",
       "schedule": "0 6 * * *"
+    },
+    {
+      "path": "/api/cron/second-order-campaign",
+      "schedule": "0 8 * * *"
     }
   ]
 }

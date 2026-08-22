@@ -45,6 +45,7 @@ export async function POST(req: NextRequest) {
       firstName: parsed.data.firstName,
       lastName: parsed.data.lastName,
       phone: parsed.data.phone,
+      marketingOptIn: parsed.data.marketingOptIn,
     },
   });
 

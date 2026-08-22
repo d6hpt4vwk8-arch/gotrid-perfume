@@ -11,6 +11,7 @@ export default function RegisterPage() {
   const [firstName, setFirstName] = useState("");
   const [lastName, setLastName] = useState("");
   const [phone, setPhone] = useState("");
+  const [marketingOptIn, setMarketingOptIn] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [submitting, setSubmitting] = useState(false);
 
@@ -23,7 +24,14 @@ export default function RegisterPage() {
       const res = await fetch("/api/customer/register", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ email, password, firstName, lastName, phone: phone || undefined }),
+        body: JSON.stringify({
+          email,
+          password,
+          firstName,
+          lastName,
+          phone: phone || undefined,
+          marketingOptIn,
+        }),
       });
       const data = await res.json();
       if (!res.ok) {
@@ -89,6 +97,15 @@ export default function RegisterPage() {
           onChange={(e) => setPassword(e.target.value)}
           className="rounded-sm border border-line px-3 py-2 text-sm text-ink"
         />
+        <label className="flex items-start gap-2 text-sm text-accent-2">
+          <input
+            type="checkbox"
+            checked={marketingOptIn}
+            onChange={(e) => setMarketingOptIn(e.target.checked)}
+            className="mt-0.5"
+          />
+          Chci dostávat novinky a slevy e-mailem.
+        </label>
         {error && <p className="text-sm text-red-600">{error}</p>}
         <button
           type="submit"

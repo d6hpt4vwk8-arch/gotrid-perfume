@@ -6,6 +6,7 @@ export const registerSchema = z.object({
   firstName: z.string().trim().min(1, "Zadejte jméno.").max(100),
   lastName: z.string().trim().min(1, "Zadejte příjmení.").max(100),
   phone: z.string().trim().max(30).optional(),
+  marketingOptIn: z.boolean().default(false),
 });
 
 export const loginSchema = z.object({

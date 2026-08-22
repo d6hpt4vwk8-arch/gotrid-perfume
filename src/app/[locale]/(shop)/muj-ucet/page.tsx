@@ -4,7 +4,7 @@ import { prisma } from "@/lib/prisma";
 import { formatPrice } from "@/lib/format";
 import { ORDER_STATUS_LABELS } from "@/lib/orders/status-labels";
 import { getCurrentCustomer } from "@/lib/customer/get-current-customer";
-import { updateSavedAddress } from "@/lib/customer/actions";
+import { updateSavedAddress, updateMarketingOptIn } from "@/lib/customer/actions";
 import { CustomerLogoutButton } from "@/components/customer/logout-button";
 
 export default async function AccountPage() {
@@ -102,6 +102,26 @@ export default async function AccountPage() {
               className="w-full rounded-sm border border-line px-3 py-2 text-sm text-ink"
             />
           </div>
+          <button
+            type="submit"
+            className="w-fit rounded-sm bg-ink px-5 py-2.5 text-sm font-semibold text-white hover:bg-accent"
+          >
+            Uložit
+          </button>
+        </form>
+      </section>
+
+      <section className="flex flex-col gap-4">
+        <h2 className="text-lg font-bold text-ink">Odběr novinek</h2>
+        <form action={updateMarketingOptIn} className="flex flex-col gap-3 max-w-sm">
+          <label className="flex items-center gap-2 text-sm text-ink">
+            <input
+              type="checkbox"
+              name="marketingOptIn"
+              defaultChecked={customer.marketingOptIn}
+            />
+            Chci dostávat novinky a slevy e-mailem.
+          </label>
           <button
             type="submit"
             className="w-fit rounded-sm bg-ink px-5 py-2.5 text-sm font-semibold text-white hover:bg-accent"
