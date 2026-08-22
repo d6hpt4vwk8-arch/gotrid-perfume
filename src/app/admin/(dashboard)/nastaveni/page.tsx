@@ -74,7 +74,7 @@ export default async function AdminSettingsPage() {
           />
         </label>
         <div className="mt-2 border-t border-line pt-4 text-xs font-semibold uppercase text-accent-2">
-          E-mail „druhá objednávka"
+          E-mail „druhá objednávka“
         </div>
         <label className="flex flex-col gap-1 text-sm">
           Odeslat po (dnech od první objednávky)

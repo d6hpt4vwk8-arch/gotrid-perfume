@@ -1,3 +1,4 @@
+import Link from "next/link";
 import { prisma } from "@/lib/prisma";
 import { getNewsletterRecipientCount, sendNewsletterCampaign } from "@/lib/admin/actions/newsletter";
 import { previewSecondOrderCandidates } from "@/lib/marketing/second-order-campaign";
@@ -15,7 +16,7 @@ export default async function AdminNewsletterPage() {
 
       <div className="rounded-sm border border-line bg-white p-4">
         <span className="mb-2 block text-xs font-semibold uppercase text-accent-2">
-          E-mail „druhá objednávka" — komu se pošle v příštím běhu ({upcomingSecondOrder.length})
+          E-mail „druhá objednávka“ — komu se pošle v příštím běhu ({upcomingSecondOrder.length})
         </span>
         {upcomingSecondOrder.length === 0 ? (
           <p className="text-sm text-accent-2">Momentálně nikdo nesplňuje podmínky.</p>
@@ -31,9 +32,9 @@ export default async function AdminNewsletterPage() {
         )}
         <p className="mt-2 text-xs text-accent-2">
           Reálně odeslané e-maily (s vygenerovaným kódem) najdete v{" "}
-          <a href="/admin/log" className="underline">
+          <Link href="/admin/log" className="underline">
             Logu činností
-          </a>
+          </Link>
           .
         </p>
       </div>
