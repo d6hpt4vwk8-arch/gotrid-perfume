@@ -2,7 +2,9 @@ import { NextResponse } from "next/server";
 import { getFeedProducts } from "@/lib/feeds/get-feed-products";
 import { buildGoogleShoppingRss } from "@/lib/feeds/google-shopping-rss";
 
-export const revalidate = 3600;
+// Rendered per-request rather than ISR-cached — see feeds/heureka.xml/route.ts
+// for why (oversized-ISR-page build failure past ~15k products).
+export const dynamic = "force-dynamic";
 
 export async function GET() {
   const products = await getFeedProducts();

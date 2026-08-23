@@ -9,7 +9,11 @@ import { getSettings } from "@/lib/settings.server";
 // goes live in Heureka Business Center — Heureka updates delivery codes
 // occasionally and a stale code would just be silently ignored by them.
 // Prices are owner-editable in /admin/nastaveni, not hardcoded.
-export const revalidate = 3600;
+// Rendered per-request rather than ISR-cached: past ~15k products the full
+// feed exceeds Vercel's 19.07 MB pre-rendered-response cap and fails the
+// build (FALLBACK_BODY_TOO_LARGE) — first hit by the perfumes-wholesale.eu
+// import (2026-08-23), which pushed the catalog past that size.
+export const dynamic = "force-dynamic";
 
 export async function GET() {
   const settings = await getSettings();
