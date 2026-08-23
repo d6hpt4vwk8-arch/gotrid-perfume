@@ -5,7 +5,12 @@ import { prisma } from "@/lib/prisma";
 // tag fired in src/components/sklik-conversion.tsx. No signature scheme:
 // the secret key is sent as a plain JSON field directly to Zboží's server,
 // never exposed to the browser.
-const SHOP_ID = process.env.ZBOZI_SHOP_ID;
+// Shop ID is public info (shown unmasked in Zboží.cz's own seller dashboard),
+// so reusing the NEXT_PUBLIC_ var server-side here is safe — there's no
+// separate server-only ZBOZI_SHOP_ID and never was one in .env, which is
+// why this was silently no-op-ing (isZboziConversionConfigured() always
+// false) since the integration was added.
+const SHOP_ID = process.env.NEXT_PUBLIC_ZBOZI_SHOP_ID;
 const SECRET_KEY = process.env.ZBOZI_SECRET_KEY;
 
 export function isZboziConversionConfigured(): boolean {
