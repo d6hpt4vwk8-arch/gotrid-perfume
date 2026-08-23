@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { runSecondOrderCampaign } from "@/lib/marketing/second-order-campaign";
 import { syncPacketaDeliveryStatus } from "@/lib/orders/sync-packeta-delivery";
+import { syncPerfumesWholesaleStock } from "@/lib/sync/perfumeswholesale-stock";
 
 // Triggered by Vercel Cron (see vercel.json) — same auth pattern as
 // src/app/api/cron/sync-spventure-stock/route.ts. Bundles the daily
@@ -13,10 +14,11 @@ export async function GET(req: NextRequest) {
     return NextResponse.json({ error: "Neautorizováno." }, { status: 401 });
   }
 
-  const [secondOrder, delivery] = await Promise.all([
+  const [secondOrder, delivery, perfumesWholesaleStock] = await Promise.all([
     runSecondOrderCampaign(),
     syncPacketaDeliveryStatus(),
+    syncPerfumesWholesaleStock(),
   ]);
 
-  return NextResponse.json({ secondOrder, delivery });
+  return NextResponse.json({ secondOrder, delivery, perfumesWholesaleStock });
 }
