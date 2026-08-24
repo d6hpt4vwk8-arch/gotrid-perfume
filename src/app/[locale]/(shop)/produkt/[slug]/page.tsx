@@ -5,6 +5,7 @@ import { prisma } from "@/lib/prisma";
 import { formatPrice } from "@/lib/format";
 import { AddToCartButton } from "@/components/add-to-cart-button";
 import { ProductViewTracker } from "@/components/product-view-tracker";
+import { HeurekaProductView } from "@/components/heureka-product-view";
 import { sanitizeDescription } from "@/lib/sanitize-description";
 import { jsonLdScript } from "@/lib/json-ld";
 import { ProductCard } from "@/components/product-card";
@@ -131,6 +132,7 @@ export default async function ProductPage({
       <ProductViewTracker
         product={{ id: product.id, name: product.name, price: Number(product.price) }}
       />
+      <HeurekaProductView />
 
       <div className="grid gap-8 md:grid-cols-2">
         <ProductGallery images={product.images} alt={product.name} />

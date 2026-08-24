@@ -6,6 +6,7 @@ import { prisma } from "@/lib/prisma";
 import { formatPrice } from "@/lib/format";
 import { calculateSklikConversionValue } from "@/lib/sklik";
 import { SklikConversion } from "@/components/sklik-conversion";
+import { HeurekaConversion } from "@/components/heureka-conversion";
 import { PAYMENT_LABELS, PICKUP_ADDRESS, SHIPPING_LABELS } from "@/lib/shipping";
 import { ORDER_STATUS_LABELS } from "@/lib/orders/status-labels";
 import { generateQrPlatbaDataUrl } from "@/lib/payments/qr-platba";
@@ -24,7 +25,7 @@ export default async function OrderConfirmationPage({
   const { number } = await params;
   const order = await prisma.order.findUnique({
     where: { number },
-    include: { items: true },
+    include: { items: { include: { product: { select: { code: true } } } } },
   });
   if (!order) notFound();
 
@@ -59,6 +60,16 @@ export default async function OrderConfirmationPage({
   return (
     <main className="mx-auto flex max-w-2xl flex-1 flex-col gap-6 px-4 py-10">
       <SklikConversion orderId={order.number} value={sklikConversionValue} />
+      <HeurekaConversion
+        orderId={order.number}
+        items={order.items.map((item) => ({
+          itemId: item.product?.code ?? item.ean ?? item.name,
+          name: item.name,
+          unitPrice: Number(item.unitPrice),
+          qty: item.qty,
+        }))}
+        totalVat={Number(order.total)}
+      />
       <h1 className="text-2xl font-bold text-ink">Děkujeme za objednávku!</h1>
       <p className="text-ink/70">
         Číslo objednávky <strong className="text-ink">{order.number}</strong>. Potvrzení jsme
