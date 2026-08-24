@@ -95,7 +95,17 @@ export default async function AdminOrdersPage({
                   )}
                 </td>
                 <td className="px-3 py-2">{formatPrice(o.total)}</td>
-                <td className="px-3 py-2">{ORDER_STATUS_LABELS[o.status]}</td>
+                <td className="px-3 py-2">
+                  {ORDER_STATUS_LABELS[o.status]}
+                  {o.paymentMethod === "CARD" && o.status === "NEW" && (
+                    <span
+                      title="Platba kartou zatím nepotvrzena — nevyřizovat, dokud se nezmění na Zaplaceno"
+                      className="ml-1.5 rounded-full bg-red-100 px-2 py-0.5 text-xs font-medium text-red-700"
+                    >
+                      ⚠ čeká na platbu
+                    </span>
+                  )}
+                </td>
               </tr>
             ))}
             {orders.length === 0 && (

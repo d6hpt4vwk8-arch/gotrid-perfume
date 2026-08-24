@@ -39,6 +39,14 @@ export async function createCheckoutSession({
     client_reference_id: orderId,
     success_url: successUrl,
     cancel_url: cancelUrl,
+    // Stripe's own default is 24h — far longer than a card payment ever
+    // legitimately takes, and long enough that an abandoned/failed checkout
+    // sits as a plain "NEW" order (stock already reserved, see create-order.ts)
+    // indistinguishable from a real COD/bank-transfer order for most of a
+    // business day. Shortened to 2h so the checkout.session.expired webhook
+    // (src/app/api/webhooks/stripe/route.ts) cancels it and releases stock
+    // promptly, while still giving a genuine slow payment attempt room.
+    expires_at: Math.floor(Date.now() / 1000) + 2 * 60 * 60,
     line_items: [
       {
         price_data: {
