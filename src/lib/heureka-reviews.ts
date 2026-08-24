@@ -20,7 +20,10 @@ type RawReview = {
 
 export async function getHeurekaShopReviews(limit = 6): Promise<HeurekaReview[]> {
   const key = process.env.HEUREKA_OVERENO_API_KEY;
-  if (!key) return [];
+  if (!key) {
+    console.error("Heureka reviews: HEUREKA_OVERENO_API_KEY is not set");
+    return [];
+  }
 
   try {
     const res = await fetch(`https://www.heureka.cz/direct/dotaznik/export-review.php?key=${key}`, {
