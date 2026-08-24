@@ -8,9 +8,17 @@ import { getSettings } from "@/lib/settings.server";
 // for why (oversized-ISR-page build failure past ~15k products).
 export const dynamic = "force-dynamic";
 
+// All 5 shipping methods the checkout actually offers (src/lib/shipping.ts),
+// keyed by the same ShippingMethod enum value order.shippingMethod holds —
+// so deliveryType sent to sendZboziConversion (src/lib/analytics/zbozi-conversion.ts,
+// set to order.shippingMethod verbatim) always matches one of these DELIVERY_ID
+// values exactly. Previously this feed only ever declared ZASILKOVNA, so any
+// order placed with PPL/DPD/BALIKOVNA/OSOBNI_ODBER got flagged by Zboží as
+// "DELIVERY_ID neodpovídá" — fixed by declaring all of them here.
+const DELIVERY_IDS = ["ZASILKOVNA", "PPL", "DPD", "BALIKOVNA", "OSOBNI_ODBER"] as const;
+
 export async function GET() {
   const settings = await getSettings();
-  const DELIVERY_PRICE = settings.shippingPrices.ZASILKOVNA;
 
   const allProducts = await getFeedProducts();
   const products = allProducts.filter((p) => p.stock > 0);
@@ -31,10 +39,12 @@ export async function GET() {
     ${p.ean && isValidEan(p.ean) ? `<EAN>${escapeXml(p.ean)}</EAN>` : ""}
     ${p.categoryBreadcrumb ? `<CATEGORYTEXT>${escapeXml(p.categoryBreadcrumb)}</CATEGORYTEXT>` : ""}
     <DELIVERY_DATE>${p.stock > 0 ? "1" : "7"}</DELIVERY_DATE>
-    <DELIVERY>
-      <DELIVERY_ID>ZASILKOVNA</DELIVERY_ID>
-      <DELIVERY_PRICE>${DELIVERY_PRICE.toFixed(2)}</DELIVERY_PRICE>
-    </DELIVERY>
+${DELIVERY_IDS.map(
+  (id) => `    <DELIVERY>
+      <DELIVERY_ID>${id}</DELIVERY_ID>
+      <DELIVERY_PRICE>${settings.shippingPrices[id].toFixed(2)}</DELIVERY_PRICE>
+    </DELIVERY>`,
+).join("\n")}
   </SHOPITEM>`;
     })
     .join("\n");
