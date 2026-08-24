@@ -3,6 +3,7 @@ import { prisma } from "@/lib/prisma";
 import { getCategoryNavTree } from "@/lib/categories.server";
 import { primaryVariantWhere } from "@/lib/product-filters";
 import { ProductCard } from "@/components/product-card";
+import { getHeurekaShopReviews } from "@/lib/heureka-reviews";
 
 async function getBestsellers() {
   // Real sales-ranked bestsellers — only meaningful once orders exist, so
@@ -35,11 +36,7 @@ export default async function HomePage() {
       include: { brand: true, images: { orderBy: { sortOrder: "asc" }, take: 1 } },
     }),
     getBestsellers(),
-    prisma.review.findMany({
-      orderBy: { date: "desc" },
-      take: 6,
-      include: { product: { select: { name: true, slug: true } } },
-    }),
+    getHeurekaShopReviews(6),
   ]);
 
   return (
@@ -112,21 +109,17 @@ export default async function HomePage() {
           <h2 className="mb-4 text-lg font-semibold">Poslední recenze</h2>
           <div className="grid gap-4 sm:grid-cols-2 md:grid-cols-3">
             {latestReviews.map((review) => (
-              <Link
+              <div
                 key={review.id}
-                href={`/produkt/${review.product.slug}`}
-                className="flex flex-col gap-1 rounded-lg border border-neutral-200 p-4 text-sm hover:border-neutral-400"
+                className="flex flex-col gap-1 rounded-lg border border-neutral-200 p-4 text-sm"
               >
                 <span className="font-medium">
                   {"★".repeat(review.rating)}
                   {"☆".repeat(5 - review.rating)}
                 </span>
-                {review.text && <p className="text-neutral-600 line-clamp-3">{review.text}</p>}
-                <span className="text-xs text-neutral-400">
-                  {review.product.name}
-                  {review.authorName && ` — ${review.authorName}`}
-                </span>
-              </Link>
+                <p className="text-neutral-600 line-clamp-3">{review.text}</p>
+                <span className="text-xs text-neutral-400">Ověřeno zákazníky — Heureka.cz</span>
+              </div>
             ))}
           </div>
         </section>
