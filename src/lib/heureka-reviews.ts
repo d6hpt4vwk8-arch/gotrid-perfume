@@ -27,7 +27,10 @@ export async function getHeurekaShopReviews(limit = 6): Promise<HeurekaReview[]>
       // Heureka regenerates this export every 6 hours — no point polling faster.
       next: { revalidate: 21600 },
     });
-    if (!res.ok) return [];
+    if (!res.ok) {
+      console.error("Heureka reviews export failed:", res.status, await res.text());
+      return [];
+    }
 
     const xml = await res.text();
     const parsed = new XMLParser().parse(xml) as { reviews?: { review?: RawReview | RawReview[] } };
@@ -45,7 +48,8 @@ export async function getHeurekaShopReviews(limit = 6): Promise<HeurekaReview[]>
       .filter((r) => r.text)
       .sort((a, b) => b.date.getTime() - a.date.getTime())
       .slice(0, limit);
-  } catch {
+  } catch (err) {
+    console.error("Heureka reviews export threw:", err);
     return [];
   }
 }
