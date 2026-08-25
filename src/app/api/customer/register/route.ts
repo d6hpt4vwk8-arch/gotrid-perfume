@@ -30,7 +30,7 @@ export async function POST(req: NextRequest) {
   await recordRateLimitHit(key);
 
   const existing = await prisma.customer.findUnique({ where: { email: parsed.data.email } });
-  if (existing) {
+  if (existing?.passwordHash) {
     return NextResponse.json(
       { error: "Účet s tímto e-mailem už existuje. Zkuste se přihlásit." },
       { status: 409 },
@@ -38,16 +38,30 @@ export async function POST(req: NextRequest) {
   }
 
   const passwordHash = await hashPassword(parsed.data.password);
-  const customer = await prisma.customer.create({
-    data: {
-      email: parsed.data.email,
-      passwordHash,
-      firstName: parsed.data.firstName,
-      lastName: parsed.data.lastName,
-      phone: parsed.data.phone,
-      marketingOptIn: parsed.data.marketingOptIn,
-    },
-  });
+  // A passwordless row already existing here means this email opted into the
+  // newsletter as a guest at checkout before ever registering — claim it
+  // instead of creating a duplicate (email is unique) or bouncing them.
+  const customer = existing
+    ? await prisma.customer.update({
+        where: { id: existing.id },
+        data: {
+          passwordHash,
+          firstName: parsed.data.firstName,
+          lastName: parsed.data.lastName,
+          phone: parsed.data.phone,
+          marketingOptIn: parsed.data.marketingOptIn,
+        },
+      })
+    : await prisma.customer.create({
+        data: {
+          email: parsed.data.email,
+          passwordHash,
+          firstName: parsed.data.firstName,
+          lastName: parsed.data.lastName,
+          phone: parsed.data.phone,
+          marketingOptIn: parsed.data.marketingOptIn,
+        },
+      });
 
   const res = NextResponse.json({ ok: true });
   res.cookies.set(

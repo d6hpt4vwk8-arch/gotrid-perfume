@@ -64,6 +64,7 @@ export function CheckoutForm({
   const [street, setStreet] = useState(customer?.addressStreet ?? "");
   const [city, setCity] = useState(customer?.addressCity ?? "");
   const [postalCode, setPostalCode] = useState(customer?.addressPostalCode ?? "");
+  const [newsletterOptIn, setNewsletterOptIn] = useState(customer?.marketingOptIn ?? false);
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -172,6 +173,7 @@ export function CheckoutForm({
           shippingPostalCode: !usesPickupPoint && !isPersonalPickup ? postalCode : undefined,
           items: items.map((i) => ({ productId: i.productId, qty: i.qty })),
           marketingConsent: Boolean(consent?.marketing),
+          newsletterOptIn,
           couponCode: coupon?.code,
         }),
       });
@@ -256,6 +258,15 @@ export function CheckoutForm({
               className="w-full rounded-sm border border-line px-3 py-2 text-sm text-ink"
             />
           </div>
+          <label className="flex items-start gap-2 text-sm text-ink">
+            <input
+              type="checkbox"
+              checked={newsletterOptIn}
+              onChange={(e) => setNewsletterOptIn(e.target.checked)}
+              className="mt-0.5 accent-accent"
+            />
+            Chci dostávat novinky a slevy e-mailem
+          </label>
         </fieldset>
 
         <fieldset className="flex flex-col gap-2">

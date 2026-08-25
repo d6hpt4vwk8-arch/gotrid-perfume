@@ -49,8 +49,8 @@ export async function sendNewsletterCampaign(formData: FormData): Promise<void> 
           ${body}
           <hr>
           <p style="font-size:12px;color:#666">
-            Tento e-mail dostáváte, protože jste se při registraci na Gotrid Perfume přihlásili k odběru
-            novinek. <a href="${await buildUnsubscribeUrl(email)}">Odhlásit se z těchto e-mailů</a>.
+            Tento e-mail dostáváte, protože jste se na Gotrid Perfume přihlásili k odběru novinek.
+            <a href="${await buildUnsubscribeUrl(email)}">Odhlásit se z těchto e-mailů</a>.
           </p>
         `,
       })),

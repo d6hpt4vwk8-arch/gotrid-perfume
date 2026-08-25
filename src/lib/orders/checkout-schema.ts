@@ -13,6 +13,7 @@ export const checkoutSchema = z
     shippingCity: z.string().max(100).optional(),
     shippingPostalCode: z.string().max(20).optional(),
     marketingConsent: z.boolean().optional().default(false),
+    newsletterOptIn: z.boolean().optional().default(false),
     couponCode: z.string().trim().max(50).optional(),
     items: z
       .array(

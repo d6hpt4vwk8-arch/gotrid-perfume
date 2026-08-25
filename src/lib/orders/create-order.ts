@@ -106,6 +106,27 @@ export async function createOrder(input: CheckoutInput, customerId?: string | nu
           include: { items: true },
         });
 
+        if (input.newsletterOptIn) {
+          // Upsert by email rather than customerId — covers guest checkouts
+          // (no Customer row yet) the same way as logged-in ones, and if the
+          // email later becomes a full account, register() below claims this
+          // row instead of bouncing on "already exists". Normalized the same
+          // way registerSchema normalizes it, so the two paths always match
+          // the same row instead of creating a case-variant duplicate.
+          const email = input.email.trim().toLowerCase();
+          await tx.customer.upsert({
+            where: { email },
+            update: { marketingOptIn: true },
+            create: {
+              email,
+              firstName: input.firstName,
+              lastName: input.lastName,
+              phone: input.phone,
+              marketingOptIn: true,
+            },
+          });
+        }
+
         return order;
       });
     } catch (err) {
