@@ -40,8 +40,8 @@ export async function HomeHero() {
             Arabské parfémy a korejská kosmetika za poctivou cenu.
           </h1>
           <p className="max-w-md text-sm leading-relaxed text-white/70">
-            Značková parfumerie a péče o pleť bez maloobchodní přirážky. Doručujeme po celé ČR,
-            doprava zdarma od 1 500 Kč.
+            Pečlivě vybrané parfémy a korejská péče, které v běžném e-shopu nenajdete — dovážíme
+            přímo od distributorů a ověřujeme původ každého kusu.
           </p>
           <div className="flex w-full flex-col gap-3 pt-1 sm:w-auto sm:flex-row sm:flex-wrap">
             <Link

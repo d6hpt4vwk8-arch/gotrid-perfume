@@ -1,9 +1,23 @@
 import { randomUUID, createHash, createHmac } from "node:crypto";
+import { readFileSync } from "node:fs";
+import path from "node:path";
+import { Agent } from "undici";
 
 // Česká pošta nAPI B2B — ZSKService (Balíkovna parcel shipments).
 // Spec: B2B-ZSKService OpenAPI (obtained from postaonline.cz → Služby pro
 // firmy → Správa B2B profilu). REST/JSON, not the older SOAP B2B service.
 const API_URL = "https://b2b.postaonline.cz:444/restservices/ZSKService/v1";
+
+// b2b.postaonline.cz serves a cert chain rooted at PostSignum (Česká pošta's
+// own qualified CA), which isn't in Node's/Vercel's default trust store —
+// plain fetch() fails the TLS handshake with an opaque "fetch failed" and no
+// further detail. Rather than disabling verification, trust this specific
+// CA chain (root + intermediate, same pair the reference Ruby B2B client
+// bundles) via a dedicated dispatcher.
+const postsignumCerts = ["postsignum_qca4_root.pem", "postsignum_vca5_sub.pem"].map((file) =>
+  readFileSync(path.join(process.cwd(), "src/lib/certs", file), "utf8"),
+);
+const balikovnaDispatcher = new Agent({ connect: { ca: postsignumCerts } });
 
 // Sender identifiers from Dohoda č. 2026/00278 (ID CČK 503806001).
 const CUSTOMER_ID = "M17422"; // technologické číslo podavatele
@@ -29,7 +43,10 @@ function requireEnv(name: "BALIKOVNA_API_TOKEN" | "BALIKOVNA_PRIVATE_KEY"): stri
 
 // HMAC_SHA256_Auth per the nAPI spec: sign
 // "Authorization-Content-SHA256;Authorization-Timestamp;nonce" with the
-// base64-decoded secret key, base64-encode the result.
+// secret key, base64-encode the result. The spec describes the secret key
+// as "in Base64 format" but that's just its storage encoding — verified
+// against the live API that the HMAC key is the base64 *string* itself
+// (its raw UTF-8 bytes), not the bytes you get from base64-decoding it.
 function buildAuthHeaders(bodyJson: string) {
   const apiToken = requireEnv("BALIKOVNA_API_TOKEN");
   const privateKey = requireEnv("BALIKOVNA_PRIVATE_KEY");
@@ -38,16 +55,14 @@ function buildAuthHeaders(bodyJson: string) {
   const contentSha256 = createHash("sha256").update(bodyJson, "utf8").digest("hex");
   const nonce = randomUUID();
   const signedString = `${contentSha256};${timestamp};${nonce}`;
-  const signature = createHmac("sha256", Buffer.from(privateKey, "base64"))
-    .update(signedString, "utf8")
-    .digest("base64");
+  const signature = createHmac("sha256", privateKey).update(signedString, "utf8").digest("base64");
 
   return {
     "Content-Type": "application/json",
     "Api-Token": apiToken,
     "Authorization-Timestamp": timestamp,
     "Authorization-Content-SHA256": contentSha256,
-    Authorization: `CP-HMAC-SHA256 nonce="${nonce}",signature="${signature}"`,
+    Authorization: `CP-HMAC-SHA256 nonce="${nonce}", signature="${signature}"`,
   };
 }
 
@@ -135,12 +150,14 @@ export async function createParcel(
       method: "POST",
       headers: buildAuthHeaders(bodyJson),
       body: bodyJson,
+      // @ts-expect-error -- dispatcher is an undici-specific fetch option not in the DOM lib types
+      dispatcher: balikovnaDispatcher,
     });
   } catch (err) {
-    console.error("Balíkovna API request failed:", err, "body:", bodyJson);
-    throw new BalikovnaError(
-      `Balíkovna API — chyba spojení: ${err instanceof Error ? err.message : String(err)}`,
-    );
+    const cause = err instanceof Error ? err.cause : undefined;
+    console.error("Balíkovna API request failed:", err, "cause:", cause, "body:", bodyJson);
+    const detail = cause instanceof Error ? cause.message : err instanceof Error ? err.message : String(err);
+    throw new BalikovnaError(`Balíkovna API — chyba spojení: ${detail}`);
   }
 
   const rawText = await res.text();
