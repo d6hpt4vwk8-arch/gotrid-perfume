@@ -49,7 +49,9 @@ export default function PodminkyVraceniZboziPage() {
       <h2>5. Postup při vrácení</h2>
       <p>
         Pro vrácení zboží nás prosím kontaktujte na emailu pavlohrytsan@gmail.com. Uveďte číslo
-        objednávky a důvod vrácení (není povinný). Po domluvě zašlete zboží na adresu:
+        objednávky a důvod vrácení (není povinný). Můžete využít i{" "}
+        <a href="/api/dokumenty/odstoupeni-od-smlouvy">vzorový formulář pro odstoupení od smlouvy (PDF)</a>
+        . Po domluvě zašlete zboží na adresu:
       </p>
       <p>
         Pavlo Hrytsan

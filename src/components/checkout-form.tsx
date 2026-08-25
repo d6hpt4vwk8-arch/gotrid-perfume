@@ -18,6 +18,7 @@ import { ZasilkovnaPicker } from "@/components/zasilkovna-picker";
 import { BalikovnaPicker } from "@/components/balikovna-picker";
 import { CustomerLogoutButton } from "@/components/customer/logout-button";
 import { TrustBadges } from "@/components/trust-badges";
+import { PaymentIcons } from "@/components/payment-icons";
 import type { Customer } from "@prisma/client";
 
 type ShippingMethod = keyof typeof SHIPPING_LABELS;
@@ -405,7 +406,10 @@ export function CheckoutForm({
 
         {error && <p className="text-sm text-red-600">{error}</p>}
 
-        <TrustBadges />
+        <div className="flex flex-col gap-2">
+          <TrustBadges />
+          <PaymentIcons />
+        </div>
 
         <button
           type="submit"
