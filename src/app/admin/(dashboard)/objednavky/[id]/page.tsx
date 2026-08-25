@@ -48,6 +48,16 @@ export default async function AdminOrderDetailPage({
               Štítek Zásilkovna (PDF)
             </a>
           )}
+          {order.shippingMethod === "BALIKOVNA" && (
+            <a
+              href={`/api/admin/orders/${order.id}/balikovna-label`}
+              target="_blank"
+              rel="noreferrer"
+              className="text-sm font-medium underline"
+            >
+              Štítek Balíkovna (PDF)
+            </a>
+          )}
           <a
             href={`/api/orders/${order.number}/faktura`}
             target="_blank"
@@ -204,6 +214,9 @@ export default async function AdminOrderDetailPage({
         </form>
         {order.packetaId && (
           <p className="mt-3 text-xs text-accent-2">Packeta ID zásilky: {order.packetaId}</p>
+        )}
+        {order.balikovnaParcelCode && (
+          <p className="mt-3 text-xs text-accent-2">Balíkovna kód zásilky: {order.balikovnaParcelCode}</p>
         )}
       </div>
     </div>

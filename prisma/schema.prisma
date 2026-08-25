@@ -402,6 +402,10 @@ model Order {
   packetaId String?
   weight    Decimal @default(0.5) @db.Decimal(10, 3)
 
+  // Balíkovna shipment (Česká pošta nAPI B2B ZSKService), same idea as
+  // packetaId — src/app/api/admin/orders/[id]/balikovna-label/route.ts.
+  balikovnaParcelCode String?
+
   couponCode     String?
   discountAmount Decimal @default(0) @db.Decimal(10, 2)
 
