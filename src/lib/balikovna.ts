@@ -1,7 +1,7 @@
 import { randomUUID, createHash, createHmac } from "node:crypto";
 import { readFileSync } from "node:fs";
 import path from "node:path";
-import { Agent } from "undici";
+import { Agent, fetch as undiciFetch } from "undici";
 
 // Česká pošta nAPI B2B — ZSKService (Balíkovna parcel shipments).
 // Spec: B2B-ZSKService OpenAPI (obtained from postaonline.cz → Služby pro
@@ -144,13 +144,17 @@ export async function createParcel(
   };
 
   const bodyJson = JSON.stringify(body);
-  let res: Response;
+  // Node's global fetch and the npm `undici` package are separate bundled
+  // instances — passing an Agent built from the npm package as `dispatcher`
+  // to global fetch fails with "invalid onRequestStart method" (learned the
+  // hard way in production). Using undici's own fetch keeps both from the
+  // same instance.
+  let res: Awaited<ReturnType<typeof undiciFetch>>;
   try {
-    res = await fetch(`${API_URL}/parcelService`, {
+    res = await undiciFetch(`${API_URL}/parcelService`, {
       method: "POST",
       headers: buildAuthHeaders(bodyJson),
       body: bodyJson,
-      // @ts-expect-error -- dispatcher is an undici-specific fetch option not in the DOM lib types
       dispatcher: balikovnaDispatcher,
     });
   } catch (err) {
