@@ -64,7 +64,11 @@ export async function GET(_req: NextRequest, { params }: { params: Promise<{ id:
       },
     });
   } catch (err) {
-    const message = err instanceof BalikovnaError ? err.message : "Nepodařilo se vytvořit štítek.";
+    console.error("Balíkovna label creation failed for order", order.number, err);
+    const message =
+      err instanceof BalikovnaError
+        ? err.message
+        : `Nepodařilo se vytvořit štítek: ${err instanceof Error ? err.message : String(err)}`;
     return NextResponse.json({ error: message }, { status: 502 });
   }
 }

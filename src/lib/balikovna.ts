@@ -129,18 +129,33 @@ export async function createParcel(
   };
 
   const bodyJson = JSON.stringify(body);
-  const res = await fetch(`${API_URL}/parcelService`, {
-    method: "POST",
-    headers: buildAuthHeaders(bodyJson),
-    body: bodyJson,
-  });
-
-  if (!res.ok) {
-    const text = await res.text().catch(() => "");
-    throw new BalikovnaError(`Balíkovna API vrátila HTTP ${res.status}: ${text}`);
+  let res: Response;
+  try {
+    res = await fetch(`${API_URL}/parcelService`, {
+      method: "POST",
+      headers: buildAuthHeaders(bodyJson),
+      body: bodyJson,
+    });
+  } catch (err) {
+    console.error("Balíkovna API request failed:", err, "body:", bodyJson);
+    throw new BalikovnaError(
+      `Balíkovna API — chyba spojení: ${err instanceof Error ? err.message : String(err)}`,
+    );
   }
 
-  const parsed = (await res.json()) as ParcelServiceResponse;
+  const rawText = await res.text();
+  if (!res.ok) {
+    console.error("Balíkovna API non-OK response:", res.status, rawText, "body:", bodyJson);
+    throw new BalikovnaError(`Balíkovna API vrátila HTTP ${res.status}: ${rawText}`);
+  }
+
+  let parsed: ParcelServiceResponse;
+  try {
+    parsed = JSON.parse(rawText) as ParcelServiceResponse;
+  } catch {
+    console.error("Balíkovna API returned non-JSON body:", rawText, "body:", bodyJson);
+    throw new BalikovnaError(`Balíkovna API vrátila neplatnou odpověď: ${rawText.slice(0, 500)}`);
+  }
   const header = parsed.responseHeader;
   const resultHeader = header?.resultHeader;
   if (resultHeader && resultHeader.responseCode !== 0) {
