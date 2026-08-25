@@ -3,6 +3,7 @@ import { prisma } from "@/lib/prisma";
 import { getCategoryNavTree } from "@/lib/categories.server";
 import { primaryVariantWhere } from "@/lib/product-filters";
 import { ProductCard } from "@/components/product-card";
+import { HomeHero } from "@/components/home-hero";
 import { getHeurekaShopReviews } from "@/lib/heureka-reviews";
 
 // K-beauty brands carried in the catalog — used to curate the homepage's
@@ -53,25 +54,7 @@ export default async function HomePage() {
 
   return (
     <main className="mx-auto flex max-w-6xl flex-1 flex-col gap-12 px-4 py-10">
-      <section
-        className="flex flex-col items-center gap-4 rounded-sm px-8 py-20 text-center text-white"
-        style={{
-          background:
-            "linear-gradient(180deg, rgba(19,17,16,0) 0%, rgba(19,17,16,.55) 100%)," +
-            "radial-gradient(ellipse 65% 70% at 50% 35%, rgba(255,255,255,.08), transparent 65%)," +
-            "linear-gradient(160deg, #2a2725, #131110 75%)",
-        }}
-      >
-        <span className="rounded-full border border-white/25 bg-white/10 px-3 py-1.5 text-[11px] tracking-widest text-white uppercase">
-          100 % originální, přímo od distributorů
-        </span>
-        <h1 className="max-w-xl text-3xl font-bold leading-tight sm:text-4xl">
-          Poctivá cena, bez maloobchodní přirážky.
-        </h1>
-        <p className="max-w-md text-sm text-white/70">
-          Značková parfumerie a kosmetika s doručením po celé ČR. Doprava zdarma od 1 500 Kč.
-        </p>
-      </section>
+      <HomeHero />
 
       <section>
         <h2 className="mb-4 text-lg font-semibold">Kategorie</h2>
