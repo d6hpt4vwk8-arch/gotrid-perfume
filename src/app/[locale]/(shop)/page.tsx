@@ -19,11 +19,11 @@ const KOREAN_COSMETICS_BRANDS = [
 ];
 
 export default async function HomePage() {
-  const [categories, newestProducts, koreanCosmetics, arabicPerfumes, latestReviews] =
+  const [categories, saleProducts, koreanCosmetics, arabicPerfumes, latestReviews] =
     await Promise.all([
       getCategoryNavTree(),
       prisma.product.findMany({
-        where: { visible: true, ...primaryVariantWhere },
+        where: { visible: true, ...primaryVariantWhere, compareAtPrice: { not: null } },
         orderBy: [{ priority: "desc" }, { createdAt: "desc" }],
         take: 12,
         include: { brand: true, images: { orderBy: { sortOrder: "asc" }, take: 1 } },
@@ -112,20 +112,16 @@ export default async function HomePage() {
         </section>
       )}
 
-      <section>
-        <h2 className="mb-4 text-lg font-semibold">Novinky</h2>
-        {newestProducts.length === 0 ? (
-          <p className="text-sm text-neutral-500">
-            Zatím žádné produkty — naimportujte katalog přes admin XLSX import.
-          </p>
-        ) : (
+      {saleProducts.length > 0 && (
+        <section>
+          <h2 className="mb-4 text-lg font-semibold">Výprodej</h2>
           <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 md:grid-cols-4">
-            {newestProducts.map((product) => (
+            {saleProducts.map((product) => (
               <ProductCard key={product.slug} product={product} />
             ))}
           </div>
-        )}
-      </section>
+        </section>
+      )}
 
       {latestReviews.length > 0 && (
         <section>
