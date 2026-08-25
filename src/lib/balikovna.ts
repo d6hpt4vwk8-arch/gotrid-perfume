@@ -72,6 +72,7 @@ type ParcelAddress = {
   address: {
     street?: string;
     houseNumber?: string;
+    sequenceNumber?: string;
     city: string;
     zipCode: string;
     isoCountry?: string;
