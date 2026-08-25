@@ -41,7 +41,6 @@ export function getProductSpecs(product: ProductWithSpecs): ProductSpec[] {
   }
 
   if (product.ean) specs.push({ label: "EAN", value: product.ean });
-  specs.push({ label: "Kód", value: product.code });
 
   return specs;
 }

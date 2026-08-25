@@ -18,6 +18,7 @@ import { ReviewForm } from "@/components/review-form";
 import { ProductGallery } from "@/components/product-gallery";
 import { primaryVariantWhere } from "@/lib/product-filters";
 import { ScentNotesPyramid } from "@/components/scent-notes-pyramid";
+import { ProductTrustStrip } from "@/components/product-trust-strip";
 
 async function getProduct(slug: string) {
   return prisma.product.findUnique({
@@ -238,6 +239,8 @@ export default async function ProductPage({
               <StockAlertForm productId={product.id} />
             </div>
           )}
+
+          <ProductTrustStrip productName={product.name} />
 
           {product.description && (
             <div
