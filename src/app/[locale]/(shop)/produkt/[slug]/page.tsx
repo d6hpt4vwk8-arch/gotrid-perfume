@@ -161,6 +161,18 @@ export default async function ProductPage({
             />
           </div>
 
+          {product.reviews.length > 0 && (
+            <a href="#recenze" className="flex w-fit items-center gap-1.5 text-sm">
+              <span className="text-accent" aria-hidden="true">
+                {"★".repeat(Math.round(avgRating ?? 0))}
+                {"☆".repeat(5 - Math.round(avgRating ?? 0))}
+              </span>
+              <span className="text-accent-2 underline-offset-2 hover:underline">
+                ({product.reviews.length})
+              </span>
+            </a>
+          )}
+
           <div className="flex items-baseline gap-3">
             <span className="text-2xl font-bold text-accent">{formatPrice(product.price)}</span>
             {product.compareAtPrice && (
@@ -276,7 +288,7 @@ export default async function ProductPage({
         />
       )}
 
-      <section className="flex flex-col gap-4 border-t border-line pt-6">
+      <section id="recenze" className="flex flex-col gap-4 border-t border-line pt-6">
         <h2 className="text-lg font-bold text-ink">
           Recenze {avgRating && `— ${avgRating.toFixed(1)} / 5`}
         </h2>
