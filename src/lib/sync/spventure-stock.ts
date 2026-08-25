@@ -6,14 +6,24 @@
 // Important quirk of SP Venture's feed (verified 2026-08-16 by diffing
 // product.xml against avail.xml): BOTH feeds only ever list items with
 // stock > 0 — an item with zero stock right now is indistinguishable from
-// one permanently discontinued; the feed simply omits it either way. So a
-// missing code here just means "stock is 0 right now", nothing stronger —
-// this only ever writes the `stock` number, it never touches `visible`.
+// one permanently discontinued; the feed simply omits it either way.
+// This only ever writes the `stock` number, it never touches `visible`.
 // The storefront already renders "Vyprodáno" + a stock-alert signup for
 // stock 0, which is the correct behavior for a transient supplier
 // stockout; permanently hiding a product that's been gone for a long time
 // is a separate, human judgment call, not something a single feed
 // snapshot should decide.
+//
+// BUT (found 2026-08-25): "missing from the feed" does NOT reliably mean
+// "stock 0". The feed carries 5254 items while SP Venture's own site
+// reports 6399 in stock, and spot-checking 25 codes the feed omitted found
+// 9 of them (36%) actually in stock — some in quantity (348, 81, 54 ks).
+// Zeroing on absence alone would therefore have wrongly marked roughly a
+// third of those products sold out. So anything missing from the feed is
+// now confirmed one-by-one against the supplier's own search page, which
+// states availability exactly ("27 ks" / "Momentálně nedostupné") and
+// needs no login. A lookup that fails or comes back ambiguous leaves the
+// stock untouched rather than guessing in either direction.
 import { prisma } from "@/lib/prisma";
 import { logAdminActivity } from "@/lib/admin/activity-log";
 import { notifyStockAlerts } from "@/lib/stock-alerts";
@@ -54,9 +64,62 @@ function parseStockByCode(xml: string): Map<string, number> {
   return byCode;
 }
 
+// Public search page — same numbers as the logged-in B2B view, no session
+// needed. Availability renders as aria-label="Dostupnost: 27 ks", or the
+// literal "Momentálně nedostupné" (HTML-entity encoded) when sold out.
+const SEARCH_URL = "https://www.perfumes-b2b.com/cz/hledat/?q=";
+const LOOKUP_CONCURRENCY = 6;
+
+/**
+ * Confirms one feed-missing code against SP Venture's own search page.
+ * Returns the exact stock, or null when the answer isn't unambiguous (search
+ * error, no/multiple hits) — callers must leave stock untouched on null
+ * rather than assuming zero.
+ */
+async function lookupStockOnSite(itemCode: string): Promise<number | null> {
+  let html: string;
+  try {
+    const res = await fetch(`${SEARCH_URL}${encodeURIComponent(itemCode)}`, {
+      signal: AbortSignal.timeout(20_000),
+    });
+    if (!res.ok) return null;
+    html = (await res.text()).replace(/\n/g, " ");
+  } catch {
+    return null;
+  }
+
+  // Only trust a search that resolved to exactly one product — a partial
+  // code match returning several rows tells us nothing about this one.
+  const count = /nalezli celkem\s*<span>(\d+)/.exec(html);
+  if (!count || count[1] !== "1") return null;
+
+  const inStock = /aria-label="Dostupnost:\s*(\d+)\s*ks"/.exec(html);
+  if (inStock) return parseInt(inStock[1], 10);
+  if (html.includes("nedostupn")) return 0;
+  return null;
+}
+
+/** Runs lookupStockOnSite over many codes with a small connection pool. */
+async function lookupMissingCodes(codes: string[]): Promise<Map<string, number>> {
+  const found = new Map<string, number>();
+  let next = 0;
+  await Promise.all(
+    Array.from({ length: Math.min(LOOKUP_CONCURRENCY, codes.length) }, async () => {
+      while (next < codes.length) {
+        const code = codes[next++];
+        const stock = await lookupStockOnSite(code);
+        if (stock !== null) found.set(code, stock);
+      }
+    }),
+  );
+  return found;
+}
+
 export interface SpVentureSyncResult {
   checked: number;
   updated: { code: string; name: string; from: number; to: number }[];
+  /** Feed-missing codes the site lookup couldn't resolve — left untouched. */
+  unresolved: number;
 }
 
 export async function syncSpVentureStock(dryRun = false): Promise<SpVentureSyncResult> {
@@ -69,11 +132,25 @@ export async function syncSpVentureStock(dryRun = false): Promise<SpVentureSyncR
     where: { code: { startsWith: CODE_PREFIX } },
   });
 
-  const result: SpVentureSyncResult = { checked: products.length, updated: [] };
+  // Anything the feed omits gets confirmed against the site before we touch
+  // it (see the header note) — the feed's silence is not evidence of zero.
+  const missingCodes = products
+    .map((p) => p.code.slice(CODE_PREFIX.length))
+    .filter((code) => !feedStock.has(code));
+  const siteStock = await lookupMissingCodes(missingCodes);
+
+  const result: SpVentureSyncResult = {
+    checked: products.length,
+    updated: [],
+    unresolved: missingCodes.length - siteStock.size,
+  };
 
   for (const product of products) {
     const itemCode = product.code.slice(CODE_PREFIX.length);
-    const feedValue = feedStock.get(itemCode) ?? 0;
+    const feedValue = feedStock.get(itemCode) ?? siteStock.get(itemCode);
+    // Feed didn't list it and the site lookup was inconclusive — leave the
+    // current number alone instead of guessing.
+    if (feedValue === undefined) continue;
 
     if (feedValue === product.stock) continue;
 
@@ -97,7 +174,7 @@ export async function syncSpVentureStock(dryRun = false): Promise<SpVentureSyncR
     await logAdminActivity({
       action: "product.spventure_sync",
       entityType: "Product",
-      detail: `SP Venture stock sync: ${result.updated.length} updated (${wentUp} restocked/changed, ${wentToZero} now at 0)`,
+      detail: `SP Venture stock sync: ${result.updated.length} updated (${wentUp} restocked/changed, ${wentToZero} now at 0), ${result.unresolved} unresolved`,
     });
   }
 
