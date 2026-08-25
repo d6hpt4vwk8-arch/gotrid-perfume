@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import Link from "next/link";
 import { LegalPage } from "@/components/legal-page";
 
 export const metadata: Metadata = {
@@ -50,7 +51,9 @@ export default function PodminkyVraceniZboziPage() {
       <p>
         Pro vrácení zboží nás prosím kontaktujte na emailu pavlohrytsan@gmail.com. Uveďte číslo
         objednávky a důvod vrácení (není povinný). Můžete využít i{" "}
-        <a href="/api/dokumenty/odstoupeni-od-smlouvy">vzorový formulář pro odstoupení od smlouvy (PDF)</a>
+        <Link href="/api/dokumenty/odstoupeni-od-smlouvy">
+          vzorový formulář pro odstoupení od smlouvy (PDF)
+        </Link>
         . Po domluvě zašlete zboží na adresu:
       </p>
       <p>
