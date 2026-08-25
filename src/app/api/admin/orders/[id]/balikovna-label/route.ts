@@ -2,7 +2,6 @@ import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { createParcel, BalikovnaError } from "@/lib/balikovna";
 import { logAdminActivity } from "@/lib/admin/activity-log";
-import { parseBalikovnaPointAddress } from "@/lib/balikovna-point-address";
 
 export async function GET(_req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
@@ -22,41 +21,21 @@ export async function GET(_req: NextRequest, { params }: { params: Promise<{ id:
     let labelPdf: Buffer | null = null;
 
     if (!parcelCode) {
-      // Balíkovna orders are always pickup-point orders in this shop (see
-      // checkout-schema.ts) — shippingStreet/City/PostalCode are never set
-      // for them. The nAPI has no "route to výdejní místo" field, so the
-      // parcel is addressed directly to the point's own physical address
-      // instead (that's how it actually reaches an AlzaBox/partner point —
-      // confirmed against the live API: leaving the address empty returns
-      // responseCode 11 "INVALID_LOCATION").
-      const point = order.pickupPointId
-        ? await prisma.balikovnaPoint.findUnique({ where: { id: order.pickupPointId } })
-        : null;
-      if (!point) {
-        throw new BalikovnaError(
-          `Výdejní místo ${order.pickupPointId ?? "(chybí)"} nebylo nalezeno v databázi Balíkovna míst.`,
-        );
+      if (!order.pickupPointId) {
+        throw new BalikovnaError("Objednávka nemá vybrané výdejní místo Balíkovna.");
       }
-      const pointAddress = parseBalikovnaPointAddress(point.address);
-
       const result = await createParcel({
         recordId: order.number,
         weightKg: Number(order.weight),
+        insuredValue: Number(order.total),
         codAmount: order.paymentMethod === "CASH_ON_DELIVERY" ? Number(order.total) : null,
         recipient: {
           firstName: order.firstName,
           surname: order.lastName,
-          address: {
-            street: pointAddress.street || undefined,
-            houseNumber: pointAddress.houseNumber,
-            sequenceNumber: pointAddress.sequenceNumber,
-            city: point.city,
-            zipCode: pointAddress.zipCode,
-          },
           mobilNumber: order.phone,
           emailAddress: order.email,
         },
-        pickupPointId: order.pickupPointId ?? undefined,
+        pickupPointId: order.pickupPointId,
       });
       parcelCode = result.parcelCode;
       labelPdf = result.labelPdf;

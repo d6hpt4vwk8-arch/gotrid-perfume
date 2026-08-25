@@ -6,6 +6,9 @@ import { Agent, fetch as undiciFetch } from "undici";
 // Česká pošta nAPI B2B — ZSKService (Balíkovna parcel shipments).
 // Spec: B2B-ZSKService OpenAPI (obtained from postaonline.cz → Služby pro
 // firmy → Správa B2B profilu). REST/JSON, not the older SOAP B2B service.
+// FAQ (nAPI – nejčastější dotazy a vyskytující se chyby, ceskaposta.cz)
+// filled in several gaps the spec itself leaves silent — see the comments
+// below on locationNumber, prefixParcelCode, and the address fields.
 const API_URL = "https://b2b.postaonline.cz:444/restservices/ZSKService/v1";
 
 // b2b.postaonline.cz serves a cert chain rooted at PostSignum (Česká pošta's
@@ -22,7 +25,11 @@ const balikovnaDispatcher = new Agent({ connect: { ca: postsignumCerts } });
 // Sender identifiers from Dohoda č. 2026/00278 (ID CČK 503806001).
 const CUSTOMER_ID = "M17422"; // technologické číslo podavatele
 const POST_CODE = "13000"; // PSČ podací pošty
-const PARCEL_PREFIX = "BA"; // Balíkovna parcel code prefix
+const PARCEL_PREFIX = "NB"; // Balíkovna/Box parcel type — "BA" (the YAML's generic example value) is wrong here and produces INVALID_LOCATION regardless of address.
+// The account's one registered podací místo (see setup note below) —
+// required in every parcelServiceHeaderCom or every call fails with
+// responseCode 11 "INVALID_LOCATION", no matter what else is right.
+const LOCATION_NUMBER = 1;
 
 export class BalikovnaError extends Error {
   constructor(message: string) {
@@ -66,34 +73,31 @@ function buildAuthHeaders(bodyJson: string) {
   };
 }
 
-type ParcelAddress = {
-  firstName: string;
-  surname: string;
-  address: {
-    street?: string;
-    houseNumber?: string;
-    sequenceNumber?: string;
-    city: string;
-    zipCode: string;
-    isoCountry?: string;
-  };
-  mobilNumber?: string;
-  emailAddress?: string;
-};
-
 export type CreateParcelInput = {
   recordId: string; // our order number, echoed back in the response
   weightKg: number;
+  // Declared value of the contents — required by the API for prefix "NB"
+  // (responseCode 336 MISSING_REQUIRED_PRICE otherwise). Distinct from
+  // codAmount below: that one is the Amount schema, literally documented
+  // as "Cash on delivery amount", a separate field.
+  insuredValue: number;
   codAmount: number | null;
-  recipient: ParcelAddress;
-  // Balíkovna výdejní místo (BalikovnaPoint.id) selected at checkout. NOT
-  // wired into the request body yet — the 1.4.0 ZSKService spec (the only
-  // version this codebase could retrieve; the docs portal's newer versions
-  // return "Internal error") has no field for "hold at branch" routing.
-  // Confirm the right field/prefix with Balíkovna support before relying on
-  // this for real pickup-point orders; until then createParcel builds a
-  // normal address-delivery parcel from the order's shipping fields.
-  pickupPointId?: string;
+  recipient: {
+    firstName: string;
+    surname: string;
+    mobilNumber?: string;
+    // Required for prefix "NB" (responseCode 250 MISSING_REQUIRED_EMAIL
+    // otherwise) — the box notifies the recipient by email when it's ready
+    // for pickup.
+    emailAddress: string;
+  };
+  // BalikovnaPoint.id (the výdejní místo/AlzaBox the customer picked at
+  // checkout). The 1.4.0 spec has no dedicated "route to this point" field
+  // — undocumented there, only in Česká pošta's nAPI FAQ PDF: for prefix
+  // "NB" the point's ID goes in the address's zipCode field, with every
+  // other address field left empty (a real street/city there produces
+  // responseCode 247 INVALID_ADDRESS, not a location match).
+  pickupPointId: string;
 };
 
 type ParcelServiceResponse = {
@@ -112,8 +116,10 @@ type ParcelServiceResponse = {
 };
 
 /**
- * Creates a Balíkovna parcel and, in the same call, renders its address
- * label as a PDF (idForm 21 = independent address label).
+ * Creates a Balíkovna/Box parcel and, in the same call, renders its address
+ * label as a PDF (idForm 101 = harmonized label, independent — idForm 21,
+ * the plain address label, fails prefix "NB" with responseCode 378
+ * INVALID_PREFIX_COMBINATION).
  */
 export async function createParcel(
   input: CreateParcelInput,
@@ -124,22 +130,25 @@ export async function createParcel(
         transmissionDate: new Date().toISOString().slice(0, 10),
         customerID: CUSTOMER_ID,
         postCode: POST_CODE,
+        locationNumber: LOCATION_NUMBER,
       },
-      printParams: { idForm: 21, shiftHorizontal: 0, shiftVertical: 0 },
+      printParams: { idForm: 101, shiftHorizontal: 0, shiftVertical: 0 },
     },
     parcelServiceData: {
       parcelParams: {
         recordID: input.recordId,
         prefixParcelCode: PARCEL_PREFIX,
         weight: input.weightKg.toFixed(3),
-        ...(input.codAmount ? { amount: input.codAmount, currency: "CZK" } : {}),
+        insuredValue: input.insuredValue,
+        currency: "CZK",
+        ...(input.codAmount ? { amount: input.codAmount } : {}),
       },
       parcelAddress: {
         firstName: input.recipient.firstName,
         surname: input.recipient.surname,
-        address: { isoCountry: "CZ", ...input.recipient.address },
+        address: { isoCountry: "CZ", zipCode: input.pickupPointId },
+        emailAddress: input.recipient.emailAddress,
         ...(input.recipient.mobilNumber ? { mobilNumber: input.recipient.mobilNumber } : {}),
-        ...(input.recipient.emailAddress ? { emailAddress: input.recipient.emailAddress } : {}),
       },
     },
   };
@@ -180,7 +189,10 @@ export async function createParcel(
   }
   const header = parsed.responseHeader;
   const resultHeader = header?.resultHeader;
-  if (resultHeader && resultHeader.responseCode !== 0) {
+  // responseCode 1 = OK — NOT 0. Every non-1 code (11 INVALID_LOCATION, 19
+  // BATCH_INVALID, ...) is an error; confirmed against the live API.
+  if (resultHeader && resultHeader.responseCode !== 1) {
+    console.error("Balíkovna API error response:", rawText, "body:", bodyJson);
     throw new BalikovnaError(`Balíkovna API: ${resultHeader.responseText}`);
   }
 
@@ -188,12 +200,17 @@ export async function createParcel(
   if (!parcel?.parcelCode) {
     throw new BalikovnaError("Balíkovna API nevrátila kód zásilky.");
   }
-  const parcelError = parcel.parcelStateResponse?.find((s) => s.responseCode !== 0);
+  const parcelError = parcel.parcelStateResponse?.find((s) => s.responseCode !== 1);
   if (parcelError) {
     throw new BalikovnaError(`Balíkovna API: ${parcelError.responseText}`);
   }
 
-  const labelBase64 = header?.responsePrintParams?.file;
+  const printResponse = header?.responsePrintParams;
+  const printError = printResponse?.printParamsResponse?.find((s) => s.responseCode !== 1);
+  if (printError) {
+    throw new BalikovnaError(`Balíkovna API (tisk štítku): ${printError.responseText}`);
+  }
+  const labelBase64 = printResponse?.file;
   if (!labelBase64) {
     throw new BalikovnaError("Balíkovna API nevrátila štítek.");
   }
