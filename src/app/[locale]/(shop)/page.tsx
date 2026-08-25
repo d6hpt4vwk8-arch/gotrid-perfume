@@ -5,39 +5,51 @@ import { primaryVariantWhere } from "@/lib/product-filters";
 import { ProductCard } from "@/components/product-card";
 import { getHeurekaShopReviews } from "@/lib/heureka-reviews";
 
-async function getBestsellers() {
-  // Real sales-ranked bestsellers — only meaningful once orders exist, so
-  // this naturally renders nothing (not fake data) until the shop has history.
-  const grouped = await prisma.orderItem.groupBy({
-    by: ["productId"],
-    where: { productId: { not: null } },
-    _sum: { qty: true },
-    orderBy: { _sum: { qty: "desc" } },
-    take: 12,
-  });
-  if (grouped.length === 0) return [];
-
-  const ids = grouped.map((g) => g.productId!).filter(Boolean);
-  const products = await prisma.product.findMany({
-    where: { id: { in: ids }, visible: true, ...primaryVariantWhere },
-    include: { brand: true, images: { orderBy: { sortOrder: "asc" }, take: 1 } },
-  });
-  const byId = new Map(products.map((p) => [p.id, p]));
-  return ids.map((id) => byId.get(id)).filter((p): p is NonNullable<typeof p> => Boolean(p));
-}
+// K-beauty brands carried in the catalog — used to curate the homepage's
+// "Korejská kosmetika" section (no dedicated category exists for this yet).
+const KOREAN_COSMETICS_BRANDS = [
+  "Cosrx", "Esthetic House", "Dr. Althea", "Missha", "SKIN1004", "Beauty Of Joseon",
+  "VT Cosmetics", "VVBETTER", "APLB", "Medicube", "Some By Mi", "Haruharu Wonder",
+  "Dr.Jart+", "Round Lab", "Celimax", "Lavon", "Holika Holika", "ITOXX", "Biodance",
+  "Pyunkang Yul", "AXIS-Y", "Purito", "Abib", "Medi-Peel", "Mixsoon", "Numbuzin",
+  "TIRTIR", "K-SECRET", "Isntree", "Polatam", "Dear, Klairs", "Coxir", "Barulab",
+  "DAENG GI MEO RI", "Frudia", "Inkee", "Banila Co", "rom&nd", "TOCOBO", "Laneige",
+  "Naturia", "d'Alba", "MEDIPEEL+", "Hyggee", "Torriden", "MEDIBLANC", "Hanskin",
+  "Sioris", "I’m From",
+];
 
 export default async function HomePage() {
-  const [categories, newestProducts, bestsellers, latestReviews] = await Promise.all([
-    getCategoryNavTree(),
-    prisma.product.findMany({
-      where: { visible: true, ...primaryVariantWhere },
-      orderBy: [{ priority: "desc" }, { createdAt: "desc" }],
-      take: 12,
-      include: { brand: true, images: { orderBy: { sortOrder: "asc" }, take: 1 } },
-    }),
-    getBestsellers(),
-    getHeurekaShopReviews(6),
-  ]);
+  const [categories, newestProducts, koreanCosmetics, arabicPerfumes, latestReviews] =
+    await Promise.all([
+      getCategoryNavTree(),
+      prisma.product.findMany({
+        where: { visible: true, ...primaryVariantWhere },
+        orderBy: [{ priority: "desc" }, { createdAt: "desc" }],
+        take: 12,
+        include: { brand: true, images: { orderBy: { sortOrder: "asc" }, take: 1 } },
+      }),
+      prisma.product.findMany({
+        where: {
+          visible: true,
+          ...primaryVariantWhere,
+          brand: { name: { in: KOREAN_COSMETICS_BRANDS } },
+        },
+        orderBy: [{ priority: "desc" }, { createdAt: "desc" }],
+        take: 12,
+        include: { brand: true, images: { orderBy: { sortOrder: "asc" }, take: 1 } },
+      }),
+      prisma.product.findMany({
+        where: {
+          visible: true,
+          ...primaryVariantWhere,
+          categories: { some: { category: { fullSlug: "parfemy/arabske-parfemy" } } },
+        },
+        orderBy: [{ priority: "desc" }, { createdAt: "desc" }],
+        take: 12,
+        include: { brand: true, images: { orderBy: { sortOrder: "asc" }, take: 1 } },
+      }),
+      getHeurekaShopReviews(6),
+    ]);
 
   return (
     <main className="mx-auto flex max-w-6xl flex-1 flex-col gap-12 px-4 py-10">
@@ -78,11 +90,22 @@ export default async function HomePage() {
         </div>
       </section>
 
-      {bestsellers.length > 0 && (
+      {koreanCosmetics.length > 0 && (
         <section>
-          <h2 className="mb-4 text-lg font-semibold">Nejprodávanější</h2>
+          <h2 className="mb-4 text-lg font-semibold">Korejská kosmetika</h2>
           <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 md:grid-cols-4">
-            {bestsellers.map((product) => (
+            {koreanCosmetics.map((product) => (
+              <ProductCard key={product.slug} product={product} />
+            ))}
+          </div>
+        </section>
+      )}
+
+      {arabicPerfumes.length > 0 && (
+        <section>
+          <h2 className="mb-4 text-lg font-semibold">Arabské parfémy</h2>
+          <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 md:grid-cols-4">
+            {arabicPerfumes.map((product) => (
               <ProductCard key={product.slug} product={product} />
             ))}
           </div>
