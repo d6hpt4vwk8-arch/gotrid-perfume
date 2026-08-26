@@ -211,6 +211,29 @@ model ProductScentNotes {
 }
 
 // ---------------------------------------------------------------------------
+// ScentNotePhoto — real ingredient photo per note NAME (not per product —
+// "Vanilla" or "Cedar" shows up across many different fragrances, so this is
+// a shared, reusable lookup rather than duplicated per ProductScentNotes
+// row). Sourced from the Unsplash API (see scripts/fetch-note-photos.ts).
+// Unsplash's API guidelines require crediting the photographer wherever the
+// photo is shown — attributionName/attributionUrl carry that.
+// ---------------------------------------------------------------------------
+
+model ScentNotePhoto {
+  id       String @id @default(cuid())
+  noteName String @unique // normalized (lowercased) note name, e.g. "vanilla"
+
+  imageUrl        String
+  source          String  @default("unsplash")
+  sourcePhotoId   String?
+  attributionName String?
+  attributionUrl  String?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+// ---------------------------------------------------------------------------
 // StockAlert — "notify me when back in stock" email capture for
 // out-of-stock products. Notified in bulk when admin restocks (see
 // updateProduct action), not via a cron poll.
