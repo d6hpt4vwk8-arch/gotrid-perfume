@@ -232,3 +232,65 @@ export async function createParcel(
 
   return { parcelCode: parcel.parcelCode, labelPdf: Buffer.from(labelBase64, "base64") };
 }
+
+type ParcelPrintingResponse = {
+  printingHeaderResult?: {
+    printingStatusResponse?: { responseCode: number; responseText: string };
+  };
+  printingDataResult?: string; // base64 PDF
+};
+
+/**
+ * Re-fetches the address label PDF for a parcel that was already created
+ * (i.e. has a stored parcelCode) — the /parcelService createParcel operation
+ * always makes a NEW shipment, so it can't be used again here. This is the
+ * nAPI's dedicated reprint operation (/parcelPrinting, confirmed against the
+ * official OpenAPI spec at postaonline.cz/dokumentaceapi/b2b/zsk).
+ */
+export async function reprintLabel(parcelCode: string): Promise<Buffer> {
+  const body = {
+    printingHeader: { customerID: CUSTOMER_ID, idForm: 101, shiftHorizontal: 0, shiftVertical: 0 },
+    printingData: [parcelCode],
+  };
+  const bodyJson = JSON.stringify(body);
+
+  let res: Awaited<ReturnType<typeof undiciFetch>>;
+  try {
+    res = await undiciFetch(`${API_URL}/parcelPrinting`, {
+      method: "POST",
+      headers: buildAuthHeaders(bodyJson),
+      body: bodyJson,
+      dispatcher: balikovnaDispatcher,
+    });
+  } catch (err) {
+    const cause = err instanceof Error ? err.cause : undefined;
+    console.error("Balíkovna reprint request failed:", err, "cause:", cause);
+    const detail = cause instanceof Error ? cause.message : err instanceof Error ? err.message : String(err);
+    throw new BalikovnaError(`Balíkovna API — chyba spojení: ${detail}`);
+  }
+
+  const rawText = await res.text();
+  if (!res.ok) {
+    console.error("Balíkovna reprint non-OK response:", res.status, rawText);
+    throw new BalikovnaError(`Balíkovna API vrátila HTTP ${res.status}: ${rawText}`);
+  }
+
+  let parsed: ParcelPrintingResponse;
+  try {
+    parsed = JSON.parse(rawText) as ParcelPrintingResponse;
+  } catch {
+    console.error("Balíkovna reprint returned non-JSON body:", rawText);
+    throw new BalikovnaError(`Balíkovna API vrátila neplatnou odpověď: ${rawText.slice(0, 500)}`);
+  }
+
+  const status = parsed.printingHeaderResult?.printingStatusResponse;
+  if (status && status.responseCode !== 1) {
+    console.error("Balíkovna reprint error response:", rawText);
+    throw new BalikovnaError(`Balíkovna API (opětovný tisk): ${status.responseText}`);
+  }
+  if (!parsed.printingDataResult) {
+    throw new BalikovnaError("Balíkovna API nevrátila štítek.");
+  }
+
+  return Buffer.from(parsed.printingDataResult, "base64");
+}

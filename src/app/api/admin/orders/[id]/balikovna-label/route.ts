@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
-import { createParcel, BalikovnaError } from "@/lib/balikovna";
+import { createParcel, reprintLabel, BalikovnaError } from "@/lib/balikovna";
 import { logAdminActivity } from "@/lib/admin/activity-log";
 
 export async function GET(_req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
@@ -47,12 +47,7 @@ export async function GET(_req: NextRequest, { params }: { params: Promise<{ id:
         detail: `${order.number}: vytvořena zásilka Balíkovna, kód ${parcelCode}`,
       });
     } else {
-      // Re-printing an already-created parcel isn't wired yet (needs a
-      // separate "get label" call) — createParcel always makes a new one.
-      return NextResponse.json(
-        { error: `Zásilka už byla vytvořena (kód ${parcelCode}) — opětovný tisk štítku zatím není podporován.` },
-        { status: 400 },
-      );
+      labelPdf = await reprintLabel(parcelCode);
     }
 
     return new NextResponse(new Uint8Array(labelPdf!), {
