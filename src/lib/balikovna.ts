@@ -143,6 +143,16 @@ export async function createParcel(
         currency: "CZK",
         ...(input.codAmount ? { amount: input.codAmount } : {}),
       },
+      // parcelServices (sibling of parcelParams, NOT a property inside it —
+      // confirmed against the official OpenAPI spec at postaonline.cz/dokumentaceapi/b2b/zsk,
+      // schema ParcelData.parcelServices) declares which doplňková služba
+      // applies. For COD it's mandatory — omitting it fails with responseCode
+      // 19 BATCH_INVALID / 267 MISSING_REQUIRED_SERVICE_4/5/41/Du/Dh, which
+      // (unhelpfully) doesn't say *which* field is missing. "Du" = "Dobírka –
+      // účet" (COD paid out to the sender's bank account, not cash at the
+      // counter — the right choice for us regardless of pickup point type).
+      // Value casing matters: "DU" is rejected, only "Du" works.
+      ...(input.codAmount ? { parcelServices: ["Du"] } : {}),
       parcelAddress: {
         firstName: input.recipient.firstName,
         surname: input.recipient.surname,
@@ -189,18 +199,23 @@ export async function createParcel(
   }
   const header = parsed.responseHeader;
   const resultHeader = header?.resultHeader;
+  const parcel = header?.resultParcelData?.[0];
+  const parcelError = parcel?.parcelStateResponse?.find((s) => s.responseCode !== 1);
+
   // responseCode 1 = OK — NOT 0. Every non-1 code (11 INVALID_LOCATION, 19
   // BATCH_INVALID, ...) is an error; confirmed against the live API.
+  // 19 BATCH_INVALID specifically is just a generic "batch has bad records"
+  // wrapper — the real per-record reason (bad weight, missing size category,
+  // etc.) lives in resultParcelData[0].parcelStateResponse, so prefer that
+  // over the header's generic text whenever it's present.
   if (resultHeader && resultHeader.responseCode !== 1) {
     console.error("Balíkovna API error response:", rawText, "body:", bodyJson);
-    throw new BalikovnaError(`Balíkovna API: ${resultHeader.responseText}`);
+    throw new BalikovnaError(`Balíkovna API: ${parcelError?.responseText ?? resultHeader.responseText}`);
   }
 
-  const parcel = header?.resultParcelData?.[0];
   if (!parcel?.parcelCode) {
     throw new BalikovnaError("Balíkovna API nevrátila kód zásilky.");
   }
-  const parcelError = parcel.parcelStateResponse?.find((s) => s.responseCode !== 1);
   if (parcelError) {
     throw new BalikovnaError(`Balíkovna API: ${parcelError.responseText}`);
   }
