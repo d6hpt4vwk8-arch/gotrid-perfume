@@ -15,28 +15,54 @@ import { logAdminActivity } from "../src/lib/admin/activity-log";
 
 const DRY_RUN = process.argv.includes("--dry-run");
 const PILOT = process.argv.includes("--pilot");
+const REDO_PILOT_PERFUMES = process.argv.includes("--redo-pilot-perfumes");
 const LIMIT = Number(process.argv.find((a) => a.startsWith("--limit="))?.split("=")[1] ?? "0");
 const MODEL = "claude-sonnet-5";
 const CONCURRENCY = 4;
 
 const client = new Anthropic();
 
-const SYSTEM_PROMPT = `Píšeš krátké popisy produktů pro český e-shop s parfémy a kosmetikou (gotridperfume.cz).
+const SYSTEM_PROMPT = `Píšeš popisy produktů pro český e-shop s parfémy a kosmetikou (gotridperfume.cz).
 
-Pravidla:
+Obecná pravidla:
 - Piš vždy česky.
 - Výstup: POUZE HTML v jednom tagu <p>...</p>, žádný další text kolem.
-- Délka: 1-3 věty, věcně a poutavě, bez zbytečné vaty.
 - Nepoužívej superlativa ("nejlepší", "jedinečný") bez opodstatnění.
-- U PARFÉMŮ: piš obecný, ale poutavý text o charakteru/náladě vůně na základě značky a názvu. Nevymýšlej konkrétní vonné tóny, pokud nejsou všeobecně známé (např. u velmi slavných parfémů). Nikdy nekopíruj oficiální marketingový text značky doslovně — piš vlastními slovy.
-- U DROGERIE/KOSMETIKY: popiš JEN to, co je zjevné z názvu/kategorie/objemu produktu (typ produktu, k čemu slouží, velikost balení). Nevymýšlej konkrétní účinky, složení nebo přínosy, které nejsou v zadání uvedené.
-- Pokud produkt nemá dost informací na smysluplný popis, napiš jen stručnou věcnou větu o typu produktu a značce — neházej si výplňová klišé.`;
+- Nikdy doslovně nekopíruj oficiální marketingový text značky — piš vlastními slovy.
+- KRITICKY DŮLEŽITÉ: nepiš šablonovitě. Konkurenční e-shopy (např. fann.cz) mají u každého parfému jinak strukturovaný, specificky napsaný text — ne stejnou kostru s dosazeným jménem. Nepoužívej opakovaně stejné uzavírací věty typu "balení X ml je ideální pro každodenní nošení" nebo "vhodný pro muže/ženy, kteří hledají..." u více produktů za sebou — každý popis musí znít, jako by ho někdo napsal zvlášť právě o tomto parfému, ne že se dosadilo jméno do fráze.
+
+U PARFÉMŮ (délka 4-6 vět, cca 70-130 slov):
+- Piš poutavě o charakteru, náladě a příležitosti nošení vůně na základě značky, řady a názvu.
+- NIKDY neuváděj konkrétní rok uvedení na trh ani jméno parfuméra — i u známých značek existuje riziko záměny s příbuznou variantou (dámská/pánská verze, flanker), takže konkrétní datum nebo jméno se snadno splete. Piš o dojmu, charakteru a náladě vůně, ne o ověřitelných historických faktech.
+- Konkrétní vonné tóny zmiňuj JEN pokud jde o všeobecně známý fakt, který si jsi jistý (např. citrusová svěžest u vůně, která je citrusová v samotném názvu) — jinak piš obecně o dojmu.
+- Nota vůně (top/heart/base) se zobrazuje zvlášť jako obrázková pyramida pod popisem — NEOPAKUJ výčet not, soustřeď se na celkový dojem a charakter.
+- Zkus u každého produktu zvolit jiný úhel pohledu (nálada, příležitost, kontrast s jinými vůněmi řady, pro koho je vhodná, jak působí) — ne pokaždé stejnou strukturu vět.
+
+U DROGERIE/KOSMETIKY (délka 1-3 věty, jak dosud):
+- Popiš JEN to, co je zjevné z názvu/kategorie/objemu produktu (typ produktu, k čemu slouží, velikost balení).
+- Nevymýšlej konkrétní účinky, složení nebo přínosy, které nejsou v zadání uvedené.
+- Pokud produkt nemá dost informací na smysluplný popis, napiš jen stručnou věcnou větu o typu produktu a značce.`;
 
 interface PilotItem {
   where: Record<string, unknown>;
 }
 
 async function pickProducts() {
+  if (REDO_PILOT_PERFUMES) {
+    // Regenerate the same 15 pilot perfumes (overwriting) to A/B the
+    // rewritten prompt against the first pass — see conversation.
+    return prisma.product.findMany({
+      where: {
+        visible: true,
+        code: { startsWith: "SPV-" },
+        categories: { some: { category: { fullSlug: { startsWith: "parfemy" } } } },
+      },
+      select: { id: true, name: true, slug: true, brand: { select: { name: true } }, categories: { include: { category: true } } },
+      take: 15,
+      orderBy: { createdAt: "desc" },
+    });
+  }
+
   if (PILOT) {
     const perfumes = await prisma.product.findMany({
       where: {
@@ -82,7 +108,7 @@ Napiš popis podle pravidel výše.`;
 
   const res = await client.messages.create({
     model: MODEL,
-    max_tokens: 300,
+    max_tokens: 500,
     system: SYSTEM_PROMPT,
     messages: [{ role: "user", content: userPrompt }],
   });
