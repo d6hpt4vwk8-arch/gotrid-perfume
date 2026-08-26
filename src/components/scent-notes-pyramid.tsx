@@ -72,6 +72,7 @@ function NoteTier({
                   <img
                     src={photo.imageUrl}
                     alt={note.name}
+                    title={photo.attributionName ? `Foto: ${photo.attributionName} / Unsplash` : undefined}
                     className="h-full w-full object-cover"
                     loading="lazy"
                   />
@@ -109,11 +110,7 @@ export async function ScentNotesPyramid({
   if (top.length === 0 && middle.length === 0 && base.length === 0) return null;
 
   const photos = await getNotePhotos([...top, ...middle, ...base].map((n) => n.name));
-  const usedPhotographers = [...new Map(
-    [...photos.values()]
-      .filter((p) => p.attributionName && p.attributionUrl)
-      .map((p) => [p.attributionName, p.attributionUrl] as const),
-  )];
+  const hasUnsplashPhotos = [...photos.values()].some((p) => p.attributionName);
 
   return (
     <section className="border-t border-line pt-6">
@@ -145,18 +142,9 @@ export async function ScentNotesPyramid({
         </div>
       )}
 
-      {usedPhotographers.length > 0 && (
+      {hasUnsplashPhotos && (
         <p className="mt-4 text-[11px] text-accent-2">
-          Fotografie:{" "}
-          {usedPhotographers.map(([name, url], i) => (
-            <span key={name}>
-              <a href={url ?? undefined} target="_blank" rel="noopener noreferrer" className="underline">
-                {name}
-              </a>
-              {i < usedPhotographers.length - 1 ? ", " : ""}
-            </span>
-          ))}{" "}
-          přes{" "}
+          Fotografie ingrediencí:{" "}
           <a
             href="https://unsplash.com/?utm_source=gotrid-perfume&utm_medium=referral"
             target="_blank"
@@ -164,7 +152,8 @@ export async function ScentNotesPyramid({
             className="underline"
           >
             Unsplash
-          </a>
+          </a>{" "}
+          (najeďte myší na fotku pro jméno autora)
         </p>
       )}
     </section>
