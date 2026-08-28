@@ -41,7 +41,7 @@ export function MobileCategoryMenu({ categories }: { categories: CategoryNavNode
             onClick={() => setOpen(false)}
             aria-hidden
           />
-          <div className="absolute inset-x-0 top-full z-50 flex flex-col gap-1 border-t border-white/10 bg-ink py-2 shadow-lg">
+          <div className="absolute inset-x-0 -mx-4 top-full z-50 flex flex-col gap-1 border-t border-white/10 bg-ink px-4 py-2 shadow-lg">
             {visible.map((category) => (
               <Link
                 key={category.id}
