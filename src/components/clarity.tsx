@@ -26,6 +26,16 @@ function loadClarity(projectId: string) {
     y.parentNode.insertBefore(t, y);
   })(window, document, "clarity", "script", projectId);
   /* eslint-enable */
+
+  // loadClarity() only ever runs after the visitor has already granted
+  // analytics consent via our own cookie banner (see the gate below), so
+  // there's nothing left to ask — tell Clarity's consent API right away.
+  // Without this call Clarity runs cookie-less: it never sets _clck/_clsk,
+  // so it can't stitch page views into one session and every single
+  // pageview shows up in the dashboard as its own few-second "session"
+  // (confirmed live: window.clarity was active but no _clck/_clsk cookie
+  // existed until this call was made).
+  (window as unknown as { clarity: (...args: unknown[]) => void }).clarity("consent");
 }
 
 /**
