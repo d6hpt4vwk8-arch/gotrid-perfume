@@ -95,7 +95,7 @@ async function generateDescription(product: {
   name: string;
   brand: { name: string } | null;
   categories: { category: { name: string; fullSlug: string } }[];
-}): Promise<string> {
+}): Promise<{ text: string; usage: Anthropic.Messages.Usage }> {
   const categoryNames = product.categories.map((c) => c.category.name).join(", ");
   const isPerfume = product.categories.some((c) => c.category.fullSlug.startsWith("parfemy"));
 
@@ -109,7 +109,7 @@ Napiš popis podle pravidel výše.`;
   const res = await client.messages.create({
     model: MODEL,
     max_tokens: 500,
-    system: SYSTEM_PROMPT,
+    system: [{ type: "text", text: SYSTEM_PROMPT, cache_control: { type: "ephemeral" } }],
     messages: [{ role: "user", content: userPrompt }],
   });
 
@@ -118,7 +118,7 @@ Napiš popis podle pravidel výše.`;
   if (!text.startsWith("<p>")) {
     throw new Error(`Unexpected output shape (no <p> wrapper): ${text.slice(0, 200)}`);
   }
-  return text;
+  return { text, usage: res.usage };
 }
 
 async function processInBatches<T>(items: T[], size: number, fn: (item: T, index: number) => Promise<void>) {
@@ -140,13 +140,21 @@ async function main() {
 
   let done = 0;
   let failed = 0;
+  let cacheRead = 0;
+  let cacheWrite = 0;
+  let inputTokens = 0;
+  let outputTokens = 0;
 
   await processInBatches(products, CONCURRENCY, async (product) => {
     try {
-      const description = await generateDescription(product);
+      const { text: description, usage } = await generateDescription(product);
       await prisma.product.update({ where: { id: product.id }, data: { description } });
       console.log(`  [ok] ${product.brand?.name ?? ""} ${product.name}\n        ${description}`);
       done++;
+      cacheRead += usage.cache_read_input_tokens ?? 0;
+      cacheWrite += usage.cache_creation_input_tokens ?? 0;
+      inputTokens += usage.input_tokens;
+      outputTokens += usage.output_tokens;
     } catch (err) {
       failed++;
       console.error(`  [error] ${product.name}:`, err instanceof Error ? err.message : err);
@@ -154,6 +162,9 @@ async function main() {
   });
 
   console.log(`\nDone. Generated: ${done}, failed: ${failed}.`);
+  console.log(
+    `Token usage — input: ${inputTokens}, output: ${outputTokens}, cache write: ${cacheWrite}, cache read: ${cacheRead}.`,
+  );
 
   if (done > 0) {
     await logAdminActivity({
