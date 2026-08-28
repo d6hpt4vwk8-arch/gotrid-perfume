@@ -48,3 +48,22 @@ export async function findCategoryByFullSlug(fullSlug: string) {
     include: { children: { orderBy: { sortOrder: "asc" } } },
   });
 }
+
+/**
+ * Ancestor chain (root first, leaf last) for a category's fullSlug, e.g.
+ * "parfemy/damske-parfemy/parfemovane-vody" -> [Parfémy, Dámské parfémy,
+ * Parfémované vody]. Uses the materialized fullSlug path to resolve every
+ * ancestor in one query instead of walking parentId links one at a time.
+ */
+export async function getCategoryBreadcrumb(fullSlug: string) {
+  const segments = fullSlug.split("/");
+  const ancestorSlugs = segments.map((_, i) => segments.slice(0, i + 1).join("/"));
+  const categories = await prisma.category.findMany({
+    where: { fullSlug: { in: ancestorSlugs } },
+    select: { name: true, fullSlug: true },
+  });
+  const byFullSlug = new Map(categories.map((c) => [c.fullSlug, c]));
+  return ancestorSlugs
+    .map((slug) => byFullSlug.get(slug))
+    .filter((c): c is { name: string; fullSlug: string } => Boolean(c));
+}

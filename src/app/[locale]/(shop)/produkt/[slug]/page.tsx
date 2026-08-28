@@ -12,6 +12,8 @@ import { ProductCard } from "@/components/product-card";
 import { WishlistButton } from "@/components/wishlist-button";
 import { StockAlertForm } from "@/components/stock-alert-form";
 import { getProductSpecs } from "@/lib/product-specs";
+import { getCategoryBreadcrumb } from "@/lib/categories.server";
+import { Breadcrumbs } from "@/components/breadcrumbs";
 import { parseVolumeMl, formatVolumeLabel } from "@/lib/parse-volume";
 import { estimateDeliveryDate, formatDeliveryEstimate } from "@/lib/delivery-estimate";
 import { ReviewForm } from "@/components/review-form";
@@ -81,12 +83,15 @@ export default async function ProductPage({
   const product = await getProduct(slug);
   if (!product) notFound();
 
-  const [relatedProducts, sizeVariants] = await Promise.all([
+  const primaryCategory = product.categories[0]?.category;
+
+  const [relatedProducts, sizeVariants, categoryBreadcrumb] = await Promise.all([
     getRelatedProducts(
       product.id,
       product.categories.map((c) => c.categoryId),
     ),
     getSizeVariants(product.variantGroupKey),
+    primaryCategory ? getCategoryBreadcrumb(primaryCategory.fullSlug) : Promise.resolve([]),
   ]);
 
   const avgRating =
@@ -134,6 +139,13 @@ export default async function ProductPage({
         product={{ id: product.id, name: product.name, price: Number(product.price) }}
       />
       <HeurekaProductView />
+
+      <Breadcrumbs
+        items={[
+          ...categoryBreadcrumb.map((c) => ({ name: c.name, href: `/kategorie/${c.fullSlug}` })),
+          { name: product.name },
+        ]}
+      />
 
       <div className="grid gap-8 md:grid-cols-2">
         <ProductGallery images={product.images} alt={product.name} />

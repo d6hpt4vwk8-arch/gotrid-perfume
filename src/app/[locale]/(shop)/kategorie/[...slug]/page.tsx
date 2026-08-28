@@ -1,7 +1,8 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { prisma } from "@/lib/prisma";
-import { findCategoryByFullSlug } from "@/lib/categories.server";
+import { findCategoryByFullSlug, getCategoryBreadcrumb } from "@/lib/categories.server";
+import { Breadcrumbs } from "@/components/breadcrumbs";
 import { getDescendantCategoryIds } from "@/lib/category-descendants.server";
 import { getAvailableBrands } from "@/lib/category-brands.server";
 import { getScentFamilyFacets } from "@/lib/category-scent-facets.server";
@@ -37,7 +38,10 @@ export default async function CategoryPage({
   const category = await findCategoryByFullSlug(fullSlug);
   if (!category) notFound();
 
-  const categoryIds = await getDescendantCategoryIds(category.id);
+  const [categoryIds, categoryBreadcrumb] = await Promise.all([
+    getDescendantCategoryIds(category.id),
+    getCategoryBreadcrumb(fullSlug),
+  ]);
   const filters = parseFilterParams(rawParams);
   const baseWhere = { categories: { some: { categoryId: { in: categoryIds } } } };
   const perfumeCategoryIds = await resolvePerfumeFilterCategoryIds(
@@ -89,6 +93,13 @@ export default async function CategoryPage({
 
   return (
     <main className="mx-auto flex max-w-6xl flex-1 flex-col gap-6 px-4 py-10">
+      <Breadcrumbs
+        items={categoryBreadcrumb.map((c, i) => ({
+          name: c.name,
+          href: i < categoryBreadcrumb.length - 1 ? `/kategorie/${c.fullSlug}` : undefined,
+        }))}
+      />
+
       <h1 className="text-2xl font-bold text-ink">{category.name}</h1>
 
       {category.children.length > 0 && (
