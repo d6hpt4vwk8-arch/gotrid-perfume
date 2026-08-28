@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { runSecondOrderCampaign } from "@/lib/marketing/second-order-campaign";
+import { runAbandonedCheckoutRecovery } from "@/lib/marketing/abandoned-checkout";
 import { syncPacketaDeliveryStatus } from "@/lib/orders/sync-packeta-delivery";
 import { syncPerfumesWholesaleStock } from "@/lib/sync/perfumeswholesale-stock";
 
@@ -14,11 +15,12 @@ export async function GET(req: NextRequest) {
     return NextResponse.json({ error: "Neautorizováno." }, { status: 401 });
   }
 
-  const [secondOrder, delivery, perfumesWholesaleStock] = await Promise.all([
+  const [secondOrder, abandonedCheckout, delivery, perfumesWholesaleStock] = await Promise.all([
     runSecondOrderCampaign(),
+    runAbandonedCheckoutRecovery(),
     syncPacketaDeliveryStatus(),
     syncPerfumesWholesaleStock(),
   ]);
 
-  return NextResponse.json({ secondOrder, delivery, perfumesWholesaleStock });
+  return NextResponse.json({ secondOrder, abandonedCheckout, delivery, perfumesWholesaleStock });
 }

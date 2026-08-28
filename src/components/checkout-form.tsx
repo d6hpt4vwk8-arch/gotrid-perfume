@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { useCart } from "@/lib/cart-context";
 import { useConsent } from "@/lib/consent-context";
 import { formatPrice } from "@/lib/format";
@@ -98,6 +98,46 @@ export function CheckoutForm({
   const isPersonalPickup = shippingMethod === "OSOBNI_ODBER";
 
   const contactDone = Boolean(email.trim() && phone.trim() && firstName.trim() && lastName.trim());
+
+  // Once contact details are filled in but before the order is actually
+  // submitted, debounce-capture a snapshot so a daily job can send one
+  // polite "did you forget something?" reminder if they never come back
+  // (src/lib/marketing/abandoned-checkout.ts). Also fires via sendBeacon on
+  // pagehide so closing the tab right after typing still gets captured
+  // without waiting out the debounce.
+  const abandonedPayloadRef = useRef<{
+    email: string;
+    firstName: string;
+    phone: string;
+    cartSnapshot: typeof items;
+  } | null>(null);
+  useEffect(() => {
+    if (!contactDone || items.length === 0) return;
+    const payload = { email: email.trim(), firstName: firstName.trim(), phone: phone.trim(), cartSnapshot: items };
+    abandonedPayloadRef.current = payload;
+    const timer = setTimeout(() => {
+      fetch("/api/checkout/capture-abandoned", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(payload),
+        keepalive: true,
+      }).catch(() => {
+        // Best-effort — a failed capture just means no reminder gets sent, nothing user-facing breaks.
+      });
+    }, 2000);
+    return () => clearTimeout(timer);
+  }, [contactDone, email, firstName, phone, items]);
+
+  useEffect(() => {
+    const onPageHide = () => {
+      const payload = abandonedPayloadRef.current;
+      if (!payload) return;
+      const blob = new Blob([JSON.stringify(payload)], { type: "application/json" });
+      navigator.sendBeacon("/api/checkout/capture-abandoned", blob);
+    };
+    window.addEventListener("pagehide", onPageHide);
+    return () => window.removeEventListener("pagehide", onPageHide);
+  }, []);
   const shippingDone =
     contactDone &&
     (isPersonalPickup

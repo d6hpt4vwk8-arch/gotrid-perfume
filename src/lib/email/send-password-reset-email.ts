@@ -14,7 +14,7 @@ export async function sendPasswordResetEmail(email: string, token: string) {
     to: email,
     subject: "Obnovení hesla — Gotrid Perfume",
     html: `
-      <h1>Obnovení hesla</h1>
+      <h1>Ahoj!</h1>
       <p>Požádali jste o obnovení hesla k účtu na Gotrid Perfume. Odkaz je platný 1 hodinu.</p>
       <p><a href="${resetUrl}">Nastavit nové heslo</a></p>
       <p>Pokud jste o obnovení hesla nežádali, tento e-mail můžete ignorovat.</p>

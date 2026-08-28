@@ -28,8 +28,8 @@ export async function sendCustomerOrderConfirmation(order: OrderWithItems) {
     to: order.email,
     subject: `Potvrzení objednávky ${order.number} — Gotrid Perfume`,
     html: `
-      <h1>Děkujeme za objednávku!</h1>
-      <p>Objednávka <strong>${order.number}</strong> byla přijata.</p>
+      <h1>Ahoj ${order.firstName}!</h1>
+      <p>Děkujeme za objednávku! Objednávka <strong>${order.number}</strong> byla přijata.</p>
       ${itemsTableHtml(order.items)}
       <p>Doprava: ${SHIPPING_LABELS[order.shippingMethod]} — ${formatPrice(order.shippingPrice)}</p>
       <p>Platba: ${PAYMENT_LABELS[order.paymentMethod]}${Number(order.codSurcharge) > 0 ? ` (příplatek ${formatPrice(order.codSurcharge)})` : ""}</p>

@@ -14,8 +14,8 @@ export async function sendStockAlertEmail(email: string, product: Product) {
     to: email,
     subject: `${product.name} je opět skladem — Gotrid Perfume`,
     html: `
-      <h1>${product.name} je opět skladem!</h1>
-      <p>Produkt, na který jste čekali, je znovu k dispozici.</p>
+      <h1>Ahoj!</h1>
+      <p><strong>${product.name}</strong> je opět skladem! Produkt, na který jste čekali, je znovu k dispozici.</p>
       <p><a href="${SITE_URL}/produkt/${product.slug}">Zobrazit produkt a objednat</a></p>
     `,
   });

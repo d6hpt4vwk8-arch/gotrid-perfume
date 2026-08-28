@@ -373,6 +373,28 @@ enum PaymentMethod {
   CASH_ON_DELIVERY
 }
 
+// Captured once a checkout-form visitor has filled in email+phone+name but
+// hasn't submitted the order yet — lets a daily job send one polite reminder
+// (src/lib/marketing/abandoned-checkout.ts). `email` is the unique key: while
+// someone is still actively typing on the checkout page, repeated capture
+// calls just refresh the snapshot/timestamp on the same row rather than
+// piling up duplicates.
+model AbandonedCheckout {
+  id           String    @id @default(cuid())
+  email        String    @unique
+  firstName    String?
+  phone        String?
+  cartSnapshot Json
+  capturedAt   DateTime  @default(now())
+  updatedAt    DateTime  @updatedAt
+  // Left untouched by the capture endpoint's update clause (only set once,
+  // by the sender) so a visitor lingering on the page after the reminder
+  // already went out can't re-arm a duplicate send.
+  emailSentAt  DateTime?
+  // Order completed before the reminder was ever sent — resolved without emailing.
+  recoveredAt  DateTime?
+}
+
 model Order {
   id          String @id @default(cuid())
   number      String @unique
