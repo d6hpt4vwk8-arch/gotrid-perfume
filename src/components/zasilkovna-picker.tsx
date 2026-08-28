@@ -47,9 +47,11 @@ function loadWidgetScript(): Promise<void> {
 export function ZasilkovnaPicker({
   selectedPointName,
   onSelect,
+  country = "cz",
 }: {
   selectedPointName: string | null;
   onSelect: (point: { id: string; name: string }) => void;
+  country?: "cz" | "sk";
 }) {
   const [manualId, setManualId] = useState("");
   const [manualName, setManualName] = useState("");
@@ -116,7 +118,7 @@ export function ZasilkovnaPicker({
               (point) => {
                 if (point) onSelect({ id: point.id, name: point.name });
               },
-              { country: "cz", language: "cs" },
+              { country, language: country === "sk" ? "sk" : "cs" },
             );
           } catch (err) {
             setError(err instanceof Error ? err.message : "Chyba widgetu.");

@@ -4,6 +4,7 @@ import { getCategoryNavTree } from "@/lib/categories.server";
 import { SearchBar } from "@/components/search-bar";
 import { CartIconLink } from "@/components/cart-icon-link";
 import { WishlistIconLink } from "@/components/wishlist-icon-link";
+import { MobileCategoryMenu } from "@/components/mobile-category-menu";
 import { getCurrentCustomerId } from "@/lib/customer/get-current-customer";
 
 export async function SiteHeader() {
@@ -58,7 +59,9 @@ export async function SiteHeader() {
           <CartIconLink />
         </div>
 
-        <nav className="order-4 flex w-full flex-nowrap gap-x-5 gap-y-2 overflow-x-auto border-t border-white/10 pt-3 text-sm sm:flex-wrap sm:overflow-visible">
+        <MobileCategoryMenu categories={categories} />
+
+        <nav className="order-4 hidden w-full flex-wrap gap-x-5 gap-y-2 border-t border-white/10 pt-3 text-sm sm:flex">
           {categories
             .filter((c) => !c.hidden)
             .map((category) => (

@@ -58,6 +58,7 @@ export function CheckoutForm({
   const [phone, setPhone] = useState(customer?.phone ?? "");
   const [firstName, setFirstName] = useState(customer?.firstName ?? "");
   const [lastName, setLastName] = useState(customer?.lastName ?? "");
+  const [shippingCountry, setShippingCountry] = useState<"CZ" | "SK">("CZ");
   const [shippingMethod, setShippingMethod] = useState<ShippingMethod>("ZASILKOVNA");
   const [paymentMethod, setPaymentMethod] = useState<PaymentMethod>("BANK_TRANSFER");
   const [pickupPoint, setPickupPoint] = useState<{ id: string; name: string } | null>(null);
@@ -74,8 +75,8 @@ export function CheckoutForm({
   const [couponChecking, setCouponChecking] = useState(false);
 
   const shippingPrice = useMemo(
-    () => getShippingPrice(shippingMethod, itemsTotal, settings),
-    [shippingMethod, itemsTotal, settings],
+    () => getShippingPrice(shippingMethod, itemsTotal, settings, shippingCountry),
+    [shippingMethod, itemsTotal, settings, shippingCountry],
   );
   const codAvailable = useMemo(() => canUseCod(itemsTotal, settings), [itemsTotal, settings]);
   const codSurcharge = useMemo(
@@ -93,6 +94,15 @@ export function CheckoutForm({
       setPaymentMethod("BANK_TRANSFER");
     }
   }, [paymentMethod, codAvailable]);
+
+  // Zásilkovna is the only carrier with a real Slovak pickup-point network
+  // today — switching to Slovensko forces it, mirroring the COD fallback above.
+  useEffect(() => {
+    if (shippingCountry === "SK" && shippingMethod !== "ZASILKOVNA") {
+      setShippingMethod("ZASILKOVNA");
+      setPickupPoint(null);
+    }
+  }, [shippingCountry, shippingMethod]);
 
   const usesPickupPoint = shippingMethod === "ZASILKOVNA" || shippingMethod === "BALIKOVNA";
   const isPersonalPickup = shippingMethod === "OSOBNI_ODBER";
@@ -206,6 +216,7 @@ export function CheckoutForm({
           firstName,
           lastName,
           shippingMethod,
+          shippingCountry,
           paymentMethod,
           pickupPointId: usesPickupPoint ? pickupPoint?.id : undefined,
           shippingStreet: !usesPickupPoint && !isPersonalPickup ? street : undefined,
@@ -311,33 +322,60 @@ export function CheckoutForm({
 
         <fieldset className="flex flex-col gap-2">
           <legend className="mb-1 text-sm font-semibold text-ink">Doprava</legend>
-          {(Object.keys(SHIPPING_LABELS) as ShippingMethod[]).map((method) => (
-            <label key={method} className="flex items-center gap-2 text-sm text-ink">
+
+          <div className="mb-1 flex gap-3 text-sm text-ink">
+            <label className="flex items-center gap-1.5">
               <input
                 type="radio"
-                name="shippingMethod"
-                checked={shippingMethod === method}
-                onChange={() => {
-                  setShippingMethod(method);
-                  // Point IDs are method-specific (Zásilkovna's widget ID vs.
-                  // a Balíkovna address string) — carrying a stale selection
-                  // across a method switch would submit it under the wrong method.
-                  setPickupPoint(null);
-                }}
+                name="shippingCountry"
+                checked={shippingCountry === "CZ"}
+                onChange={() => setShippingCountry("CZ")}
                 className="accent-accent"
               />
-              {SHIPPING_LABELS[method]} —{" "}
-              {method === "OSOBNI_ODBER" || itemsTotal >= settings.freeShippingThreshold
-                ? "zdarma"
-                : formatPrice(settings.shippingPrices[method])}
+              Česko
             </label>
-          ))}
+            <label className="flex items-center gap-1.5">
+              <input
+                type="radio"
+                name="shippingCountry"
+                checked={shippingCountry === "SK"}
+                onChange={() => setShippingCountry("SK")}
+                className="accent-accent"
+              />
+              Slovensko
+            </label>
+          </div>
+
+          {(Object.keys(SHIPPING_LABELS) as ShippingMethod[])
+            .filter((method) => shippingCountry !== "SK" || method === "ZASILKOVNA")
+            .map((method) => (
+              <label key={method} className="flex items-center gap-2 text-sm text-ink">
+                <input
+                  type="radio"
+                  name="shippingMethod"
+                  checked={shippingMethod === method}
+                  onChange={() => {
+                    setShippingMethod(method);
+                    // Point IDs are method-specific (Zásilkovna's widget ID vs.
+                    // a Balíkovna address string) — carrying a stale selection
+                    // across a method switch would submit it under the wrong method.
+                    setPickupPoint(null);
+                  }}
+                  className="accent-accent"
+                />
+                {SHIPPING_LABELS[method]} —{" "}
+                {method === "OSOBNI_ODBER" || itemsTotal >= settings.freeShippingThreshold
+                  ? "zdarma"
+                  : formatPrice(getShippingPrice(method, itemsTotal, settings, shippingCountry))}
+              </label>
+            ))}
 
           {shippingMethod === "ZASILKOVNA" ? (
             <div className="pt-2">
               <ZasilkovnaPicker
                 selectedPointName={pickupPoint?.name ?? null}
                 onSelect={setPickupPoint}
+                country={shippingCountry === "SK" ? "sk" : "cz"}
               />
             </div>
           ) : shippingMethod === "BALIKOVNA" ? (

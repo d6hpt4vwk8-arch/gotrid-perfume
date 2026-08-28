@@ -8,6 +8,16 @@ import { requireAdmin } from "@/lib/admin/require-admin";
 const settingsSchema = z.object({
   freeShippingThreshold: z.coerce.number().min(0).max(1_000_000),
   shippingPriceZasilkovna: z.coerce.number().min(0).max(10_000),
+  // Cross-border SK price is optional — left blank means "not confirmed
+  // yet", handled by getShippingPrice()'s fallback to the CZ price rather
+  // than a guessed number.
+  shippingPriceZasilkovnaSk: z
+    .string()
+    .optional()
+    .transform((v) => (v === undefined || v.trim() === "" ? null : Number(v)))
+    .refine((v) => v === null || (Number.isFinite(v) && v >= 0 && v <= 10_000), {
+      message: "Neplatná cena pro Slovensko.",
+    }),
   shippingPricePpl: z.coerce.number().min(0).max(10_000),
   shippingPriceDpd: z.coerce.number().min(0).max(10_000),
   shippingPriceBalikovna: z.coerce.number().min(0).max(10_000),

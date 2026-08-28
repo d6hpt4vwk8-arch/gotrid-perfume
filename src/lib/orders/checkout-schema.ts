@@ -7,6 +7,7 @@ export const checkoutSchema = z
     firstName: z.string().min(1, "Zadejte jméno.").max(100),
     lastName: z.string().min(1, "Zadejte příjmení.").max(100),
     shippingMethod: z.enum(["ZASILKOVNA", "PPL", "DPD", "BALIKOVNA", "OSOBNI_ODBER"]),
+    shippingCountry: z.enum(["CZ", "SK"]).optional().default("CZ"),
     paymentMethod: z.enum(["CARD", "BANK_TRANSFER", "CASH_ON_DELIVERY"]),
     pickupPointId: z.string().max(50).optional(),
     shippingStreet: z.string().max(200).optional(),
@@ -43,6 +44,16 @@ export const checkoutSchema = z
           message: "Vyplňte doručovací adresu.",
         });
       }
+    }
+    // Zásilkovna is the only carrier with a real Slovak pickup-point network
+    // today — enforced here, not just hidden in the UI, so a direct API call
+    // can't smuggle in a combination we can't actually fulfil.
+    if (data.shippingCountry === "SK" && data.shippingMethod !== "ZASILKOVNA") {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        path: ["shippingMethod"],
+        message: "Na Slovensko lze zatím doručit pouze přes Zásilkovnu.",
+      });
     }
   });
 

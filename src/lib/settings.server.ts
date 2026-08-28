@@ -5,6 +5,9 @@ import type { ShippingMethod } from "@prisma/client";
 export interface ShopSettings {
   freeShippingThreshold: number;
   shippingPrices: Record<ShippingMethod, number>;
+  // Null until the owner sets a real cross-border price in admin settings —
+  // callers should fall back to shippingPrices.ZASILKOVNA until then.
+  shippingPriceZasilkovnaSk: number | null;
   codSurcharge: number;
 }
 
@@ -30,6 +33,8 @@ export const getSettings = unstable_cache(
         // Not DB-backed — personal pickup has no carrier cost, always free.
         OSOBNI_ODBER: 0,
       },
+      shippingPriceZasilkovnaSk:
+        row.shippingPriceZasilkovnaSk === null ? null : Number(row.shippingPriceZasilkovnaSk),
       codSurcharge: Number(row.codSurcharge),
     };
   },

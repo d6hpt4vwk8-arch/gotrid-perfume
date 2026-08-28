@@ -34,6 +34,20 @@ export default async function AdminSettingsPage() {
           />
         </label>
         <label className="flex flex-col gap-1 text-sm">
+          Zásilkovna — Slovensko (Kč)
+          <input
+            name="shippingPriceZasilkovnaSk"
+            type="number"
+            step="0.01"
+            defaultValue={settings.shippingPriceZasilkovnaSk ?? ""}
+            className="rounded-sm border border-line px-3 py-2"
+          />
+          <span className="text-xs text-accent-2">
+            Nechte prázdné, dokud nepotvrdíte cenu — do té doby se pro Slovensko použije stejná
+            cena jako pro ČR.
+          </span>
+        </label>
+        <label className="flex flex-col gap-1 text-sm">
           PPL kurýr (Kč)
           <input
             name="shippingPricePpl"

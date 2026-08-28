@@ -41,7 +41,7 @@ export async function createOrder(input: CheckoutInput, customerId?: string | nu
     );
   }
 
-  const shippingPrice = getShippingPrice(input.shippingMethod, itemsTotal, settings);
+  const shippingPrice = getShippingPrice(input.shippingMethod, itemsTotal, settings, input.shippingCountry);
   const codSurcharge = getCodSurcharge(input.paymentMethod, settings);
 
   for (let attempt = 0; attempt < MAX_ORDER_NUMBER_ATTEMPTS; attempt++) {
@@ -82,6 +82,7 @@ export async function createOrder(input: CheckoutInput, customerId?: string | nu
             shippingStreet: input.shippingStreet,
             shippingCity: input.shippingCity,
             shippingPostalCode: input.shippingPostalCode,
+            shippingCountry: input.shippingCountry,
             marketingConsent: input.marketingConsent,
             couponCode,
             discountAmount,
