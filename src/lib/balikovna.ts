@@ -31,6 +31,81 @@ const PARCEL_PREFIX = "NB"; // Balíkovna/Box parcel type — "BA" (the YAML's g
 // responseCode 11 "INVALID_LOCATION", no matter what else is right.
 const LOCATION_NUMBER = 1;
 
+// B2B-POZRService ("Balíkovna Retail" / PORZ) — a separate nAPI service from
+// ZSKService above. Unlike parcelService/createParcel, sendData carries no
+// locationNumber/postCode at all: instead of being tied to one pre-registered
+// podací místo (which above is fixed to post-office drop-off), each request
+// declares the Sender inline, and the resulting confirmCode ("podací kód")
+// can be handed over at ANY Balíkovna point/Z-BOX — that's the whole point
+// of "Retail". Spec: B2B-POZRService OpenAPI 1.7.2, downloaded from
+// postaonline.cz/dokumentaceapi/b2b/pozr (requires the B2B-POZR role on the
+// account — as of writing this account only has SPB2B_uzivatel,
+// B2B-CIS_zasilka, B2B-ZSK_zasilky, i.e. NOT YET enabled; ask Česká pošta's
+// account manager to add it before this code path can work).
+const POZR_API_URL = "https://b2b.postaonline.cz:444/restservices/POZRService/v1";
+
+// Sender block for every sendData call — Gotrid Perfume's own contact/pickup
+// details (not order-specific), matching PICKUP_ADDRESS in src/lib/shipping.ts.
+const RETAIL_SENDER = {
+  firstName: "Pavlo",
+  name: "Hrytsan",
+  zipCode: POST_CODE,
+  mobilNumber: "735583527",
+  emailAddress: "pavlohrytsan@gmail.com",
+  note: "Gotrid Perfume",
+};
+
+// ConsignmentParams.trnCode/idTrnCountry identify the specific product
+// (e.g. "Balíkovna"/Box) within sendData — unlike prefixParcelCode "NB"
+// above, the OpenAPI spec gives no fixed value for these (its examples are
+// generic placeholders "ABC"/1), and no public price list enumerates them
+// either. Get the correct pair from Česká pošta's account manager together
+// with enabling the B2B-POZR role, then set these two env vars — deliberately
+// not hardcoded so a wrong guess can't silently mis-tag every shipment.
+function requirePozrEnv(name: "BALIKOVNA_POZR_TRN_CODE" | "BALIKOVNA_POZR_ID_TRN_COUNTRY"): string {
+  const value = process.env[name];
+  if (!value) {
+    throw new BalikovnaError(
+      `${name} není nastavené — vyžádejte si od obchodního zástupce České pošty spolu s ` +
+        `aktivací role B2B-POZR správnou hodnotu trnCode/idTrnCountry pro produkt Balíkovna.`,
+    );
+  }
+  return value;
+}
+
+// service code for "Dobírka" (cash on delivery) within POZR's Services
+// array — the OpenAPI spec's example ("41") is a generic placeholder for
+// *some* service, not confirmed as COD; verify with Česká pošta before
+// relying on it for orders paid by cash on delivery.
+function requirePozrCodServiceCode(): string {
+  const value = process.env.BALIKOVNA_POZR_COD_SERVICE_CODE;
+  if (!value) {
+    throw new BalikovnaError(
+      "BALIKOVNA_POZR_COD_SERVICE_CODE není nastavené — vyžádejte si od České pošty kód " +
+        "doplňkové služby „Dobírka“ pro sendData/POZR (není totéž co „Du“ u ZSKService).",
+    );
+  }
+  return value;
+}
+
+// Unlike ZSKService (which settles COD to a bank account already on file
+// for customerID, nothing extra in the request), POZR's CodAccount object
+// requires the account explicitly on every call — do not reuse BANK_IBAN
+// (that's the QR-platba IBAN, not necessarily confirmed as the same account
+// or in this accountPrefix/account/bankCode split format) without checking
+// with Česká pošta first.
+function requirePozrCodAccount(): { accountPrefix: string; account: string; bankCode: string } {
+  const account = process.env.BALIKOVNA_POZR_COD_ACCOUNT;
+  const bankCode = process.env.BALIKOVNA_POZR_COD_BANK_CODE;
+  if (!account || !bankCode) {
+    throw new BalikovnaError(
+      "BALIKOVNA_POZR_COD_ACCOUNT / BALIKOVNA_POZR_COD_BANK_CODE nejsou nastavené — doplňte " +
+        "číslo účtu pro vyplácení dobírek přes sendData/POZR.",
+    );
+  }
+  return { accountPrefix: process.env.BALIKOVNA_POZR_COD_ACCOUNT_PREFIX ?? "", account, bankCode };
+}
+
 export class BalikovnaError extends Error {
   constructor(message: string) {
     super(message);
@@ -293,4 +368,144 @@ export async function reprintLabel(parcelCode: string): Promise<Buffer> {
   }
 
   return Buffer.from(parsed.printingDataResult, "base64");
+}
+
+async function pozrFetch(path: string, init: { method: "GET" | "POST"; body?: string }) {
+  const bodyJson = init.body ?? "";
+  const headers = {
+    ...buildAuthHeaders(bodyJson),
+    customerID: CUSTOMER_ID,
+  };
+  try {
+    return await undiciFetch(`${POZR_API_URL}${path}`, {
+      method: init.method,
+      headers,
+      ...(init.body ? { body: init.body } : {}),
+      dispatcher: balikovnaDispatcher,
+    });
+  } catch (err) {
+    const cause = err instanceof Error ? err.cause : undefined;
+    console.error("Balíkovna POZR request failed:", path, err, "cause:", cause);
+    const detail = cause instanceof Error ? cause.message : err instanceof Error ? err.message : String(err);
+    throw new BalikovnaError(`Balíkovna API (POZR) — chyba spojení: ${detail}`);
+  }
+}
+
+export type CreateRetailParcelInput = {
+  weightKg: number; // not sent to POZR (ConsignmentParams has no weight field —
+  // the drop-off point weighs the parcel itself), kept for callers that log/store it
+  codAmount: number | null;
+  recipient: {
+    firstName: string;
+    surname: string;
+    mobilNumber?: string;
+    emailAddress: string;
+  };
+  // BalikovnaPoint.id, same convention as ZSKService's createParcel: for a
+  // point/Box delivery the point's ID goes in the address's zipCode field.
+  pickupPointId: string;
+};
+
+/**
+ * Balíkovna Retail (PORZ) equivalent of createParcel — submits the shipment
+ * via the /sendData operation (async: POST returns an idTransaction, then we
+ * poll GET .../idTransaction/{id} until it resolves) and returns the
+ * confirmCode ("podací kód") the sender hands over at ANY Balíkovna point,
+ * plus the parcelCode (ConsignmentCode) for tracking/label lookup. Requires
+ * the B2B-POZR role and BALIKOVNA_POZR_TRN_CODE/BALIKOVNA_POZR_ID_TRN_COUNTRY
+ * (and BALIKOVNA_POZR_COD_SERVICE_CODE for COD orders) — see the comments
+ * above POZR_API_URL.
+ */
+export async function createRetailParcel(
+  input: CreateRetailParcelInput,
+): Promise<{ confirmCode: string; parcelCode: string }> {
+  const trnCode = requirePozrEnv("BALIKOVNA_POZR_TRN_CODE");
+  const idTrnCountry = Number(requirePozrEnv("BALIKOVNA_POZR_ID_TRN_COUNTRY"));
+
+  const body = {
+    SendData: {
+      Sender: RETAIL_SENDER,
+      ...(input.codAmount ? { CodAccount: requirePozrCodAccount() } : {}),
+      ConsignmentParams: [
+        {
+          prefix: PARCEL_PREFIX,
+          trnCode,
+          idTrnCountry,
+          ...(input.codAmount ? { amount: input.codAmount } : {}),
+          ...(input.codAmount ? { Services: [{ service: requirePozrCodServiceCode() }] } : {}),
+          Addressee: {
+            firstName: input.recipient.firstName,
+            name: input.recipient.surname,
+            zipCode: input.pickupPointId,
+            gsm: input.recipient.mobilNumber ?? "",
+            email: input.recipient.emailAddress,
+          },
+        },
+      ],
+    },
+  };
+
+  const bodyJson = JSON.stringify(body);
+  const postRes = await pozrFetch("/sendData", { method: "POST", body: bodyJson });
+  const postText = await postRes.text();
+  if (!postRes.ok) {
+    console.error("Balíkovna POZR sendData non-OK response:", postRes.status, postText, "body:", bodyJson);
+    throw new BalikovnaError(`Balíkovna API (POZR) vrátila HTTP ${postRes.status}: ${postText}`);
+  }
+
+  let posted: { idTransaction?: string };
+  try {
+    posted = JSON.parse(postText) as { idTransaction?: string };
+  } catch {
+    throw new BalikovnaError(`Balíkovna API (POZR) vrátila neplatnou odpověď: ${postText.slice(0, 500)}`);
+  }
+  if (!posted.idTransaction) {
+    throw new BalikovnaError("Balíkovna API (POZR) nevrátila idTransaction.");
+  }
+
+  // /sendData is asynchronous — poll for the result. The spec gives no SLA,
+  // so retry with a short fixed delay for up to ~30s before giving up.
+  const maxAttempts = 15;
+  for (let attempt = 1; attempt <= maxAttempts; attempt++) {
+    await new Promise((resolve) => setTimeout(resolve, 2000));
+
+    const getRes = await pozrFetch(`/sendData/idTransaction/${posted.idTransaction}`, { method: "GET" });
+    if (getRes.status === 202) continue; // still processing
+
+    const getText = await getRes.text();
+    if (!getRes.ok) {
+      console.error("Balíkovna POZR poll non-OK response:", getRes.status, getText);
+      throw new BalikovnaError(`Balíkovna API (POZR) vrátila HTTP ${getRes.status}: ${getText}`);
+    }
+
+    let result: { confirmCode?: string; ConsignmentCode?: string };
+    try {
+      result = JSON.parse(getText) as { confirmCode?: string; ConsignmentCode?: string };
+    } catch {
+      throw new BalikovnaError(`Balíkovna API (POZR) vrátila neplatnou odpověď: ${getText.slice(0, 500)}`);
+    }
+    if (!result.confirmCode || !result.ConsignmentCode) {
+      throw new BalikovnaError("Balíkovna API (POZR) nevrátila podací kód nebo ID zásilky.");
+    }
+    return { confirmCode: result.confirmCode, parcelCode: result.ConsignmentCode };
+  }
+
+  throw new BalikovnaError(
+    "Balíkovna API (POZR): zpracování zásilky trvá déle než obvykle, zkuste štítek znovu za chvíli.",
+  );
+}
+
+/**
+ * Fetches the printable address label PDF for a parcel already submitted via
+ * createRetailParcel — optional under POZR, since the drop-off point can
+ * also affix the label itself using just the confirmCode.
+ */
+export async function getRetailLabel(parcelCode: string): Promise<Buffer> {
+  const res = await pozrFetch(`/addressLabel/consignmentCode/${parcelCode}`, { method: "GET" });
+  if (!res.ok) {
+    const text = await res.text();
+    console.error("Balíkovna POZR addressLabel non-OK response:", res.status, text);
+    throw new BalikovnaError(`Balíkovna API (POZR) vrátila HTTP ${res.status}: ${text}`);
+  }
+  return Buffer.from(await res.arrayBuffer());
 }
