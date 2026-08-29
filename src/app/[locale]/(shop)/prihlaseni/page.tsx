@@ -15,6 +15,7 @@ function LoginForm() {
   const [submitting, setSubmitting] = useState(false);
   const nextParam = searchParams.get("next");
   const seznamHref = `/api/auth/seznam${nextParam ? `?next=${encodeURIComponent(nextParam)}` : ""}`;
+  const facebookHref = `/api/auth/facebook${nextParam ? `?next=${encodeURIComponent(nextParam)}` : ""}`;
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
@@ -57,6 +58,12 @@ function LoginForm() {
         className="flex items-center justify-center gap-2 rounded-sm border border-line px-4 py-2 text-sm font-semibold text-ink hover:border-accent hover:text-accent"
       >
         Přihlásit se přes Seznam
+      </Link>
+      <Link
+        href={facebookHref}
+        className="flex items-center justify-center gap-2 rounded-sm border border-line px-4 py-2 text-sm font-semibold text-ink hover:border-accent hover:text-accent"
+      >
+        Přihlásit se přes Facebook
       </Link>
       <div className="flex items-center gap-3 text-xs text-accent-2">
         <span className="h-px flex-1 bg-line" />

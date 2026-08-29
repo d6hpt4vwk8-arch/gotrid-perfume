@@ -63,6 +63,12 @@ export default function RegisterPage() {
       >
         Pokračovat přes Seznam
       </Link>
+      <Link
+        href="/api/auth/facebook"
+        className="flex items-center justify-center gap-2 rounded-sm border border-line px-4 py-2 text-sm font-semibold text-ink hover:border-accent hover:text-accent"
+      >
+        Pokračovat přes Facebook
+      </Link>
       <div className="flex items-center gap-3 text-xs text-accent-2">
         <span className="h-px flex-1 bg-line" />
         nebo e-mailem
