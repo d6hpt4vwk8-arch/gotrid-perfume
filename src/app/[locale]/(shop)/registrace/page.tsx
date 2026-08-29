@@ -57,6 +57,17 @@ export default function RegisterPage() {
         </Link>
         .
       </p>
+      <Link
+        href="/api/auth/seznam"
+        className="flex items-center justify-center gap-2 rounded-sm border border-line px-4 py-2 text-sm font-semibold text-ink hover:border-accent hover:text-accent"
+      >
+        Pokračovat přes Seznam
+      </Link>
+      <div className="flex items-center gap-3 text-xs text-accent-2">
+        <span className="h-px flex-1 bg-line" />
+        nebo e-mailem
+        <span className="h-px flex-1 bg-line" />
+      </div>
       <form onSubmit={handleSubmit} className="flex flex-col gap-3">
         <div className="flex gap-3">
           <input

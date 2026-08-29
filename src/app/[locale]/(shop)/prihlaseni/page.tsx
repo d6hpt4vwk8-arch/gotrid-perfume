@@ -10,8 +10,11 @@ function LoginForm() {
   const searchParams = useSearchParams();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const oauthError = searchParams.get("error");
   const [error, setError] = useState<string | null>(null);
   const [submitting, setSubmitting] = useState(false);
+  const nextParam = searchParams.get("next");
+  const seznamHref = `/api/auth/seznam${nextParam ? `?next=${encodeURIComponent(nextParam)}` : ""}`;
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
@@ -48,6 +51,18 @@ function LoginForm() {
         </Link>
         .
       </p>
+      {oauthError && <p className="text-sm text-red-600">{oauthError}</p>}
+      <Link
+        href={seznamHref}
+        className="flex items-center justify-center gap-2 rounded-sm border border-line px-4 py-2 text-sm font-semibold text-ink hover:border-accent hover:text-accent"
+      >
+        Přihlásit se přes Seznam
+      </Link>
+      <div className="flex items-center gap-3 text-xs text-accent-2">
+        <span className="h-px flex-1 bg-line" />
+        nebo e-mailem
+        <span className="h-px flex-1 bg-line" />
+      </div>
       <form onSubmit={handleSubmit} className="flex flex-col gap-3">
         <input
           required
