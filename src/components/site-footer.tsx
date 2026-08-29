@@ -15,7 +15,7 @@ const INFO_LINKS = [
 
 export function SiteFooter() {
   return (
-    <footer className="mt-16 bg-ink text-white">
+    <footer className="bg-ink text-white">
       <div className="mx-auto grid max-w-6xl gap-8 px-4 py-10 sm:grid-cols-2 lg:grid-cols-4">
         <div>
           <h3 className="text-sm font-semibold text-white">Garance originality</h3>
