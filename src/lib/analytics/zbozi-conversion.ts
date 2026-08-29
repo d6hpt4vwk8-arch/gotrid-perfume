@@ -1,4 +1,4 @@
-import { prisma } from "@/lib/prisma";
+import { resolveItemCodes, toItemId, type OrderItemInput } from "./resolve-item-ids";
 
 // Zboží.cz's own backend conversion API (github.com/seznam/zbozi-konverze),
 // separate from — but reported alongside — the client-side rc.conversionHit
@@ -17,37 +17,13 @@ export function isZboziConversionConfigured(): boolean {
   return Boolean(SHOP_ID && SECRET_KEY);
 }
 
-interface OrderItemInput {
-  productId: string | null;
-  name: string;
-  ean: string | null;
-  qty: number;
-  unitPrice: number;
-}
-
 export interface ZboziConversionEvent {
   orderId: string;
   items: OrderItemInput[];
-  email?: string;
   deliveryType?: string;
   deliveryPrice?: number;
   otherCosts?: number;
   paymentType?: string;
-}
-
-// itemId should match the same identifier used as <ITEM_ID> in our product
-// feeds (product.code) so Zboží can reconcile conversions against the
-// catalog it already has — OrderItem only stores productId/ean/name, so
-// this resolves code via a batch lookup, falling back to ean/name for
-// items whose product has since been deleted.
-async function resolveItemIds(items: OrderItemInput[]): Promise<Map<string, string>> {
-  const productIds = items.map((i) => i.productId).filter((id): id is string => Boolean(id));
-  if (productIds.length === 0) return new Map();
-  const products = await prisma.product.findMany({
-    where: { id: { in: productIds } },
-    select: { id: true, code: true },
-  });
-  return new Map(products.map((p) => [p.id, p.code]));
 }
 
 export async function sendZboziConversion(event: ZboziConversionEvent): Promise<void> {
@@ -56,20 +32,23 @@ export async function sendZboziConversion(event: ZboziConversionEvent): Promise<
     return;
   }
 
-  const codeByProductId = await resolveItemIds(event.items);
+  const codeByProductId = await resolveItemCodes(event.items);
   const cart = event.items.map((item) => ({
-    itemId: (item.productId && codeByProductId.get(item.productId)) || item.ean || item.name,
+    itemId: toItemId(item, codeByProductId),
     productName: item.name,
     unitPrice: item.unitPrice,
     quantity: item.qty,
   }));
 
+  // Deliberately no "email" field here — Zboží.cz uses it to trigger their
+  // own purchase-satisfaction survey email, which would double up with
+  // Heureka's "Ověřeno zákazníky" dotazník (src/lib/analytics/heureka-overeno.ts)
+  // for the same order. Revenue/conversion attribution below doesn't need it.
   const payload = {
     PRIVATE_KEY: SECRET_KEY,
     sandbox: false,
     orderId: event.orderId,
     cart,
-    ...(event.email && { email: event.email }),
     ...(event.deliveryType && { deliveryType: event.deliveryType }),
     ...(event.deliveryPrice !== undefined && { deliveryPrice: event.deliveryPrice }),
     ...(event.otherCosts !== undefined && { otherCosts: event.otherCosts }),
