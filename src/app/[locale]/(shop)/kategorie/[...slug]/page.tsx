@@ -115,6 +115,15 @@ export default async function CategoryPage({
         </div>
       )}
 
+      {(fullSlug.startsWith("parfemy") || fullSlug.startsWith("nisove-parfemy")) && (
+        <Link
+          href="/magazin/jak-vybrat-parfem"
+          className="flex w-fit items-center gap-2 rounded-sm border border-line px-3 py-2 text-sm text-ink hover:border-accent hover:text-accent"
+        >
+          Nevíte, který parfém vybrat? Poradíme →
+        </Link>
+      )}
+
       <div className="flex flex-col gap-6 sm:flex-row">
         <CategoryFilters
           brands={brands}

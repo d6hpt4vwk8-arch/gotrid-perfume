@@ -4,6 +4,7 @@ import { getCategoryNavTree } from "@/lib/categories.server";
 import { primaryVariantWhere } from "@/lib/product-filters";
 import { ProductCard } from "@/components/product-card";
 import { HomeHero } from "@/components/home-hero";
+import { PerfumeAdviceBlock } from "@/components/perfume-advice-block";
 import { getHeurekaShopReviews } from "@/lib/heureka-reviews";
 
 // K-beauty brands carried in the catalog — used to curate the homepage's
@@ -74,6 +75,8 @@ export default async function HomePage() {
             ))}
         </div>
       </section>
+
+      <PerfumeAdviceBlock />
 
       {koreanCosmetics.length > 0 && (
         <section>

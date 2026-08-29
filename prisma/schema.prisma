@@ -8,6 +8,34 @@ datasource db {
 }
 
 // ---------------------------------------------------------------------------
+// BlogPost — "Magazín" content section (buying guides, brand spotlights),
+// authored by the owner via /admin/magazin rather than hand-written pages.
+// ---------------------------------------------------------------------------
+
+model BlogPost {
+  id      String @id @default(cuid())
+  slug    String @unique
+  title   String
+  excerpt String
+  // Category is a free-form tag ("parfemy" | "kosmetika" | "obecne") rather
+  // than a relation to Category — articles aren't tied to the product
+  // catalog taxonomy, just loosely grouped for the /magazin filter.
+  category    String
+  coverImage  String?
+  // Author's original plain text (blank line = new paragraph) — the source
+  // of truth reloaded into the edit form; contentHtml below is derived from
+  // it at save time so public pages don't reconvert on every render.
+  content     String  @db.Text
+  // Converted to safe <p> HTML at save time — sanitized again at render via
+  // sanitizeDescription() as defense in depth, same as product descriptions.
+  contentHtml String  @db.Text
+  published   Boolean @default(true)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+// ---------------------------------------------------------------------------
 // Brand
 // ---------------------------------------------------------------------------
 

@@ -1,13 +1,8 @@
 import { PaymentIcons } from "@/components/payment-icons";
-
-// Same number published in the footer and on /kontakty — reused here rather
-// than introducing a second contact channel.
-const WHATSAPP_NUMBER = "420735583527";
+import { buildWhatsappHref } from "@/lib/whatsapp";
 
 export function ProductTrustStrip({ productName }: { productName: string }) {
-  const whatsappHref = `https://wa.me/${WHATSAPP_NUMBER}?text=${encodeURIComponent(
-    `Dobrý den, mám dotaz k produktu „${productName}“.`,
-  )}`;
+  const whatsappHref = buildWhatsappHref(`Dobrý den, mám dotaz k produktu „${productName}“.`);
 
   return (
     <div className="flex flex-col gap-3 border-y border-line py-4">

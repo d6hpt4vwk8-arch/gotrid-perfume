@@ -4,6 +4,7 @@ import { SocialLinks } from "@/components/social-links";
 
 const INFO_LINKS = [
   { href: "/o-nas", label: "O nás" },
+  { href: "/magazin", label: "Magazín" },
   { href: "/garance-originality-produktu", label: "Garance originality produktů" },
   { href: "/doprava-a-platba", label: "Doprava a platba" },
   { href: "/obchodni-podminky", label: "Obchodní podmínky" },
