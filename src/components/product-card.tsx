@@ -18,10 +18,18 @@ export interface ProductCardData {
 
 export function ProductCard({ product }: { product: ProductCardData }) {
   const image = product.images[0];
+  const discountPercent = product.compareAtPrice
+    ? Math.round((1 - Number(product.price) / Number(product.compareAtPrice)) * 100)
+    : null;
 
   return (
     <Link href={`/produkt/${product.slug}`} className="group flex flex-col">
       <div className="relative aspect-square w-full overflow-hidden bg-line/60">
+        {discountPercent && discountPercent > 0 && (
+          <span className="absolute left-2 top-2 z-10 rounded-sm bg-red-600 px-1.5 py-1 text-xs font-bold text-white">
+            -{discountPercent}%
+          </span>
+        )}
         <WishlistButton
           product={{
             productId: product.id,

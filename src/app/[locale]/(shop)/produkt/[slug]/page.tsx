@@ -188,9 +188,14 @@ export default async function ProductPage({
           <div className="flex items-baseline gap-3">
             <span className="text-2xl font-bold text-accent">{formatPrice(product.price)}</span>
             {product.compareAtPrice && (
-              <span className="text-lg text-accent-2 line-through">
-                {formatPrice(product.compareAtPrice)}
-              </span>
+              <>
+                <span className="text-lg text-accent-2 line-through">
+                  {formatPrice(product.compareAtPrice)}
+                </span>
+                <span className="rounded-sm bg-red-600 px-1.5 py-1 text-xs font-bold text-white">
+                  -{Math.round((1 - Number(product.price) / Number(product.compareAtPrice)) * 100)}%
+                </span>
+              </>
             )}
           </div>
 
