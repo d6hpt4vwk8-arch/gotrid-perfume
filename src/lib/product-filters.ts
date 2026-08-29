@@ -11,7 +11,6 @@ export interface CategoryFilterParams {
   concern?: string | string[];
   priceMin?: string;
   priceMax?: string;
-  inStock?: string;
   sale?: string;
   sort?: string;
   page?: string;
@@ -26,7 +25,6 @@ export interface ParsedFilters {
   concernSlugs: string[];
   priceMin: number | null;
   priceMax: number | null;
-  inStockOnly: boolean;
   saleOnly: boolean;
   sort: SortOption;
   page: number;
@@ -55,7 +53,6 @@ export function parseFilterParams(params: CategoryFilterParams): ParsedFilters {
     concernSlugs: toArray(params.concern),
     priceMin: priceMin !== null && Number.isFinite(priceMin) ? priceMin : null,
     priceMax: priceMax !== null && Number.isFinite(priceMax) ? priceMax : null,
-    inStockOnly: params.inStock === "1",
     saleOnly: params.sale === "1",
     sort,
     page: Math.max(1, Number(params.page) || 1),
@@ -87,7 +84,13 @@ export function buildProductWhere(
   filters: ParsedFilters,
   perfumeCategoryIds?: string[] | null,
 ): Prisma.ProductWhereInput {
-  const and: Prisma.ProductWhereInput[] = [baseWhere, primaryVariantWhere];
+  // Sold-out products are excluded from every storefront listing by
+  // default (not just an opt-in filter) — a customer browsing a category
+  // shouldn't keep running into "Vyprodáno" cards, and hiding them costs
+  // nothing extra since `stock` is already indexed/queried on every listing.
+  // They come back automatically the moment supplier stock syncs restore
+  // `stock > 0` — nothing to toggle back manually.
+  const and: Prisma.ProductWhereInput[] = [baseWhere, primaryVariantWhere, { stock: { gt: 0 } }];
 
   if (filters.brandSlugs.length > 0) {
     and.push({ brand: { slug: { in: filters.brandSlugs } } });
@@ -100,10 +103,6 @@ export function buildProductWhere(
         ...(filters.priceMax !== null && { lte: filters.priceMax }),
       },
     });
-  }
-
-  if (filters.inStockOnly) {
-    and.push({ stock: { gt: 0 } });
   }
 
   if (filters.saleOnly) {

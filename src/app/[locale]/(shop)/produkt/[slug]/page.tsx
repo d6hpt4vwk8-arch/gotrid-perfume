@@ -54,6 +54,7 @@ async function getRelatedProducts(productId: string, categoryIds: string[]) {
       visible: true,
       categories: { some: { categoryId: { in: categoryIds } } },
       ...primaryVariantWhere,
+      stock: { gt: 0 },
     },
     include: { brand: true, images: { orderBy: { sortOrder: "asc" }, take: 1 } },
     orderBy: [{ priority: "desc" }, { createdAt: "desc" }],

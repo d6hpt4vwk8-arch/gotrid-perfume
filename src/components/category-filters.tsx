@@ -143,7 +143,6 @@ export function CategoryFilters({
         label: cosmetics.concerns.find((c) => c.slug === v)?.name ?? v,
       }),
     );
-    if (searchParams.get("inStock") === "1") chips.push({ key: "inStock", value: "1", label: "Skladem" });
     if (searchParams.get("sale") === "1") chips.push({ key: "sale", value: "1", label: "Ve slevě" });
     return chips;
   }, [
@@ -162,7 +161,7 @@ export function CategoryFilters({
 
   function removeChip(key: string, value: string) {
     updateParams((params) => {
-      if (key === "inStock" || key === "sale") {
+      if (key === "sale") {
         params.delete(key);
         return;
       }
@@ -266,15 +265,6 @@ export function CategoryFilters({
       )}
 
       <div className="flex flex-col gap-2 border-b border-line pb-4">
-        <label className="flex items-center gap-2 text-sm text-ink">
-          <input
-            type="checkbox"
-            checked={searchParams.get("inStock") === "1"}
-            onChange={() => toggleBoolean("inStock")}
-            className="accent-accent"
-          />
-          Pouze skladem
-        </label>
         <label className="flex items-center gap-2 text-sm text-ink">
           <input
             type="checkbox"

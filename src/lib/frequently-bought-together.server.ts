@@ -25,7 +25,7 @@ export async function getFrequentlyBoughtTogether(productId: string, limit = 4) 
   if (rows.length === 0) return [];
 
   const products = await prisma.product.findMany({
-    where: { id: { in: rows.map((r) => r.productId) }, visible: true },
+    where: { id: { in: rows.map((r) => r.productId) }, visible: true, stock: { gt: 0 } },
     include: { brand: true, images: { orderBy: { sortOrder: "asc" }, take: 1 } },
   });
   const byId = new Map(products.map((p) => [p.id, p]));

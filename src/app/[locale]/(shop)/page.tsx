@@ -24,7 +24,7 @@ export default async function HomePage() {
     await Promise.all([
       getCategoryNavTree(),
       prisma.product.findMany({
-        where: { visible: true, ...primaryVariantWhere, compareAtPrice: { not: null } },
+        where: { visible: true, ...primaryVariantWhere, compareAtPrice: { not: null }, stock: { gt: 0 } },
         orderBy: [{ priority: "desc" }, { createdAt: "desc" }],
         take: 12,
         include: { brand: true, images: { orderBy: { sortOrder: "asc" }, take: 1 } },
@@ -34,6 +34,7 @@ export default async function HomePage() {
           visible: true,
           ...primaryVariantWhere,
           brand: { name: { in: KOREAN_COSMETICS_BRANDS } },
+          stock: { gt: 0 },
         },
         orderBy: [{ priority: "desc" }, { createdAt: "desc" }],
         take: 12,
@@ -44,6 +45,7 @@ export default async function HomePage() {
           visible: true,
           ...primaryVariantWhere,
           categories: { some: { category: { fullSlug: "parfemy/arabske-parfemy" } } },
+          stock: { gt: 0 },
         },
         orderBy: [{ priority: "desc" }, { createdAt: "desc" }],
         take: 12,

@@ -13,7 +13,7 @@ export default async function BrandPage({
   if (!brand) notFound();
 
   const products = await prisma.product.findMany({
-    where: { visible: true, brandId: brand.id, ...primaryVariantWhere },
+    where: { visible: true, brandId: brand.id, ...primaryVariantWhere, stock: { gt: 0 } },
     orderBy: { createdAt: "desc" },
     include: { brand: true, images: { orderBy: { sortOrder: "asc" }, take: 1 } },
   });

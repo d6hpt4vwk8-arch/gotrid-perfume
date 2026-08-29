@@ -87,7 +87,6 @@ export default async function CategoryPage({
   filters.concernSlugs.forEach((c) => paginationQuery.append("concern", c));
   if (filters.priceMin !== null) paginationQuery.set("priceMin", String(filters.priceMin));
   if (filters.priceMax !== null) paginationQuery.set("priceMax", String(filters.priceMax));
-  if (filters.inStockOnly) paginationQuery.set("inStock", "1");
   if (filters.saleOnly) paginationQuery.set("sale", "1");
   if (filters.sort !== "newest") paginationQuery.set("sort", filters.sort);
 
