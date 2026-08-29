@@ -508,6 +508,7 @@ model OrderItem {
   vatRate   Int
 
   @@index([orderId])
+  @@index([productId])
 }
 
 // ---------------------------------------------------------------------------

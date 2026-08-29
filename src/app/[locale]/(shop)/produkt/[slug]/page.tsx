@@ -14,6 +14,7 @@ import { StockAlertForm } from "@/components/stock-alert-form";
 import { getProductSpecs } from "@/lib/product-specs";
 import { getCategoryBreadcrumb } from "@/lib/categories.server";
 import { Breadcrumbs } from "@/components/breadcrumbs";
+import { getFrequentlyBoughtTogether } from "@/lib/frequently-bought-together.server";
 import { parseVolumeMl, formatVolumeLabel } from "@/lib/parse-volume";
 import { estimateDeliveryDate, formatDeliveryEstimate } from "@/lib/delivery-estimate";
 import { ReviewForm } from "@/components/review-form";
@@ -85,13 +86,14 @@ export default async function ProductPage({
 
   const primaryCategory = product.categories[0]?.category;
 
-  const [relatedProducts, sizeVariants, categoryBreadcrumb] = await Promise.all([
+  const [relatedProducts, sizeVariants, categoryBreadcrumb, frequentlyBoughtTogether] = await Promise.all([
     getRelatedProducts(
       product.id,
       product.categories.map((c) => c.categoryId),
     ),
     getSizeVariants(product.variantGroupKey),
     primaryCategory ? getCategoryBreadcrumb(primaryCategory.fullSlug) : Promise.resolve([]),
+    getFrequentlyBoughtTogether(product.id),
   ]);
 
   const avgRating =
@@ -295,6 +297,17 @@ export default async function ProductPage({
           )}
         </div>
       </div>
+
+      {frequentlyBoughtTogether.length > 0 && (
+        <section className="border-t border-line pt-6">
+          <h2 className="mb-4 text-lg font-bold text-ink">Často kupováno spolu</h2>
+          <div className="grid grid-cols-2 gap-x-4 gap-y-8 sm:grid-cols-3 md:grid-cols-4">
+            {frequentlyBoughtTogether.map((item) => (
+              <ProductCard key={item.slug} product={item} />
+            ))}
+          </div>
+        </section>
+      )}
 
       {product.scentNotes && (
         <ScentNotesPyramid
