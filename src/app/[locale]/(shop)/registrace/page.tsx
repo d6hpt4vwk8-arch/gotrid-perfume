@@ -3,6 +3,8 @@
 import Link from "next/link";
 import { useState } from "react";
 import { useRouter } from "next/navigation";
+import { OAuthLoginButton } from "@/components/oauth-login-button";
+import { SeznamIcon, FacebookIcon } from "@/components/oauth-icons";
 
 export default function RegisterPage() {
   const router = useRouter();
@@ -57,18 +59,10 @@ export default function RegisterPage() {
         </Link>
         .
       </p>
-      <Link
-        href="/api/auth/seznam"
-        className="flex items-center justify-center gap-2 rounded-sm border border-line px-4 py-2 text-sm font-semibold text-ink hover:border-accent hover:text-accent"
-      >
-        Pokračovat přes Seznam
-      </Link>
-      <Link
-        href="/api/auth/facebook"
-        className="flex items-center justify-center gap-2 rounded-sm border border-line px-4 py-2 text-sm font-semibold text-ink hover:border-accent hover:text-accent"
-      >
-        Pokračovat přes Facebook
-      </Link>
+      <div className="flex flex-col gap-2">
+        <OAuthLoginButton href="/api/auth/seznam" icon={<SeznamIcon className="h-5 w-5" />} label="Pokračovat přes Seznam" />
+        <OAuthLoginButton href="/api/auth/facebook" icon={<FacebookIcon className="h-5 w-5" />} label="Pokračovat přes Facebook" />
+      </div>
       <div className="flex items-center gap-3 text-xs text-accent-2">
         <span className="h-px flex-1 bg-line" />
         nebo e-mailem

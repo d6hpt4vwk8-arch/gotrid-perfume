@@ -4,6 +4,8 @@ import Link from "next/link";
 import { Suspense, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { getSafeRedirectPath } from "@/lib/safe-redirect";
+import { OAuthLoginButton } from "@/components/oauth-login-button";
+import { SeznamIcon, FacebookIcon } from "@/components/oauth-icons";
 
 function LoginForm() {
   const router = useRouter();
@@ -53,18 +55,10 @@ function LoginForm() {
         .
       </p>
       {oauthError && <p className="text-sm text-red-600">{oauthError}</p>}
-      <Link
-        href={seznamHref}
-        className="flex items-center justify-center gap-2 rounded-sm border border-line px-4 py-2 text-sm font-semibold text-ink hover:border-accent hover:text-accent"
-      >
-        Přihlásit se přes Seznam
-      </Link>
-      <Link
-        href={facebookHref}
-        className="flex items-center justify-center gap-2 rounded-sm border border-line px-4 py-2 text-sm font-semibold text-ink hover:border-accent hover:text-accent"
-      >
-        Přihlásit se přes Facebook
-      </Link>
+      <div className="flex flex-col gap-2">
+        <OAuthLoginButton href={seznamHref} icon={<SeznamIcon className="h-5 w-5" />} label="Přihlásit se přes Seznam" />
+        <OAuthLoginButton href={facebookHref} icon={<FacebookIcon className="h-5 w-5" />} label="Přihlásit se přes Facebook" />
+      </div>
       <div className="flex items-center gap-3 text-xs text-accent-2">
         <span className="h-px flex-1 bg-line" />
         nebo e-mailem
