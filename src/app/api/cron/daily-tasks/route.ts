@@ -3,6 +3,7 @@ import { runSecondOrderCampaign } from "@/lib/marketing/second-order-campaign";
 import { runAbandonedCheckoutRecovery } from "@/lib/marketing/abandoned-checkout";
 import { syncPacketaDeliveryStatus } from "@/lib/orders/sync-packeta-delivery";
 import { syncPerfumesWholesaleStock } from "@/lib/sync/perfumeswholesale-stock";
+import { checkZasilkovnaVolumeMilestone } from "@/lib/marketing/zasilkovna-volume-check.server";
 
 // Triggered by Vercel Cron (see vercel.json) — same auth pattern as
 // src/app/api/cron/sync-spventure-stock/route.ts. Bundles the daily
@@ -15,12 +16,13 @@ export async function GET(req: NextRequest) {
     return NextResponse.json({ error: "Neautorizováno." }, { status: 401 });
   }
 
-  const [secondOrder, abandonedCheckout, delivery, perfumesWholesaleStock] = await Promise.all([
+  const [secondOrder, abandonedCheckout, delivery, perfumesWholesaleStock, zasilkovnaVolume] = await Promise.all([
     runSecondOrderCampaign(),
     runAbandonedCheckoutRecovery(),
     syncPacketaDeliveryStatus(),
     syncPerfumesWholesaleStock(),
+    checkZasilkovnaVolumeMilestone(),
   ]);
 
-  return NextResponse.json({ secondOrder, abandonedCheckout, delivery, perfumesWholesaleStock });
+  return NextResponse.json({ secondOrder, abandonedCheckout, delivery, perfumesWholesaleStock, zasilkovnaVolume });
 }

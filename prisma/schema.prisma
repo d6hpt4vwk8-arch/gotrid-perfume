@@ -555,6 +555,11 @@ model Settings {
   secondOrderDiscountPercent Int    @default(5)
   secondOrderCouponPrefix    String @default("DRUHY")
 
+  // One-time milestone alert (see checkZasilkovnaVolumeMilestone) — set once
+  // the owner has been notified that Zásilkovna volume crossed the
+  // repricing-worth threshold, so the cron job never nags about it again.
+  zasilkovnaVolumeAlertSentAt DateTime?
+
   updatedAt DateTime @updatedAt
 }
 
