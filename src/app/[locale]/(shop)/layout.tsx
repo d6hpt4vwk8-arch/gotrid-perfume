@@ -7,6 +7,7 @@ import { MetaPixel } from "@/components/meta-pixel";
 import { SklikPixel } from "@/components/sklik-pixel";
 import { Clarity } from "@/components/clarity";
 import { BenefitsBar } from "@/components/benefits-bar";
+import { NewsletterSignup } from "@/components/newsletter-signup";
 import { getSettings } from "@/lib/settings.server";
 
 // Google Consent Mode v2 default signals — must be queued before any Google
@@ -39,6 +40,7 @@ export default async function ShopLayout({ children }: { children: React.ReactNo
         <BenefitsBar />
         <SiteHeader />
         {children}
+        <NewsletterSignup />
         <SiteFooter />
         <CookieBanner />
       </Providers>
