@@ -4,6 +4,13 @@ import type { Metadata } from "next";
 import { prisma } from "@/lib/prisma";
 import { LegalPage } from "@/components/legal-page";
 import { sanitizeDescription } from "@/lib/sanitize-description";
+import { WhatsappAdviceButton } from "@/components/whatsapp-advice-button";
+
+const WHATSAPP_MESSAGE_BY_CATEGORY: Record<string, string> = {
+  parfemy: "Dobrý den, chtěl(a) bych poradit s výběrem parfému.",
+  kosmetika: "Dobrý den, chtěl(a) bych poradit s výběrem kosmetiky.",
+  obecne: "Dobrý den, mám dotaz k článku na vašem webu.",
+};
 
 async function getPost(slug: string) {
   return prisma.blogPost.findUnique({ where: { slug } });
@@ -40,6 +47,13 @@ export default async function BlogPostPage({
         </div>
       )}
       <div dangerouslySetInnerHTML={{ __html: sanitizeDescription(post.contentHtml) }} />
+
+      <div className="not-prose mt-2">
+        <WhatsappAdviceButton
+          message={WHATSAPP_MESSAGE_BY_CATEGORY[post.category] ?? WHATSAPP_MESSAGE_BY_CATEGORY.obecne}
+          label="Poradit na WhatsAppu"
+        />
+      </div>
     </LegalPage>
   );
 }

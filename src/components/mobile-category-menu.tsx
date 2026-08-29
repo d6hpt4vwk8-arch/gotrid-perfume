@@ -52,6 +52,13 @@ export function MobileCategoryMenu({ categories }: { categories: CategoryNavNode
                 {category.name}
               </Link>
             ))}
+            <Link
+              href="/magazin"
+              onClick={() => setOpen(false)}
+              className="border-t border-white/10 px-1 pt-3 pb-2 text-sm font-medium text-white/70 hover:text-white"
+            >
+              Magazín
+            </Link>
           </div>
         </>
       )}

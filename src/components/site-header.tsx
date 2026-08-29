@@ -75,6 +75,12 @@ export async function SiteHeader() {
                 {category.name}
               </Link>
             ))}
+          <Link
+            href="/magazin"
+            className="shrink-0 border-l border-white/10 pl-5 font-medium text-white/70 hover:text-white"
+          >
+            Magazín
+          </Link>
         </nav>
       </div>
     </header>
