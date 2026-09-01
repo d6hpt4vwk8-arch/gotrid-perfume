@@ -132,9 +132,9 @@ const NEW_BRAND_PREFIXES = [
 function parseVatIncludedPrice(priceInclVat: number): { purchasePrice: number; sellPrice: number } {
   // Same conversion as the first Tamda batch: displayed prices already
   // include VAT, so strip it for our ex-VAT purchase basis, then reapply the
-  // store's usual formula (purchase × 1.21 × 1.2) — the two 1.21s cancel.
+  // store's usual formula (purchase × 1.21 × 1.3) — the two 1.21s cancel.
   const purchasePrice = priceInclVat / 1.21;
-  const sellPrice = Math.round(priceInclVat * 1.2);
+  const sellPrice = Math.round(priceInclVat * 1.3);
   return { purchasePrice, sellPrice };
 }
 
