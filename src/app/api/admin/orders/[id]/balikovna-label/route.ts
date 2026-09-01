@@ -36,6 +36,9 @@ export async function GET(_req: NextRequest, { params }: { params: Promise<{ id:
           emailAddress: order.email,
         },
         pickupPointId: order.pickupPointId,
+        // Post-office counter drop-off isn't practical right now — partner
+        // network (AlzaBox/partner Balíkovna) is the standard path.
+        dropOff: "partner_network",
       });
       parcelCode = result.parcelCode;
       labelPdf = result.labelPdf;

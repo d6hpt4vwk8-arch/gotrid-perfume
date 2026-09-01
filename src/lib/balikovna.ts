@@ -24,12 +24,23 @@ const balikovnaDispatcher = new Agent({ connect: { ca: postsignumCerts } });
 
 // Sender identifiers from Dohoda č. 2026/00278 (ID CČK 503806001).
 const CUSTOMER_ID = "M17422"; // technologické číslo podavatele
-const POST_CODE = "13000"; // PSČ podací pošty
+const POST_CODE = "13000"; // PSČ podací pošty — post office counter (Praha 3, Olšanská 38/9)
 const PARCEL_PREFIX = "NB"; // Balíkovna/Box parcel type — "BA" (the YAML's generic example value) is wrong here and produces INVALID_LOCATION regardless of address.
-// The account's one registered podací místo (see setup note below) —
+// The account's registered podací místo for post-office counter drop-off —
 // required in every parcelServiceHeaderCom or every call fails with
 // responseCode 11 "INVALID_LOCATION", no matter what else is right.
 const LOCATION_NUMBER = 1;
+
+// Second podací místo added 02.09.2026 (Seznam provozoven k Dohodě 2026/00278)
+// under the same CUSTOMER_ID — an "interní podací místo" with no street
+// address, letting the parcel be handed over at ANY AlzaBox or partner
+// Balíkovna point instead of the fixed Praha 3 counter (+10 Kč surcharge per
+// Česká pošta's confirmation email). locationNumber for this PSČ hasn't been
+// confirmed by Česká pošta — 1 is a guess (first/only location registered
+// under this postCode); if a real call fails with responseCode 11
+// INVALID_LOCATION, that's the first thing to check with them.
+const PARTNER_POST_CODE = "79999";
+const PARTNER_LOCATION_NUMBER = 1;
 
 // B2B-POZRService ("Balíkovna Retail" / PORZ) — a separate nAPI service from
 // ZSKService above. Unlike parcelService/createParcel, sendData carries no
@@ -173,6 +184,12 @@ export type CreateParcelInput = {
   // other address field left empty (a real street/city there produces
   // responseCode 247 INVALID_ADDRESS, not a location match).
   pickupPointId: string;
+  // Where WE (the sender) hand the parcel over — not to be confused with
+  // pickupPointId above (where the RECIPIENT collects it). "post_office"
+  // (default) requires a trip to the one registered post-office counter;
+  // "partner_network" lets the label be dropped at any AlzaBox/partner
+  // Balíkovna point instead, for a +10 Kč surcharge billed by Česká pošta.
+  dropOff?: "post_office" | "partner_network";
 };
 
 type ParcelServiceResponse = {
@@ -199,13 +216,14 @@ type ParcelServiceResponse = {
 export async function createParcel(
   input: CreateParcelInput,
 ): Promise<{ parcelCode: string; labelPdf: Buffer }> {
+  const usePartnerNetwork = input.dropOff === "partner_network";
   const body = {
     parcelServiceHeader: {
       parcelServiceHeaderCom: {
         transmissionDate: new Date().toISOString().slice(0, 10),
         customerID: CUSTOMER_ID,
-        postCode: POST_CODE,
-        locationNumber: LOCATION_NUMBER,
+        postCode: usePartnerNetwork ? PARTNER_POST_CODE : POST_CODE,
+        locationNumber: usePartnerNetwork ? PARTNER_LOCATION_NUMBER : LOCATION_NUMBER,
       },
       printParams: { idForm: 101, shiftHorizontal: 0, shiftVertical: 0 },
     },
