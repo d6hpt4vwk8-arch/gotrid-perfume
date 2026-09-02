@@ -36,9 +36,15 @@ export async function GET(_req: NextRequest, { params }: { params: Promise<{ id:
           emailAddress: order.email,
         },
         pickupPointId: order.pickupPointId,
-        // Post-office counter drop-off isn't practical right now — partner
-        // network (AlzaBox/partner Balíkovna) is the standard path.
-        dropOff: "partner_network",
+        // NOT "partner_network" — confirmed 2026-09-02 by a real AlzaBox
+        // attempt that the label ZSKService prints for postCode 79999 is
+        // missing the second "podací kód" barcode AlzaBox terminals scan.
+        // That code only comes from the separate POZR/Retail service
+        // (createRetailParcel below), which 401s until Česká pošta enables
+        // the B2B-POZR role — PSČ 79999 was only added for their "Podání
+        // Online" web portal/CSV import, a different product from this
+        // JSON API. Post-office counter drop-off is the only path that
+        // actually produces a valid, scannable label right now.
       });
       parcelCode = result.parcelCode;
       labelPdf = result.labelPdf;
