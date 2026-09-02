@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { getFeedProducts } from "@/lib/feeds/get-feed-products";
+import { isPaidAdsEligible } from "@/lib/feeds/paid-ads-eligibility";
 import { cdata, escapeXml, isValidEan } from "@/lib/feeds/xml";
 import { SITE_URL } from "@/lib/site";
 import { getSettings } from "@/lib/settings.server";
@@ -21,7 +22,10 @@ export async function GET() {
   const settings = await getSettings();
 
   const allProducts = await getFeedProducts();
-  const products = allProducts.filter((p) => p.stock > 0);
+  // Sklik's Nákupy (Shopping) campaigns ingest this same Zboží-format feed —
+  // see paid-ads-eligibility.ts for why only Tamda/Korean-cosmetics/Arabic
+  // fragrances are advertised here.
+  const products = allProducts.filter((p) => p.stock > 0 && isPaidAdsEligible(p.code, p.brandName));
 
   const items = products
     .map((p) => {

@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { getFeedProducts } from "@/lib/feeds/get-feed-products";
+import { isPaidAdsEligible } from "@/lib/feeds/paid-ads-eligibility";
 import { cdata, escapeXml, isValidEan } from "@/lib/feeds/xml";
 import { SITE_URL } from "@/lib/site";
 import { getSettings } from "@/lib/settings.server";
@@ -27,7 +28,12 @@ export async function GET() {
   const allProducts = await getFeedProducts();
   // Heureka's format has no explicit "in stock" flag — out-of-stock items are
   // conventionally left out of the feed entirely rather than listed unavailable.
-  const products = allProducts.filter((p) => p.stock > 0);
+  // excludeFromHeureka additionally drops items priced well above the
+  // cheapest competitor there — paying per click for a listing that can't
+  // win on price just funds clicks that were never going to convert.
+  const products = allProducts.filter(
+    (p) => p.stock > 0 && !p.excludeFromHeureka && isPaidAdsEligible(p.code, p.brandName),
+  );
 
   const items = products
     .map((p) => {

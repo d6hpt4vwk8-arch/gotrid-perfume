@@ -8,7 +8,9 @@ import { formatPrice } from "@/lib/format";
 // fold. Slugs (not IDs) so the pick survives a catalog re-import; anything
 // that goes missing or invisible is simply dropped from the row.
 const HERO_PRODUCT_SLUGS = [
-  "rayhaan-pharaoh-eau-de-parfum-100ml-rom-311128",
+  // Was a Romscent (ROM-) product — swapped 2026-09-02 when Romscent was
+  // paused (visible:false), which silently dropped this slot to 2 items.
+  "lattafa-fakhar-lattafa-eau-de-parfum-100-ml--unisex",
   "dr-althea-aqua-marine-deep-serum-gvs-256191",
   "cp-1-bright-complex-intense-nourishing-shampoo-version-2-0-100-ml-gvs-12104",
 ];
