@@ -14,6 +14,7 @@ export interface FeedProduct {
   brandName: string | null;
   images: string[];
   categoryBreadcrumb: string | null;
+  excludeFromHeureka: boolean;
 }
 
 async function buildCategoryBreadcrumbs(): Promise<Map<string, string>> {
@@ -66,6 +67,7 @@ export async function getFeedProducts(): Promise<FeedProduct[]> {
     categoryBreadcrumb: p.categories[0]
       ? (breadcrumbs.get(p.categories[0].categoryId) ?? null)
       : null,
+    excludeFromHeureka: p.excludeFromHeureka,
   }));
 
   return disambiguateDescriptions(disambiguateNames(feedProducts));

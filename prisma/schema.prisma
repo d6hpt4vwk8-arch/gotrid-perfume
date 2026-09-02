@@ -109,6 +109,12 @@ model Product {
   stock   Int     @default(0)
   visible Boolean @default(true)
 
+  // Hides the product from the Heureka.cz XML feed specifically (still sold
+  // on-site and in other feeds) — for items priced well above the cheapest
+  // competitor on Heureka's price comparison, where paying per-click there
+  // just funds clicks that can't convert.
+  excludeFromHeureka Boolean @default(false)
+
   // Manual merchandising override — higher shows first wherever products
   // aren't sorted by an explicit visitor choice (price/newest toggle): the
   // homepage "Novinky" section, a category's default listing order, and
