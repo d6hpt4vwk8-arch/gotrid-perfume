@@ -49,7 +49,14 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
         { status: 400 },
       );
     }
-    outputBuffer = await image.toFormat(format as keyof FormatEnum).toBuffer();
+    // .rotate() with no args bakes in the EXIF Orientation tag as actual
+    // pixel rotation before re-encoding — phone photos (portrait shots
+    // especially) carry this tag instead of storing pixels pre-rotated,
+    // and re-encoding without it here previously stripped the tag while
+    // leaving the pixels in their raw sideways orientation, so every
+    // photo ended up rotated on the live site regardless of how it looked
+    // in an EXIF-aware previewer beforehand.
+    outputBuffer = await image.rotate().toFormat(format as keyof FormatEnum).toBuffer();
   } catch {
     return NextResponse.json({ error: "Soubor není platný obrázek." }, { status: 400 });
   }
