@@ -6,7 +6,7 @@ export const checkoutSchema = z
     phone: z.string().min(9, "Zadejte platné telefonní číslo.").max(30),
     firstName: z.string().min(1, "Zadejte jméno.").max(100),
     lastName: z.string().min(1, "Zadejte příjmení.").max(100),
-    shippingMethod: z.enum(["ZASILKOVNA", "PPL", "DPD", "BALIKOVNA", "OSOBNI_ODBER"]),
+    shippingMethod: z.enum(["ZASILKOVNA", "PPL", "DPD", "BALIKOVNA", "OSOBNI_ODBER", "GLS"]),
     shippingCountry: z.enum(["CZ", "SK"]).optional().default("CZ"),
     paymentMethod: z.enum(["CARD", "BANK_TRANSFER", "CASH_ON_DELIVERY"]),
     pickupPointId: z.string().max(50).optional(),
@@ -28,7 +28,8 @@ export const checkoutSchema = z
   })
   .superRefine((data, ctx) => {
     const usesPickupPoint = data.shippingMethod === "ZASILKOVNA" || data.shippingMethod === "BALIKOVNA";
-    const usesAddress = data.shippingMethod === "PPL" || data.shippingMethod === "DPD";
+    const usesAddress =
+      data.shippingMethod === "PPL" || data.shippingMethod === "DPD" || data.shippingMethod === "GLS";
     if (usesPickupPoint && !data.pickupPointId) {
       ctx.addIssue({
         code: z.ZodIssueCode.custom,

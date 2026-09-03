@@ -399,6 +399,7 @@ enum ShippingMethod {
   DPD
   BALIKOVNA
   OSOBNI_ODBER
+  GLS
 }
 
 enum PaymentMethod {
@@ -485,6 +486,13 @@ model Order {
   // packetaId — src/app/api/admin/orders/[id]/balikovna-label/route.ts.
   balikovnaParcelCode String?
 
+  // GLS shipment (MyGLS REST API) — src/app/api/admin/orders/[id]/gls-label/route.ts.
+  // glsParcelId is GLS's internal database record id, needed to reprint the same
+  // label via GetPrintedLabels without registering a new parcel; glsParcelNumber
+  // is the public tracking number (also copied into trackingNumber below).
+  glsParcelId     Int?
+  glsParcelNumber String?
+
   couponCode     String?
   discountAmount Decimal @default(0) @db.Decimal(10, 2)
 
@@ -570,6 +578,7 @@ model Settings {
   shippingPricePpl        Decimal @default(90) @db.Decimal(10, 2)
   shippingPriceDpd        Decimal @default(99) @db.Decimal(10, 2)
   shippingPriceBalikovna  Decimal @default(69) @db.Decimal(10, 2)
+  shippingPriceGls        Decimal @default(99) @db.Decimal(10, 2)
   // Cross-border Zásilkovna price for Slovak delivery — the only carrier
   // with a real SK pickup-point network today (see
   // src/components/zasilkovna-picker.tsx). Nullable and no default on

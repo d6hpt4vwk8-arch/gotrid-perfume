@@ -30,6 +30,7 @@ export const getSettings = unstable_cache(
         PPL: Number(row.shippingPricePpl),
         DPD: Number(row.shippingPriceDpd),
         BALIKOVNA: Number(row.shippingPriceBalikovna),
+        GLS: Number(row.shippingPriceGls),
         // Not DB-backed — personal pickup has no carrier cost, always free.
         OSOBNI_ODBER: 0,
       },

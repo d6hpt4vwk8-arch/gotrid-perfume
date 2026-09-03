@@ -58,6 +58,16 @@ export default async function AdminOrderDetailPage({
               Štítek Balíkovna (PDF)
             </a>
           )}
+          {order.shippingMethod === "GLS" && (
+            <a
+              href={`/api/admin/orders/${order.id}/gls-label`}
+              target="_blank"
+              rel="noreferrer"
+              className="text-sm font-medium underline"
+            >
+              Štítek GLS (PDF)
+            </a>
+          )}
           <a
             href={`/api/orders/${order.number}/faktura`}
             target="_blank"
@@ -192,7 +202,7 @@ export default async function AdminOrderDetailPage({
             defaultValue={order.trackingNumber ?? ""}
             className="rounded-sm border border-line px-3 py-2 text-sm"
           />
-          {order.shippingMethod === "ZASILKOVNA" && (
+          {(order.shippingMethod === "ZASILKOVNA" || order.shippingMethod === "GLS") && (
             <label className="flex items-center gap-2 text-sm text-accent-2">
               Váha (kg)
               <input
@@ -217,6 +227,9 @@ export default async function AdminOrderDetailPage({
         )}
         {order.balikovnaParcelCode && (
           <p className="mt-3 text-xs text-accent-2">Balíkovna kód zásilky: {order.balikovnaParcelCode}</p>
+        )}
+        {order.glsParcelNumber && (
+          <p className="mt-3 text-xs text-accent-2">GLS ID zásilky: {order.glsParcelNumber}</p>
         )}
       </div>
     </div>

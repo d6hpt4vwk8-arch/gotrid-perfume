@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { runSecondOrderCampaign } from "@/lib/marketing/second-order-campaign";
 import { runAbandonedCheckoutRecovery } from "@/lib/marketing/abandoned-checkout";
 import { syncPacketaDeliveryStatus } from "@/lib/orders/sync-packeta-delivery";
+import { syncGlsDeliveryStatus } from "@/lib/orders/sync-gls-delivery";
 import { syncPerfumesWholesaleStock } from "@/lib/sync/perfumeswholesale-stock";
 import { checkZasilkovnaVolumeMilestone } from "@/lib/marketing/zasilkovna-volume-check.server";
 
@@ -28,13 +29,22 @@ export async function GET(req: NextRequest) {
     return NextResponse.json({ error: "Neautorizováno." }, { status: 401 });
   }
 
-  const [secondOrder, abandonedCheckout, delivery, perfumesWholesaleStock, zasilkovnaVolume] = await Promise.all([
-    runSecondOrderCampaign(),
-    runAbandonedCheckoutRecovery(),
-    syncPacketaDeliveryStatus(),
-    syncPerfumesWholesaleStock(),
-    checkZasilkovnaVolumeMilestone(),
-  ]);
+  const [secondOrder, abandonedCheckout, delivery, glsDelivery, perfumesWholesaleStock, zasilkovnaVolume] =
+    await Promise.all([
+      runSecondOrderCampaign(),
+      runAbandonedCheckoutRecovery(),
+      syncPacketaDeliveryStatus(),
+      syncGlsDeliveryStatus(),
+      syncPerfumesWholesaleStock(),
+      checkZasilkovnaVolumeMilestone(),
+    ]);
 
-  return NextResponse.json({ secondOrder, abandonedCheckout, delivery, perfumesWholesaleStock, zasilkovnaVolume });
+  return NextResponse.json({
+    secondOrder,
+    abandonedCheckout,
+    delivery,
+    glsDelivery,
+    perfumesWholesaleStock,
+    zasilkovnaVolume,
+  });
 }

@@ -78,6 +78,16 @@ export default async function AdminSettingsPage() {
           />
         </label>
         <label className="flex flex-col gap-1 text-sm">
+          GLS kurýr (Kč)
+          <input
+            name="shippingPriceGls"
+            type="number"
+            step="0.01"
+            defaultValue={settings.shippingPrices.GLS}
+            className="rounded-sm border border-line px-3 py-2"
+          />
+        </label>
+        <label className="flex flex-col gap-1 text-sm">
           Příplatek za dobírku (Kč)
           <input
             name="codSurcharge"
