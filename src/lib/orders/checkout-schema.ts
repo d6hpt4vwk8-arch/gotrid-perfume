@@ -67,6 +67,17 @@ export const checkoutSchema = z
         message: "Doprava DPD již není dostupná, zvolte prosím jiný způsob dopravy.",
       });
     }
+    // PPL temporarily paused 2026-09-04 — no signed contract with PPL yet.
+    // Remove this block (and the matching filter in checkout-form.tsx) once
+    // the contract is in place; still a valid ShippingMethod value so
+    // historical PPL orders are unaffected.
+    if (data.shippingMethod === "PPL") {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        path: ["shippingMethod"],
+        message: "Doprava PPL je dočasně nedostupná, zvolte prosím jiný způsob dopravy.",
+      });
+    }
   });
 
 export type CheckoutInput = z.infer<typeof checkoutSchema>;

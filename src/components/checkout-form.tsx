@@ -353,6 +353,10 @@ export function CheckoutForm({
             // creation + tracking, so DPD is dropped from checkout entirely
             // (existing DPD orders are untouched, only new ones can't pick it).
             .filter((method) => method !== "DPD")
+            // PPL temporarily paused 2026-09-04 — no signed contract with
+            // PPL yet. Remove this filter (and the matching one in
+            // checkout-schema.ts) once the contract is in place.
+            .filter((method) => method !== "PPL")
             .filter((method) => shippingCountry !== "SK" || method === "ZASILKOVNA")
             .map((method) => (
               <label key={method} className="flex items-center gap-2 text-sm text-ink">
