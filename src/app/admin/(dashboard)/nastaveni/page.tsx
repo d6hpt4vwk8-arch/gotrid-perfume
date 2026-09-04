@@ -57,16 +57,12 @@ export default async function AdminSettingsPage() {
             className="rounded-sm border border-line px-3 py-2"
           />
         </label>
-        <label className="flex flex-col gap-1 text-sm">
-          DPD kurýr (Kč)
-          <input
-            name="shippingPriceDpd"
-            type="number"
-            step="0.01"
-            defaultValue={settings.shippingPrices.DPD}
-            className="rounded-sm border border-line px-3 py-2"
-          />
-        </label>
+        {/* DPD retired 2026-09-04 (no API integration, GLS covers the same
+            courier-to-address case) — no longer offered at checkout, so no
+            visible price field, but the value is still resubmitted unchanged
+            since updateSettings' schema still has a required shippingPriceDpd
+            field for the historical DPD orders' records. */}
+        <input type="hidden" name="shippingPriceDpd" value={settings.shippingPrices.DPD} />
         <label className="flex flex-col gap-1 text-sm">
           Balíkovna (Kč)
           <input

@@ -3,6 +3,7 @@ import { notFound } from "next/navigation";
 import { prisma } from "@/lib/prisma";
 import { formatPrice } from "@/lib/format";
 import { SHIPPING_LABELS, PAYMENT_LABELS } from "@/lib/shipping";
+import { ShippingIcon } from "@/components/shipping-icons";
 import { ORDER_STATUS_LABELS } from "@/lib/orders/status-labels";
 import { updateOrderStatus } from "@/lib/admin/actions/orders";
 import { getCustomerReputationMap } from "@/lib/customer-reputation";
@@ -100,7 +101,10 @@ export default async function AdminOrderDetailPage({
         </div>
         <div className="flex flex-col gap-1">
           <span className="text-xs font-semibold uppercase text-accent-2">Doprava a platba</span>
-          <span>{SHIPPING_LABELS[order.shippingMethod]}</span>
+          <span className="flex items-center gap-2">
+            <ShippingIcon method={order.shippingMethod} />
+            {SHIPPING_LABELS[order.shippingMethod]}
+          </span>
           <span>{PAYMENT_LABELS[order.paymentMethod]}</span>
           {order.pickupPointId && <span>Výdejní místo: {order.pickupPointId}</span>}
           {order.shippingStreet && (

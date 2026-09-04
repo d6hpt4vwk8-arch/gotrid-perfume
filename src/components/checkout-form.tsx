@@ -19,6 +19,7 @@ import { BalikovnaPicker } from "@/components/balikovna-picker";
 import { CustomerLogoutButton } from "@/components/customer/logout-button";
 import { TrustBadges } from "@/components/trust-badges";
 import { PaymentIcons } from "@/components/payment-icons";
+import { ShippingIcon } from "@/components/shipping-icons";
 import type { Customer } from "@prisma/client";
 
 type ShippingMethod = keyof typeof SHIPPING_LABELS;
@@ -347,6 +348,11 @@ export function CheckoutForm({
           </div>
 
           {(Object.keys(SHIPPING_LABELS) as ShippingMethod[])
+            // DPD retired 2026-09-04 — no API integration, and GLS now
+            // covers the same "kurýr k adrese" use case with real label
+            // creation + tracking, so DPD is dropped from checkout entirely
+            // (existing DPD orders are untouched, only new ones can't pick it).
+            .filter((method) => method !== "DPD")
             .filter((method) => shippingCountry !== "SK" || method === "ZASILKOVNA")
             .map((method) => (
               <label key={method} className="flex items-center gap-2 text-sm text-ink">
@@ -363,6 +369,7 @@ export function CheckoutForm({
                   }}
                   className="accent-accent"
                 />
+                <ShippingIcon method={method} />
                 {SHIPPING_LABELS[method]} —{" "}
                 {method === "OSOBNI_ODBER" || itemsTotal >= settings.freeShippingThreshold
                   ? "zdarma"

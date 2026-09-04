@@ -8,6 +8,7 @@ import { calculateSklikConversionValue } from "@/lib/sklik";
 import { SklikConversion } from "@/components/sklik-conversion";
 import { HeurekaConversion } from "@/components/heureka-conversion";
 import { PAYMENT_LABELS, PICKUP_ADDRESS, SHIPPING_LABELS } from "@/lib/shipping";
+import { ShippingIcon } from "@/components/shipping-icons";
 import { ORDER_STATUS_LABELS } from "@/lib/orders/status-labels";
 import { generateQrPlatbaDataUrl } from "@/lib/payments/qr-platba";
 import { getCurrentCustomerId } from "@/lib/customer/get-current-customer";
@@ -101,7 +102,10 @@ export default async function OrderConfirmationPage({
       <div className="flex flex-col gap-1 text-sm text-ink">
         <div className="flex justify-between">
           <span>Doprava</span>
-          <span>{SHIPPING_LABELS[order.shippingMethod]}</span>
+          <span className="flex items-center gap-2">
+            <ShippingIcon method={order.shippingMethod} />
+            {SHIPPING_LABELS[order.shippingMethod]}
+          </span>
         </div>
         <div className="flex justify-between">
           <span>Platba</span>

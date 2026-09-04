@@ -56,6 +56,17 @@ export const checkoutSchema = z
         message: "Na Slovensko lze zatím doručit pouze přes Zásilkovnu.",
       });
     }
+    // DPD retired 2026-09-04 (no API integration; GLS now covers the same
+    // courier-to-address case) — still a valid ShippingMethod value for
+    // historical orders, but rejected here so a direct API call can't pick
+    // it for a new one, not just hidden from the checkout UI.
+    if (data.shippingMethod === "DPD") {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        path: ["shippingMethod"],
+        message: "Doprava DPD již není dostupná, zvolte prosím jiný způsob dopravy.",
+      });
+    }
   });
 
 export type CheckoutInput = z.infer<typeof checkoutSchema>;
