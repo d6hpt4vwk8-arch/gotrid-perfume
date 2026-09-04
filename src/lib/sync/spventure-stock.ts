@@ -7,12 +7,15 @@
 // product.xml against avail.xml): BOTH feeds only ever list items with
 // stock > 0 — an item with zero stock right now is indistinguishable from
 // one permanently discontinued; the feed simply omits it either way.
-// This only ever writes the `stock` number, it never touches `visible`.
 // The storefront already renders "Vyprodáno" + a stock-alert signup for
 // stock 0, which is the correct behavior for a transient supplier
 // stockout; permanently hiding a product that's been gone for a long time
 // is a separate, human judgment call, not something a single feed
 // snapshot should decide.
+//
+// The one exception (2026-09-04): stock === 1 specifically is auto-hidden
+// (and auto-restored once restocked above 1) — see the comment above
+// `desiredVisible` below for why.
 //
 // BUT (found 2026-08-25): "missing from the feed" does NOT reliably mean
 // "stock 0". The feed carries 5254 items while SP Venture's own site
@@ -152,13 +155,24 @@ export async function syncSpVentureStock(dryRun = false): Promise<SpVentureSyncR
     // current number alone instead of guessing.
     if (feedValue === undefined) continue;
 
-    if (feedValue === product.stock) continue;
+    // We only buy SPV stock from the supplier after a customer orders, not
+    // ahead of time — a product down to their last unit has a real chance
+    // of being sold out at SP Venture by the time we go buy it, so it's not
+    // worth advertising. Hide at stock 1, restore automatically once it's
+    // restocked above that (2026-09-04, per owner request).
+    const desiredVisible =
+      feedValue === 1 ? false : feedValue > 1 && product.stock <= 1 ? true : product.visible;
+    const stockChanged = feedValue !== product.stock;
+    const visibilityChanged = desiredVisible !== product.visible;
+    if (!stockChanged && !visibilityChanged) continue;
 
-    result.updated.push({ code: product.code, name: product.name, from: product.stock, to: feedValue });
+    if (stockChanged) {
+      result.updated.push({ code: product.code, name: product.name, from: product.stock, to: feedValue });
+    }
     if (!dryRun) {
       const updated = await prisma.product.update({
         where: { id: product.id },
-        data: { stock: feedValue },
+        data: { stock: feedValue, visible: desiredVisible },
       });
       if (product.stock <= 0 && feedValue > 0) {
         void notifyStockAlerts(updated).catch((err) =>
