@@ -40,11 +40,23 @@ async function callPacketaApi(method: string, params: Record<string, unknown>): 
 
   const xml = await res.text();
   const parsed = parser.parse(xml) as {
-    response?: { status?: string; result?: unknown; fault?: { faultString?: string } };
+    response?: {
+      status?: string;
+      result?: unknown;
+      fault?: string | { faultString?: string };
+      string?: string;
+    };
   };
   const response = parsed.response;
   if (!response || response.status !== "ok") {
-    const faultMessage = response?.fault?.faultString ?? "Neznámá chyba Packeta API.";
+    // Packeta's fault shape varies: sometimes `fault.faultString` (object),
+    // sometimes a top-level `string` alongside `fault` as a plain error-code
+    // string (e.g. PacketAttributesFault) — fall back through both rather
+    // than swallowing the real reason behind a generic message.
+    const faultMessage =
+      (typeof response?.fault === "object" ? response.fault?.faultString : undefined) ??
+      response?.string ??
+      "Neznámá chyba Packeta API.";
     throw new PacketaError(`Packeta API (${method}): ${faultMessage}`);
   }
   return response.result;
@@ -79,7 +91,10 @@ export async function createPacket(input: CreatePacketInput): Promise<string> {
     eshop,
   };
   if (input.codAmount) {
-    packetAttributes.cod = input.codAmount.toFixed(2);
+    // Packeta rejects a fractional COD amount for CZK ("Unacceptable value
+    // for CZK currency. Please fill in a whole number.") — cash pickup can't
+    // handle heller fractions anyway, so round to the nearest whole crown.
+    packetAttributes.cod = String(Math.round(input.codAmount));
   }
 
   const result = (await callPacketaApi("createPacket", { packetAttributes })) as { id?: string | number };
