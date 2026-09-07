@@ -3,6 +3,8 @@ import { renderToBuffer } from "@react-pdf/renderer";
 import { prisma } from "@/lib/prisma";
 import { FakturaDocument } from "@/lib/pdf/faktura";
 import { getCurrentCustomerId } from "@/lib/customer/get-current-customer";
+import { verifySessionToken } from "@/lib/admin-auth";
+import { canDownloadInvoice } from "@/lib/orders/status-labels";
 import {
   ADMIN_COOKIE_NAME,
   ORDER_ACCESS_COOKIE_NAME,
@@ -31,6 +33,19 @@ export async function GET(
   });
   if (!hasAccess) {
     return NextResponse.json({ error: "Neautorizováno." }, { status: 401 });
+  }
+
+  // A real Faktura shouldn't exist for a sale that hasn't happened yet
+  // (unpaid bank transfer, or a cash-on-delivery/personal-pickup order
+  // nobody ever picked up) — admin keeps access regardless, for order
+  // management, everyone else only once the order has actually moved on
+  // from NEW.
+  const isAdmin = await verifySessionToken(req.cookies.get(ADMIN_COOKIE_NAME)?.value);
+  if (!isAdmin && !canDownloadInvoice(order.status)) {
+    return NextResponse.json(
+      { error: "Faktura bude k dispozici po zaplacení nebo vyřízení objednávky." },
+      { status: 403 },
+    );
   }
 
   const buffer = await renderToBuffer(<FakturaDocument order={order} />);

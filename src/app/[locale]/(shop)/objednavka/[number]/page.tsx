@@ -9,7 +9,7 @@ import { SklikConversion } from "@/components/sklik-conversion";
 import { HeurekaConversion } from "@/components/heureka-conversion";
 import { PAYMENT_LABELS, PICKUP_ADDRESS, SHIPPING_LABELS } from "@/lib/shipping";
 import { ShippingIcon } from "@/components/shipping-icons";
-import { ORDER_STATUS_LABELS } from "@/lib/orders/status-labels";
+import { ORDER_STATUS_LABELS, canDownloadInvoice } from "@/lib/orders/status-labels";
 import { generateQrPlatbaDataUrl } from "@/lib/payments/qr-platba";
 import { getCurrentCustomerId } from "@/lib/customer/get-current-customer";
 import {
@@ -129,7 +129,7 @@ export default async function OrderConfirmationPage({
         </div>
       </div>
 
-      {order.paymentMethod === "BANK_TRANSFER" && (
+      {order.paymentMethod === "BANK_TRANSFER" && order.status === "NEW" && (
         <div className="border border-line p-4">
           <h2 className="mb-2 text-sm font-semibold text-ink">Platba převodem</h2>
           {qrDataUrl ? (
@@ -163,14 +163,20 @@ export default async function OrderConfirmationPage({
         </p>
       )}
 
-      <a
-        href={`/api/orders/${order.number}/faktura`}
-        target="_blank"
-        rel="noreferrer"
-        className="text-sm font-medium text-accent underline"
-      >
-        Stáhnout fakturu (PDF)
-      </a>
+      {canDownloadInvoice(order.status) ? (
+        <a
+          href={`/api/orders/${order.number}/faktura`}
+          target="_blank"
+          rel="noreferrer"
+          className="text-sm font-medium text-accent underline"
+        >
+          Stáhnout fakturu (PDF)
+        </a>
+      ) : (
+        <p className="text-sm text-ink/70">
+          Faktura bude k dispozici po zaplacení nebo vyřízení objednávky.
+        </p>
+      )}
 
       <Link href="/" className="text-sm text-accent-2 hover:text-accent hover:underline">
         Zpět na hlavní stránku
