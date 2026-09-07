@@ -5,6 +5,7 @@ import Link from "next/link";
 import { useCart } from "@/lib/cart-context";
 import { formatPrice } from "@/lib/format";
 import { TrustBadges } from "@/components/trust-badges";
+import { PaymentIcons } from "@/components/payment-icons";
 
 export default function CartPage() {
   const { items, setQty, removeItem, total, freeShippingThreshold } = useCart();
@@ -95,8 +96,9 @@ export default function CartPage() {
         Pokračovat k objednávce
       </Link>
 
-      <div className="flex justify-center border-t border-line pt-4">
+      <div className="flex flex-col items-center gap-2 border-t border-line pt-4">
         <TrustBadges />
+        <PaymentIcons />
       </div>
     </main>
   );
