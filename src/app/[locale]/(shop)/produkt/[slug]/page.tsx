@@ -16,6 +16,7 @@ import { getCategoryBreadcrumb } from "@/lib/categories.server";
 import { Breadcrumbs } from "@/components/breadcrumbs";
 import { getFrequentlyBoughtTogether } from "@/lib/frequently-bought-together.server";
 import { parseVolumeMl, formatVolumeLabel } from "@/lib/parse-volume";
+import { parseShadeLabel } from "@/lib/parse-shade";
 import { estimateDeliveryDate, formatDeliveryEstimate } from "@/lib/delivery-estimate";
 import { ReviewForm } from "@/components/review-form";
 import { ProductGallery } from "@/components/product-gallery";
@@ -36,14 +37,30 @@ async function getProduct(slug: string) {
   });
 }
 
-/** Other bottle sizes of this same fragrance (scripts/group-product-variants.ts) — includes the current product itself, sorted smallest to largest. */
+/**
+ * Sibling variants sharing this product's variantGroupKey — either other
+ * bottle sizes of the same fragrance (scripts/group-product-variants.ts) or
+ * other shades of the same color-cosmetics item
+ * (scripts/group-shade-variants.ts); a product is only ever in one kind of
+ * group. Includes the current product itself, sorted smallest-to-largest
+ * for sizes or alphabetically by shade label for shades.
+ */
 async function getSizeVariants(variantGroupKey: string | null) {
   if (!variantGroupKey) return [];
   const products = await prisma.product.findMany({
     where: { variantGroupKey },
     select: { id: true, slug: true, name: true, stock: true },
   });
-  return products.sort((a, b) => (parseVolumeMl(a.name) ?? 0) - (parseVolumeMl(b.name) ?? 0));
+  // Same "does this attribute actually vary" check as the selector UI below
+  // — a shade group can still have a parseable (identical) volume in every
+  // member's name, which isn't a meaningful thing to sort by.
+  const isSizeGroup = new Set(products.map((p) => formatVolumeLabel(p.name))).size > 1;
+  if (isSizeGroup) {
+    return products.sort((a, b) => (parseVolumeMl(a.name) ?? 0) - (parseVolumeMl(b.name) ?? 0));
+  }
+  return products.sort((a, b) =>
+    (parseShadeLabel(a.name) ?? "").localeCompare(parseShadeLabel(b.name) ?? ""),
+  );
 }
 
 async function getRelatedProducts(productId: string, categoryIds: string[]) {
@@ -202,40 +219,54 @@ export default async function ProductPage({
             )}
           </div>
 
-          {sizeVariants.length > 1 && (
-            <div className="flex flex-col gap-2">
-              <span className="text-[11px] font-semibold tracking-wide text-accent-2 uppercase">
-                Velikost
-              </span>
-              <div className="flex flex-wrap gap-2">
-                {sizeVariants.map((variant) => {
-                  const label = formatVolumeLabel(variant.name) ?? variant.name;
-                  if (variant.id === product.id) {
+          {sizeVariants.length > 1 && (() => {
+            // group-shade-variants.ts only groups products whose *shade*
+            // differs — a group-product-variants.ts (size) group can still
+            // happen to share the same volume across every member (every
+            // True Match shade here is 30 ml) and that must not be shown as
+            // a "Velikost" selector listing "30 ml" five times. Pick
+            // whichever attribute actually varies across the group, not
+            // just whichever happens to be parseable from the name.
+            const volumeLabels = sizeVariants.map((v) => formatVolumeLabel(v.name));
+            const isSizeGroup = new Set(volumeLabels).size > 1;
+            const labelFor = (name: string) =>
+              (isSizeGroup ? formatVolumeLabel(name) : parseShadeLabel(name)) ?? name;
+
+            return (
+              <div className="flex flex-col gap-2">
+                <span className="text-[11px] font-semibold tracking-wide text-accent-2 uppercase">
+                  {isSizeGroup ? "Velikost" : "Odstín"}
+                </span>
+                <div className="flex flex-wrap gap-2">
+                  {sizeVariants.map((variant) => {
+                    const label = labelFor(variant.name);
+                    if (variant.id === product.id) {
+                      return (
+                        <span
+                          key={variant.id}
+                          className="rounded-sm border border-ink bg-ink px-3 py-1.5 text-sm font-medium text-white"
+                        >
+                          {label}
+                        </span>
+                      );
+                    }
                     return (
-                      <span
+                      <Link
                         key={variant.id}
-                        className="rounded-sm border border-ink bg-ink px-3 py-1.5 text-sm font-medium text-white"
+                        href={`/produkt/${variant.slug}`}
+                        className="rounded-sm border border-line px-3 py-1.5 text-sm font-medium text-ink hover:border-accent"
                       >
                         {label}
-                      </span>
+                        {variant.stock <= 0 && (
+                          <span className="text-accent-2"> (vyprodáno)</span>
+                        )}
+                      </Link>
                     );
-                  }
-                  return (
-                    <Link
-                      key={variant.id}
-                      href={`/produkt/${variant.slug}`}
-                      className="rounded-sm border border-line px-3 py-1.5 text-sm font-medium text-ink hover:border-accent"
-                    >
-                      {label}
-                      {variant.stock <= 0 && (
-                        <span className="text-accent-2"> (vyprodáno)</span>
-                      )}
-                    </Link>
-                  );
-                })}
+                  })}
+                </div>
               </div>
-            </div>
-          )}
+            );
+          })()}
 
           <span
             className={`flex items-center gap-1.5 text-sm ${product.stock > 0 ? "text-ok" : "text-accent-2"}`}
