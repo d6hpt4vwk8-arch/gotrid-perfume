@@ -20,7 +20,7 @@ import {
   primaryVariantWhere,
   type CategoryFilterParams,
 } from "@/lib/product-filters";
-import { ProductCard } from "@/components/product-card";
+import { ProductGridLoadMore } from "@/components/product-grid-load-more";
 import { CategoryFilters } from "@/components/category-filters";
 import { Pagination } from "@/components/pagination";
 
@@ -155,11 +155,12 @@ export default async function CategoryPage({
               V této kategorii jsme s vybranými filtry nic nenašli.
             </p>
           ) : (
-            <div className="grid grid-cols-2 gap-x-4 gap-y-8 sm:grid-cols-3 lg:grid-cols-4">
-              {products.map((product) => (
-                <ProductCard key={product.slug} product={product} />
-              ))}
-            </div>
+            <ProductGridLoadMore
+              initialProducts={products}
+              totalPages={totalPages}
+              currentPage={filters.page}
+              fetchUrl={`/api/category-products/${fullSlug}?${paginationQuery.toString()}`}
+            />
           )}
 
           <Pagination
