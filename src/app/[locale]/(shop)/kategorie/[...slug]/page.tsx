@@ -1,7 +1,9 @@
+import Image from "next/image";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { prisma } from "@/lib/prisma";
 import { findCategoryByFullSlug, getCategoryBreadcrumb } from "@/lib/categories.server";
+import { sanitizeDescription } from "@/lib/sanitize-description";
 import { Breadcrumbs } from "@/components/breadcrumbs";
 import { getDescendantCategoryIds } from "@/lib/category-descendants.server";
 import { getAvailableBrands } from "@/lib/category-brands.server";
@@ -100,6 +102,20 @@ export default async function CategoryPage({
       />
 
       <h1 className="text-2xl font-bold text-ink">{category.name}</h1>
+
+      {category.description && (
+        <section className="flex flex-col gap-6 border-b border-line pb-6 sm:flex-row sm:items-center">
+          {category.bannerImage && (
+            <div className="relative aspect-[4/3] w-full shrink-0 overflow-hidden rounded-sm bg-line/60 sm:w-72">
+              <Image src={category.bannerImage} alt={category.name} fill sizes="288px" className="object-cover" />
+            </div>
+          )}
+          <div
+            className="prose prose-neutral max-w-none text-sm leading-relaxed text-ink/80 [&_a]:font-semibold [&_a]:text-ink [&_a]:underline [&_p]:mb-3 [&_p:last-child]:mb-0"
+            dangerouslySetInnerHTML={{ __html: sanitizeDescription(category.description) }}
+          />
+        </section>
+      )}
 
       {category.children.length > 0 && (
         <div className="flex flex-wrap gap-2">

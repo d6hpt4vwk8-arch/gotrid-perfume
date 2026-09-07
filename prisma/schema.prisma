@@ -71,6 +71,14 @@ model Category {
   sortOrder Int     @default(0)
   hidden    Boolean @default(false)
 
+  // Optional SEO/merchandising intro shown above the product grid on the
+  // category page (only when set — most categories have neither) — raw
+  // HTML written by an admin, sanitized at render via sanitizeDescription()
+  // same as Product.description and BlogPost.contentHtml. Meant to surface
+  // subcategories a visitor might otherwise scroll past, via inline links.
+  description String? @db.Text
+  bannerImage String?
+
   products ProductCategory[]
 
   createdAt DateTime @default(now())

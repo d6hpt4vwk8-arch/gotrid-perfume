@@ -1,3 +1,4 @@
+import Link from "next/link";
 import { prisma } from "@/lib/prisma";
 import { getCategoryOptions } from "@/lib/admin/category-options.server";
 import { createCategory, updateCategory, deleteCategory } from "@/lib/admin/actions/categories";
@@ -35,6 +36,7 @@ export default async function AdminCategoriesPage() {
               <th className="px-3 py-2">Pořadí</th>
               <th className="px-3 py-2">Skrytá</th>
               <th className="px-3 py-2">Produkty</th>
+              <th className="px-3 py-2" />
               <th className="px-3 py-2" />
             </tr>
           </thead>
@@ -85,6 +87,11 @@ export default async function AdminCategoriesPage() {
                   </form>
                 </td>
                 <td className="px-3 py-2 text-accent-2">{c._count.products}</td>
+                <td className="px-3 py-2">
+                  <Link href={`/admin/kategorie/${c.id}`} className="text-xs text-accent-2 underline">
+                    Obsah
+                  </Link>
+                </td>
                 <td className="px-3 py-2">
                   {c._count.children === 0 && c._count.products === 0 && (
                     <DeleteButton

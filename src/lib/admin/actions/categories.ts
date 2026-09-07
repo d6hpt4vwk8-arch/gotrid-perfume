@@ -53,6 +53,34 @@ export async function updateCategory(id: string, formData: FormData) {
   revalidateTag("category-nav");
 }
 
+const emptyToUndefined = (v: unknown) => (v === "" ? undefined : v);
+
+const categoryContentSchema = z.object({
+  description: z.preprocess(emptyToUndefined, z.string().trim().max(20_000).optional()),
+});
+
+/**
+ * The intro block shown above a category's product grid (see the category
+ * page) — separate from updateCategory() since it's edited from its own
+ * page, not the flat categories table. Raw HTML, sanitized at render time
+ * via sanitizeDescription() (same as Product/BlogPost) — write real <a
+ * href="/kategorie/..."> links to subcategories, not markdown.
+ */
+export async function updateCategoryContent(id: string, formData: FormData) {
+  await requireAdmin();
+  const parsed = categoryContentSchema.safeParse(Object.fromEntries(formData));
+  if (!parsed.success) throw new Error(parsed.error.issues[0]?.message ?? "Neplatná data.");
+
+  const category = await prisma.category.update({
+    where: { id },
+    data: { description: parsed.data.description ?? null },
+  });
+
+  revalidatePath("/admin/kategorie");
+  revalidatePath(`/admin/kategorie/${id}`);
+  revalidatePath(`/kategorie/${category.fullSlug}`);
+}
+
 export async function deleteCategory(id: string) {
   await requireAdmin();
   const [childCount, productCount] = await Promise.all([
