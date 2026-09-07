@@ -138,6 +138,12 @@ export function buildOrderBy(sort: SortOption): Prisma.ProductOrderByWithRelatio
       return [{ salesCount: "desc" }, { createdAt: "desc" }];
     case "newest":
     default:
-      return [{ priority: "desc" }, { createdAt: "desc" }];
+      // Manually pinned picks (priority) lead, same as before; the tie-break
+      // used to be createdAt (so the rest of the category was effectively
+      // random from a shopper's perspective) — salesCount surfaces real
+      // demand there instead, without turning the whole category into a
+      // duplicate of the dedicated "Nejprodávanější" sort, since curated
+      // picks still occupy the top slots.
+      return [{ priority: "desc" }, { salesCount: "desc" }];
   }
 }

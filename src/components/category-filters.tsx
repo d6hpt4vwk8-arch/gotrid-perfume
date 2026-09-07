@@ -12,7 +12,7 @@ import { formatPrice } from "@/lib/format";
 import type { ProductCardData } from "@/components/product-card";
 
 const SORT_LABELS: Record<string, string> = {
-  newest: "Novinky",
+  newest: "Doporučené",
   bestsellers: "Nejprodávanější",
   "price-asc": "Cena od nejnižší",
   "price-desc": "Cena od nejvyšší",
