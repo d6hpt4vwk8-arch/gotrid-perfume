@@ -205,6 +205,11 @@ export async function reprintLabel(parcelId: number): Promise<Buffer> {
 }
 
 export const GLS_DELIVERED_STATUS_CODE = "5"; // Appendix G: "The parcel has been delivered."
+// Appendix G lists two codes with the same "returned to sender" meaning —
+// 23 (general) and 40 (a second, separately-numbered occurrence in the same
+// table) — most commonly reached via 57 ("reached the maximum storage time
+// in the ParcelShop") for GLS_MISTO orders the customer never picked up.
+export const GLS_RETURNED_STATUS_CODES = ["23", "40"];
 
 interface ParcelStatus {
   StatusCode: string;

@@ -3,6 +3,8 @@ import { prisma } from "@/lib/prisma";
 import { formatPrice } from "@/lib/format";
 import { ORDER_STATUS_LABELS } from "@/lib/orders/status-labels";
 import { getCustomerReputationMap } from "@/lib/customer-reputation";
+import { getReturnStatsByMethod } from "@/lib/orders/return-stats.server";
+import { SHIPPING_LABELS } from "@/lib/shipping";
 import type { OrderStatus } from "@prisma/client";
 
 const PAGE_SIZE = 30;
@@ -16,7 +18,7 @@ export default async function AdminOrdersPage({
   const page = Math.max(1, Number(pageParam) || 1);
   const where = status && status in ORDER_STATUS_LABELS ? { status: status as OrderStatus } : {};
 
-  const [orders, total] = await Promise.all([
+  const [orders, total, returnStats] = await Promise.all([
     prisma.order.findMany({
       where,
       orderBy: { createdAt: "desc" },
@@ -24,8 +26,13 @@ export default async function AdminOrdersPage({
       take: PAGE_SIZE,
     }),
     prisma.order.count({ where }),
+    getReturnStatsByMethod(),
   ]);
   const reputationMap = await getCustomerReputationMap(orders.map((o) => o.email));
+  const totalDelivered = returnStats.reduce((sum, r) => sum + r.delivered, 0);
+  const totalReturned = returnStats.reduce((sum, r) => sum + r.returned, 0);
+  const overallRate =
+    totalDelivered + totalReturned > 0 ? (totalReturned / (totalDelivered + totalReturned)) * 100 : 0;
 
   const totalPages = Math.max(1, Math.ceil(total / PAGE_SIZE));
 
@@ -40,6 +47,47 @@ export default async function AdminOrdersPage({
           Export do XLSX
         </a>
       </div>
+
+      {totalDelivered + totalReturned > 0 && (
+        <div className="rounded-sm border border-line bg-white p-4">
+          <div className="flex items-center justify-between">
+            <span className="text-xs font-semibold uppercase text-accent-2">
+              Nevyzvednuté zásilky (vráceno dopravcem)
+            </span>
+            <span
+              className={`text-sm font-bold ${overallRate > 10 ? "text-red-600" : "text-ink"}`}
+            >
+              {overallRate.toFixed(1)} % celkem ({totalReturned} z {totalDelivered + totalReturned})
+            </span>
+          </div>
+          <table className="mt-3 w-full text-sm">
+            <thead className="text-left text-xs uppercase text-accent-2">
+              <tr>
+                <th className="py-1">Doprava</th>
+                <th className="py-1 text-right">Doručeno</th>
+                <th className="py-1 text-right">Vráceno</th>
+                <th className="py-1 text-right">Podíl vrácených</th>
+              </tr>
+            </thead>
+            <tbody>
+              {returnStats.map((row) => (
+                <tr key={row.method} className="border-t border-line">
+                  <td className="py-1.5">{SHIPPING_LABELS[row.method]}</td>
+                  <td className="py-1.5 text-right">{row.delivered}</td>
+                  <td className="py-1.5 text-right">{row.returned}</td>
+                  <td
+                    className={`py-1.5 text-right font-medium ${
+                      row.ratePercent > 10 ? "text-red-600" : "text-ink"
+                    }`}
+                  >
+                    {row.ratePercent.toFixed(1)} %
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      )}
 
       <div className="flex flex-wrap gap-2 text-sm">
         <Link

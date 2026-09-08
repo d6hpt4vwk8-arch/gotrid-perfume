@@ -119,9 +119,12 @@ export async function fetchLabelPdf(packetId: string, format: LabelFormat = "A6 
   return Buffer.from(base64, "base64");
 }
 
-// statusCode 7 = "delivered" (picked up by customer at the branch) — see
+// statusCode 7 = "delivered" (picked up by customer at the branch); 10 =
+// "returned" (packet has been returned to the sender — the customer never
+// picked it up within the branch's storage window) — see
 // https://docs.packeta.com/docs/packet-tracking/status-codes
 export const PACKETA_DELIVERED_STATUS_CODE = "7";
+export const PACKETA_RETURNED_STATUS_CODE = "10";
 
 /** Fetches the current Packeta status of a packet (statusCode 7 = delivered). */
 export async function getPacketStatus(packetId: string): Promise<{ statusCode: string; codeText: string }> {
