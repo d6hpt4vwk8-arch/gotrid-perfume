@@ -313,6 +313,10 @@ export function CheckoutForm({
             // PPL yet. Remove this filter (and the matching one in
             // checkout-schema.ts) once the contract is in place.
             .filter((method) => method !== "PPL")
+            // Balíkovna retired 2026-09-08 — consolidating onto fewer
+            // carriers (Zásilkovna + GLS) to build volume for better
+            // negotiated rates; see the matching block in checkout-schema.ts.
+            .filter((method) => method !== "BALIKOVNA")
             .filter((method) => shippingCountry !== "SK" || method === "ZASILKOVNA")
             .map((method) => (
               <label key={method} className="flex items-center gap-2 text-sm text-ink">

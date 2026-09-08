@@ -79,6 +79,20 @@ export const checkoutSchema = z
         message: "Doprava PPL je dočasně nedostupná, zvolte prosím jiný způsob dopravy.",
       });
     }
+    // Balíkovna retired 2026-09-08 — consolidating onto fewer carriers
+    // (Zásilkovna + GLS) to build volume for better negotiated rates,
+    // Balíkovna's standard (non-negotiated, unresponsive-to-negotiate)
+    // price already exceeds what's charged at checkout, and Zásilkovna's
+    // výdejní místo network already covers the same "pickup point" case.
+    // Still a valid ShippingMethod value so historical Balíkovna orders
+    // are unaffected.
+    if (data.shippingMethod === "BALIKOVNA") {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        path: ["shippingMethod"],
+        message: "Doprava Balíkovna již není dostupná, zvolte prosím jiný způsob dopravy.",
+      });
+    }
   });
 
 export type CheckoutInput = z.infer<typeof checkoutSchema>;
