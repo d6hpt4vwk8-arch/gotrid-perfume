@@ -18,6 +18,7 @@ import { getFrequentlyBoughtTogether } from "@/lib/frequently-bought-together.se
 import { parseVolumeMl, formatVolumeLabel } from "@/lib/parse-volume";
 import { parseShadeLabel } from "@/lib/parse-shade";
 import { estimateDeliveryDate, formatDeliveryEstimate } from "@/lib/delivery-estimate";
+import { getSettings } from "@/lib/settings.server";
 import { ReviewForm } from "@/components/review-form";
 import { ProductGallery } from "@/components/product-gallery";
 import { primaryVariantWhere } from "@/lib/product-filters";
@@ -104,15 +105,24 @@ export default async function ProductPage({
 
   const primaryCategory = product.categories[0]?.category;
 
-  const [relatedProducts, sizeVariants, categoryBreadcrumb, frequentlyBoughtTogether] = await Promise.all([
-    getRelatedProducts(
-      product.id,
-      product.categories.map((c) => c.categoryId),
-    ),
-    getSizeVariants(product.variantGroupKey),
-    primaryCategory ? getCategoryBreadcrumb(primaryCategory.fullSlug) : Promise.resolve([]),
-    getFrequentlyBoughtTogether(product.id),
-  ]);
+  const [relatedProducts, sizeVariants, categoryBreadcrumb, frequentlyBoughtTogether, settings] =
+    await Promise.all([
+      getRelatedProducts(
+        product.id,
+        product.categories.map((c) => c.categoryId),
+      ),
+      getSizeVariants(product.variantGroupKey),
+      primaryCategory ? getCategoryBreadcrumb(primaryCategory.fullSlug) : Promise.resolve([]),
+      getFrequentlyBoughtTogether(product.id),
+      getSettings(),
+    ]);
+
+  // Shown next to Add to cart so price-comparison traffic (Zbozi/Heureka)
+  // sees the real shipping cost before checkout, not just at the very end —
+  // Clarity session recordings showed visitors landing straight on
+  // checkout from these sites and removing the item once they saw the
+  // total including delivery, which the product page never mentioned.
+  const cheapestShippingPrice = Math.min(...Object.values(settings.shippingPrices).filter((p) => p > 0));
 
   const avgRating =
     product.reviews.length > 0
@@ -268,21 +278,43 @@ export default async function ProductPage({
             );
           })()}
 
-          <span
-            className={`flex items-center gap-1.5 text-sm ${product.stock > 0 ? "text-ok" : "text-accent-2"}`}
-          >
+          <div className="flex flex-col gap-1">
             <span
-              className={`h-1.5 w-1.5 rounded-full ${product.stock > 0 ? "bg-ok" : "bg-accent-2"}`}
-            />
-            {product.stock > 0 ? `Skladem (${product.stock} ks)` : "Vyprodáno"}
-          </span>
+              className={`flex items-center gap-1.5 text-sm font-semibold ${product.stock > 0 ? "text-ok" : "text-accent-2"}`}
+            >
+              {product.stock > 0 ? (
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+                  <circle cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="2" />
+                  <path
+                    d="M8 12.5l2.5 2.5L16 9"
+                    stroke="currentColor"
+                    strokeWidth="2"
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                  />
+                </svg>
+              ) : (
+                <span className="h-1.5 w-1.5 rounded-full bg-accent-2" />
+              )}
+              {product.stock > 0 ? `Skladem pro nákup online — ${product.stock} ks` : "Vyprodáno"}
+            </span>
 
-          {deliveryEstimate && (
-            <p className="text-sm text-accent-2">
-              Objednejte dnes — doručení{" "}
-              <span className="font-medium text-ink">{formatDeliveryEstimate(deliveryEstimate)}</span>
-            </p>
-          )}
+            {product.stock > 0 && (
+              <p className="pl-6 text-sm text-accent-2">
+                Ihned k odeslání od{" "}
+                <span className="font-medium text-ink">{formatPrice(cheapestShippingPrice)}</span>
+                {deliveryEstimate && (
+                  <>
+                    , u vás doma již{" "}
+                    <span className="font-medium text-ink">{formatDeliveryEstimate(deliveryEstimate)}</span>
+                  </>
+                )}
+                . <Link href="/doprava-a-platba" className="text-ink underline hover:text-accent">
+                  Možnosti dopravy
+                </Link>
+              </p>
+            )}
+          </div>
 
           <div className="max-w-xs">
             <AddToCartButton
