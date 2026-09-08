@@ -18,14 +18,19 @@ export const dynamic = "force-dynamic";
 
 export async function GET() {
   const settings = await getSettings();
-  // Balíkovna retired 2026-09-08 (see checkout-schema.ts) — dropped from
-  // here too rather than advertise a method we no longer actually offer.
-  // TODO: GLS/GLS_MISTO aren't declared yet — need Heureka's official
-  // delivery code for GLS from their current list before adding them here.
+  // Must match what checkout actually offers — Heureka blocks shops for
+  // untruthful delivery info ("V případě nepravdivě zadaných údajů bude
+  // obchod blokován", sluzby.heureka.cz → Nastavení → Ceny dopravy), and
+  // until 2026-09-08 this still advertised PPL/DPD/Balíkovna long after all
+  // three were retired while omitting GLS entirely — including the cheapest
+  // option we have, so Heureka showed our delivery as pricier than it is.
+  // IDs come from Heureka's own carrier vocabulary (not our enum names):
+  // ZASILKOVNA = pickup points, GLS = courier to address, GLS_PARCELSHOP =
+  // GLS pickup points/boxes.
   const DELIVERY_METHODS = [
+    { id: "GLS_PARCELSHOP", price: settings.shippingPrices.GLS_MISTO },
     { id: "ZASILKOVNA", price: settings.shippingPrices.ZASILKOVNA },
-    { id: "PPL", price: settings.shippingPrices.PPL },
-    { id: "DPD", price: settings.shippingPrices.DPD },
+    { id: "GLS", price: settings.shippingPrices.GLS },
   ];
 
   const allProducts = await getFeedProducts();

@@ -9,24 +9,18 @@ import { getSettings } from "@/lib/settings.server";
 // for why (oversized-ISR-page build failure past ~15k products).
 export const dynamic = "force-dynamic";
 
-// Every ShippingMethod enum value that has ever been (or still is) settable
-// at checkout — keyed the same way order.shippingMethod holds it — so
-// deliveryType sent to sendZboziConversion (src/lib/analytics/zbozi-conversion.ts,
-// set to order.shippingMethod verbatim) always matches one of these DELIVERY_ID
-// values exactly, for historical orders too. Previously this feed only ever
-// declared ZASILKOVNA, so any order placed with PPL/DPD/BALIKOVNA/OSOBNI_ODBER
-// got flagged by Zboží as "DELIVERY_ID neodpovídá" — keep this in sync with
-// prisma/schema.prisma's ShippingMethod enum, past and present values alike,
-// not just what checkout-form.tsx currently offers.
-const DELIVERY_IDS = [
-  "ZASILKOVNA",
-  "PPL",
-  "DPD",
-  "BALIKOVNA",
-  "OSOBNI_ODBER",
-  "GLS",
-  "GLS_MISTO",
-] as const;
+// Only what checkout actually offers today — advertising a carrier we don't
+// serve is what gets a shop flagged (and Heureka/Zboží can block for it), so
+// retired methods (PPL/DPD/Balíkovna) are deliberately NOT listed even
+// though the enum still has them for historical orders. Values are our own
+// ShippingMethod enum names so deliveryType sent to sendZboziConversion
+// (src/lib/analytics/zbozi-conversion.ts, set to order.shippingMethod
+// verbatim) matches a declared DELIVERY_ID for every order still being
+// placed. Note Zboží.cz currently takes delivery prices from its own admin
+// panel (Centrum prodejce → Doprava → "Nastavení cen: Administrační
+// rozhraní") rather than these tags — switching that toggle to "Feed" is
+// what makes these numbers authoritative and keeps them from going stale.
+const DELIVERY_IDS = ["ZASILKOVNA", "GLS", "GLS_MISTO", "OSOBNI_ODBER"] as const;
 
 export async function GET() {
   const settings = await getSettings();
