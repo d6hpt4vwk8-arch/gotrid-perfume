@@ -20,9 +20,21 @@ const ARABIC_PERFUME_BRANDS = new Set(
   ].map((b) => b.toLowerCase()),
 );
 
+// The original, pre-supplier catalog — added by hand before TDE-/SPV-/PWH-/
+// GVS- import prefixes existed, so it kept the plain short numeric codes
+// from that first manual product-entry scheme ("43", "361", …) instead.
+// Distinct stock we already own (not a supplier's shared inventory), and
+// mostly what's left of it now sits in Výprodej — unlike the Heureka/Zboží
+// price-war designer perfumes are excluded from above, a semi-clearance
+// click here is worth paying for since the goal is moving owned stock, not
+// margin on a repeat sale. EAN-style codes (8+ digits) are a separate,
+// unrelated import and intentionally not matched by this.
+const ORIGINAL_CATALOG_CODE = /^\d{1,5}$/;
+
 export function isPaidAdsEligible(code: string, brandName: string | null): boolean {
   if (code.startsWith("TDE-")) return true;
   if (code.startsWith("GVS-")) return true;
   if (brandName && ARABIC_PERFUME_BRANDS.has(brandName.toLowerCase())) return true;
+  if (ORIGINAL_CATALOG_CODE.test(code)) return true;
   return false;
 }
