@@ -669,6 +669,24 @@ model NewsletterCampaign {
 }
 
 // ---------------------------------------------------------------------------
+// SearchLog — one row per on-site search (hledat/page.tsx), so demand for
+// things we don't stock (or don't stock enough of) shows up as a query with
+// resultCount 0 instead of just vanishing. `query` is stored lowercased and
+// trimmed (not verbatim) so "Parfém"/"parfém "/"PARFÉM" group as one term in
+// the admin report instead of fragmenting the count.
+// ---------------------------------------------------------------------------
+
+model SearchLog {
+  id          String   @id @default(cuid())
+  query       String
+  resultCount Int
+  createdAt   DateTime @default(now())
+
+  @@index([query])
+  @@index([createdAt])
+}
+
+// ---------------------------------------------------------------------------
 // AdminActivityLog — audit trail for sensitive admin mutations (price/stock
 // changes, order status/tracking edits, coupon changes). Read-only history,
 // no relations, so a deleted product/order doesn't cascade-delete its log.

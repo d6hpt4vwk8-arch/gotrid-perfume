@@ -35,7 +35,7 @@ export async function HomeHero() {
   const slides: ReactNode[] = [
     <section
       key="main"
-      className="relative overflow-hidden rounded-sm bg-ink px-6 py-12 text-white sm:px-10 sm:py-14"
+      className="relative overflow-hidden rounded-sm bg-ink px-12 py-12 text-white sm:px-16 sm:py-14"
     >
       <div className="flex flex-col gap-10 lg:flex-row lg:items-center lg:gap-14">
         <div className="flex flex-col items-start gap-5 lg:w-[45%]">
@@ -116,7 +116,7 @@ export async function HomeHero() {
     slides.push(
       <section
         key="gift"
-        className="relative overflow-hidden rounded-sm bg-ink px-6 py-12 text-white sm:px-10 sm:py-14"
+        className="relative overflow-hidden rounded-sm bg-ink px-12 py-12 text-white sm:px-16 sm:py-14"
       >
         <div className="flex flex-col gap-10 lg:flex-row lg:items-center lg:gap-14">
           <div className="flex flex-col items-start gap-5 lg:w-[45%]">

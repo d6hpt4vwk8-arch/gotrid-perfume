@@ -1,4 +1,5 @@
 import type { Prisma } from "@prisma/client";
+import { after } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { getAvailableBrands } from "@/lib/category-brands.server";
 import { getScentFamilyFacets } from "@/lib/category-scent-facets.server";
@@ -65,6 +66,20 @@ export default async function SearchPage({
     getPerfumeStructureFacets(searchWhere),
     getCosmeticsFacets(searchWhere),
   ]);
+
+  // Logged after the response is sent — a failed write here must never
+  // affect what the visitor actually sees. Only page 1 counts a query as
+  // "searched"; deeper pages are the same search paginating, not a new one.
+  if (filters.page === 1) {
+    const normalizedQuery = query.toLowerCase();
+    after(async () => {
+      try {
+        await prisma.searchLog.create({ data: { query: normalizedQuery, resultCount: total } });
+      } catch {
+        // best-effort analytics — never worth surfacing to the visitor
+      }
+    });
+  }
 
   const totalPages = Math.ceil(total / PAGE_SIZE);
 
