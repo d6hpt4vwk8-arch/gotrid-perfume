@@ -13,24 +13,24 @@ interface GiftOption {
 }
 
 /**
- * "Pick a free gift" list, shown in the cart and again at checkout. The
- * choice lives in the cart context so it survives the move between the two;
- * the threshold and eligibility are re-checked server-side in createOrder(),
+ * "Pick a free gift" list, shown once a GIFT-type coupon is applied (see
+ * CouponField) — in the cart and again at checkout. The choice lives in the
+ * cart context so it survives the move between the two; coupon validity and
+ * gift eligibility/stock are always re-checked server-side in createOrder(),
  * this is only the shop window.
  */
-export function GiftPicker() {
-  const { total, giftProductId, setGiftProductId } = useCart();
+export function GiftPicker({ unlocked }: { unlocked: boolean }) {
+  const { giftProductId, setGiftProductId } = useCart();
   const [gifts, setGifts] = useState<GiftOption[]>([]);
-  const [threshold, setThreshold] = useState(0);
   const [loaded, setLoaded] = useState(false);
 
   useEffect(() => {
+    if (!unlocked) return;
     let cancelled = false;
     fetch("/api/gifts")
       .then((res) => res.json())
-      .then((data: { threshold: number; gifts: GiftOption[] }) => {
+      .then((data: { gifts: GiftOption[] }) => {
         if (cancelled) return;
-        setThreshold(data.threshold);
         setGifts(data.gifts);
         setLoaded(true);
       })
@@ -40,27 +40,15 @@ export function GiftPicker() {
     return () => {
       cancelled = true;
     };
-  }, []);
+  }, [unlocked]);
 
-  const unlocked = threshold > 0 && total >= threshold;
-
-  // Drop a gift that's no longer earned (items removed after picking it) —
+  // Drop a gift that's no longer earned (coupon removed or expired) —
   // otherwise checkout would submit a gift the server then rejects.
   useEffect(() => {
-    if (loaded && giftProductId && !unlocked) setGiftProductId(null);
-  }, [loaded, giftProductId, unlocked, setGiftProductId]);
+    if (giftProductId && !unlocked) setGiftProductId(null);
+  }, [giftProductId, unlocked, setGiftProductId]);
 
-  if (!loaded || threshold <= 0 || gifts.length === 0) return null;
-
-  if (!unlocked) {
-    return (
-      <div className="rounded-sm border border-dashed border-line p-3 text-sm text-accent-2">
-        Nakupte ještě za{" "}
-        <span className="font-semibold text-ink">{formatPrice(threshold - total)}</span> a vyberte
-        si dárek zdarma.
-      </div>
-    );
-  }
+  if (!unlocked || !loaded || gifts.length === 0) return null;
 
   return (
     <div className="flex flex-col gap-2 rounded-sm border border-ok/40 bg-ok/5 p-3">

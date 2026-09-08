@@ -9,8 +9,6 @@ export interface ShopSettings {
   // callers should fall back to shippingPrices.ZASILKOVNA until then.
   shippingPriceZasilkovnaSk: number | null;
   codSurcharge: number;
-  /** Goods total from which a free gift may be picked; 0 = promo disabled. */
-  giftThreshold: number;
 }
 
 // Read on every storefront page (BenefitsBar, checkout, CartProvider) — like
@@ -39,7 +37,6 @@ export const getSettings = unstable_cache(
       shippingPriceZasilkovnaSk:
         row.shippingPriceZasilkovnaSk === null ? null : Number(row.shippingPriceZasilkovnaSk),
       codSurcharge: Number(row.codSurcharge),
-      giftThreshold: Number(row.giftThreshold),
     };
   },
   ["shop-settings"],

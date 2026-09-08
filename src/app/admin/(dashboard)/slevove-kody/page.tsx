@@ -38,6 +38,7 @@ export default async function AdminCouponsPage() {
                 >
                   <option value="PERCENT">% sleva</option>
                   <option value="FIXED">Kč sleva</option>
+                  <option value="GIFT">Dárek zdarma</option>
                 </select>
               </label>
               <label className="flex flex-col gap-1">
@@ -111,11 +112,13 @@ export default async function AdminCouponsPage() {
             <select name="type" className="rounded border border-line px-2 py-1">
               <option value="PERCENT">% sleva</option>
               <option value="FIXED">Kč sleva</option>
+              <option value="GIFT">Dárek zdarma</option>
             </select>
           </label>
           <label className="flex flex-col gap-1 text-sm">
             Hodnota
-            <input name="value" type="number" step="0.01" required className="w-24 rounded border border-line px-2 py-1" />
+            <input name="value" type="number" step="0.01" defaultValue={0} required className="w-24 rounded border border-line px-2 py-1" />
+            <span className="text-xs text-accent-2">Pro „Dárek zdarma“ nechte 0.</span>
           </label>
           <label className="flex flex-col gap-1 text-sm">
             Min. objednávka (Kč)

@@ -1,5 +1,4 @@
 import { prisma } from "@/lib/prisma";
-import { getSettings } from "@/lib/settings.server";
 
 export interface GiftOption {
   productId: string;
@@ -10,14 +9,11 @@ export interface GiftOption {
 }
 
 /**
- * Products the customer may pick as a free gift once the cart reaches
- * Settings.giftThreshold. Gifts ship from normal catalog stock, so anything
- * sold out drops out of the list on its own.
+ * Products the customer may pick as a free gift once a GIFT-type Coupon is
+ * applied (see CouponType in schema.prisma). Gifts ship from normal catalog
+ * stock, so anything sold out drops out of the list on its own.
  */
 export async function getGiftOptions(): Promise<GiftOption[]> {
-  const settings = await getSettings();
-  if (settings.giftThreshold <= 0) return [];
-
   const products = await prisma.product.findMany({
     where: { giftEligible: true, visible: true, stock: { gt: 0 } },
     orderBy: { price: "desc" },

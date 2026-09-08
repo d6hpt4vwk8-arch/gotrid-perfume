@@ -422,14 +422,16 @@ export function CheckoutForm({
         </fieldset>
 
         <fieldset className="flex flex-col gap-2">
-          <legend className="mb-1 text-sm font-semibold text-ink">Dárek k objednávce</legend>
-          <GiftPicker />
-        </fieldset>
-
-        <fieldset className="flex flex-col gap-2">
           <legend className="mb-1 text-sm font-semibold text-ink">Slevový kód</legend>
           <CouponField onApplied={setCoupon} />
         </fieldset>
+
+        {coupon?.grantsGift && (
+          <fieldset className="flex flex-col gap-2">
+            <legend className="mb-1 text-sm font-semibold text-ink">Dárek k objednávce</legend>
+            <GiftPicker unlocked />
+          </fieldset>
+        )}
 
         {error && <p className="text-sm text-red-600">{error}</p>}
 
@@ -474,7 +476,7 @@ export function CheckoutForm({
               <span>{formatPrice(codSurcharge)}</span>
             </div>
           )}
-          {coupon && (
+          {coupon && !coupon.grantsGift && (
             <div className="flex justify-between text-ok">
               <span>Sleva ({coupon.code})</span>
               <span>−{formatPrice(coupon.discountAmount)}</span>

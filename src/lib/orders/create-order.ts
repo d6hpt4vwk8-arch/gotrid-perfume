@@ -3,7 +3,7 @@ import { prisma } from "@/lib/prisma";
 import { generateOrderNumber } from "./generate-order-number";
 import { canUseCod, getCodSurcharge, getShippingPrice } from "@/lib/shipping";
 import { getSettings } from "@/lib/settings.server";
-import { validateCoupon } from "@/lib/coupons";
+import { previewCoupon, validateCoupon } from "@/lib/coupons";
 import { CheckoutError } from "./checkout-error";
 import type { CheckoutInput } from "./checkout-schema";
 
@@ -45,12 +45,19 @@ export async function createOrder(input: CheckoutInput, customerId?: string | nu
   const codSurcharge = getCodSurcharge(input.paymentMethod, settings);
 
   // The gift is re-checked here rather than trusted from the checkout form:
-  // a direct API call could otherwise claim any product for free, or claim
-  // one on an order below the threshold.
+  // a direct API call could otherwise claim any product for free. A gift is
+  // only ever earned by applying a GIFT-type coupon (checked read-only here;
+  // validateCoupon() below re-checks it for real and burns the usage inside
+  // the transaction) — not just by reaching some cart total, so that picking
+  // one up means the customer actually saw and typed the promo code.
   let giftProduct: (typeof products)[number] | null = null;
   if (input.giftProductId) {
-    if (settings.giftThreshold <= 0 || itemsTotal < settings.giftThreshold) {
-      throw new CheckoutError("Na dárek zdarma zatím nemáte nárok.");
+    if (!input.couponCode) {
+      throw new CheckoutError("Dárek zdarma je podmíněný platným slevovým kódem.");
+    }
+    const couponPreview = await previewCoupon(input.couponCode, itemsTotal).catch(() => null);
+    if (!couponPreview?.grantsGift) {
+      throw new CheckoutError("Zadaný slevový kód neopravňuje k výběru dárku zdarma.");
     }
     giftProduct = await prisma.product.findFirst({
       where: { id: input.giftProductId, giftEligible: true, visible: true, stock: { gt: 0 } },

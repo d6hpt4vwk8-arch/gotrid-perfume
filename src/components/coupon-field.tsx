@@ -7,6 +7,8 @@ import { formatPrice } from "@/lib/format";
 export interface AppliedCoupon {
   code: string;
   discountAmount: number;
+  /** GIFT-type coupon — no discount, unlocks the free-gift picker instead. */
+  grantsGift: boolean;
 }
 
 /**
@@ -71,8 +73,12 @@ export function CouponField({ onApplied }: { onApplied?: (coupon: AppliedCoupon 
       <div className="flex flex-col gap-1">
         <div className="flex items-center justify-between rounded-sm border border-ok/40 bg-ok/10 px-3 py-2 text-sm text-ink">
           <span>
-            Kód <strong>{applied.code}</strong> uplatněn — sleva{" "}
-            {formatPrice(applied.discountAmount)}
+            Kód <strong>{applied.code}</strong> uplatněn
+            {applied.grantsGift ? (
+              " — vyberte si dárek zdarma níže"
+            ) : (
+              <> — sleva {formatPrice(applied.discountAmount)}</>
+            )}
           </span>
           <button
             type="button"

@@ -241,7 +241,7 @@ export function ProductForm({
 
       <label className="flex items-center gap-2 text-sm">
         <input type="checkbox" name="giftEligible" defaultChecked={product?.giftEligible ?? false} />
-        Lze dát jako dárek zdarma (nabídne se v košíku nad nastavenou částku)
+        Lze dát jako dárek zdarma (nabídne se po uplatnění slevového kódu typu „Dárek“)
       </label>
 
       <button

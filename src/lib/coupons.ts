@@ -6,6 +6,9 @@ import { CheckoutError } from "@/lib/orders/checkout-error";
 type TxClient = PrismaClient | Prisma.TransactionClient;
 
 function computeDiscount(coupon: Coupon, itemsTotal: number): number {
+  // GIFT coupons carry no discount — applying one unlocks the free-gift
+  // picker instead (see grantsGift below).
+  if (coupon.type === "GIFT") return 0;
   const raw =
     coupon.type === "PERCENT" ? (itemsTotal * Number(coupon.value)) / 100 : Number(coupon.value);
   return Math.min(Math.max(raw, 0), itemsTotal);
@@ -37,16 +40,20 @@ async function loadValidCoupon(
 export async function previewCoupon(
   code: string,
   itemsTotal: number,
-): Promise<{ code: string; discountAmount: number }> {
+): Promise<{ code: string; discountAmount: number; grantsGift: boolean }> {
   const coupon = await loadValidCoupon(prisma, code, itemsTotal);
-  return { code: coupon.code, discountAmount: computeDiscount(coupon, itemsTotal) };
+  return {
+    code: coupon.code,
+    discountAmount: computeDiscount(coupon, itemsTotal),
+    grantsGift: coupon.type === "GIFT",
+  };
 }
 
 export async function validateCoupon(
   tx: TxClient,
   code: string,
   itemsTotal: number,
-): Promise<{ code: string; discountAmount: number }> {
+): Promise<{ code: string; discountAmount: number; grantsGift: boolean }> {
   const coupon = await loadValidCoupon(tx, code, itemsTotal);
   const discountAmount = computeDiscount(coupon, itemsTotal);
 
@@ -61,5 +68,5 @@ export async function validateCoupon(
     throw new CheckoutError("Slevový kód už byl vyčerpán.");
   }
 
-  return { code: coupon.code, discountAmount };
+  return { code: coupon.code, discountAmount, grantsGift: coupon.type === "GIFT" };
 }

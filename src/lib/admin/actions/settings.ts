@@ -23,8 +23,6 @@ const settingsSchema = z.object({
   shippingPriceBalikovna: z.coerce.number().min(0).max(10_000),
   shippingPriceGls: z.coerce.number().min(0).max(10_000),
   codSurcharge: z.coerce.number().min(0).max(10_000),
-  // 0 = gift promo off entirely (see Settings.giftThreshold in schema.prisma).
-  giftThreshold: z.coerce.number().min(0).max(100_000),
   secondOrderDelayDays: z.coerce.number().int().min(1).max(365),
   secondOrderDiscountPercent: z.coerce.number().int().min(1).max(90),
   secondOrderCouponPrefix: z

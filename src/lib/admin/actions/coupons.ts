@@ -8,20 +8,27 @@ import { requireAdmin } from "@/lib/admin/require-admin";
 
 const emptyToUndefined = (v: unknown) => (v === "" ? undefined : v);
 
-const couponSchema = z.object({
-  code: z
-    .string()
-    .trim()
-    .min(2, "Kód musí mít alespoň 2 znaky.")
-    .max(50)
-    .transform((v) => v.toUpperCase()),
-  type: z.enum(["PERCENT", "FIXED"]),
-  value: z.coerce.number().positive("Hodnota slevy musí být kladná."),
-  active: z.coerce.boolean().default(false),
-  minOrderValue: z.preprocess(emptyToUndefined, z.coerce.number().min(0).optional()),
-  usageLimit: z.preprocess(emptyToUndefined, z.coerce.number().int().positive().optional()),
-  expiresAt: z.preprocess(emptyToUndefined, z.string().optional()),
-});
+const couponSchema = z
+  .object({
+    code: z
+      .string()
+      .trim()
+      .min(2, "Kód musí mít alespoň 2 znaky.")
+      .max(50)
+      .transform((v) => v.toUpperCase()),
+    type: z.enum(["PERCENT", "FIXED", "GIFT"]),
+    // GIFT coupons carry no discount — value is meaningless for them, so it's
+    // only required to be positive for PERCENT/FIXED (checked below).
+    value: z.coerce.number().min(0),
+    active: z.coerce.boolean().default(false),
+    minOrderValue: z.preprocess(emptyToUndefined, z.coerce.number().min(0).optional()),
+    usageLimit: z.preprocess(emptyToUndefined, z.coerce.number().int().positive().optional()),
+    expiresAt: z.preprocess(emptyToUndefined, z.string().optional()),
+  })
+  .refine((data) => data.type === "GIFT" || data.value > 0, {
+    message: "Hodnota slevy musí být kladná.",
+    path: ["value"],
+  });
 
 function parseCouponForm(formData: FormData) {
   const raw = Object.fromEntries(formData);
