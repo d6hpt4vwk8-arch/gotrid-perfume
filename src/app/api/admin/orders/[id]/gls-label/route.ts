@@ -9,7 +9,7 @@ export async function GET(_req: NextRequest, { params }: { params: Promise<{ id:
   if (!order) {
     return NextResponse.json({ error: "Objednávka nenalezena." }, { status: 404 });
   }
-  if (order.shippingMethod !== "GLS") {
+  if (order.shippingMethod !== "GLS" && order.shippingMethod !== "GLS_MISTO") {
     return NextResponse.json(
       { error: "Štítek GLS lze vytvořit jen pro objednávky se způsobem dopravy GLS." },
       { status: 400 },
@@ -23,6 +23,12 @@ export async function GET(_req: NextRequest, { params }: { params: Promise<{ id:
     if (!parcelId) {
       if (!order.shippingStreet || !order.shippingCity || !order.shippingPostalCode) {
         throw new GlsError("Objednávka nemá vyplněnou doručovací adresu.");
+      }
+      // GLS_MISTO: shippingStreet/City/PostalCode already hold the pickup
+      // point's own address (set at checkout — see create-order.ts), and
+      // pickupPointId/pickupPointName route the label via GLS's PSD service.
+      if (order.shippingMethod === "GLS_MISTO" && (!order.pickupPointId || !order.pickupPointName)) {
+        throw new GlsError("Objednávka nemá vybrané výdejní místo GLS.");
       }
       const result = await createParcel({
         recordId: order.number,
@@ -40,6 +46,10 @@ export async function GET(_req: NextRequest, { params }: { params: Promise<{ id:
           postalCode: order.shippingPostalCode,
           country: order.shippingCountry,
         },
+        pickupPoint:
+          order.shippingMethod === "GLS_MISTO"
+            ? { id: order.pickupPointId!, name: order.pickupPointName! }
+            : undefined,
       });
       parcelId = result.parcelId;
       labelPdf = result.labelPdf;

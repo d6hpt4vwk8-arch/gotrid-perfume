@@ -9,6 +9,7 @@ export const SHIPPING_LABELS: Record<ShippingMethod, string> = {
   DPD: "DPD kurýr",
   BALIKOVNA: "Balíkovna",
   GLS: "GLS kurýr",
+  GLS_MISTO: "GLS — výdejní místo",
   OSOBNI_ODBER: `Osobní odběr — ${PICKUP_ADDRESS}`,
 };
 

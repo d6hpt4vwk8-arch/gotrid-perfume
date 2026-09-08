@@ -22,6 +22,7 @@ const settingsSchema = z.object({
   shippingPriceDpd: z.coerce.number().min(0).max(10_000),
   shippingPriceBalikovna: z.coerce.number().min(0).max(10_000),
   shippingPriceGls: z.coerce.number().min(0).max(10_000),
+  shippingPriceGlsMisto: z.coerce.number().min(0).max(10_000),
   codSurcharge: z.coerce.number().min(0).max(10_000),
   secondOrderDelayDays: z.coerce.number().int().min(1).max(365),
   secondOrderDiscountPercent: z.coerce.number().int().min(1).max(90),

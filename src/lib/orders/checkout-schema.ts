@@ -6,10 +6,14 @@ export const checkoutSchema = z
     phone: z.string().min(9, "Zadejte platné telefonní číslo.").max(30),
     firstName: z.string().min(1, "Zadejte jméno.").max(100),
     lastName: z.string().min(1, "Zadejte příjmení.").max(100),
-    shippingMethod: z.enum(["ZASILKOVNA", "PPL", "DPD", "BALIKOVNA", "OSOBNI_ODBER", "GLS"]),
+    shippingMethod: z.enum(["ZASILKOVNA", "PPL", "DPD", "BALIKOVNA", "OSOBNI_ODBER", "GLS", "GLS_MISTO"]),
     shippingCountry: z.enum(["CZ", "SK"]).optional().default("CZ"),
     paymentMethod: z.enum(["CARD", "BANK_TRANSFER", "CASH_ON_DELIVERY"]),
     pickupPointId: z.string().max(50).optional(),
+    // Display name of the chosen pickup point — only actually required for
+    // GLS_MISTO (see Order.pickupPointName in schema.prisma), optional here
+    // so ZASILKOVNA/BALIKOVNA checkouts (which don't send it) still pass.
+    pickupPointName: z.string().max(200).optional(),
     shippingStreet: z.string().max(200).optional(),
     shippingCity: z.string().max(100).optional(),
     shippingPostalCode: z.string().max(20).optional(),
@@ -28,7 +32,10 @@ export const checkoutSchema = z
       .max(200),
   })
   .superRefine((data, ctx) => {
-    const usesPickupPoint = data.shippingMethod === "ZASILKOVNA" || data.shippingMethod === "BALIKOVNA";
+    const usesPickupPoint =
+      data.shippingMethod === "ZASILKOVNA" ||
+      data.shippingMethod === "BALIKOVNA" ||
+      data.shippingMethod === "GLS_MISTO";
     const usesAddress =
       data.shippingMethod === "PPL" || data.shippingMethod === "DPD" || data.shippingMethod === "GLS";
     if (usesPickupPoint && !data.pickupPointId) {
@@ -37,6 +44,25 @@ export const checkoutSchema = z
         path: ["pickupPointId"],
         message: "Vyberte výdejní místo.",
       });
+    }
+    // Unlike Zásilkovna/Balíkovna (resolved against their own network from
+    // pickupPointId alone), GLS's PSD service needs the point's own name and
+    // address supplied explicitly at label-creation time — see gls.ts. The
+    // picker fills these in automatically, so a missing value here means a
+    // direct API call skipped the real flow, not a legitimate order.
+    if (data.shippingMethod === "GLS_MISTO") {
+      if (
+        !data.pickupPointName ||
+        !data.shippingStreet ||
+        !data.shippingCity ||
+        !data.shippingPostalCode
+      ) {
+        ctx.addIssue({
+          code: z.ZodIssueCode.custom,
+          path: ["pickupPointId"],
+          message: "Vyberte výdejní místo GLS.",
+        });
+      }
     }
     if (usesAddress) {
       if (!data.shippingStreet || !data.shippingCity || !data.shippingPostalCode) {

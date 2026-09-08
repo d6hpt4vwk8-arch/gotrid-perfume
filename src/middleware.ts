@@ -23,7 +23,7 @@ function buildCsp(nonce: string): string {
     "img-src 'self' data: https:",
     "font-src 'self' data:",
     "connect-src 'self' https://connect.facebook.net https://widget.packeta.com https://*.packeta.com https://*.tile.openstreetmap.org https://c.seznam.cz https://h.seznam.cz https://*.clarity.ms",
-    "frame-src 'self' https://widget.packeta.com",
+    "frame-src 'self' https://widget.packeta.com https://ps-maps.gls-czech.com",
     "frame-ancestors 'self'",
     "base-uri 'self'",
     "form-action 'self'",

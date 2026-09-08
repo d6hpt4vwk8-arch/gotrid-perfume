@@ -9,14 +9,24 @@ import { getSettings } from "@/lib/settings.server";
 // for why (oversized-ISR-page build failure past ~15k products).
 export const dynamic = "force-dynamic";
 
-// All 5 shipping methods the checkout actually offers (src/lib/shipping.ts),
-// keyed by the same ShippingMethod enum value order.shippingMethod holds —
-// so deliveryType sent to sendZboziConversion (src/lib/analytics/zbozi-conversion.ts,
+// Every ShippingMethod enum value that has ever been (or still is) settable
+// at checkout — keyed the same way order.shippingMethod holds it — so
+// deliveryType sent to sendZboziConversion (src/lib/analytics/zbozi-conversion.ts,
 // set to order.shippingMethod verbatim) always matches one of these DELIVERY_ID
-// values exactly. Previously this feed only ever declared ZASILKOVNA, so any
-// order placed with PPL/DPD/BALIKOVNA/OSOBNI_ODBER got flagged by Zboží as
-// "DELIVERY_ID neodpovídá" — fixed by declaring all of them here.
-const DELIVERY_IDS = ["ZASILKOVNA", "PPL", "DPD", "BALIKOVNA", "OSOBNI_ODBER"] as const;
+// values exactly, for historical orders too. Previously this feed only ever
+// declared ZASILKOVNA, so any order placed with PPL/DPD/BALIKOVNA/OSOBNI_ODBER
+// got flagged by Zboží as "DELIVERY_ID neodpovídá" — keep this in sync with
+// prisma/schema.prisma's ShippingMethod enum, past and present values alike,
+// not just what checkout-form.tsx currently offers.
+const DELIVERY_IDS = [
+  "ZASILKOVNA",
+  "PPL",
+  "DPD",
+  "BALIKOVNA",
+  "OSOBNI_ODBER",
+  "GLS",
+  "GLS_MISTO",
+] as const;
 
 export async function GET() {
   const settings = await getSettings();

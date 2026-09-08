@@ -117,6 +117,7 @@ export async function createOrder(input: CheckoutInput, customerId?: string | nu
             shippingMethod: input.shippingMethod,
             paymentMethod: input.paymentMethod,
             pickupPointId: input.pickupPointId,
+            pickupPointName: input.pickupPointName,
             shippingStreet: input.shippingStreet,
             shippingCity: input.shippingCity,
             shippingPostalCode: input.shippingPostalCode,

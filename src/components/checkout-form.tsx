@@ -16,6 +16,7 @@ import {
 import type { ShopSettings } from "@/lib/settings.server";
 import { ZasilkovnaPicker } from "@/components/zasilkovna-picker";
 import { BalikovnaPicker } from "@/components/balikovna-picker";
+import { GlsPickupPointPicker } from "@/components/gls-pickup-point-picker";
 import { CustomerLogoutButton } from "@/components/customer/logout-button";
 import { TrustBadges } from "@/components/trust-badges";
 import { PaymentIcons } from "@/components/payment-icons";
@@ -45,7 +46,17 @@ export function CheckoutForm({
   const [shippingCountry, setShippingCountry] = useState<"CZ" | "SK">("CZ");
   const [shippingMethod, setShippingMethod] = useState<ShippingMethod>("ZASILKOVNA");
   const [paymentMethod, setPaymentMethod] = useState<PaymentMethod>("BANK_TRANSFER");
-  const [pickupPoint, setPickupPoint] = useState<{ id: string; name: string } | null>(null);
+  // `street`/`city`/`zip` are only ever set by GlsPickupPointPicker
+  // (GLS_MISTO) — Zásilkovna/Balíkovna resolve the point's address from
+  // `id` alone against their own network, so their pickers only give
+  // {id, name}.
+  const [pickupPoint, setPickupPoint] = useState<{
+    id: string;
+    name: string;
+    street?: string;
+    city?: string;
+    zip?: string;
+  } | null>(null);
   const [street, setStreet] = useState(customer?.addressStreet ?? "");
   const [city, setCity] = useState(customer?.addressCity ?? "");
   const [postalCode, setPostalCode] = useState(customer?.addressPostalCode ?? "");
@@ -85,7 +96,8 @@ export function CheckoutForm({
     }
   }, [shippingCountry, shippingMethod]);
 
-  const usesPickupPoint = shippingMethod === "ZASILKOVNA" || shippingMethod === "BALIKOVNA";
+  const usesPickupPoint =
+    shippingMethod === "ZASILKOVNA" || shippingMethod === "BALIKOVNA" || shippingMethod === "GLS_MISTO";
   const isPersonalPickup = shippingMethod === "OSOBNI_ODBER";
 
   const contactDone = Boolean(email.trim() && phone.trim() && firstName.trim() && lastName.trim());
@@ -175,9 +187,28 @@ export function CheckoutForm({
           shippingCountry,
           paymentMethod,
           pickupPointId: usesPickupPoint ? pickupPoint?.id : undefined,
-          shippingStreet: !usesPickupPoint && !isPersonalPickup ? street : undefined,
-          shippingCity: !usesPickupPoint && !isPersonalPickup ? city : undefined,
-          shippingPostalCode: !usesPickupPoint && !isPersonalPickup ? postalCode : undefined,
+          pickupPointName: usesPickupPoint ? pickupPoint?.name : undefined,
+          // GLS_MISTO's address fields come from the picked point (GLS's
+          // PSD service needs the pickup point's own address, not the
+          // customer's — see gls.ts), everyone else follows the usual rule.
+          shippingStreet:
+            shippingMethod === "GLS_MISTO"
+              ? pickupPoint?.street
+              : !usesPickupPoint && !isPersonalPickup
+                ? street
+                : undefined,
+          shippingCity:
+            shippingMethod === "GLS_MISTO"
+              ? pickupPoint?.city
+              : !usesPickupPoint && !isPersonalPickup
+                ? city
+                : undefined,
+          shippingPostalCode:
+            shippingMethod === "GLS_MISTO"
+              ? pickupPoint?.zip
+              : !usesPickupPoint && !isPersonalPickup
+                ? postalCode
+                : undefined,
           items: items.map((i) => ({ productId: i.productId, qty: i.qty })),
           marketingConsent: Boolean(consent?.marketing),
           newsletterOptIn,
@@ -352,6 +383,13 @@ export function CheckoutForm({
           ) : shippingMethod === "BALIKOVNA" ? (
             <div className="pt-2">
               <BalikovnaPicker
+                selectedPointName={pickupPoint?.name ?? null}
+                onSelect={setPickupPoint}
+              />
+            </div>
+          ) : shippingMethod === "GLS_MISTO" ? (
+            <div className="pt-2">
+              <GlsPickupPointPicker
                 selectedPointName={pickupPoint?.name ?? null}
                 onSelect={setPickupPoint}
               />

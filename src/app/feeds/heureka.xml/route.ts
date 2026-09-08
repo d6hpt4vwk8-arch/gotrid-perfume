@@ -18,11 +18,14 @@ export const dynamic = "force-dynamic";
 
 export async function GET() {
   const settings = await getSettings();
+  // Balíkovna retired 2026-09-08 (see checkout-schema.ts) — dropped from
+  // here too rather than advertise a method we no longer actually offer.
+  // TODO: GLS/GLS_MISTO aren't declared yet — need Heureka's official
+  // delivery code for GLS from their current list before adding them here.
   const DELIVERY_METHODS = [
     { id: "ZASILKOVNA", price: settings.shippingPrices.ZASILKOVNA },
     { id: "PPL", price: settings.shippingPrices.PPL },
     { id: "DPD", price: settings.shippingPrices.DPD },
-    { id: "CESKA_POSTA", price: settings.shippingPrices.BALIKOVNA },
   ];
 
   const allProducts = await getFeedProducts();

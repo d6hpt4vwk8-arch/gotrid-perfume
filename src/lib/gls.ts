@@ -110,6 +110,12 @@ export type CreateParcelInput = {
   codAmount: number | null;
   recipient: { firstName: string; surname: string; phone: string; email: string };
   address: { street: string; city: string; postalCode: string; country: string };
+  // Set for GLS_MISTO orders — routes the parcel to a GLS ParcelShop/Locker
+  // via the PSD service instead of the recipient's home address. `address`
+  // above must already be the pickup point's own address in this case (see
+  // create-order.ts) — GLS's PSD service can't resolve it from `id` alone,
+  // unlike Zásilkovna/Balíkovna's pickup-point APIs.
+  pickupPoint?: { id: string; name: string };
 };
 
 interface PrintLabelsResponse {
@@ -135,7 +141,13 @@ export async function createParcel(
           : {}),
         PickupAddress: SENDER_ADDRESS,
         DeliveryAddress: {
-          Name: `${input.recipient.firstName} ${input.recipient.surname}`,
+          // For a GLS_MISTO parcel the label's primary addressee is the
+          // pickup point itself (per GLS's own "How to implement
+          // ShopDeliveryService" guide: "the address of the pick up point
+          // instead of the actual address of the consignee must be
+          // entered... the name of the actual consignee is stated just as a
+          // contact person") — the real customer only appears in Contact*.
+          Name: input.pickupPoint?.name ?? `${input.recipient.firstName} ${input.recipient.surname}`,
           Street,
           HouseNumber,
           City: input.address.city,
@@ -145,7 +157,12 @@ export async function createParcel(
           ContactPhone: input.recipient.phone,
           ContactEmail: input.recipient.email,
         },
-        ServiceList: codAmount ? [{ Code: "COD" }] : [],
+        ServiceList: [
+          ...(codAmount ? [{ Code: "COD" }] : []),
+          ...(input.pickupPoint
+            ? [{ Code: "PSD", PSDParameter: { StringValue: input.pickupPoint.id } }]
+            : []),
+        ],
         ParcelPropertyList: [{ Weight: input.weightKg, PackageType: 2 }],
       },
     ],

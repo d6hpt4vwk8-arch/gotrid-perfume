@@ -413,6 +413,11 @@ enum ShippingMethod {
   BALIKOVNA
   OSOBNI_ODBER
   GLS
+  // GLS's own pickup-point network (ParcelShop/Locker/Box) — the cheap
+  // alternative to Zásilkovna's výdejní místo, distinct from GLS above
+  // (courier to home address) since it's a different price and a different
+  // delivery mechanism (GLS's PSD service, see gls.ts).
+  GLS_MISTO
 }
 
 enum PaymentMethod {
@@ -465,6 +470,13 @@ model Order {
   shippingMethod ShippingMethod
   paymentMethod  PaymentMethod
   pickupPointId  String?
+  // Human-readable pickup point name (e.g. "GLS BOX, Průmyslová - Jihlava")
+  // — Zásilkovna/Balíkovna resolve pickupPointId against their own network
+  // and don't need this, but GLS's PSD service has no such lookup: the
+  // label must carry the point's own address/name text (see gls.ts), which
+  // for GLS_MISTO orders is stored in shippingStreet/City/PostalCode below
+  // (the courier's real destination) alongside this display name.
+  pickupPointName String?
 
   shippingStreet     String?
   shippingCity       String?
@@ -603,6 +615,10 @@ model Settings {
   shippingPriceDpd        Decimal @default(99) @db.Decimal(10, 2)
   shippingPriceBalikovna  Decimal @default(69) @db.Decimal(10, 2)
   shippingPriceGls        Decimal @default(99) @db.Decimal(10, 2)
+  // GLS's own pickup-point network (ParcelShop/Locker/Box) — the cheap
+  // tier, real wholesale cost is a flat ~54,45 Kč incl. VAT up to 20 kg
+  // per the 31.8.2026 GLS contract, regardless of weight.
+  shippingPriceGlsMisto Decimal @default(59) @db.Decimal(10, 2)
   // Cross-border Zásilkovna price for Slovak delivery — the only carrier
   // with a real SK pickup-point network today (see
   // src/components/zasilkovna-picker.tsx). Nullable and no default on

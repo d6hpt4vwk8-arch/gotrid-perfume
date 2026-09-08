@@ -10,6 +10,7 @@ const LOGO_SRC: Partial<Record<ShippingMethod, string>> = {
   DPD: "/shipping-logos/dpd.svg",
   BALIKOVNA: "/shipping-logos/balikovna.svg",
   GLS: "/shipping-logos/gls.svg",
+  GLS_MISTO: "/shipping-logos/gls.svg",
 };
 
 export function ShippingIcon({ method, className }: { method: ShippingMethod; className?: string }) {

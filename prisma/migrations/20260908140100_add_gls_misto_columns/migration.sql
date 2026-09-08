@@ -1,0 +1,2 @@
+ALTER TABLE "Settings" ADD COLUMN "shippingPriceGlsMisto" DECIMAL(10,2) NOT NULL DEFAULT 59;
+ALTER TABLE "Order" ADD COLUMN "pickupPointName" TEXT;

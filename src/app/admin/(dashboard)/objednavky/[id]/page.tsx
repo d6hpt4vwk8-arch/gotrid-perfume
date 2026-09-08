@@ -59,7 +59,7 @@ export default async function AdminOrderDetailPage({
               Štítek Balíkovna (PDF)
             </a>
           )}
-          {order.shippingMethod === "GLS" && (
+          {(order.shippingMethod === "GLS" || order.shippingMethod === "GLS_MISTO") && (
             <a
               href={`/api/admin/orders/${order.id}/gls-label`}
               target="_blank"
@@ -106,7 +106,9 @@ export default async function AdminOrderDetailPage({
             {SHIPPING_LABELS[order.shippingMethod]}
           </span>
           <span>{PAYMENT_LABELS[order.paymentMethod]}</span>
-          {order.pickupPointId && <span>Výdejní místo: {order.pickupPointId}</span>}
+          {order.pickupPointId && (
+            <span>Výdejní místo: {order.pickupPointName ?? order.pickupPointId}</span>
+          )}
           {order.shippingStreet && (
             <span>
               {order.shippingStreet}, {order.shippingPostalCode} {order.shippingCity}
@@ -207,7 +209,9 @@ export default async function AdminOrderDetailPage({
             defaultValue={order.trackingNumber ?? ""}
             className="rounded-sm border border-line px-3 py-2 text-sm"
           />
-          {(order.shippingMethod === "ZASILKOVNA" || order.shippingMethod === "GLS") && (
+          {(order.shippingMethod === "ZASILKOVNA" ||
+            order.shippingMethod === "GLS" ||
+            order.shippingMethod === "GLS_MISTO") && (
             <label className="flex items-center gap-2 text-sm text-accent-2">
               Váha (kg)
               <input

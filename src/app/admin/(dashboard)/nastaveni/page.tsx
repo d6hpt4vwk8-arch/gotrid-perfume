@@ -63,23 +63,32 @@ export default async function AdminSettingsPage() {
             since updateSettings' schema still has a required shippingPriceDpd
             field for the historical DPD orders' records. */}
         <input type="hidden" name="shippingPriceDpd" value={settings.shippingPrices.DPD} />
+        {/* Balíkovna retired 2026-09-08 (consolidating onto Zásilkovna + GLS
+            to build volume for better rates; standard non-negotiated pricing
+            already exceeded what was charged at checkout) — same hidden-field
+            treatment as DPD above, kept only for historical orders' records. */}
+        <input
+          type="hidden"
+          name="shippingPriceBalikovna"
+          value={settings.shippingPrices.BALIKOVNA}
+        />
         <label className="flex flex-col gap-1 text-sm">
-          Balíkovna (Kč)
-          <input
-            name="shippingPriceBalikovna"
-            type="number"
-            step="0.01"
-            defaultValue={settings.shippingPrices.BALIKOVNA}
-            className="rounded-sm border border-line px-3 py-2"
-          />
-        </label>
-        <label className="flex flex-col gap-1 text-sm">
-          GLS kurýr (Kč)
+          GLS kurýr — na adresu (Kč)
           <input
             name="shippingPriceGls"
             type="number"
             step="0.01"
             defaultValue={settings.shippingPrices.GLS}
+            className="rounded-sm border border-line px-3 py-2"
+          />
+        </label>
+        <label className="flex flex-col gap-1 text-sm">
+          GLS — výdejní místo/box (Kč)
+          <input
+            name="shippingPriceGlsMisto"
+            type="number"
+            step="0.01"
+            defaultValue={settings.shippingPrices.GLS_MISTO}
             className="rounded-sm border border-line px-3 py-2"
           />
         </label>
