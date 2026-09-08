@@ -1,6 +1,9 @@
 import Link from "next/link";
 import { InstagramFeed } from "@/components/instagram-feed";
 import { SocialLinks } from "@/components/social-links";
+import { prisma } from "@/lib/prisma";
+
+const TOP_BRANDS_COUNT = 14;
 
 const INFO_LINKS = [
   { href: "/o-nas", label: "O nás" },
@@ -13,7 +16,22 @@ const INFO_LINKS = [
   { href: "/kontakty", label: "Kontakty" },
 ];
 
-export function SiteFooter() {
+export async function SiteFooter() {
+  // Highlight the brands with the most in-stock products — a fair proxy for
+  // "what we actually carry a lot of" without needing a curated pick list.
+  // Full A-Z list lives at /znacky.
+  const topBrandsRaw = await prisma.brand.findMany({
+    select: {
+      name: true,
+      slug: true,
+      _count: { select: { products: { where: { visible: true, stock: { gt: 0 } } } } },
+    },
+  });
+  const topBrands = topBrandsRaw
+    .filter((b) => b._count.products > 0)
+    .sort((a, b) => b._count.products - a._count.products)
+    .slice(0, TOP_BRANDS_COUNT);
+
   return (
     <footer className="bg-ink text-white">
       <div className="mx-auto grid max-w-6xl gap-8 px-4 py-10 sm:grid-cols-2 lg:grid-cols-4">
@@ -57,6 +75,31 @@ export function SiteFooter() {
           </div>
         </div>
       </div>
+
+      {topBrands.length > 0 && (
+        <div className="border-t border-white/10 px-4 py-8">
+          <div className="mx-auto flex max-w-6xl flex-col gap-3">
+            <h3 className="text-sm font-semibold text-white">Značky</h3>
+            <div className="flex flex-wrap gap-2">
+              {topBrands.map((brand) => (
+                <Link
+                  key={brand.slug}
+                  href={`/znacka/${brand.slug}`}
+                  className="rounded-full border border-white/20 px-3.5 py-1.5 text-xs text-white/70 transition-colors hover:border-white hover:text-white"
+                >
+                  {brand.name}
+                </Link>
+              ))}
+              <Link
+                href="/znacky"
+                className="rounded-full border border-white/40 px-3.5 py-1.5 text-xs font-medium text-white hover:bg-white hover:text-ink"
+              >
+                Zobrazit všechny značky →
+              </Link>
+            </div>
+          </div>
+        </div>
+      )}
 
       <InstagramFeed />
 
