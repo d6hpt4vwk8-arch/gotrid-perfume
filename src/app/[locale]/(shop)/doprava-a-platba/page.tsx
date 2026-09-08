@@ -1,11 +1,20 @@
 import type { Metadata } from "next";
 import { LegalPage } from "@/components/legal-page";
+import { getSettings } from "@/lib/settings.server";
+import { formatPrice } from "@/lib/format";
+import { PICKUP_ADDRESS } from "@/lib/shipping";
 
 export const metadata: Metadata = {
   title: "Doprava a platba | Gotrid Perfume",
 };
 
-export default function DopravaAPlatbaPage() {
+// Prices/thresholds are pulled live from Settings rather than hardcoded —
+// this page previously went stale every time a carrier's price or lineup
+// changed in /admin/nastaveni (still listed PPL/DPD/Balíkovna after they
+// were retired from checkout).
+export default async function DopravaAPlatbaPage() {
+  const settings = await getSettings();
+
   return (
     <LegalPage title="Doprava a platba">
       <h2>1. Způsoby dopravy</h2>
@@ -14,13 +23,26 @@ export default function DopravaAPlatbaPage() {
         objednávce si můžete zvolit následující možnosti doručení:
       </p>
       <ul>
-        <li>Zásilkovna — výdejní místo dle vašeho výběru: 79 Kč, doba doručení 2–4 pracovní dny,</li>
-        <li>PPL kurýr — doručení na adresu: 90 Kč, doba doručení 2–4 pracovní dny,</li>
-        <li>DPD kurýr — doručení na adresu: 99 Kč, doba doručení 2–4 pracovní dny,</li>
-        <li>Balíkovna — výdejní místo: 69 Kč, doba doručení 2–4 pracovní dny,</li>
-        <li>Osobní odběr — Na Jarově 2425/4, 130 00 Praha 3-Žižkov: zdarma, po předchozí domluvě termínu.</li>
+        <li>
+          Zásilkovna — výdejní místo dle vašeho výběru: {formatPrice(settings.shippingPrices.ZASILKOVNA)},
+          doba doručení 1–3 pracovní dny,
+        </li>
+        <li>
+          GLS — výdejní místo/box dle vašeho výběru: {formatPrice(settings.shippingPrices.GLS_MISTO)}, doba
+          doručení 1–3 pracovní dny,
+        </li>
+        <li>
+          GLS kurýr — doručení na adresu: {formatPrice(settings.shippingPrices.GLS)}, doba doručení
+          1–3 pracovní dny,
+        </li>
+        <li>
+          Osobní odběr — {PICKUP_ADDRESS}: zdarma, po předchozí domluvě termínu.
+        </li>
       </ul>
-      <p>Doprava zdarma při objednávce nad 1 500 Kč (netýká se osobního odběru, který je zdarma vždy).</p>
+      <p>
+        Doprava zdarma při objednávce nad {formatPrice(settings.freeShippingThreshold)} (netýká se
+        osobního odběru, který je zdarma vždy).
+      </p>
 
       <h2>2. Zpracování objednávky</h2>
       <p>
@@ -32,7 +54,11 @@ export default function DopravaAPlatbaPage() {
       <ul>
         <li>Platba kartou online — rychlá a bezpečná platba (podporuje i Apple Pay a Google Pay),</li>
         <li>Bankovní převod — QR platba s údaji zaslanými po dokončení objednávky,</li>
-        <li>Dobírka — platba v hotovosti při převzetí zásilky (příplatek 30 Kč, dostupné jen do 1 500 Kč).</li>
+        <li>
+          Dobírka — platba v hotovosti nebo kartou při převzetí zásilky (příplatek{" "}
+          {formatPrice(settings.codSurcharge)}, dostupné jen do {formatPrice(settings.freeShippingThreshold)}
+          ).
+        </li>
       </ul>
 
       <h2>4. Důležité informace</h2>
