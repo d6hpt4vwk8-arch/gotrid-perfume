@@ -48,6 +48,13 @@ export async function GET() {
       const url = `${SITE_URL}/produkt/${p.slug}`;
       const images = p.images.map((img) => `${SITE_URL}${img}`);
       const [mainImage, ...altImages] = images;
+      // Days from order to dispatch, not total delivery time — Heureka
+      // buckets 0 as "skladem" and 1-3 as "do 3 dnů" (sluzby.heureka.cz/
+      // napoveda/xml-feed/#DELIVERY_DATE). An in-stock item (dispatched
+      // same/next business day, per the product page's own "Ihned k
+      // odeslání" copy) must be 0, not 1, or every listing undersells
+      // itself with a 3-day estimate.
+      const deliveryDate = p.stock > 0 ? "0" : "7";
 
       return `  <SHOPITEM>
     <ITEM_ID>${escapeXml(p.code)}</ITEM_ID>
@@ -61,7 +68,7 @@ ${altImages.map((img) => `    <IMGURL_ALTERNATIVE>${escapeXml(img)}</IMGURL_ALTE
     ${p.brandName ? `<MANUFACTURER>${escapeXml(p.brandName)}</MANUFACTURER>` : ""}
     ${p.ean && isValidEan(p.ean) ? `<EAN>${escapeXml(p.ean)}</EAN>` : ""}
     ${p.categoryBreadcrumb ? `<CATEGORYTEXT>${escapeXml(p.categoryBreadcrumb)}</CATEGORYTEXT>` : ""}
-    <DELIVERY_DATE>${p.stock > 0 ? "1" : "7"}</DELIVERY_DATE>
+    <DELIVERY_DATE>${deliveryDate}</DELIVERY_DATE>
 ${DELIVERY_METHODS.map(
   (d) => `    <DELIVERY>
       <DELIVERY_ID>${d.id}</DELIVERY_ID>
