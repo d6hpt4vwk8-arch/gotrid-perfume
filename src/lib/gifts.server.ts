@@ -1,4 +1,25 @@
+import type { Coupon } from "@prisma/client";
 import { prisma } from "@/lib/prisma";
+
+/**
+ * The GIFT-type coupon currently worth announcing (benefits bar, homepage
+ * hero slide) — active, not expired, not yet exhausted. Only ever one: if
+ * several are active at once, the newest wins, so the site never shows two
+ * conflicting gift promos at the same time.
+ */
+export async function getActiveGiftCoupon(): Promise<Coupon | null> {
+  const coupon = await prisma.coupon.findFirst({
+    where: {
+      type: "GIFT",
+      active: true,
+      OR: [{ expiresAt: null }, { expiresAt: { gt: new Date() } }],
+    },
+    orderBy: { createdAt: "desc" },
+  });
+  return coupon && (coupon.usageLimit === null || coupon.usedCount < coupon.usageLimit)
+    ? coupon
+    : null;
+}
 
 export interface GiftOption {
   productId: string;

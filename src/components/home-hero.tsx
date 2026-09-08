@@ -1,7 +1,11 @@
 import Image from "next/image";
 import Link from "next/link";
+import type { ReactNode } from "react";
 import { prisma } from "@/lib/prisma";
 import { formatPrice } from "@/lib/format";
+import { getActiveGiftCoupon, getGiftOptions } from "@/lib/gifts.server";
+import { HeroSlider } from "@/components/hero-slider";
+import { CopyCodeButton } from "@/components/copy-code-button";
 
 // Hand-picked showcase products for the homepage hero — one arabský parfém
 // plus two korejské péče items, matching the two curated sections below the
@@ -15,23 +19,36 @@ const HERO_PRODUCT_SLUGS = [
   "cp-1-bright-complex-intense-nourishing-shampoo-version-2-0-100-ml-gvs-12104",
 ];
 
+const HERO_BACKGROUND = {
+  background:
+    "radial-gradient(ellipse 70% 80% at 18% 15%, rgba(255,255,255,.10), transparent 62%)," +
+    "linear-gradient(160deg, #2a2725, #131110 75%)",
+};
+
+const GIFT_SLIDE_BACKGROUND = {
+  background:
+    "radial-gradient(ellipse 70% 80% at 82% 15%, rgba(214,168,101,.18), transparent 62%)," +
+    "linear-gradient(160deg, #2a2725, #131110 75%)",
+};
+
 export async function HomeHero() {
-  const products = await prisma.product.findMany({
-    where: { slug: { in: HERO_PRODUCT_SLUGS }, visible: true },
-    include: { brand: true, images: { orderBy: { sortOrder: "asc" }, take: 1 } },
-  });
+  const [products, giftCoupon, giftOptions] = await Promise.all([
+    prisma.product.findMany({
+      where: { slug: { in: HERO_PRODUCT_SLUGS }, visible: true },
+      include: { brand: true, images: { orderBy: { sortOrder: "asc" }, take: 1 } },
+    }),
+    getActiveGiftCoupon(),
+    getGiftOptions(),
+  ]);
   const featured = HERO_PRODUCT_SLUGS.map((slug) => products.find((p) => p.slug === slug)).filter(
     (p): p is NonNullable<typeof p> => Boolean(p),
   );
 
-  return (
+  const slides: ReactNode[] = [
     <section
+      key="main"
       className="relative overflow-hidden rounded-sm px-6 py-12 text-white sm:px-10 sm:py-14"
-      style={{
-        background:
-          "radial-gradient(ellipse 70% 80% at 18% 15%, rgba(255,255,255,.10), transparent 62%)," +
-          "linear-gradient(160deg, #2a2725, #131110 75%)",
-      }}
+      style={HERO_BACKGROUND}
     >
       <div className="flex flex-col gap-10 lg:flex-row lg:items-center lg:gap-14">
         <div className="flex flex-col items-start gap-5 lg:w-[45%]">
@@ -102,6 +119,82 @@ export async function HomeHero() {
           </div>
         )}
       </div>
-    </section>
-  );
+    </section>,
+  ];
+
+  // Second slide only exists while a GIFT-type coupon is actually active —
+  // see benefits-bar.tsx for the other place this same promo gets announced.
+  if (giftCoupon) {
+    const gifts = giftOptions.slice(0, 3);
+    slides.push(
+      <section
+        key="gift"
+        className="relative overflow-hidden rounded-sm px-6 py-12 text-white sm:px-10 sm:py-14"
+        style={GIFT_SLIDE_BACKGROUND}
+      >
+        <div className="flex flex-col gap-10 lg:flex-row lg:items-center lg:gap-14">
+          <div className="flex flex-col items-start gap-5 lg:w-[45%]">
+            <span className="rounded-full border border-white/25 bg-white/10 px-3 py-1.5 text-[10px] tracking-widest uppercase sm:text-[11px]">
+              Dárek zdarma
+            </span>
+            <h2 className="text-3xl leading-[1.15] font-bold sm:text-4xl lg:text-[2.6rem]">
+              {giftCoupon.minOrderValue
+                ? `Nákup nad ${formatPrice(Number(giftCoupon.minOrderValue))}? Dárek zdarma!`
+                : "Vyberte si dárek zdarma!"}
+            </h2>
+            <p className="max-w-md text-sm leading-relaxed text-white/70">
+              Zadejte kód v košíku nebo na pokladně a vyberte si jeden z dárků z naší nabídky —
+              zdarma k vaší objednávce.
+            </p>
+            <div className="flex flex-wrap items-center gap-3 pt-1">
+              <CopyCodeButton code={giftCoupon.code} />
+              <Link
+                href="/kosik"
+                className="rounded-sm border border-white/30 px-5 py-3 text-center text-sm font-semibold text-white transition hover:border-white/60 hover:bg-white/10"
+              >
+                Do košíku
+              </Link>
+            </div>
+          </div>
+
+          {gifts.length > 0 && (
+            <div className="grid grid-cols-3 gap-3 sm:gap-4 lg:flex-1">
+              {gifts.map((gift, i) => (
+                <div
+                  key={gift.productId}
+                  className={`flex flex-col overflow-hidden rounded-sm bg-white/95 ${
+                    i === 1 ? "lg:-translate-y-6" : ""
+                  }`}
+                >
+                  <div className="relative aspect-square w-full">
+                    {gift.image ? (
+                      <Image
+                        src={gift.image}
+                        alt={gift.name}
+                        fill
+                        sizes="(min-width: 1024px) 18vw, 30vw"
+                        className="object-contain p-3"
+                      />
+                    ) : (
+                      <div className="flex h-full items-center justify-center text-xs text-accent-2">
+                        Bez obrázku
+                      </div>
+                    )}
+                  </div>
+                  <div className="flex flex-col gap-1 border-t border-line/70 px-3 py-2.5">
+                    <span className="line-clamp-2 text-[11px] leading-snug font-semibold text-ink sm:text-xs">
+                      {gift.name}
+                    </span>
+                    <span className="text-sm font-bold text-ok">Zdarma</span>
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
+      </section>,
+    );
+  }
+
+  return <HeroSlider slides={slides} />;
 }
