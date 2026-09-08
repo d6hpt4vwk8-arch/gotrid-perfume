@@ -19,18 +19,6 @@ const HERO_PRODUCT_SLUGS = [
   "cp-1-bright-complex-intense-nourishing-shampoo-version-2-0-100-ml-gvs-12104",
 ];
 
-const HERO_BACKGROUND = {
-  background:
-    "radial-gradient(ellipse 70% 80% at 18% 15%, rgba(255,255,255,.10), transparent 62%)," +
-    "linear-gradient(160deg, #2a2725, #131110 75%)",
-};
-
-const GIFT_SLIDE_BACKGROUND = {
-  background:
-    "radial-gradient(ellipse 70% 80% at 82% 15%, rgba(214,168,101,.18), transparent 62%)," +
-    "linear-gradient(160deg, #2a2725, #131110 75%)",
-};
-
 export async function HomeHero() {
   const [products, giftCoupon, giftOptions] = await Promise.all([
     prisma.product.findMany({
@@ -47,8 +35,7 @@ export async function HomeHero() {
   const slides: ReactNode[] = [
     <section
       key="main"
-      className="relative overflow-hidden rounded-sm px-6 py-12 text-white sm:px-10 sm:py-14"
-      style={HERO_BACKGROUND}
+      className="relative overflow-hidden rounded-sm bg-ink px-6 py-12 text-white sm:px-10 sm:py-14"
     >
       <div className="flex flex-col gap-10 lg:flex-row lg:items-center lg:gap-14">
         <div className="flex flex-col items-start gap-5 lg:w-[45%]">
@@ -129,8 +116,7 @@ export async function HomeHero() {
     slides.push(
       <section
         key="gift"
-        className="relative overflow-hidden rounded-sm px-6 py-12 text-white sm:px-10 sm:py-14"
-        style={GIFT_SLIDE_BACKGROUND}
+        className="relative overflow-hidden rounded-sm bg-ink px-6 py-12 text-white sm:px-10 sm:py-14"
       >
         <div className="flex flex-col gap-10 lg:flex-row lg:items-center lg:gap-14">
           <div className="flex flex-col items-start gap-5 lg:w-[45%]">
