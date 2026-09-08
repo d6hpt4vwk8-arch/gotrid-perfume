@@ -728,3 +728,48 @@ model BalikovnaPoint {
 
   @@index([city])
 }
+
+// ---------------------------------------------------------------------------
+// PriceCompetition — where we actually rank on price, sourced from the
+// "Statistiky položek (podrobný)" CSV Sklik/Zboží's Centrum prodejce lets a
+// seller download by hand (Statistiky → Podrobné statistiky) — there's no
+// API for this, so a person uploads a fresh export via the admin page
+// whenever they want the numbers refreshed, and this just accumulates that
+// history rather than trying to poll for it. The report's own "Průměrná
+// pozice (Produkt - dle ceny)" column is our average rank specifically
+// within Zboží's price-sorted comparison slot: ~1 means we were shown as
+// the cheapest (or tied) whenever we appeared there, a high number means
+// several other sellers usually beat us on price for that item — a real,
+// per-product signal for margin headroom vs. losing on price, instead of
+// the single static "score" percentage Heureka/Zboží show on their own
+// dashboards, which folds everything into one number no matter how far
+// apart the underlying products actually are.
+// ---------------------------------------------------------------------------
+
+model PriceCompetitionImport {
+  id          String   @id @default(cuid())
+  /** Free-text period the person typed in when uploading (e.g. "27.08.–31.08.2026") — the report file itself carries no dates. */
+  periodLabel String?
+  rowCount    Int
+  createdAt   DateTime @default(now())
+
+  rows PriceCompetitionRow[]
+}
+
+model PriceCompetitionRow {
+  id       String                 @id @default(cuid())
+  importId String
+  import   PriceCompetitionImport @relation(fields: [importId], references: [id], onDelete: Cascade)
+
+  /** Matches Product.code — the report's own "Produkt Zboží.cz (poslední známý)" column. */
+  productCode            String
+  offerName              String
+  impressionsByPrice     Int
+  avgPositionByPrice     Decimal? @db.Decimal(6, 2)
+  impressionsRecommended Int
+  avgPositionRecommended Decimal? @db.Decimal(6, 2)
+  clicksTotal            Int
+
+  @@index([importId])
+  @@index([productCode])
+}
