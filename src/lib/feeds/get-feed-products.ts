@@ -1,5 +1,11 @@
 import { prisma } from "@/lib/prisma";
+import { formatVolumeLabel } from "@/lib/parse-volume";
 import { feedDescription } from "./xml";
+
+export interface FeedParam {
+  name: string;
+  value: string;
+}
 
 export interface FeedProduct {
   code: string;
@@ -15,7 +21,24 @@ export interface FeedProduct {
   images: string[];
   categoryBreadcrumb: string | null;
   excludeFromHeureka: boolean;
+  /**
+   * PARAM pairs for the marketplace feeds. These are what put an offer into
+   * the comparison sites' category filters ("Objem 100 ml", "Pro koho
+   * Dámské", …) — without them an offer only ever surfaces on a plain
+   * name/price match, which is why Heureka flagged 122 offers as missing
+   * <PARAM>. Only real data: nothing here is guessed.
+   */
+  params: FeedParam[];
 }
+
+// Same category→gender inference the storefront's spec table uses
+// (src/lib/product-specs.ts) — a perfume's gender is implied by which
+// category branch it sits in rather than being a field of its own.
+const GENDER_LABELS: Record<string, string> = {
+  "damske-parfemy": "Dámské",
+  "panske-parfemy": "Pánské",
+  "unisex-parfemy": "Unisex",
+};
 
 async function buildCategoryBreadcrumbs(): Promise<Map<string, string>> {
   const categories = await prisma.category.findMany({
@@ -39,6 +62,49 @@ async function buildCategoryBreadcrumbs(): Promise<Map<string, string>> {
   return breadcrumb;
 }
 
+type ProductForParams = {
+  name: string;
+  brand: { name: string } | null;
+  categories: { category: { name: string; fullSlug: string } }[];
+  scentFamilies: { scentFamily: { name: string } }[];
+  skinTypes: { skinType: { name: string } }[];
+  concerns: { concern: { name: string } }[];
+};
+
+function buildParams(product: ProductForParams): FeedParam[] {
+  const params: FeedParam[] = [];
+
+  if (product.brand) params.push({ name: "Značka", value: product.brand.name });
+
+  // Volume lives in the product name (supplier feeds bake it in), not a
+  // column — see parse-volume.ts. Present on ~94 % of the live catalog and
+  // it's the single most-used filter in perfume/cosmetics categories.
+  const volume = formatVolumeLabel(product.name);
+  if (volume) params.push({ name: "Objem", value: volume });
+
+  const category = product.categories[0]?.category;
+  if (category) {
+    const genderSlug = Object.keys(GENDER_LABELS).find(
+      (slug) => category.fullSlug === slug || category.fullSlug.includes(`/${slug}`),
+    );
+    if (genderSlug) params.push({ name: "Pro koho", value: GENDER_LABELS[genderSlug] });
+  }
+
+  // Multi-value attributes get one PARAM each rather than a joined string —
+  // a comma-joined value matches no filter at all on either marketplace.
+  for (const { scentFamily } of product.scentFamilies) {
+    params.push({ name: "Charakter vůně", value: scentFamily.name });
+  }
+  for (const { skinType } of product.skinTypes) {
+    params.push({ name: "Typ pleti", value: skinType.name });
+  }
+  for (const { concern } of product.concerns) {
+    params.push({ name: "Účel", value: concern.name });
+  }
+
+  return params;
+}
+
 /** Products + resolved data needed by every marketplace feed (Heureka/Zboží/Google/Meta). */
 export async function getFeedProducts(): Promise<FeedProduct[]> {
   const [products, breadcrumbs] = await Promise.all([
@@ -48,6 +114,9 @@ export async function getFeedProducts(): Promise<FeedProduct[]> {
         brand: true,
         images: { orderBy: { sortOrder: "asc" } },
         categories: { include: { category: true }, take: 1 },
+        scentFamilies: { include: { scentFamily: true } },
+        skinTypes: { include: { skinType: true } },
+        concerns: { include: { concern: true } },
       },
     }),
     buildCategoryBreadcrumbs(),
@@ -68,6 +137,7 @@ export async function getFeedProducts(): Promise<FeedProduct[]> {
       ? (breadcrumbs.get(p.categories[0].categoryId) ?? null)
       : null,
     excludeFromHeureka: p.excludeFromHeureka,
+    params: buildParams(p),
   }));
 
   return disambiguateDescriptions(disambiguateNames(feedProducts));

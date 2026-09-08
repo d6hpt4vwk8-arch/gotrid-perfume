@@ -69,7 +69,12 @@ ${DELIVERY_METHODS.map(
       <DELIVERY_PRICE_COD>${(d.price + settings.codSurcharge).toFixed(2)}</DELIVERY_PRICE_COD>
     </DELIVERY>`,
 ).join("\n")}
-    ${p.brandName ? `<PARAM><PARAM_NAME>Značka</PARAM_NAME><VAL>${escapeXml(p.brandName)}</VAL></PARAM>` : ""}
+${p.params
+  .map(
+    (param) =>
+      `    <PARAM><PARAM_NAME>${escapeXml(param.name)}</PARAM_NAME><VAL>${escapeXml(param.value)}</VAL></PARAM>`,
+  )
+  .join("\n")}
   </SHOPITEM>`;
     })
     .join("\n");

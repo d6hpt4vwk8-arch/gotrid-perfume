@@ -47,6 +47,12 @@ export async function GET() {
     ${p.ean && isValidEan(p.ean) ? `<EAN>${escapeXml(p.ean)}</EAN>` : ""}
     ${p.categoryBreadcrumb ? `<CATEGORYTEXT>${escapeXml(p.categoryBreadcrumb)}</CATEGORYTEXT>` : ""}
     <DELIVERY_DATE>${p.stock > 0 ? "1" : "7"}</DELIVERY_DATE>
+${p.params
+  .map(
+    (param) =>
+      `    <PARAM><PARAM_NAME>${escapeXml(param.name)}</PARAM_NAME><VAL>${escapeXml(param.value)}</VAL></PARAM>`,
+  )
+  .join("\n")}
 ${DELIVERY_IDS.map(
   (id) => `    <DELIVERY>
       <DELIVERY_ID>${id}</DELIVERY_ID>
