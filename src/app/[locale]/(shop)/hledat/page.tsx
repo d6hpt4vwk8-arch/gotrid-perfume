@@ -17,6 +17,7 @@ import {
 import { ProductCard } from "@/components/product-card";
 import { CategoryFilters } from "@/components/category-filters";
 import { Pagination } from "@/components/pagination";
+import { getSettings } from "@/lib/settings.server";
 
 const PAGE_SIZE = 24;
 
@@ -52,20 +53,22 @@ export default async function SearchPage({
   );
   const where = buildProductWhere(searchWhere, filters, perfumeCategoryIds);
 
-  const [products, total, brands, scentFacets, structureFacets, cosmeticsFacets] = await Promise.all([
-    prisma.product.findMany({
-      where,
-      orderBy: buildOrderBy(filters.sort),
-      skip: (filters.page - 1) * PAGE_SIZE,
-      take: PAGE_SIZE,
-      include: { brand: true, images: { orderBy: { sortOrder: "asc" }, take: 1 } },
-    }),
-    prisma.product.count({ where }),
-    getAvailableBrands(searchWhere),
-    getScentFamilyFacets(searchWhere),
-    getPerfumeStructureFacets(searchWhere),
-    getCosmeticsFacets(searchWhere),
-  ]);
+  const [products, total, brands, scentFacets, structureFacets, cosmeticsFacets, settings] =
+    await Promise.all([
+      prisma.product.findMany({
+        where,
+        orderBy: buildOrderBy(filters.sort),
+        skip: (filters.page - 1) * PAGE_SIZE,
+        take: PAGE_SIZE,
+        include: { brand: true, images: { orderBy: { sortOrder: "asc" }, take: 1 } },
+      }),
+      prisma.product.count({ where }),
+      getAvailableBrands(searchWhere),
+      getScentFamilyFacets(searchWhere),
+      getPerfumeStructureFacets(searchWhere),
+      getCosmeticsFacets(searchWhere),
+      getSettings(),
+    ]);
 
   // Logged after the response is sent — a failed write here must never
   // affect what the visitor actually sees. Only page 1 counts a query as
@@ -116,7 +119,11 @@ export default async function SearchPage({
           ) : (
             <div className="grid grid-cols-2 gap-x-4 gap-y-8 sm:grid-cols-3 lg:grid-cols-4">
               {products.map((product) => (
-                <ProductCard key={product.slug} product={product} />
+                <ProductCard
+                  key={product.slug}
+                  product={product}
+                  freeShippingThreshold={settings.freeShippingThreshold}
+                />
               ))}
             </div>
           )}

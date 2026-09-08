@@ -14,12 +14,14 @@ export function ProductGridLoadMore({
   totalPages,
   currentPage,
   fetchUrl,
+  freeShippingThreshold,
 }: {
   initialProducts: ProductCardData[];
   totalPages: number;
   currentPage: number;
   /** e.g. "/api/kategorie/kosmetika/products?brand=chanel" — page param is appended per request. */
   fetchUrl: string;
+  freeShippingThreshold?: number;
 }) {
   const [products, setProducts] = useState(initialProducts);
   const [nextPage, setNextPage] = useState(currentPage + 1);
@@ -48,7 +50,7 @@ export function ProductGridLoadMore({
     <div className="flex flex-col gap-6">
       <div className="grid grid-cols-2 gap-x-4 gap-y-8 sm:grid-cols-3 lg:grid-cols-4">
         {products.map((product) => (
-          <ProductCard key={product.slug} product={product} />
+          <ProductCard key={product.slug} product={product} freeShippingThreshold={freeShippingThreshold} />
         ))}
       </div>
 

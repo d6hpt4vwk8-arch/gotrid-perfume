@@ -16,20 +16,36 @@ export interface ProductCardData {
   images: { url: string }[];
 }
 
-export function ProductCard({ product }: { product: ProductCardData }) {
+export function ProductCard({
+  product,
+  freeShippingThreshold,
+}: {
+  product: ProductCardData;
+  /** Settings.freeShippingThreshold — omit to just skip the badge (e.g. the wishlist page, which has no server parent to source it from). */
+  freeShippingThreshold?: number;
+}) {
   const image = product.images[0];
   const discountPercent = product.compareAtPrice
     ? Math.round((1 - Number(product.price) / Number(product.compareAtPrice)) * 100)
     : null;
+  const isFreeShipping =
+    freeShippingThreshold !== undefined && Number(product.price) >= freeShippingThreshold;
 
   return (
     <Link href={`/produkt/${product.slug}`} className="group flex flex-col">
       <div className="relative aspect-square w-full overflow-hidden bg-line/60">
-        {discountPercent && discountPercent > 0 && (
-          <span className="absolute left-2 top-2 z-10 rounded-sm bg-red-600 px-1.5 py-1 text-xs font-bold text-white">
-            -{discountPercent}%
-          </span>
-        )}
+        <div className="absolute left-2 top-2 z-10 flex flex-col items-start gap-1">
+          {discountPercent && discountPercent > 0 && (
+            <span className="rounded-sm bg-red-600 px-1.5 py-1 text-xs font-bold text-white">
+              -{discountPercent}%
+            </span>
+          )}
+          {isFreeShipping && (
+            <span className="rounded-sm bg-ok px-1.5 py-1 text-xs font-bold text-white">
+              Doprava zdarma
+            </span>
+          )}
+        </div>
         <WishlistButton
           product={{
             productId: product.id,

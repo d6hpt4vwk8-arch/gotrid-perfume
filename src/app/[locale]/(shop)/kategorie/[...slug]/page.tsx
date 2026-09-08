@@ -23,6 +23,7 @@ import {
 import { ProductGridLoadMore } from "@/components/product-grid-load-more";
 import { CategoryFilters } from "@/components/category-filters";
 import { Pagination } from "@/components/pagination";
+import { getSettings } from "@/lib/settings.server";
 
 const PAGE_SIZE = 24;
 
@@ -52,7 +53,7 @@ export default async function CategoryPage({
   );
   const where = buildProductWhere(baseWhere, filters, perfumeCategoryIds);
 
-  const [products, total, brands, scentFacets, structureFacets, cosmeticsFacets, topProducts] =
+  const [products, total, brands, scentFacets, structureFacets, cosmeticsFacets, topProducts, settings] =
     await Promise.all([
       prisma.product.findMany({
         where,
@@ -76,6 +77,7 @@ export default async function CategoryPage({
         take: 4,
         include: { brand: true, images: { orderBy: { sortOrder: "asc" }, take: 1 } },
       }),
+      getSettings(),
     ]);
 
   const totalPages = Math.ceil(total / PAGE_SIZE);
@@ -160,6 +162,7 @@ export default async function CategoryPage({
               totalPages={totalPages}
               currentPage={filters.page}
               fetchUrl={`/api/category-products/${fullSlug}?${paginationQuery.toString()}`}
+              freeShippingThreshold={settings.freeShippingThreshold}
             />
           )}
 

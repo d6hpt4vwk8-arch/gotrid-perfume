@@ -6,6 +6,7 @@ import { ProductCard } from "@/components/product-card";
 import { HomeHero } from "@/components/home-hero";
 import { PerfumeAdviceBlock } from "@/components/perfume-advice-block";
 import { getHeurekaShopReviews } from "@/lib/heureka-reviews";
+import { getSettings } from "@/lib/settings.server";
 
 // K-beauty brands carried in the catalog — used to curate the homepage's
 // "Korejská kosmetika" section (no dedicated category exists for this yet).
@@ -21,7 +22,7 @@ const KOREAN_COSMETICS_BRANDS = [
 ];
 
 export default async function HomePage() {
-  const [categories, saleProducts, koreanCosmetics, arabicPerfumes, latestReviews] =
+  const [categories, saleProducts, koreanCosmetics, arabicPerfumes, latestReviews, settings] =
     await Promise.all([
       getCategoryNavTree(),
       prisma.product.findMany({
@@ -53,6 +54,7 @@ export default async function HomePage() {
         include: { brand: true, images: { orderBy: { sortOrder: "asc" }, take: 1 } },
       }),
       getHeurekaShopReviews(6),
+      getSettings(),
     ]);
 
   return (
@@ -83,7 +85,7 @@ export default async function HomePage() {
           <h2 className="mb-4 text-lg font-semibold">Korejská kosmetika</h2>
           <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 md:grid-cols-4">
             {koreanCosmetics.map((product) => (
-              <ProductCard key={product.slug} product={product} />
+              <ProductCard key={product.slug} product={product} freeShippingThreshold={settings.freeShippingThreshold} />
             ))}
           </div>
         </section>
@@ -94,7 +96,7 @@ export default async function HomePage() {
           <h2 className="mb-4 text-lg font-semibold">Arabské parfémy</h2>
           <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 md:grid-cols-4">
             {arabicPerfumes.map((product) => (
-              <ProductCard key={product.slug} product={product} />
+              <ProductCard key={product.slug} product={product} freeShippingThreshold={settings.freeShippingThreshold} />
             ))}
           </div>
         </section>
@@ -105,7 +107,7 @@ export default async function HomePage() {
           <h2 className="mb-4 text-lg font-semibold">Výprodej</h2>
           <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 md:grid-cols-4">
             {saleProducts.map((product) => (
-              <ProductCard key={product.slug} product={product} />
+              <ProductCard key={product.slug} product={product} freeShippingThreshold={settings.freeShippingThreshold} />
             ))}
           </div>
         </section>

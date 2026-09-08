@@ -35,7 +35,7 @@ export async function HomeHero() {
   const slides: ReactNode[] = [
     <section
       key="main"
-      className="relative overflow-hidden rounded-sm bg-ink px-12 py-12 text-white sm:px-16 sm:py-14"
+      className="relative overflow-hidden rounded-sm bg-ink px-14 py-12 text-white sm:px-20 sm:py-14"
     >
       <div className="flex flex-col gap-10 lg:flex-row lg:items-center lg:gap-14">
         <div className="flex flex-col items-start gap-5 lg:w-[45%]">
@@ -67,13 +67,11 @@ export async function HomeHero() {
 
         {featured.length > 0 && (
           <div className="grid grid-cols-3 gap-3 sm:gap-4 lg:flex-1">
-            {featured.map((product, i) => (
+            {featured.map((product) => (
               <Link
                 key={product.slug}
                 href={`/produkt/${product.slug}`}
-                className={`group flex flex-col overflow-hidden rounded-sm bg-white/95 transition hover:bg-white ${
-                  i === 1 ? "lg:-translate-y-6" : ""
-                }`}
+                className="group flex flex-col overflow-hidden rounded-sm bg-white/95 transition hover:bg-white"
               >
                 <div className="relative aspect-square w-full">
                   {product.images[0] ? (
@@ -116,7 +114,7 @@ export async function HomeHero() {
     slides.push(
       <section
         key="gift"
-        className="relative overflow-hidden rounded-sm bg-ink px-12 py-12 text-white sm:px-16 sm:py-14"
+        className="relative overflow-hidden rounded-sm bg-ink px-14 py-12 text-white sm:px-20 sm:py-14"
       >
         <div className="flex flex-col gap-10 lg:flex-row lg:items-center lg:gap-14">
           <div className="flex flex-col items-start gap-5 lg:w-[45%]">
@@ -145,13 +143,8 @@ export async function HomeHero() {
 
           {gifts.length > 0 && (
             <div className="grid grid-cols-3 gap-3 sm:gap-4 lg:flex-1">
-              {gifts.map((gift, i) => (
-                <div
-                  key={gift.productId}
-                  className={`flex flex-col overflow-hidden rounded-sm bg-white/95 ${
-                    i === 1 ? "lg:-translate-y-6" : ""
-                  }`}
-                >
+              {gifts.map((gift) => (
+                <div key={gift.productId} className="flex flex-col overflow-hidden rounded-sm bg-white/95">
                   <div className="relative aspect-square w-full">
                     {gift.image ? (
                       <Image

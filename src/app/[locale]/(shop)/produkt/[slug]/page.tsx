@@ -368,7 +368,11 @@ export default async function ProductPage({
           <h2 className="mb-4 text-lg font-bold text-ink">Často kupováno spolu</h2>
           <div className="grid grid-cols-2 gap-x-4 gap-y-8 sm:grid-cols-3 md:grid-cols-4">
             {frequentlyBoughtTogether.map((item) => (
-              <ProductCard key={item.slug} product={item} />
+              <ProductCard
+                key={item.slug}
+                product={item}
+                freeShippingThreshold={settings.freeShippingThreshold}
+              />
             ))}
           </div>
         </section>
@@ -410,7 +414,11 @@ export default async function ProductPage({
           <h2 className="mb-4 text-lg font-bold text-ink">Podobné produkty</h2>
           <div className="grid grid-cols-2 gap-x-4 gap-y-8 sm:grid-cols-3 md:grid-cols-4">
             {relatedProducts.map((related) => (
-              <ProductCard key={related.slug} product={related} />
+              <ProductCard
+                key={related.slug}
+                product={related}
+                freeShippingThreshold={settings.freeShippingThreshold}
+              />
             ))}
           </div>
         </section>
