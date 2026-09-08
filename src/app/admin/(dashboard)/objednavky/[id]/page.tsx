@@ -135,7 +135,8 @@ export default async function AdminOrderDetailPage({
             const details = (
               <span className="flex flex-col">
                 <span>
-                  {item.name} × {item.qty}
+                  {item.name}
+                  {item.isGift && <span className="font-semibold text-ok"> — DÁREK</span>} × {item.qty}
                 </span>
                 {item.ean && <span className="text-xs text-accent-2">EAN: {item.ean}</span>}
               </span>

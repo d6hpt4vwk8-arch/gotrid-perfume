@@ -93,6 +93,19 @@ export default async function AdminSettingsPage() {
             className="rounded-sm border border-line px-3 py-2"
           />
         </label>
+        <label className="flex flex-col gap-1 text-sm">
+          Dárek zdarma od (Kč) — 0 = akce vypnutá
+          <input
+            name="giftThreshold"
+            type="number"
+            step="0.01"
+            defaultValue={settings.giftThreshold}
+            className="rounded-sm border border-line px-3 py-2"
+          />
+          <span className="text-xs text-accent-2">
+            Zákazník si pak v košíku vybere jeden z produktů označených „Lze dát jako dárek“.
+          </span>
+        </label>
         <div className="mt-2 border-t border-line pt-4 text-xs font-semibold uppercase text-accent-2">
           E-mail „druhá objednávka“
         </div>

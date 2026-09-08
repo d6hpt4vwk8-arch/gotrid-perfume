@@ -10,7 +10,7 @@ function itemsTableHtml(items: OrderItem[]): string {
   const rows = items
     .map(
       (item) =>
-        `<tr><td>${item.name}</td><td>${item.qty}×</td><td>${formatPrice(item.unitPrice)}</td></tr>`,
+        `<tr><td>${item.name}${item.isGift ? " (dárek zdarma)" : ""}</td><td>${item.qty}×</td><td>${formatPrice(item.unitPrice)}</td></tr>`,
     )
     .join("");
   return `<table cellpadding="6" style="border-collapse:collapse;width:100%">${rows}</table>`;

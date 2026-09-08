@@ -44,6 +44,22 @@ export async function createOrder(input: CheckoutInput, customerId?: string | nu
   const shippingPrice = getShippingPrice(input.shippingMethod, itemsTotal, settings, input.shippingCountry);
   const codSurcharge = getCodSurcharge(input.paymentMethod, settings);
 
+  // The gift is re-checked here rather than trusted from the checkout form:
+  // a direct API call could otherwise claim any product for free, or claim
+  // one on an order below the threshold.
+  let giftProduct: (typeof products)[number] | null = null;
+  if (input.giftProductId) {
+    if (settings.giftThreshold <= 0 || itemsTotal < settings.giftThreshold) {
+      throw new CheckoutError("Na dárek zdarma zatím nemáte nárok.");
+    }
+    giftProduct = await prisma.product.findFirst({
+      where: { id: input.giftProductId, giftEligible: true, visible: true, stock: { gt: 0 } },
+    });
+    if (!giftProduct) {
+      throw new CheckoutError("Vybraný dárek už bohužel není dostupný, zvolte prosím jiný.");
+    }
+  }
+
   for (let attempt = 0; attempt < MAX_ORDER_NUMBER_ATTEMPTS; attempt++) {
     const number = generateOrderNumber();
     try {
@@ -56,6 +72,21 @@ export async function createOrder(input: CheckoutInput, customerId?: string | nu
           });
           if (updated.count === 0) {
             throw new CheckoutError(`Produkt "${product.name}" mezitím vyprodán.`);
+          }
+        }
+
+        if (giftProduct) {
+          // Same guarded decrement as above (the gift may even be a product
+          // that's also in the cart), but no salesCount bump — a giveaway
+          // isn't a sale and shouldn't skew "Nejprodávanější".
+          const giftStockTaken = await tx.product.updateMany({
+            where: { id: giftProduct.id, stock: { gte: 1 } },
+            data: { stock: { decrement: 1 } },
+          });
+          if (giftStockTaken.count === 0) {
+            throw new CheckoutError(
+              `Dárek "${giftProduct.name}" mezitím vyprodán, zvolte prosím jiný.`,
+            );
           }
         }
 
@@ -91,17 +122,32 @@ export async function createOrder(input: CheckoutInput, customerId?: string | nu
             codSurcharge,
             total,
             items: {
-              create: input.items.map((item) => {
-                const product = productById.get(item.productId)!;
-                return {
-                  productId: product.id,
-                  name: product.name,
-                  ean: product.ean,
-                  qty: item.qty,
-                  unitPrice: product.price,
-                  vatRate: product.vatRate,
-                };
-              }),
+              create: [
+                ...input.items.map((item) => {
+                  const product = productById.get(item.productId)!;
+                  return {
+                    productId: product.id,
+                    name: product.name,
+                    ean: product.ean,
+                    qty: item.qty,
+                    unitPrice: product.price,
+                    vatRate: product.vatRate,
+                  };
+                }),
+                ...(giftProduct
+                  ? [
+                      {
+                        productId: giftProduct.id,
+                        name: giftProduct.name,
+                        ean: giftProduct.ean,
+                        qty: 1,
+                        unitPrice: new Prisma.Decimal(0),
+                        vatRate: giftProduct.vatRate,
+                        isGift: true,
+                      },
+                    ]
+                  : []),
+              ],
             },
           },
           include: { items: true },

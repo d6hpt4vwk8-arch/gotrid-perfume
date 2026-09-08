@@ -92,7 +92,8 @@ export default async function OrderConfirmationPage({
         {order.items.map((item) => (
           <li key={item.id} className="flex justify-between py-3 text-sm text-ink">
             <span>
-              {item.name} × {item.qty}
+              {item.name}
+              {item.isGift && <span className="text-ok"> — dárek zdarma</span>} × {item.qty}
             </span>
             <span>{formatPrice(Number(item.unitPrice) * item.qty)}</span>
           </li>

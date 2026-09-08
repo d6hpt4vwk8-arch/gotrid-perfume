@@ -239,6 +239,11 @@ export function ProductForm({
         Viditelný na webu
       </label>
 
+      <label className="flex items-center gap-2 text-sm">
+        <input type="checkbox" name="giftEligible" defaultChecked={product?.giftEligible ?? false} />
+        Lze dát jako dárek zdarma (nabídne se v košíku nad nastavenou částku)
+      </label>
+
       <button
         type="submit"
         className="w-fit rounded-sm bg-ink px-5 py-2.5 text-sm font-medium text-white hover:bg-accent"

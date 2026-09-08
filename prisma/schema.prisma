@@ -137,6 +137,11 @@ model Product {
   // query uses, which doesn't compose with arbitrary filters + pagination.
   salesCount Int @default(0)
 
+  // Offered in the "pick a free gift" list at checkout once the cart passes
+  // Settings.giftThreshold — the gift ships from this same stock, so a
+  // flagged product still needs stock > 0 to be offered.
+  giftEligible Boolean @default(false)
+
   // Same-fragrance-different-size grouping (scripts/group-product-variants.ts).
   // Flat string key rather than a join table — null means "no sibling sizes".
   // isPrimaryVariant marks which one gets its own grid card; the others are
@@ -557,6 +562,12 @@ model OrderItem {
   unitPrice Decimal @db.Decimal(10, 2)
   vatRate   Int
 
+  // Free gift picked at checkout (unitPrice 0) rather than a bought item —
+  // kept as a normal OrderItem so it flows into the confirmation page,
+  // e-mails, faktura and picking list for free, but flagged so it can be
+  // labelled and excluded from sales stats.
+  isGift Boolean @default(false)
+
   @@index([orderId])
   @@index([productId])
 }
@@ -596,6 +607,12 @@ model Settings {
   // Extra fee charged when paying by CASH_ON_DELIVERY, on top of the
   // shipping price above — covers the higher handling/risk cost of COD.
   codSurcharge            Decimal @default(30) @db.Decimal(10, 2)
+
+  // Order value (goods only, before shipping) from which the customer may
+  // pick one free gift out of the products flagged Product.giftEligible.
+  // 0 turns the whole gift promo off — nothing is offered and createOrder()
+  // rejects any gift that gets submitted anyway.
+  giftThreshold Decimal @default(0) @db.Decimal(10, 2)
 
   // "Come back and order again" email campaign — days after a customer's
   // (only) order before we email them. Each email gets its own freshly

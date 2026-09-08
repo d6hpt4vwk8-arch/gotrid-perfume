@@ -16,6 +16,7 @@ export const checkoutSchema = z
     marketingConsent: z.boolean().optional().default(false),
     newsletterOptIn: z.boolean().optional().default(false),
     couponCode: z.string().trim().max(50).optional(),
+    giftProductId: z.string().max(200).optional(),
     items: z
       .array(
         z.object({

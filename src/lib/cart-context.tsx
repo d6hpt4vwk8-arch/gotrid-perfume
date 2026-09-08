@@ -32,9 +32,21 @@ interface CartContextValue {
   total: number;
   toast: string | null;
   freeShippingThreshold: number;
+  /**
+   * Coupon code and free-gift choice live here (not in the checkout form) so
+   * both can be picked already in the cart and survive the trip to
+   * /pokladna. Only the identifiers are kept — the discount amount and the
+   * gift's eligibility are always re-validated server-side at order time.
+   */
+  couponCode: string | null;
+  setCouponCode: (code: string | null) => void;
+  giftProductId: string | null;
+  setGiftProductId: (productId: string | null) => void;
 }
 
 const STORAGE_KEY = "gotrid-cart";
+const COUPON_STORAGE_KEY = "gotrid-cart-coupon";
+const GIFT_STORAGE_KEY = "gotrid-cart-gift";
 
 const CartContext = createContext<CartContextValue | null>(null);
 
@@ -58,6 +70,8 @@ export function CartProvider({
   freeShippingThreshold: number;
 }) {
   const [items, setItems] = useState<CartItem[]>([]);
+  const [couponCode, setCouponCode] = useState<string | null>(null);
+  const [giftProductId, setGiftProductId] = useState<string | null>(null);
   const [hydrated, setHydrated] = useState(false);
   const [toast, setToast] = useState<string | null>(null);
   const totalRef = useRef(0);
@@ -65,6 +79,8 @@ export function CartProvider({
 
   useEffect(() => {
     setItems(readStoredCart());
+    setCouponCode(window.localStorage.getItem(COUPON_STORAGE_KEY));
+    setGiftProductId(window.localStorage.getItem(GIFT_STORAGE_KEY));
     setHydrated(true);
   }, []);
 
@@ -72,6 +88,17 @@ export function CartProvider({
     if (!hydrated) return;
     window.localStorage.setItem(STORAGE_KEY, JSON.stringify(items));
   }, [items, hydrated]);
+
+  useEffect(() => {
+    if (!hydrated) return;
+    for (const [key, value] of [
+      [COUPON_STORAGE_KEY, couponCode],
+      [GIFT_STORAGE_KEY, giftProductId],
+    ] as const) {
+      if (value) window.localStorage.setItem(key, value);
+      else window.localStorage.removeItem(key);
+    }
+  }, [couponCode, giftProductId, hydrated]);
 
   useEffect(() => {
     return () => {
@@ -119,7 +146,11 @@ export function CartProvider({
     );
   }, []);
 
-  const clear = useCallback(() => setItems([]), []);
+  const clear = useCallback(() => {
+    setItems([]);
+    setCouponCode(null);
+    setGiftProductId(null);
+  }, []);
 
   const { itemCount, total } = useMemo(
     () => ({
@@ -145,6 +176,10 @@ export function CartProvider({
         total,
         toast,
         freeShippingThreshold,
+        couponCode,
+        setCouponCode,
+        giftProductId,
+        setGiftProductId,
       }}
     >
       {children}

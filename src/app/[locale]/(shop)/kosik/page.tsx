@@ -2,14 +2,21 @@
 
 import Image from "next/image";
 import Link from "next/link";
+import { useState } from "react";
 import { useCart } from "@/lib/cart-context";
+import type { AppliedCoupon } from "@/components/coupon-field";
 import { formatPrice } from "@/lib/format";
 import { TrustBadges } from "@/components/trust-badges";
 import { PaymentIcons } from "@/components/payment-icons";
+import { CheckoutSteps } from "@/components/checkout-steps";
+import { CouponField } from "@/components/coupon-field";
+import { GiftPicker } from "@/components/gift-picker";
 
 export default function CartPage() {
   const { items, setQty, removeItem, total, freeShippingThreshold } = useCart();
   const remaining = freeShippingThreshold - total;
+  const [coupon, setCoupon] = useState<AppliedCoupon | null>(null);
+  const totalAfterDiscount = Math.max(0, total - (coupon?.discountAmount ?? 0));
 
   if (items.length === 0) {
     return (
@@ -29,6 +36,15 @@ export default function CartPage() {
   return (
     <main className="mx-auto flex max-w-3xl flex-1 flex-col gap-6 px-4 py-10">
       <h1 className="text-2xl font-bold text-ink">Košík</h1>
+
+      <CheckoutSteps
+        steps={[
+          { label: "Košík", done: true },
+          { label: "Doprava a platba", done: false },
+          { label: "Kontaktní údaje", done: false },
+          { label: "Hotovo", done: false },
+        ]}
+      />
 
       <div className="flex flex-col gap-2 border border-line p-3 text-sm">
         {remaining > 0 ? (
@@ -84,9 +100,22 @@ export default function CartPage() {
         ))}
       </ul>
 
-      <div className="flex items-center justify-between text-lg font-bold text-ink">
-        <span>Celkem</span>
-        <span>{formatPrice(total)}</span>
+      <GiftPicker />
+
+      <CouponField onApplied={setCoupon} />
+
+      <div className="flex flex-col gap-1 text-sm text-ink">
+        {coupon && (
+          <div className="flex justify-between text-ok">
+            <span>Sleva ({coupon.code})</span>
+            <span>−{formatPrice(coupon.discountAmount)}</span>
+          </div>
+        )}
+        <div className="flex items-center justify-between text-lg font-bold">
+          <span>Celkem</span>
+          <span>{formatPrice(totalAfterDiscount)}</span>
+        </div>
+        <span className="text-xs text-accent-2">Dopravu spočítáme v dalším kroku.</span>
       </div>
 
       <Link

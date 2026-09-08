@@ -27,12 +27,17 @@ const productSchema = z.object({
   stock: z.coerce.number().int().min(0, "Sklad nemůže být záporný.").max(1_000_000),
   priority: z.coerce.number().int().min(0).max(1000).default(0),
   visible: z.coerce.boolean().default(false),
+  giftEligible: z.coerce.boolean().default(false),
   description: z.preprocess(emptyToUndefined, z.string().max(20_000).optional()),
 });
 
 function parseProductForm(formData: FormData) {
   const raw = Object.fromEntries(formData);
-  const parsed = productSchema.safeParse({ ...raw, visible: formData.get("visible") === "on" });
+  const parsed = productSchema.safeParse({
+    ...raw,
+    visible: formData.get("visible") === "on",
+    giftEligible: formData.get("giftEligible") === "on",
+  });
   if (!parsed.success) {
     throw new Error(parsed.error.issues[0]?.message ?? "Neplatná data produktu.");
   }
@@ -98,6 +103,7 @@ export async function createProduct(formData: FormData) {
       stock: data.stock,
       priority: data.priority,
       visible: data.visible,
+      giftEligible: data.giftEligible,
       description: data.description,
     },
   });
@@ -129,6 +135,7 @@ export async function updateProduct(id: string, formData: FormData) {
       stock: data.stock,
       priority: data.priority,
       visible: data.visible,
+      giftEligible: data.giftEligible,
       description: data.description,
     },
   });

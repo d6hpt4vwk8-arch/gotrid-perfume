@@ -20,30 +20,13 @@ import { CustomerLogoutButton } from "@/components/customer/logout-button";
 import { TrustBadges } from "@/components/trust-badges";
 import { PaymentIcons } from "@/components/payment-icons";
 import { ShippingIcon } from "@/components/shipping-icons";
+import { CheckoutSteps } from "@/components/checkout-steps";
+import { CouponField, type AppliedCoupon } from "@/components/coupon-field";
+import { GiftPicker } from "@/components/gift-picker";
 import type { Customer } from "@prisma/client";
 
 type ShippingMethod = keyof typeof SHIPPING_LABELS;
 type PaymentMethod = keyof typeof PAYMENT_LABELS;
-
-function CheckoutSteps({ steps }: { steps: { label: string; done: boolean }[] }) {
-  return (
-    <div className="flex flex-wrap items-center gap-x-2 gap-y-1.5 text-xs font-medium">
-      {steps.map((step, i) => (
-        <div key={step.label} className="flex items-center gap-2">
-          <span
-            className={`flex h-5 w-5 shrink-0 items-center justify-center rounded-full text-[10px] ${
-              step.done ? "bg-ink text-white" : "border border-line text-accent-2"
-            }`}
-          >
-            {step.done ? "✓" : i + 1}
-          </span>
-          <span className={step.done ? "text-ink" : "text-accent-2"}>{step.label}</span>
-          {i < steps.length - 1 && <span className="h-px w-4 bg-line" aria-hidden />}
-        </div>
-      ))}
-    </div>
-  );
-}
 
 export function CheckoutForm({
   settings,
@@ -52,7 +35,7 @@ export function CheckoutForm({
   settings: ShopSettings;
   customer: Customer | null;
 }) {
-  const { items, total: itemsTotal, clear } = useCart();
+  const { items, total: itemsTotal, clear, giftProductId } = useCart();
   const { consent } = useConsent();
 
   const [email, setEmail] = useState(customer?.email ?? "");
@@ -70,10 +53,7 @@ export function CheckoutForm({
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  const [couponInput, setCouponInput] = useState("");
-  const [coupon, setCoupon] = useState<{ code: string; discountAmount: number } | null>(null);
-  const [couponError, setCouponError] = useState<string | null>(null);
-  const [couponChecking, setCouponChecking] = useState(false);
+  const [coupon, setCoupon] = useState<AppliedCoupon | null>(null);
 
   const shippingPrice = useMemo(
     () => getShippingPrice(shippingMethod, itemsTotal, settings, shippingCountry),
@@ -166,31 +146,6 @@ export function CheckoutForm({
     { label: "Hotovo", done: false },
   ];
 
-  async function applyCoupon() {
-    if (!couponInput.trim()) return;
-    setCouponChecking(true);
-    setCouponError(null);
-    try {
-      const res = await fetch("/api/coupons/validate", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ code: couponInput.trim(), itemsTotal }),
-      });
-      const data = await res.json();
-      if (!res.ok) {
-        setCoupon(null);
-        setCouponError(data.error ?? "Slevový kód se nepodařilo ověřit.");
-        return;
-      }
-      setCoupon(data);
-    } catch {
-      setCoupon(null);
-      setCouponError("Slevový kód se nepodařilo ověřit.");
-    } finally {
-      setCouponChecking(false);
-    }
-  }
-
   if (items.length === 0) {
     return (
       <main className="mx-auto flex max-w-3xl flex-1 flex-col items-center gap-4 px-4 py-20 text-center">
@@ -227,6 +182,7 @@ export function CheckoutForm({
           marketingConsent: Boolean(consent?.marketing),
           newsletterOptIn,
           couponCode: coupon?.code,
+          giftProductId: giftProductId ?? undefined,
         }),
       });
 
@@ -466,42 +422,13 @@ export function CheckoutForm({
         </fieldset>
 
         <fieldset className="flex flex-col gap-2">
+          <legend className="mb-1 text-sm font-semibold text-ink">Dárek k objednávce</legend>
+          <GiftPicker />
+        </fieldset>
+
+        <fieldset className="flex flex-col gap-2">
           <legend className="mb-1 text-sm font-semibold text-ink">Slevový kód</legend>
-          {coupon ? (
-            <div className="flex items-center justify-between rounded-sm border border-ok/40 bg-ok/10 px-3 py-2 text-sm text-ink">
-              <span>
-                Kód <strong>{coupon.code}</strong> uplatněn
-              </span>
-              <button
-                type="button"
-                onClick={() => {
-                  setCoupon(null);
-                  setCouponInput("");
-                }}
-                className="text-xs text-accent-2 underline hover:text-accent"
-              >
-                Odebrat
-              </button>
-            </div>
-          ) : (
-            <div className="flex gap-2">
-              <input
-                placeholder="Zadejte kód"
-                value={couponInput}
-                onChange={(e) => setCouponInput(e.target.value)}
-                className="flex-1 rounded-sm border border-line px-3 py-2 text-sm text-ink"
-              />
-              <button
-                type="button"
-                onClick={applyCoupon}
-                disabled={couponChecking || !couponInput.trim()}
-                className="rounded-sm border border-line px-4 py-2 text-sm font-medium text-ink hover:border-accent hover:text-accent disabled:cursor-not-allowed disabled:opacity-50"
-              >
-                {couponChecking ? "Ověřuji…" : "Použít"}
-              </button>
-            </div>
-          )}
-          {couponError && <p className="text-xs text-red-600">{couponError}</p>}
+          <CouponField onApplied={setCoupon} />
         </fieldset>
 
         {error && <p className="text-sm text-red-600">{error}</p>}
