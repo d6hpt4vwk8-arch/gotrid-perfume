@@ -35,9 +35,9 @@ export async function HomeHero() {
   const slides: ReactNode[] = [
     <section
       key="main"
-      className="relative overflow-hidden rounded-sm bg-ink px-14 py-12 text-white sm:px-20 sm:py-14"
+      className="relative flex h-full items-center overflow-hidden rounded-sm bg-ink px-14 py-12 text-white sm:px-20 sm:py-14"
     >
-      <div className="flex flex-col gap-10 lg:flex-row lg:items-center lg:gap-14">
+      <div className="flex w-full flex-col gap-10 lg:flex-row lg:items-center lg:gap-14">
         <div className="flex flex-col items-start gap-5 lg:w-[45%]">
           <span className="rounded-full border border-white/25 bg-white/10 px-3 py-1.5 text-[10px] tracking-widest uppercase sm:text-[11px]">
             100 % originální, přímo od distributorů
@@ -114,9 +114,9 @@ export async function HomeHero() {
     slides.push(
       <section
         key="gift"
-        className="relative overflow-hidden rounded-sm bg-ink px-14 py-12 text-white sm:px-20 sm:py-14"
+        className="relative flex h-full items-center overflow-hidden rounded-sm bg-ink px-14 py-12 text-white sm:px-20 sm:py-14"
       >
-        <div className="flex flex-col gap-10 lg:flex-row lg:items-center lg:gap-14">
+        <div className="flex w-full flex-col gap-10 lg:flex-row lg:items-center lg:gap-14">
           <div className="flex flex-col items-start gap-5 lg:w-[45%]">
             <span className="rounded-full border border-white/25 bg-white/10 px-3 py-1.5 text-[10px] tracking-widest uppercase sm:text-[11px]">
               Dárek zdarma
