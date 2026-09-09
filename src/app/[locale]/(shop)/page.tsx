@@ -58,7 +58,16 @@ export default async function HomePage() {
     ]);
 
   return (
-    <main className="mx-auto flex max-w-6xl flex-1 flex-col gap-12 px-4 py-10">
+    // w-full matters here, not decorative: <body> is flex-col, so <main>
+    // should stretch to its width automatically — but with the 2-slide
+    // hero (a gift coupon active), that stretch wasn't reliable in
+    // practice. Something deep in the carousel's percentage-based sizing
+    // ends up ambiguous during layout, and without an explicit width here
+    // to anchor against, the browser fell back to sizing <main> off its
+    // widest content (an unwrapped heading) instead of the viewport —
+    // pushing the whole homepage ~120px wider than the screen on a phone
+    // and silently clipping the right edge of every section.
+    <main className="mx-auto flex w-full max-w-6xl flex-1 flex-col gap-12 px-4 py-10">
       <HomeHero />
 
       <section>

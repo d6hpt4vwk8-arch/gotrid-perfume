@@ -47,7 +47,15 @@ export function HeroSlider({ slides }: { slides: ReactNode[] }) {
     >
       <div className="overflow-hidden rounded-sm">
         <div
-          className="flex transition-transform duration-500 ease-out"
+          // w-full matters here, not just decorative: with 2+ slides each
+          // width:100%, the browser has to resolve those percentages
+          // against this track's own auto width — which is itself
+          // determined by its children, a circular case some engines
+          // resolve by falling back to each slide's natural content width
+          // instead of the real available width, so a long heading (or any
+          // wide, unwrapped content) on one slide silently widened the
+          // whole homepage and pushed the rest of the row off-screen.
+          className="flex w-full transition-transform duration-500 ease-out"
           style={{ transform: `translateX(-${index * 100}%)` }}
         >
           {slides.map((slide, i) => (
