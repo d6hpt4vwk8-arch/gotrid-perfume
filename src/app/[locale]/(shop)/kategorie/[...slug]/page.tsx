@@ -158,6 +158,13 @@ export default async function CategoryPage({
             </p>
           ) : (
             <ProductGridLoadMore
+              // Forces a remount whenever the category, filters, or page
+              // number changes — without this, ProductGridLoadMore's
+              // useState(initialProducts) only runs on first mount, so
+              // clicking a numbered Pagination link (a real navigation, but
+              // to the same component instance) left it stuck showing
+              // whichever page it happened to load first.
+              key={`${fullSlug}-${filters.page}-${paginationQuery.toString()}`}
               initialProducts={products}
               totalPages={totalPages}
               currentPage={filters.page}
