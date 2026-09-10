@@ -1,6 +1,9 @@
 import { NextRequest, NextResponse } from "next/server";
+import { renderToBuffer } from "@react-pdf/renderer";
 import { prisma } from "@/lib/prisma";
 import { createParcel, GlsError } from "@/lib/gls";
+import { GlsLabelDocument } from "@/lib/pdf/gls-label";
+import { code128DataUri } from "@/lib/pdf/barcode";
 import { logAdminActivity } from "@/lib/admin/activity-log";
 
 // No dynamic API (cookies/headers/searchParams) is used below, so Next.js
@@ -25,10 +28,10 @@ export async function GET(_req: NextRequest, { params }: { params: Promise<{ id:
   }
 
   try {
-    let parcelId = order.glsParcelId;
-    let labelPdf: Buffer | null = null;
+    let parcelNumber = order.glsParcelNumber;
+    const codAmount = order.paymentMethod === "CASH_ON_DELIVERY" ? Number(order.total) : null;
 
-    if (!parcelId) {
+    if (!parcelNumber) {
       if (!order.shippingStreet || !order.shippingCity || !order.shippingPostalCode) {
         throw new GlsError("Objednávka nemá vyplněnou doručovací adresu.");
       }
@@ -38,10 +41,13 @@ export async function GET(_req: NextRequest, { params }: { params: Promise<{ id:
       if (order.shippingMethod === "GLS_MISTO" && (!order.pickupPointId || !order.pickupPointName)) {
         throw new GlsError("Objednávka nemá vybrané výdejní místo GLS.");
       }
+      // GLS still has to register the parcel — we just don't use the PDF it
+      // hands back (see gls-label.tsx for why: its own PDF's fixed narrow
+      // layout truncated longer labels on this printer).
       const result = await createParcel({
         recordId: order.number,
         weightKg: Number(order.weight),
-        codAmount: order.paymentMethod === "CASH_ON_DELIVERY" ? Number(order.total) : null,
+        codAmount,
         recipient: {
           firstName: order.firstName,
           surname: order.lastName,
@@ -59,19 +65,13 @@ export async function GET(_req: NextRequest, { params }: { params: Promise<{ id:
             ? { id: order.pickupPointId!, name: order.pickupPointName! }
             : undefined,
       });
-      parcelId = result.parcelId;
-      labelPdf = result.labelPdf;
+      parcelNumber = result.parcelNumber;
       await prisma.order.update({
         where: { id },
         data: {
           glsParcelId: result.parcelId,
           glsParcelNumber: result.parcelNumber,
           trackingNumber: result.parcelNumber,
-          // GLS's GetPrintedLabels rejects re-fetching this same parcel's
-          // label later — confirmed live, "[18] Parcel label is already
-          // generated" every time, not just after a printer-format change —
-          // so this is the only copy that will ever exist; save it now.
-          glsLabelPdf: new Uint8Array(result.labelPdf),
         },
       });
       await logAdminActivity({
@@ -80,18 +80,29 @@ export async function GET(_req: NextRequest, { params }: { params: Promise<{ id:
         entityId: id,
         detail: `${order.number}: vytvořena zásilka GLS, číslo ${result.parcelNumber}`,
       });
-    } else if (order.glsLabelPdf) {
-      labelPdf = Buffer.from(order.glsLabelPdf);
-    } else {
-      // A parcel exists but we never saved its PDF (e.g. created before
-      // glsLabelPdf existed) — GLS won't hand it back, so this needs
-      // fixing by hand (cancel + recreate) rather than failing silently.
-      throw new GlsError(
-        "Štítek pro tuto zásilku nemáme uložený a GLS ho znovu nevydá — je potřeba zásilku zrušit a vytvořit znovu.",
-      );
     }
 
-    return new NextResponse(new Uint8Array(labelPdf!), {
+    const barcodeDataUri = await code128DataUri(parcelNumber);
+    const labelPdf = await renderToBuffer(
+      <GlsLabelDocument
+        trackingNumber={parcelNumber}
+        weightKg={Number(order.weight)}
+        codAmount={codAmount}
+        pickupPointName={order.shippingMethod === "GLS_MISTO" ? order.pickupPointName : null}
+        senderName="Gotrid Perfume"
+        senderAddress={["Na Jarově 2425/4", "130 00 Praha 3-Žižkov", "CZ - Česká republika"]}
+        recipientName={`${order.firstName} ${order.lastName}`}
+        recipientAddress={[
+          order.shippingStreet ?? "",
+          `${order.shippingPostalCode ?? ""} ${order.shippingCity ?? ""}`.trim(),
+          `${order.shippingCountry} - Česká republika`,
+        ]}
+        recipientPhone={order.phone}
+        barcodeDataUri={barcodeDataUri}
+      />,
+    );
+
+    return new NextResponse(new Uint8Array(labelPdf), {
       headers: {
         "Content-Type": "application/pdf",
         "Content-Disposition": `inline; filename="stitek-gls-${order.number}.pdf"`,
