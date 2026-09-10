@@ -13,6 +13,14 @@ const API_URL = "https://api.mygls.cz";
 const CLIENT_NUMBER = 53017674;
 const WEBSHOP_ENGINE = "GotridPerfume";
 
+// One label per page, sized for the thermal label printer in use (not the
+// default "A4_4x1" tiled-4-per-sheet layout meant for a regular A4 printer).
+// Despite the name, GLS's own API docs confirm this still comes back as a
+// normal PDF (not raw ZPL like the "ThermoZPL*" variants, which aren't
+// something a browser's print dialog can send to a printer directly) — so it
+// needs no changes on the response-handling side below.
+const TYPE_OF_PRINTER = "Thermo";
+
 // Our own pickup/sender address — same physical address as PICKUP_ADDRESS in
 // shipping.ts, split into GLS's separate Street/HouseNumber fields.
 const SENDER_ADDRESS = {
@@ -168,7 +176,7 @@ export async function createParcel(
     ],
     PrintPosition: 1,
     ShowPrintDialog: false,
-    TypeOfPrinter: "A4_4x1",
+    TypeOfPrinter: TYPE_OF_PRINTER,
   });
 
   throwIfErrors(response.PrintLabelsErrorList);
@@ -195,7 +203,7 @@ export async function reprintLabel(parcelId: number): Promise<Buffer> {
     ParcelIdList: [parcelId],
     PrintPosition: 1,
     ShowPrintDialog: false,
-    TypeOfPrinter: "A4_4x1",
+    TypeOfPrinter: TYPE_OF_PRINTER,
   });
   throwIfErrors(response.GetPrintedLabelsErrorList);
   if (!response.Labels) {
