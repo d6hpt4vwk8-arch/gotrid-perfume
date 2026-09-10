@@ -3,6 +3,14 @@ import { prisma } from "@/lib/prisma";
 import { createParcel, reprintLabel, GlsError } from "@/lib/gls";
 import { logAdminActivity } from "@/lib/admin/activity-log";
 
+// No dynamic API (cookies/headers/searchParams) is used below, so Next.js
+// would otherwise be free to treat this GET as static and cache its
+// response — including a *failed* one — and keep serving that same result
+// on every later hit regardless of what changes in the DB (confirmed live:
+// after fixing an order's glsParcelId, this route kept returning the old
+// "[18] Parcel label is already generated" error until this was added).
+export const dynamic = "force-dynamic";
+
 export async function GET(_req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
   const order = await prisma.order.findUnique({ where: { id } });

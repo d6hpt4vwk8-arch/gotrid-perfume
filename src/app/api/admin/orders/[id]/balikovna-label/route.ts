@@ -3,6 +3,11 @@ import { prisma } from "@/lib/prisma";
 import { createParcel, reprintLabel, BalikovnaError } from "@/lib/balikovna";
 import { logAdminActivity } from "@/lib/admin/activity-log";
 
+// See the same directive on gls-label/route.ts for why this is needed —
+// without it Next.js can cache this GET (including a failed response) and
+// keep serving that stale result regardless of later DB changes.
+export const dynamic = "force-dynamic";
+
 export async function GET(_req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
   const order = await prisma.order.findUnique({ where: { id } });
