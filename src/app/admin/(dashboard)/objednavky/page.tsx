@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { Prisma } from "@prisma/client";
 import { prisma } from "@/lib/prisma";
 import { formatPrice } from "@/lib/format";
 import { ORDER_STATUS_LABELS } from "@/lib/orders/status-labels";
@@ -12,11 +13,30 @@ const PAGE_SIZE = 30;
 export default async function AdminOrdersPage({
   searchParams,
 }: {
-  searchParams: Promise<{ status?: string; page?: string }>;
+  searchParams: Promise<{ status?: string; page?: string; q?: string }>;
 }) {
-  const { status, page: pageParam } = await searchParams;
+  const { status, page: pageParam, q } = await searchParams;
   const page = Math.max(1, Number(pageParam) || 1);
-  const where = status && status in ORDER_STATUS_LABELS ? { status: status as OrderStatus } : {};
+  const query = q?.trim() ?? "";
+
+  const statusFilter: Prisma.OrderWhereInput =
+    status && status in ORDER_STATUS_LABELS ? { status: status as OrderStatus } : {};
+  // Číslo/jméno/telefon/e-mail live directly on Order; a product name needs
+  // reaching through items — "some" so any one matching line item counts,
+  // not every item in a multi-item order.
+  const searchFilter: Prisma.OrderWhereInput = query
+    ? {
+        OR: [
+          { number: { contains: query, mode: "insensitive" } },
+          { firstName: { contains: query, mode: "insensitive" } },
+          { lastName: { contains: query, mode: "insensitive" } },
+          { phone: { contains: query, mode: "insensitive" } },
+          { email: { contains: query, mode: "insensitive" } },
+          { items: { some: { name: { contains: query, mode: "insensitive" } } } },
+        ],
+      }
+    : {};
+  const where: Prisma.OrderWhereInput = { AND: [statusFilter, searchFilter] };
 
   const [orders, total, returnStats] = await Promise.all([
     prisma.order.findMany({
@@ -35,6 +55,9 @@ export default async function AdminOrdersPage({
     totalDelivered + totalReturned > 0 ? (totalReturned / (totalDelivered + totalReturned)) * 100 : 0;
 
   const totalPages = Math.max(1, Math.ceil(total / PAGE_SIZE));
+  // Carries status (but never page — a new search/status always starts back
+  // at page 1) forward through the pagination links below.
+  const baseParams = { ...(status ? { status } : {}), ...(query ? { q: query } : {}) };
 
   return (
     <div className="flex flex-col gap-4">
@@ -47,6 +70,31 @@ export default async function AdminOrdersPage({
           Export do XLSX
         </a>
       </div>
+
+      <form method="get" className="flex gap-2">
+        {status && <input type="hidden" name="status" value={status} />}
+        <input
+          type="search"
+          name="q"
+          defaultValue={query}
+          placeholder="Číslo objednávky, jméno, telefon, e-mail nebo název produktu…"
+          className="w-full max-w-md rounded-sm border border-line px-3 py-2 text-sm"
+        />
+        <button
+          type="submit"
+          className="rounded-sm bg-ink px-4 py-2 text-sm font-medium text-white hover:bg-accent"
+        >
+          Hledat
+        </button>
+        {query && (
+          <Link
+            href={status ? `/admin/objednavky?status=${status}` : "/admin/objednavky"}
+            className="rounded-sm border border-line px-4 py-2 text-sm hover:border-accent-2"
+          >
+            Zrušit
+          </Link>
+        )}
+      </form>
 
       {totalDelivered + totalReturned > 0 && (
         <div className="rounded-sm border border-line bg-white p-4">
@@ -91,7 +139,7 @@ export default async function AdminOrdersPage({
 
       <div className="flex flex-wrap gap-2 text-sm">
         <Link
-          href="/admin/objednavky"
+          href={query ? `/admin/objednavky?q=${encodeURIComponent(query)}` : "/admin/objednavky"}
           className={`rounded-full border px-3 py-1 ${!status ? "border-ink bg-ink text-white" : "border-line"}`}
         >
           Vše
@@ -99,7 +147,7 @@ export default async function AdminOrdersPage({
         {Object.entries(ORDER_STATUS_LABELS).map(([value, label]) => (
           <Link
             key={value}
-            href={`/admin/objednavky?status=${value}`}
+            href={`/admin/objednavky?${new URLSearchParams({ status: value, ...(query ? { q: query } : {}) })}`}
             className={`rounded-full border px-3 py-1 ${status === value ? "border-ink bg-ink text-white" : "border-line"}`}
           >
             {label}
@@ -159,7 +207,7 @@ export default async function AdminOrdersPage({
             {orders.length === 0 && (
               <tr>
                 <td colSpan={5} className="px-3 py-6 text-center text-accent-2">
-                  Žádné objednávky.
+                  {query ? `Žádné objednávky neodpovídají „${query}“.` : "Žádné objednávky."}
                 </td>
               </tr>
             )}
@@ -172,7 +220,7 @@ export default async function AdminOrdersPage({
           {Array.from({ length: totalPages }, (_, i) => i + 1).map((p) => (
             <Link
               key={p}
-              href={`/admin/objednavky?${new URLSearchParams({ ...(status ? { status } : {}), page: String(p) })}`}
+              href={`/admin/objednavky?${new URLSearchParams({ ...baseParams, page: String(p) })}`}
               className={`rounded px-3 py-1 text-sm ${
                 p === page ? "bg-ink text-white" : "border border-line"
               }`}
