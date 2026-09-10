@@ -13,13 +13,16 @@ const API_URL = "https://api.mygls.cz";
 const CLIENT_NUMBER = 53017674;
 const WEBSHOP_ENGINE = "GotridPerfume";
 
-// One label per page, sized for the thermal label printer in use (not the
-// default "A4_4x1" tiled-4-per-sheet layout meant for a regular A4 printer).
-// Despite the name, GLS's own API docs confirm this still comes back as a
-// normal PDF (not raw ZPL like the "ThermoZPL*" variants, which aren't
-// something a browser's print dialog can send to a printer directly) — so it
-// needs no changes on the response-handling side below.
-const TYPE_OF_PRINTER = "Thermo";
+// Confirmed by measuring the actual returned PDFs: "A4_4x1" is a portrait
+// 8.27"×11.69" page — exactly Zásilkovna's own label PDF's page size, which
+// is known to print correctly on the printer in use. "Thermo" looked like
+// the obvious pick for a thermal label printer but is actually a
+// non-standard 3.35"×3.35" square (confirmed live: printed rotated sideways
+// with most of the label blank), and "A4_2x2" is A4 but landscape — both
+// broke the pipeline that A4_4x1's matching page shape doesn't. It still
+// tiles 4 labels per sheet rather than one, but that's a papercut compared
+// to a label that doesn't print right at all.
+const TYPE_OF_PRINTER = "A4_4x1";
 
 // Our own pickup/sender address — same physical address as PICKUP_ADDRESS in
 // shipping.ts, split into GLS's separate Street/HouseNumber fields.
