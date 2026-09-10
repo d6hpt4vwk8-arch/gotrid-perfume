@@ -39,23 +39,38 @@ async function callPacketaApi(method: string, params: Record<string, unknown>): 
   }
 
   const xml = await res.text();
+  type AttributeFault = { name?: string; fault?: string };
   const parsed = parser.parse(xml) as {
     response?: {
       status?: string;
       result?: unknown;
       fault?: string | { faultString?: string };
       string?: string;
+      // Present specifically for PacketAttributesFault — pinpoints which
+      // field failed and why, e.g. "Order nr. X: Phone number is not in
+      // valid format, dialing code is required." `string` alone ("Failed to
+      // validate attributes. See detail.") is the generic wrapper around
+      // this, so prefer it whenever it's there.
+      detail?: { attributes?: { fault?: AttributeFault | AttributeFault[] } };
     };
   };
   const response = parsed.response;
   if (!response || response.status !== "ok") {
+    const attributeFaults = response?.detail?.attributes?.fault;
+    const attributeMessage = attributeFaults
+      ? (Array.isArray(attributeFaults) ? attributeFaults : [attributeFaults])
+          .map((f) => f.fault)
+          .filter(Boolean)
+          .join("; ")
+      : undefined;
     // Packeta's fault shape varies: sometimes `fault.faultString` (object),
     // sometimes a top-level `string` alongside `fault` as a plain error-code
     // string (e.g. PacketAttributesFault) — fall back through both rather
     // than swallowing the real reason behind a generic message.
     const faultMessage =
-      (typeof response?.fault === "object" ? response.fault?.faultString : undefined) ??
-      response?.string ??
+      attributeMessage ||
+      (typeof response?.fault === "object" ? response.fault?.faultString : undefined) ||
+      response?.string ||
       "Neznámá chyba Packeta API.";
     throw new PacketaError(`Packeta API (${method}): ${faultMessage}`);
   }
