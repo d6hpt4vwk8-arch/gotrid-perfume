@@ -635,6 +635,19 @@ model Settings {
   // shipping price above — covers the higher handling/risk cost of COD.
   codSurcharge            Decimal @default(30) @db.Decimal(10, 2)
 
+  // What the carrier actually bills us per shipment — distinct from the
+  // shippingPriceX fields above (what the *customer* is charged), which
+  // often isn't the same number. Used only for the net-profit figure on the
+  // order detail page; defaults to the GLS_MISTO contract rate already
+  // noted above and to each carrier's own charged price elsewhere (a
+  // break-even placeholder) until the owner corrects it here for real.
+  shippingCostZasilkovna Decimal @default(79) @db.Decimal(10, 2)
+  shippingCostPpl        Decimal @default(90) @db.Decimal(10, 2)
+  shippingCostDpd        Decimal @default(99) @db.Decimal(10, 2)
+  shippingCostBalikovna  Decimal @default(69) @db.Decimal(10, 2)
+  shippingCostGls        Decimal @default(99) @db.Decimal(10, 2)
+  shippingCostGlsMisto   Decimal @default(54.45) @db.Decimal(10, 2)
+
   // "Come back and order again" email campaign — days after a customer's
   // (only) order before we email them. Each email gets its own freshly
   // generated single-use coupon (prefix + random suffix, usageLimit 1) at

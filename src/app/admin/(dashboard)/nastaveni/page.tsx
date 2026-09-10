@@ -103,6 +103,56 @@ export default async function AdminSettingsPage() {
           />
         </label>
         <div className="mt-2 border-t border-line pt-4 text-xs font-semibold uppercase text-accent-2">
+          Skutečné náklady na dopravu
+        </div>
+        <p className="-mt-2 text-xs text-accent-2">
+          Co skutečně platíte dopravci — liší se od cen výše (to platí zákazník). Používá se jen
+          pro výpočet čistého zisku u objednávky.
+        </p>
+        <label className="flex flex-col gap-1 text-sm">
+          Zásilkovna (Kč)
+          <input
+            name="shippingCostZasilkovna"
+            type="number"
+            step="0.01"
+            defaultValue={settings.shippingCosts.ZASILKOVNA}
+            className="rounded-sm border border-line px-3 py-2"
+          />
+        </label>
+        <label className="flex flex-col gap-1 text-sm">
+          PPL kurýr (Kč)
+          <input
+            name="shippingCostPpl"
+            type="number"
+            step="0.01"
+            defaultValue={settings.shippingCosts.PPL}
+            className="rounded-sm border border-line px-3 py-2"
+          />
+        </label>
+        <input type="hidden" name="shippingCostDpd" value={settings.shippingCosts.DPD} />
+        <input type="hidden" name="shippingCostBalikovna" value={settings.shippingCosts.BALIKOVNA} />
+        <label className="flex flex-col gap-1 text-sm">
+          GLS kurýr — na adresu (Kč)
+          <input
+            name="shippingCostGls"
+            type="number"
+            step="0.01"
+            defaultValue={settings.shippingCosts.GLS}
+            className="rounded-sm border border-line px-3 py-2"
+          />
+        </label>
+        <label className="flex flex-col gap-1 text-sm">
+          GLS — výdejní místo/box (Kč)
+          <input
+            name="shippingCostGlsMisto"
+            type="number"
+            step="0.01"
+            defaultValue={settings.shippingCosts.GLS_MISTO}
+            className="rounded-sm border border-line px-3 py-2"
+          />
+        </label>
+
+        <div className="mt-2 border-t border-line pt-4 text-xs font-semibold uppercase text-accent-2">
           E-mail „druhá objednávka“
         </div>
         <label className="flex flex-col gap-1 text-sm">

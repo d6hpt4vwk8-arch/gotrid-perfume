@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { prisma } from "@/lib/prisma";
 import { formatPrice } from "@/lib/format";
+import { getSettings } from "@/lib/settings.server";
 
 // Orders in these statuses represent confirmed/collected money — excludes
 // NEW (may still be an unpaid card order, see the "čeká na platbu" flag on
@@ -19,6 +20,8 @@ export default async function AdminDashboardPage() {
     brands,
     categories,
     revenue,
+    ordersForProfit,
+    settings,
     topSellers,
     lowStock,
   ] = await Promise.all([
@@ -32,6 +35,19 @@ export default async function AdminDashboardPage() {
       _sum: { total: true },
       _count: true,
     }),
+    // Same window/status filter as revenue above — items+purchasePrice and
+    // shippingMethod are the two extra things needed for the net-profit
+    // figure, same formula as the order detail page (see there for caveats:
+    // current purchasePrice, no card-fee deduction).
+    prisma.order.findMany({
+      where: { status: { in: [...REVENUE_STATUSES] }, createdAt: { gte: thirtyDaysAgo } },
+      select: {
+        total: true,
+        shippingMethod: true,
+        items: { select: { qty: true, isGift: true, product: { select: { purchasePrice: true } } } },
+      },
+    }),
+    getSettings(),
     prisma.product.findMany({
       where: { visible: true, salesCount: { gt: 0 } },
       orderBy: { salesCount: "desc" },
@@ -45,6 +61,16 @@ export default async function AdminDashboardPage() {
       select: { id: true, name: true, stock: true },
     }),
   ]);
+
+  const netProfit30d = ordersForProfit.reduce((sum, order) => {
+    const costOfGoods = order.items.reduce(
+      (itemSum, item) =>
+        itemSum + (item.isGift || !item.product ? 0 : Number(item.product.purchasePrice) * item.qty),
+      0,
+    );
+    const shippingCost = settings.shippingCosts[order.shippingMethod];
+    return sum + Number(order.total) - costOfGoods - shippingCost;
+  }, 0);
 
   const stats = [
     { label: "Produkty", value: products, href: "/admin/produkty" },
@@ -70,12 +96,24 @@ export default async function AdminDashboardPage() {
         ))}
       </div>
 
-      <div className="rounded-sm border border-line bg-white p-4">
-        <div className="text-sm text-accent-2">Výnos za posledních 30 dní</div>
-        <div className="text-2xl font-bold text-ink">
-          {formatPrice(revenue._sum.total ?? 0)}
+      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+        <div className="rounded-sm border border-line bg-white p-4">
+          <div className="text-sm text-accent-2">Výnos za posledních 30 dní</div>
+          <div className="text-2xl font-bold text-ink">
+            {formatPrice(revenue._sum.total ?? 0)}
+          </div>
+          <div className="text-xs text-accent-2">{revenue._count} zaplacených objednávek</div>
         </div>
-        <div className="text-xs text-accent-2">{revenue._count} zaplacených objednávek</div>
+
+        <div className="rounded-sm border border-line bg-white p-4">
+          <div className="text-sm text-accent-2">Čistý zisk za posledních 30 dní</div>
+          <div className={`text-2xl font-bold ${netProfit30d >= 0 ? "text-ink" : "text-red-600"}`}>
+            {formatPrice(netProfit30d)}
+          </div>
+          <div className="text-xs text-accent-2">
+            Po odečtení nákladů na zboží a dopravu (bez poplatků za platbu kartou)
+          </div>
+        </div>
       </div>
 
       <div className="grid grid-cols-1 gap-4 md:grid-cols-2">

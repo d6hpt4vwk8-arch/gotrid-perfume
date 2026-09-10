@@ -5,6 +5,9 @@ import type { ShippingMethod } from "@prisma/client";
 export interface ShopSettings {
   freeShippingThreshold: number;
   shippingPrices: Record<ShippingMethod, number>;
+  // What the carrier actually bills us — for the net-profit figure on the
+  // order detail page, distinct from shippingPrices (what the customer pays).
+  shippingCosts: Record<ShippingMethod, number>;
   // Null until the owner sets a real cross-border price in admin settings —
   // callers should fall back to shippingPrices.ZASILKOVNA until then.
   shippingPriceZasilkovnaSk: number | null;
@@ -33,6 +36,15 @@ export const getSettings = unstable_cache(
         GLS: Number(row.shippingPriceGls),
         GLS_MISTO: Number(row.shippingPriceGlsMisto),
         // Not DB-backed — personal pickup has no carrier cost, always free.
+        OSOBNI_ODBER: 0,
+      },
+      shippingCosts: {
+        ZASILKOVNA: Number(row.shippingCostZasilkovna),
+        PPL: Number(row.shippingCostPpl),
+        DPD: Number(row.shippingCostDpd),
+        BALIKOVNA: Number(row.shippingCostBalikovna),
+        GLS: Number(row.shippingCostGls),
+        GLS_MISTO: Number(row.shippingCostGlsMisto),
         OSOBNI_ODBER: 0,
       },
       shippingPriceZasilkovnaSk:

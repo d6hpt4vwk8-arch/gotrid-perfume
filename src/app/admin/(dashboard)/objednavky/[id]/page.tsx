@@ -2,6 +2,7 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { prisma } from "@/lib/prisma";
 import { formatPrice } from "@/lib/format";
+import { getSettings } from "@/lib/settings.server";
 import { SHIPPING_LABELS, PAYMENT_LABELS } from "@/lib/shipping";
 import { ShippingIcon } from "@/components/shipping-icons";
 import { ORDER_STATUS_LABELS } from "@/lib/orders/status-labels";
@@ -26,6 +27,19 @@ export default async function AdminOrderDetailPage({
   if (!order) notFound();
   const reputation = (await getCustomerReputationMap([order.email])).get(order.email);
   const awaitingPayment = order.paymentMethod === "CARD" && order.status === "NEW";
+
+  const settings = await getSettings();
+  // Cost of goods uses each product's *current* purchasePrice — OrderItem
+  // doesn't snapshot it at sale time, so this is only exact when that price
+  // hasn't changed since. A gift item and one with no matched product (a
+  // deleted/renamed SKU) both cost us nothing to source here — as good as
+  // this can do without a real historical cost record.
+  const costOfGoods = order.items.reduce(
+    (sum, item) => sum + (item.isGift || !item.product ? 0 : Number(item.product.purchasePrice) * item.qty),
+    0,
+  );
+  const shippingCost = settings.shippingCosts[order.shippingMethod];
+  const netProfit = Number(order.total) - costOfGoods - shippingCost;
 
   return (
     <div className="flex max-w-3xl flex-col gap-6">
@@ -187,6 +201,36 @@ export default async function AdminOrderDetailPage({
             <span>{formatPrice(order.total)}</span>
           </div>
         </div>
+      </div>
+
+      <div className="rounded-sm border border-line bg-white p-4">
+        <span className="mb-2 block text-xs font-semibold uppercase text-accent-2">
+          Čistý zisk
+        </span>
+        <div className="flex flex-col gap-1 text-sm">
+          <div className="flex justify-between">
+            <span>Tržba (celkem od zákazníka)</span>
+            <span>{formatPrice(order.total)}</span>
+          </div>
+          <div className="flex justify-between text-accent-2">
+            <span>Náklady na zboží</span>
+            <span>−{formatPrice(costOfGoods)}</span>
+          </div>
+          <div className="flex justify-between text-accent-2">
+            <span>Skutečné náklady na dopravu ({SHIPPING_LABELS[order.shippingMethod]})</span>
+            <span>−{formatPrice(shippingCost)}</span>
+          </div>
+          <div className="mt-1 flex justify-between border-t border-line pt-1 font-semibold">
+            <span>Čistý zisk</span>
+            <span className={netProfit >= 0 ? "text-ok" : "text-red-600"}>
+              {formatPrice(netProfit)}
+            </span>
+          </div>
+        </div>
+        <p className="mt-2 text-xs text-accent-2">
+          Nezahrnuje poplatky za platbu kartou. Náklady na zboží počítány z aktuální nákupní ceny
+          produktu (ne z ceny v době objednávky).
+        </p>
       </div>
 
       <div className="rounded-sm border border-line bg-white p-4">
