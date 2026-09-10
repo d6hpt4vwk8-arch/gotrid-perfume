@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
-import { createParcel, reprintLabel, GlsError } from "@/lib/gls";
+import { createParcel, GlsError } from "@/lib/gls";
 import { logAdminActivity } from "@/lib/admin/activity-log";
 
 // No dynamic API (cookies/headers/searchParams) is used below, so Next.js
@@ -67,6 +67,11 @@ export async function GET(_req: NextRequest, { params }: { params: Promise<{ id:
           glsParcelId: result.parcelId,
           glsParcelNumber: result.parcelNumber,
           trackingNumber: result.parcelNumber,
+          // GLS's GetPrintedLabels rejects re-fetching this same parcel's
+          // label later — confirmed live, "[18] Parcel label is already
+          // generated" every time, not just after a printer-format change —
+          // so this is the only copy that will ever exist; save it now.
+          glsLabelPdf: new Uint8Array(result.labelPdf),
         },
       });
       await logAdminActivity({
@@ -75,8 +80,15 @@ export async function GET(_req: NextRequest, { params }: { params: Promise<{ id:
         entityId: id,
         detail: `${order.number}: vytvořena zásilka GLS, číslo ${result.parcelNumber}`,
       });
+    } else if (order.glsLabelPdf) {
+      labelPdf = Buffer.from(order.glsLabelPdf);
     } else {
-      labelPdf = await reprintLabel(parcelId);
+      // A parcel exists but we never saved its PDF (e.g. created before
+      // glsLabelPdf existed) — GLS won't hand it back, so this needs
+      // fixing by hand (cancel + recreate) rather than failing silently.
+      throw new GlsError(
+        "Štítek pro tuto zásilku nemáme uložený a GLS ho znovu nevydá — je potřeba zásilku zrušit a vytvořit znovu.",
+      );
     }
 
     return new NextResponse(new Uint8Array(labelPdf!), {
