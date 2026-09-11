@@ -69,7 +69,7 @@ export default async function DopravaAPlatbaPage() {
 
       <h2>5. Kontaktní údaje</h2>
       <p>
-        Email: pavlohrytsan@gmail.com
+        Email: info@gotridperfume.cz
         <br />
         Telefon: +420 735 583 527
       </p>

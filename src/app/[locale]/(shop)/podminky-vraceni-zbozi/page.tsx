@@ -49,7 +49,7 @@ export default function PodminkyVraceniZboziPage() {
 
       <h2>5. Postup při vrácení</h2>
       <p>
-        Pro vrácení zboží nás prosím kontaktujte na emailu pavlohrytsan@gmail.com. Uveďte číslo
+        Pro vrácení zboží nás prosím kontaktujte na emailu info@gotridperfume.cz. Uveďte číslo
         objednávky a důvod vrácení (není povinný). Můžete využít i{" "}
         <Link href="/api/dokumenty/odstoupeni-od-smlouvy">
           vzorový formulář pro odstoupení od smlouvy (PDF)
@@ -90,7 +90,7 @@ export default function PodminkyVraceniZboziPage() {
       <p>
         Internetový obchod: Gotrid Perfume
         <br />
-        Email: pavlohrytsan@gmail.com
+        Email: info@gotridperfume.cz
         <br />
         Telefon: +420 735 583 527
       </p>

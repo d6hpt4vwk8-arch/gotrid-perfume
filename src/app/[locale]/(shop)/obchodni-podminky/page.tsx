@@ -17,7 +17,7 @@ export default function ObchodniPodminkyPage() {
         Pavlo Hrytsan, IČ: 19296037, se sídlem: Na Jarově 2425/4, 130 00 Praha 3-Žižkov. Prodávající
         není plátcem DPH.
         <br />
-        Kontaktní údaje: email: pavlohrytsan@gmail.com, telefon: +420 735 583 527
+        Kontaktní údaje: email: info@gotridperfume.cz, telefon: +420 735 583 527
         <br />
         https://www.gotridperfume.cz/ (dále jen „prodávající“)
       </p>

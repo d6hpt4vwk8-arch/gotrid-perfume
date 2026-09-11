@@ -61,8 +61,8 @@ export async function SiteFooter() {
             <br />
             Na Jarově 2425/4, 130 00 Praha 3
             <br />
-            <a href="mailto:pavlohrytsan@gmail.com" className="hover:text-white hover:underline">
-              pavlohrytsan@gmail.com
+            <a href="mailto:info@gotridperfume.cz" className="hover:text-white hover:underline">
+              info@gotridperfume.cz
             </a>
             <br />
             +420 735 583 527

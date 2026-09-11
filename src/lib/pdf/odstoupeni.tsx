@@ -41,7 +41,7 @@ export function OdstoupeniDocument() {
           <Text style={styles.label}>Adresát</Text>
           <Text>Pavlo Hrytsan</Text>
           <Text>Na Jarově 2425/4, 130 00 Praha 3 – Žižkov, Česká republika</Text>
-          <Text>Email: pavlohrytsan@gmail.com</Text>
+          <Text>Email: info@gotridperfume.cz</Text>
         </View>
 
         <Text style={styles.bodyText}>

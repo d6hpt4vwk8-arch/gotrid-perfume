@@ -16,7 +16,7 @@ export default function OchranaOsobnichUdajuPage() {
       </p>
       <p>
         2. Kontaktní údaje správce: Gotrid Perfume, www.gotridperfume.cz, email
-        pavlohrytsan@gmail.com, telefon +420 735 583 527.
+        info@gotridperfume.cz, telefon +420 735 583 527.
       </p>
       <p>
         3. Osobními údaji se rozumí veškeré informace o identifikované nebo identifikovatelné

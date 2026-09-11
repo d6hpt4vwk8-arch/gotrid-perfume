@@ -33,7 +33,7 @@ const SENDER_ADDRESS = {
   CountryIsoCode: "CZ",
   ContactName: "Pavlo Hrytsan",
   ContactPhone: "+420735583527",
-  ContactEmail: "pavlohrytsan@gmail.com",
+  ContactEmail: "info@gotridperfume.cz",
 };
 
 export class GlsError extends Error {

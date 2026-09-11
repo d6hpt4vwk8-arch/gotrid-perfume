@@ -62,7 +62,7 @@ const RETAIL_SENDER = {
   name: "Hrytsan",
   zipCode: POST_CODE,
   mobilNumber: "735583527",
-  emailAddress: "pavlohrytsan@gmail.com",
+  emailAddress: "info@gotridperfume.cz",
   note: "Gotrid Perfume",
 };
 

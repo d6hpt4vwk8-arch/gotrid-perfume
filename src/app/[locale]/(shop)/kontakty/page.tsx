@@ -17,8 +17,8 @@ export default function KontaktyPage() {
           <p>Na Jarově 2425/4, 130 00 Praha 3-Žižkov</p>
           <p>IČO: 19296037</p>
           <p>
-            <a href="mailto:pavlohrytsan@gmail.com" className="hover:text-accent hover:underline">
-              pavlohrytsan@gmail.com
+            <a href="mailto:info@gotridperfume.cz" className="hover:text-accent hover:underline">
+              info@gotridperfume.cz
             </a>
           </p>
           <p>+420 735 583 527</p>
@@ -31,8 +31,8 @@ export default function KontaktyPage() {
 
         <p className="text-sm text-ink/70">
           Máte nějaké otázky? Napište nám na{" "}
-          <a href="mailto:pavlohrytsan@gmail.com" className="text-ink underline hover:text-accent">
-            pavlohrytsan@gmail.com
+          <a href="mailto:info@gotridperfume.cz" className="text-ink underline hover:text-accent">
+            info@gotridperfume.cz
           </a>{" "}
           nebo zavolejte na +420 735 583 527 — rádi vám odpovíme.
         </p>
