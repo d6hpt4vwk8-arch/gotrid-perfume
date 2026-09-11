@@ -22,7 +22,6 @@
     "@anthropic-ai/sdk": "^0.120.0",
     "@prisma/client": "^6",
     "@react-pdf/renderer": "^4",
-    "bwip-js": "^4.11.4",
     "exceljs": "^4",
     "fast-xml-parser": "^5.11.0",
     "next": "15.5.22",
@@ -39,7 +38,6 @@
   "devDependencies": {
     "@eslint/eslintrc": "^3",
     "@tailwindcss/postcss": "^4",
-    "@types/bwip-js": "^3.2.3",
     "@types/node": "^20",
     "@types/qrcode": "^1",
     "@types/react": "^19",
