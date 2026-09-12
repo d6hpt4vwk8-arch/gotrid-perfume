@@ -5,6 +5,7 @@ import { Providers } from "@/components/providers";
 import { CookieBanner } from "@/components/cookie-banner";
 import { MetaPixel } from "@/components/meta-pixel";
 import { SklikPixel } from "@/components/sklik-pixel";
+import { GlamiPixel } from "@/components/glami-pixel";
 import { Clarity } from "@/components/clarity";
 import { BenefitsBar } from "@/components/benefits-bar";
 import { NewsletterSignup } from "@/components/newsletter-signup";
@@ -70,6 +71,7 @@ export default async function ShopLayout({ children }: { children: React.ReactNo
       <Providers freeShippingThreshold={settings.freeShippingThreshold} initialConsent={initialConsent}>
         <MetaPixel />
         <SklikPixel />
+        <GlamiPixel />
         <Clarity />
         <BenefitsBar />
         <SiteHeader />

@@ -1,6 +1,7 @@
 declare global {
   interface Window {
     fbq?: (...args: unknown[]) => void;
+    glami?: (...args: unknown[]) => void;
   }
 }
 
@@ -38,11 +39,28 @@ function trackEvent(eventName: "ViewContent" | "AddToCart", customData: Record<s
   void relayToCapi(eventName, eventId, customData);
 }
 
+// GLAMI Pixel (glami.cz/info/pixel-implementace/) wants its own shape —
+// item_ids as an array matching the feed's <ITEM_ID>, no content_name — so
+// this can't just reuse customData from trackEvent above. Callers already
+// gate on consent.marketing before calling trackViewContent/trackAddToCart
+// (see product-view-tracker.tsx / add-to-cart-button.tsx), and GlamiPixel
+// itself no-ops until that consent is granted, so no separate check needed
+// here — window.glami is simply undefined until then.
+function trackGlami(eventName: "ViewContent" | "AddToCart", data: Record<string, unknown>) {
+  window.glami?.("track", eventName, { consent: 1, ...data });
+}
+
 export function trackViewContent(product: { id: string; name: string; price: number }) {
   trackEvent("ViewContent", {
     content_ids: [product.id],
     content_name: product.name,
     content_type: "product",
+    currency: "CZK",
+    value: product.price,
+  });
+  trackGlami("ViewContent", {
+    content_type: "product",
+    item_ids: [product.id],
     currency: "CZK",
     value: product.price,
   });
@@ -53,6 +71,11 @@ export function trackAddToCart(product: { id: string; name: string; price: numbe
     content_ids: [product.id],
     content_name: product.name,
     content_type: "product",
+    currency: "CZK",
+    value: product.price * product.qty,
+  });
+  trackGlami("AddToCart", {
+    item_ids: [product.id],
     currency: "CZK",
     value: product.price * product.qty,
   });

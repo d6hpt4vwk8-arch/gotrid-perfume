@@ -7,6 +7,7 @@ import { formatPrice } from "@/lib/format";
 import { calculateSklikConversionValue } from "@/lib/sklik";
 import { SklikConversion } from "@/components/sklik-conversion";
 import { HeurekaConversion } from "@/components/heureka-conversion";
+import { GlamiConversion } from "@/components/glami-conversion";
 import { PAYMENT_LABELS, PICKUP_ADDRESS, SHIPPING_LABELS } from "@/lib/shipping";
 import { ShippingIcon } from "@/components/shipping-icons";
 import { ORDER_STATUS_LABELS, canDownloadInvoice } from "@/lib/orders/status-labels";
@@ -70,6 +71,11 @@ export default async function OrderConfirmationPage({
           qty: item.qty,
         }))}
         totalVat={Number(order.total)}
+      />
+      <GlamiConversion
+        orderId={order.number}
+        itemIds={order.items.map((item) => item.product?.code ?? item.ean ?? item.name)}
+        value={Number(order.total)}
       />
       <h1 className="text-2xl font-bold text-ink">Děkujeme za objednávku!</h1>
       <p className="text-ink/70">
