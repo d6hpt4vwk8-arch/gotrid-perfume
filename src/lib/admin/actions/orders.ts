@@ -4,6 +4,7 @@ import { revalidatePath } from "next/cache";
 import { prisma } from "@/lib/prisma";
 import { logAdminActivity } from "@/lib/admin/activity-log";
 import { requireAdmin } from "@/lib/admin/require-admin";
+import { sendHeurekaOrderLog } from "@/lib/analytics/heureka-overeno";
 import type { OrderStatus } from "@prisma/client";
 
 const VALID_STATUSES: OrderStatus[] = [
@@ -30,6 +31,7 @@ export async function updateOrderStatus(id: string, formData: FormData) {
   const order = await prisma.order.update({
     where: { id },
     data: { status: status as OrderStatus, trackingNumber, weight },
+    include: { items: true },
   });
 
   if (before.status !== order.status) {
@@ -39,6 +41,29 @@ export async function updateOrderStatus(id: string, formData: FormData) {
       entityId: id,
       detail: `${order.number}: ${before.status} → ${order.status}`,
     });
+
+    // COD/bank-transfer orders have no payment webhook to confirm them —
+    // the admin moving one past NEW here *is* the confirmation (see
+    // canDownloadInvoice's reasoning in status-labels.ts). CARD orders are
+    // reported from the Stripe webhook instead, right when
+    // checkout.session.completed actually confirms payment.
+    if (
+      order.paymentMethod !== "CARD" &&
+      before.status === "NEW" &&
+      order.status !== "CANCELLED"
+    ) {
+      void sendHeurekaOrderLog({
+        orderId: order.number,
+        email: order.email,
+        items: order.items.map((i) => ({
+          productId: i.productId,
+          name: i.name,
+          ean: i.ean,
+          qty: i.qty,
+          unitPrice: Number(i.unitPrice),
+        })),
+      }).catch((err) => console.error(`[heureka-overeno] failed for ${order.number}`, err));
+    }
   }
   if (before.trackingNumber !== order.trackingNumber) {
     await logAdminActivity({

@@ -8,7 +8,6 @@ import {
 } from "@/lib/email/send-order-emails";
 import { sendMetaCapiEvent } from "@/lib/analytics/meta-capi";
 import { sendZboziConversion } from "@/lib/analytics/zbozi-conversion";
-import { sendHeurekaOrderLog } from "@/lib/analytics/heureka-overeno";
 import { SITE_URL } from "@/lib/site";
 import { isRateLimited, recordRateLimitHit, getClientIp } from "@/lib/rate-limit";
 import { getCurrentCustomerId } from "@/lib/customer/get-current-customer";
@@ -125,17 +124,12 @@ export async function POST(req: NextRequest) {
     paymentType: order.paymentMethod,
   }).catch((err) => console.error(`[zbozi-conversion] failed for ${order.number}`, err));
 
-  void sendHeurekaOrderLog({
-    orderId: order.number,
-    email: order.email,
-    items: order.items.map((i) => ({
-      productId: i.productId,
-      name: i.name,
-      ean: i.ean,
-      qty: i.qty,
-      unitPrice: Number(i.unitPrice),
-    })),
-  }).catch((err) => console.error(`[heureka-overeno] failed for ${order.number}`, err));
+  // Heureka's Ověřeno zákazníky report is sent once this order is actually
+  // confirmed (leaves NEW in the admin, see updateOrderStatus) rather than
+  // here at creation — a COD/bank-transfer order isn't a real sale yet at
+  // this point (see canDownloadInvoice's reasoning in status-labels.ts), and
+  // sending here meant a cancelled order still got a "rate your purchase"
+  // request from Heureka.
 
   return NextResponse.json({ orderNumber: order.number, accessToken: order.accessToken });
 }

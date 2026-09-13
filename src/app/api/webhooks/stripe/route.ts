@@ -67,19 +67,24 @@ export async function POST(req: NextRequest) {
           otherCosts: Number(order.discountAmount) > 0 ? -Number(order.discountAmount) : undefined,
           paymentType: order.paymentMethod,
         }).catch((err) => console.error(`[zbozi-conversion] failed for ${order.number}`, err));
-
-        void sendHeurekaOrderLog({
-          orderId: order.number,
-          email: order.email,
-          items: order.items.map((i) => ({
-            productId: i.productId,
-            name: i.name,
-            ean: i.ean,
-            qty: i.qty,
-            unitPrice: Number(i.unitPrice),
-          })),
-        }).catch((err) => console.error(`[heureka-overeno] failed for ${order.number}`, err));
       }
+
+      // Heureka's satisfaction survey isn't ad tracking — it's a service
+      // request about the order the customer just paid for (legal basis:
+      // §7 odst. 3 zákona č. 480/2004 Sb., the "existing customer" soft
+      // opt-in Heureka's whole program relies on) — so unlike Meta/Zboží
+      // above, it doesn't wait on marketing-cookie consent.
+      void sendHeurekaOrderLog({
+        orderId: order.number,
+        email: order.email,
+        items: order.items.map((i) => ({
+          productId: i.productId,
+          name: i.name,
+          ean: i.ean,
+          qty: i.qty,
+          unitPrice: Number(i.unitPrice),
+        })),
+      }).catch((err) => console.error(`[heureka-overeno] failed for ${order.number}`, err));
     }
   }
 
