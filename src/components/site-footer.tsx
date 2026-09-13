@@ -1,9 +1,15 @@
 import Link from "next/link";
 import { InstagramFeed } from "@/components/instagram-feed";
 import { SocialLinks } from "@/components/social-links";
+import { ShippingIcon } from "@/components/shipping-icons";
+import { PaymentIcons } from "@/components/payment-icons";
 import { prisma } from "@/lib/prisma";
+import type { ShippingMethod } from "@prisma/client";
 
 const TOP_BRANDS_COUNT = 14;
+
+// Only the two carriers the owner wants highlighted in the footer.
+const DELIVERY_METHODS: ShippingMethod[] = ["ZASILKOVNA", "GLS"];
 
 const INFO_LINKS = [
   { href: "/o-nas", label: "O nás" },
@@ -100,6 +106,22 @@ export async function SiteFooter() {
           </div>
         </div>
       )}
+
+      <div className="border-t border-white/10 px-4 py-6">
+        <div className="mx-auto flex max-w-6xl flex-wrap items-center justify-center gap-6 sm:justify-between">
+          <div className="flex flex-wrap items-center gap-2">
+            {DELIVERY_METHODS.map((method) => (
+              <span
+                key={method}
+                className="flex h-9 w-14 items-center justify-center rounded-md bg-white"
+              >
+                <ShippingIcon method={method} className="max-h-5 w-auto" />
+              </span>
+            ))}
+          </div>
+          <PaymentIcons />
+        </div>
+      </div>
 
       <InstagramFeed />
 
