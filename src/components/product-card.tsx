@@ -12,6 +12,7 @@ export interface ProductCardData {
   price: Prisma.Decimal | number;
   compareAtPrice: Prisma.Decimal | number | null;
   stock: number;
+  isDefective: boolean;
   brand: { name: string } | null;
   images: { url: string }[];
 }
@@ -35,6 +36,11 @@ export function ProductCard({
     <Link href={`/produkt/${product.slug}`} className="group flex flex-col">
       <div className="relative aspect-square w-full overflow-hidden bg-line/60">
         <div className="absolute left-2 top-2 z-10 flex flex-col items-start gap-1">
+          {product.isDefective && (
+            <span className="rounded-sm bg-amber-600 px-1.5 py-1 text-xs font-bold text-white">
+              Poškozený obal
+            </span>
+          )}
           {discountPercent && discountPercent > 0 && (
             <span className="rounded-sm bg-red-600 px-1.5 py-1 text-xs font-bold text-white">
               -{discountPercent}%

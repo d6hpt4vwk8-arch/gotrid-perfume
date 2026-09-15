@@ -117,6 +117,13 @@ model Product {
   stock   Int     @default(0)
   visible Boolean @default(true)
 
+  // A separate listing for a damaged-packaging batch of an otherwise normal
+  // product (same EAN, own code/price/stock) — shows a "Poškozený obal"
+  // badge on the card/detail page instead of merging into the regular
+  // listing's stock, since the defective units are cheaper and shouldn't be
+  // indistinguishable from full-price stock at checkout.
+  isDefective Boolean @default(false)
+
   // Hides the product from the Heureka.cz XML feed specifically (still sold
   // on-site and in other feeds) — for items priced well above the cheapest
   // competitor on Heureka's price comparison, where paying per-click there

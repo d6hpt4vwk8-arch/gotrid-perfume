@@ -215,6 +215,12 @@ export default async function ProductPage({
             </a>
           )}
 
+          {product.isDefective && (
+            <span className="w-fit rounded-sm bg-amber-600 px-1.5 py-1 text-xs font-bold text-white">
+              Poškozený obal
+            </span>
+          )}
+
           <div className="flex items-baseline gap-3">
             <span className="text-2xl font-bold text-accent">{formatPrice(product.price)}</span>
             {product.compareAtPrice && (
