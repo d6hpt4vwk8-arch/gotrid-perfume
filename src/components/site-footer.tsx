@@ -1,3 +1,4 @@
+import Image from "next/image";
 import Link from "next/link";
 import { InstagramFeed } from "@/components/instagram-feed";
 import { SocialLinks } from "@/components/social-links";
@@ -40,7 +41,26 @@ export async function SiteFooter() {
 
   return (
     <footer className="bg-ink text-white">
-      <div className="mx-auto grid max-w-6xl gap-8 px-4 py-10 sm:grid-cols-2 lg:grid-cols-4">
+      <div className="mx-auto grid max-w-6xl gap-8 px-4 py-10 sm:grid-cols-2 lg:grid-cols-5">
+        <div>
+          <Link href="/" className="flex items-center gap-2.5">
+            <Image src="/logo.svg" alt="Gotrid Perfume" width={32} height={32} className="brightness-0 invert" />
+            <span className="text-base font-semibold tracking-tight text-white">Gotrid Perfume</span>
+          </Link>
+          <div className="mt-4 flex flex-wrap items-center gap-2">
+            {DELIVERY_METHODS.map((method) => (
+              <span
+                key={method}
+                className="flex h-9 w-14 items-center justify-center rounded-md bg-white"
+              >
+                <ShippingIcon method={method} />
+              </span>
+            ))}
+          </div>
+          <div className="mt-2">
+            <PaymentIcons />
+          </div>
+        </div>
         <div>
           <h3 className="text-sm font-semibold text-white">Garance originality</h3>
           <p className="mt-2 text-sm text-white/65">
@@ -106,22 +126,6 @@ export async function SiteFooter() {
           </div>
         </div>
       )}
-
-      <div className="border-t border-white/10 px-4 py-6">
-        <div className="mx-auto flex max-w-6xl flex-wrap items-center justify-center gap-6 sm:justify-between">
-          <div className="flex flex-wrap items-center gap-2">
-            {DELIVERY_METHODS.map((method) => (
-              <span
-                key={method}
-                className="flex h-9 w-14 items-center justify-center rounded-md bg-white"
-              >
-                <ShippingIcon method={method} className="max-h-5 w-auto" />
-              </span>
-            ))}
-          </div>
-          <PaymentIcons />
-        </div>
-      </div>
 
       <InstagramFeed />
 
