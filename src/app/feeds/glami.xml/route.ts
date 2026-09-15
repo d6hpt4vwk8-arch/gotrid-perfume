@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { getFeedProducts } from "@/lib/feeds/get-feed-products";
 import { isPaidAdsEligible } from "@/lib/feeds/paid-ads-eligibility";
 import { cdata, escapeXml, isValidEan } from "@/lib/feeds/xml";
+import { stripVolume } from "@/lib/parse-volume";
 import { SITE_URL } from "@/lib/site";
 import { getSettings } from "@/lib/settings.server";
 
@@ -28,8 +29,13 @@ export async function GET() {
   DELIVERY_METHODS[2].price = settings.shippingPrices.GLS;
 
   const allProducts = await getFeedProducts();
+  // GLAMI requires MANUFACTURER on every item (flagged "částečně chybí" —
+  // partially missing — once we started sending it only when we had it):
+  // ~4% of the catalog has no Brand assigned in our own data, so those are
+  // left out of this feed entirely rather than sending the tag empty or
+  // guessing a brand from the product name.
   const products = allProducts.filter(
-    (p) => p.stock > 0 && isPaidAdsEligible(p.code, p.brandName),
+    (p) => p.stock > 0 && p.brandName && isPaidAdsEligible(p.code, p.brandName),
   );
 
   const items = products
@@ -55,17 +61,24 @@ export async function GET() {
           ]
         : [];
 
+      // GLAMI rejects size/volume info inside PRODUCTNAME ("Odstraňte prosím
+      // informace o velikostech ze jména produktu") — it's already carried
+      // separately as the velikost PARAM below, so strip it here only
+      // (Heureka/Zboží/Meta keep the full name with volume, their own specs
+      // don't forbid it).
+      const productName = stripVolume(p.name);
+
       return `  <SHOPITEM>
     <ITEM_ID>${escapeXml(p.code)}</ITEM_ID>
     <ITEMGROUP_ID>${escapeXml(p.code)}</ITEMGROUP_ID>
-    <PRODUCTNAME>${escapeXml(p.name)}</PRODUCTNAME>
+    <PRODUCTNAME>${escapeXml(productName)}</PRODUCTNAME>
     <DESCRIPTION>${cdata(p.description)}</DESCRIPTION>
     <URL>${escapeXml(url)}</URL>
     <URL_SIZE>${escapeXml(url)}</URL_SIZE>
     ${mainImage ? `<IMGURL>${escapeXml(mainImage)}</IMGURL>` : ""}
 ${altImages.map((img) => `    <IMGURL_ALTERNATIVE>${escapeXml(img)}</IMGURL_ALTERNATIVE>`).join("\n")}
     <PRICE_VAT>${p.price.toFixed(2)}</PRICE_VAT>
-    ${p.brandName ? `<MANUFACTURER>${escapeXml(p.brandName)}</MANUFACTURER>` : ""}
+    <MANUFACTURER>${escapeXml(p.brandName!)}</MANUFACTURER>
     ${p.ean && isValidEan(p.ean) ? `<GTIN>${escapeXml(p.ean)}</GTIN>` : ""}
     ${p.categoryBreadcrumb ? `<CATEGORYTEXT>${escapeXml(p.categoryBreadcrumb)}</CATEGORYTEXT>` : ""}
     <DELIVERY_DATE>${deliveryDate}</DELIVERY_DATE>
