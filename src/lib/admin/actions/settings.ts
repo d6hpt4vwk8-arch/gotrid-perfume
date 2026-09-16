@@ -41,6 +41,9 @@ const settingsSchema = z.object({
     .min(2)
     .max(20)
     .transform((v) => v.toUpperCase().replace(/[^A-Z0-9]/g, "")),
+  // Manually updated, not fetched from a live FX API — see the field's
+  // comment in schema.prisma.
+  czkToEurRate: z.coerce.number().min(15).max(40),
 });
 
 export async function updateSettings(formData: FormData) {

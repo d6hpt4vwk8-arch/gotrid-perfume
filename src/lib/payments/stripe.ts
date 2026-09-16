@@ -19,14 +19,19 @@ function getStripeClient(): Stripe {
 export async function createCheckoutSession({
   orderNumber,
   orderId,
-  amountCzk,
+  amount,
+  currency,
   customerEmail,
   successUrl,
   cancelUrl,
 }: {
   orderNumber: string;
   orderId: string;
-  amountCzk: number;
+  // Already converted to the currency below — every DB price is CZK, but a
+  // Slovak order is charged in EUR (see src/app/api/orders/route.ts) so its
+  // card isn't hit with the bank's own conversion fee on top of ours.
+  amount: number;
+  currency: "czk" | "eur";
   customerEmail: string;
   successUrl: string;
   cancelUrl: string;
@@ -50,8 +55,8 @@ export async function createCheckoutSession({
     line_items: [
       {
         price_data: {
-          currency: "czk",
-          unit_amount: Math.round(amountCzk * 100),
+          currency,
+          unit_amount: Math.round(amount * 100),
           product_data: { name: `Objednávka ${orderNumber} — Gotrid Perfume` },
         },
         quantity: 1,

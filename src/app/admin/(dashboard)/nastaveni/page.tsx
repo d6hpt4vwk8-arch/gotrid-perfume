@@ -48,6 +48,22 @@ export default async function AdminSettingsPage() {
           </span>
         </label>
         <label className="flex flex-col gap-1 text-sm">
+          Kurz CZK → EUR (pro Slovensko)
+          <input
+            name="czkToEurRate"
+            type="number"
+            step="0.0001"
+            min={15}
+            max={40}
+            defaultValue={settings.czkToEurRate}
+            className="rounded-sm border border-line px-3 py-2"
+          />
+          <span className="text-xs text-accent-2">
+            Ceny a platba kartou pro Slovensko se přepočítají tímto kurzem — aktualizujte ručně
+            podle aktuálního kurzu, nedotahuje se automaticky.
+          </span>
+        </label>
+        <label className="flex flex-col gap-1 text-sm">
           PPL kurýr (Kč)
           <input
             name="shippingPricePpl"

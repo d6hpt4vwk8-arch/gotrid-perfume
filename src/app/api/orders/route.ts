@@ -13,6 +13,8 @@ import { SITE_URL } from "@/lib/site";
 import { isRateLimited, recordRateLimitHit, getClientIp } from "@/lib/rate-limit";
 import { getCurrentCustomerId } from "@/lib/customer/get-current-customer";
 import { logAdminActivity } from "@/lib/admin/activity-log";
+import { getSettings } from "@/lib/settings.server";
+import { czkToEur } from "@/lib/format";
 
 // Rate-limited on successful orders, not validation failures — a customer
 // fixing a typo'd postcode shouldn't burn through the same budget as a
@@ -83,10 +85,15 @@ export async function POST(req: NextRequest) {
 
   if (order.paymentMethod === "CARD") {
     const origin = req.nextUrl.origin;
+    // Order.total is always CZK — a Slovak order is charged in EUR so the
+    // card isn't hit with the bank's own conversion fee on top of ours.
+    const settings = await getSettings();
+    const isSk = order.shippingCountry === "SK";
     const session = await createCheckoutSession({
       orderNumber: order.number,
       orderId: order.id,
-      amountCzk: Number(order.total),
+      amount: isSk ? czkToEur(order.total, settings.czkToEurRate) : Number(order.total),
+      currency: isSk ? "eur" : "czk",
       customerEmail: order.email,
       // Routes through the access-exchange endpoint so the token becomes an
       // HttpOnly cookie instead of landing in Stripe's own redirect/logs.

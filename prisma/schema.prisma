@@ -672,6 +672,15 @@ model Settings {
   secondOrderDiscountPercent Int    @default(5)
   secondOrderCouponPrefix    String @default("DRUHY")
 
+  // Every price in the DB is CZK — this is the one number that turns that
+  // into EUR for Slovak checkout (display + the actual Stripe charge), so a
+  // Slovak card doesn't get hit with the bank's own CZK conversion fee on
+  // top of ours. Manually updated by the owner (see /admin/nastaveni), not
+  // fetched from a live FX API — a 2026-09-19 rate is close enough for a
+  // consumer price, and a live-rate dependency would make checkout fail
+  // whenever that API is down.
+  czkToEurRate Decimal @default(24.5) @db.Decimal(10, 4)
+
   // One-time milestone alert (see checkZasilkovnaVolumeMilestone) — set once
   // the owner has been notified that Zásilkovna volume crossed the
   // repricing-worth threshold, so the cron job never nags about it again.

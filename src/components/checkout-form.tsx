@@ -4,7 +4,7 @@ import Link from "next/link";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { useCart } from "@/lib/cart-context";
 import { useConsent } from "@/lib/consent-context";
-import { formatPrice } from "@/lib/format";
+import { formatEur, formatPrice } from "@/lib/format";
 import {
   PAYMENT_LABELS,
   PICKUP_ADDRESS,
@@ -76,6 +76,13 @@ export function CheckoutForm({
     [paymentMethod, settings],
   );
   const total = itemsTotal + shippingPrice + codSurcharge - (coupon?.discountAmount ?? 0);
+
+  // Every DB price is CZK — a Slovak card charged in CZK eats the bank's own
+  // conversion fee on top of ours, so once Slovensko is picked, everything
+  // shown here (and the actual Stripe charge — see src/app/api/orders/route.ts)
+  // switches to EUR at the admin-configured rate instead.
+  const price = (czk: number) =>
+    shippingCountry === "SK" ? formatEur(czk, settings.czkToEurRate) : formatPrice(czk);
 
   // Above the free-shipping threshold COD stops being offered — if the cart
   // grows past it while COD is already selected (e.g. visitor goes back and
@@ -368,7 +375,7 @@ export function CheckoutForm({
                 {SHIPPING_LABELS[method]} —{" "}
                 {method === "OSOBNI_ODBER" || itemsTotal >= settings.freeShippingThreshold
                   ? "zdarma"
-                  : formatPrice(getShippingPrice(method, itemsTotal, settings, shippingCountry))}
+                  : price(getShippingPrice(method, itemsTotal, settings, shippingCountry))}
               </label>
             ))}
 
@@ -454,9 +461,9 @@ export function CheckoutForm({
                 {PAYMENT_LABELS[method]}
                 {method === "CASH_ON_DELIVERY" &&
                   (disabled
-                    ? ` (nedostupné nad ${formatPrice(settings.freeShippingThreshold)})`
+                    ? ` (nedostupné nad ${price(settings.freeShippingThreshold)})`
                     : settings.codSurcharge > 0
-                      ? ` (+${formatPrice(settings.codSurcharge)})`
+                      ? ` (+${price(settings.codSurcharge)})`
                       : "")}
               </label>
             );
@@ -487,7 +494,7 @@ export function CheckoutForm({
           disabled={submitting || (usesPickupPoint && !pickupPoint)}
           className="rounded-sm bg-ink px-5 py-3 text-sm font-semibold text-white hover:bg-accent disabled:cursor-not-allowed disabled:bg-line disabled:text-accent-2"
         >
-          {submitting ? "Odesílám…" : `Závazně objednat — ${formatPrice(total)}`}
+          {submitting ? "Odesílám…" : `Závazně objednat — ${price(total)}`}
         </button>
       </form>
 
@@ -499,34 +506,34 @@ export function CheckoutForm({
               <span>
                 {item.name} × {item.qty}
               </span>
-              <span>{formatPrice(item.price * item.qty)}</span>
+              <span>{price(item.price * item.qty)}</span>
             </li>
           ))}
         </ul>
         <div className="mt-4 flex flex-col gap-1 border-t border-line pt-3 text-sm text-ink">
           <div className="flex justify-between">
             <span>Zboží</span>
-            <span>{formatPrice(itemsTotal)}</span>
+            <span>{price(itemsTotal)}</span>
           </div>
           <div className="flex justify-between">
             <span>Doprava</span>
-            <span>{shippingPrice === 0 ? "zdarma" : formatPrice(shippingPrice)}</span>
+            <span>{shippingPrice === 0 ? "zdarma" : price(shippingPrice)}</span>
           </div>
           {codSurcharge > 0 && (
             <div className="flex justify-between">
               <span>Příplatek za dobírku</span>
-              <span>{formatPrice(codSurcharge)}</span>
+              <span>{price(codSurcharge)}</span>
             </div>
           )}
           {coupon && !coupon.grantsGift && (
             <div className="flex justify-between text-ok">
               <span>Sleva ({coupon.code})</span>
-              <span>−{formatPrice(coupon.discountAmount)}</span>
+              <span>−{price(coupon.discountAmount)}</span>
             </div>
           )}
           <div className="flex justify-between text-base font-bold">
             <span>Celkem</span>
-            <span className="text-accent">{formatPrice(total)}</span>
+            <span className="text-accent">{price(total)}</span>
           </div>
         </div>
       </aside>
