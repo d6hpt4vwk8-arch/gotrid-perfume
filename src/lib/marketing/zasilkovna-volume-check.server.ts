@@ -1,10 +1,10 @@
 import { prisma } from "@/lib/prisma";
 import { logAdminActivity } from "@/lib/admin/activity-log";
 import { EMAIL_FROM, getResendClient, isEmailConfigured } from "@/lib/email/resend";
+import { OWNER_EMAIL } from "@/lib/business-identity";
 
 const VOLUME_THRESHOLD = 100;
 const WINDOW_DAYS = 30;
-const OWNER_EMAIL = "pavlohrytsan@gmail.com";
 
 /**
  * One-time nudge for the owner: once trailing-30-day Zásilkovna volume

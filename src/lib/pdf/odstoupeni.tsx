@@ -1,5 +1,7 @@
 import path from "node:path";
 import { Document, Page, Text, View, StyleSheet, Font } from "@react-pdf/renderer";
+import { currentSeller, CONTACT } from "@/lib/business-identity";
+import { PICKUP_ADDRESS } from "@/lib/shipping";
 
 // Same font-registration approach as faktura.tsx — base-14 PDF fonts drop
 // Czech diacritics, and public/ is what Vercel's serverless file tracing
@@ -28,6 +30,12 @@ const styles = StyleSheet.create({
 });
 
 export function OdstoupeniDocument() {
+  // Current seller, not a per-order one: the form is a blank template and the
+  // 14-day withdrawal window means it's always a recent purchase. The address
+  // is the warehouse (PICKUP_ADDRESS) — goods can't be returned to a
+  // registered seat that is only a virtual office.
+  const seller = currentSeller();
+
   return (
     <Document>
       <Page size="A4" style={styles.page}>
@@ -39,9 +47,9 @@ export function OdstoupeniDocument() {
 
         <View style={styles.section}>
           <Text style={styles.label}>Adresát</Text>
-          <Text>Pavlo Hrytsan</Text>
-          <Text>Na Jarově 2425/4, 130 00 Praha 3 – Žižkov, Česká republika</Text>
-          <Text>Email: info@gotridperfume.cz</Text>
+          <Text>{seller.legalName}</Text>
+          <Text>{PICKUP_ADDRESS}, Česká republika</Text>
+          <Text>Email: {CONTACT.email}</Text>
         </View>
 
         <Text style={styles.bodyText}>

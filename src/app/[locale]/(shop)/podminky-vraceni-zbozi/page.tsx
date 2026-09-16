@@ -1,6 +1,8 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { LegalPage } from "@/components/legal-page";
+import { currentSeller, CONTACT } from "@/lib/business-identity";
+import { PICKUP_ADDRESS } from "@/lib/shipping";
 
 export const metadata: Metadata = {
   title: "Podmínky vrácení zboží | Gotrid Perfume",
@@ -57,11 +59,9 @@ export default function PodminkyVraceniZboziPage() {
         . Po domluvě zašlete zboží na adresu:
       </p>
       <p>
-        Pavlo Hrytsan
+        {currentSeller().legalName}
         <br />
-        Na Jarově 2425/4
-        <br />
-        130 00 Praha 3 – Žižkov
+        {PICKUP_ADDRESS}
         <br />
         Česká republika
       </p>
@@ -90,9 +90,9 @@ export default function PodminkyVraceniZboziPage() {
       <p>
         Internetový obchod: Gotrid Perfume
         <br />
-        Email: info@gotridperfume.cz
+        Email: {CONTACT.email}
         <br />
-        Telefon: +420 735 583 527
+        Telefon: {CONTACT.phone}
       </p>
     </LegalPage>
   );

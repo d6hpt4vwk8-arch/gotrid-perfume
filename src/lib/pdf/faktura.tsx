@@ -3,6 +3,7 @@ import { Document, Page, Text, View, StyleSheet, Font } from "@react-pdf/rendere
 import type { Order, OrderItem } from "@prisma/client";
 import { formatPrice } from "@/lib/format";
 import { SHIPPING_LABELS, PAYMENT_LABELS } from "@/lib/shipping";
+import { sellerForDate } from "@/lib/business-identity";
 
 // The base-14 PDF fonts (Helvetica etc.) only support WinAnsi encoding and
 // silently drop Czech diacritics (č, ř, ě, ů, ž…) — Noto Sans is embedded so
@@ -52,6 +53,11 @@ const styles = StyleSheet.create({
 });
 
 export function FakturaDocument({ order }: { order: Order & { items: OrderItem[] } }) {
+  // Resolved from the order's own date, never from "today" — a faktura is
+  // re-rendered on every download, and reissuing a past sale under a company
+  // that didn't exist then would be plainly wrong. See business-identity.ts.
+  const seller = sellerForDate(new Date(order.createdAt));
+
   return (
     <Document>
       <Page size="A4" style={styles.page}>
@@ -63,11 +69,12 @@ export function FakturaDocument({ order }: { order: Order & { items: OrderItem[]
         <View style={styles.row}>
           <View style={styles.col}>
             <Text style={styles.label}>Dodavatel</Text>
-            <Text>Pavlo Hrytsan</Text>
-            <Text>Na Jarově 2425/4</Text>
-            <Text>130 00 Praha 3-Žižkov</Text>
-            <Text>IČO: 19296037</Text>
-            <Text>Není plátcem DPH</Text>
+            <Text>{seller.legalName}</Text>
+            <Text>{seller.street}</Text>
+            <Text>{seller.city}</Text>
+            <Text>IČO: {seller.ico}</Text>
+            {seller.dic && <Text>DIČ: {seller.dic}</Text>}
+            <Text>{seller.vatNote}</Text>
           </View>
           <View style={styles.col}>
             <Text style={styles.label}>Odběratel</Text>
@@ -125,8 +132,8 @@ export function FakturaDocument({ order }: { order: Order & { items: OrderItem[]
         </View>
 
         <Text style={styles.footer}>
-          Způsob platby: {PAYMENT_LABELS[order.paymentMethod]}. Cena je konečná, dodavatel není
-          plátcem DPH.
+          Způsob platby: {PAYMENT_LABELS[order.paymentMethod]}. Cena je konečná.{" "}
+          {seller.dic ? `DIČ ${seller.dic}.` : "Dodavatel není plátcem DPH."}
         </Text>
       </Page>
     </Document>

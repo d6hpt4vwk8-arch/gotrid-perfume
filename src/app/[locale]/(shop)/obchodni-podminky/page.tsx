@@ -1,11 +1,14 @@
 import type { Metadata } from "next";
 import { LegalPage } from "@/components/legal-page";
+import { currentSeller, CONTACT } from "@/lib/business-identity";
 
 export const metadata: Metadata = {
   title: "Obchodní podmínky | Gotrid Perfume",
 };
 
 export default function ObchodniPodminkyPage() {
+  const seller = currentSeller();
+
   return (
     <LegalPage title="Obchodní podmínky">
       <h2>I. Základní ustanovení</h2>
@@ -14,12 +17,14 @@ export default function ObchodniPodminkyPage() {
         a násl. zákona č. 89/2012 Sb., občanský zákoník (dále jen „občanský zákoník“)
       </p>
       <p>
-        Pavlo Hrytsan, IČ: 19296037, se sídlem: Na Jarově 2425/4, 130 00 Praha 3-Žižkov. Prodávající
-        není plátcem DPH.
+        {seller.legalName}, IČ: {seller.ico}, se sídlem: {seller.street}, {seller.city}.{" "}
+        {seller.dic
+          ? `Prodávající je plátcem DPH, DIČ: ${seller.dic}.`
+          : "Prodávající není plátcem DPH."}
         <br />
-        Kontaktní údaje: email: info@gotridperfume.cz, telefon: +420 735 583 527
+        Kontaktní údaje: email: {CONTACT.email}, telefon: {CONTACT.phone}
         <br />
-        https://www.gotridperfume.cz/ (dále jen „prodávající“)
+        {CONTACT.website} (dále jen „prodávající“)
       </p>
       <p>
         2. Tyto obchodní podmínky upravují vzájemná práva a povinnosti prodávajícího a fyzické

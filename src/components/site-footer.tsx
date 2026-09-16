@@ -5,6 +5,7 @@ import { SocialLinks } from "@/components/social-links";
 import { ShippingIcon } from "@/components/shipping-icons";
 import { PaymentIcons } from "@/components/payment-icons";
 import { prisma } from "@/lib/prisma";
+import { currentSeller, sellerLine, CONTACT } from "@/lib/business-identity";
 import type { ShippingMethod } from "@prisma/client";
 
 const TOP_BRANDS_COUNT = 14;
@@ -24,6 +25,7 @@ const INFO_LINKS = [
 ];
 
 export async function SiteFooter() {
+  const seller = currentSeller();
   // Highlight the brands with the most in-stock products — a fair proxy for
   // "what we actually carry a lot of" without needing a curated pick list.
   // Full A-Z list lives at /znacky.
@@ -83,15 +85,15 @@ export async function SiteFooter() {
         <div>
           <h3 className="text-sm font-semibold text-white">Kontakt</h3>
           <p className="mt-2 text-sm text-white/65">
-            Pavlo Hrytsan, IČO 19296037
+            {sellerLine(seller)}
             <br />
-            Na Jarově 2425/4, 130 00 Praha 3
+            {seller.street}, {seller.city}
             <br />
-            <a href="mailto:info@gotridperfume.cz" className="hover:text-white hover:underline">
-              info@gotridperfume.cz
+            <a href={`mailto:${CONTACT.email}`} className="hover:text-white hover:underline">
+              {CONTACT.email}
             </a>
             <br />
-            +420 735 583 527
+            {CONTACT.phone}
           </p>
         </div>
         <div>

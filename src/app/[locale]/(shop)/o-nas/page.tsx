@@ -1,4 +1,6 @@
 import type { Metadata } from "next";
+import { CONTACT } from "@/lib/business-identity";
+import { PICKUP_ADDRESS } from "@/lib/shipping";
 import Image from "next/image";
 import { LegalPage } from "@/components/legal-page";
 
@@ -67,11 +69,11 @@ export default function ONasPage() {
 
       <h2>Kontakt</h2>
       <p>
-        Email: info@gotridperfume.cz
+        Email: {CONTACT.email}
         <br />
-        Telefon: +420 735 583 527
+        Telefon: {CONTACT.phone}
         <br />
-        Adresa: Na Jarově 2425/4, 130 00 Praha 3 – Žižkov, Česká republika
+        Adresa: {PICKUP_ADDRESS}, Česká republika
       </p>
 
       <h2>Provozní doba</h2>

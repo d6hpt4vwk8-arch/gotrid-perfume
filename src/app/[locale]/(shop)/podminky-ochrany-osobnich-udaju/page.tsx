@@ -1,22 +1,25 @@
 import type { Metadata } from "next";
 import { LegalPage } from "@/components/legal-page";
+import { currentSeller, CONTACT } from "@/lib/business-identity";
 
 export const metadata: Metadata = {
   title: "Podmínky ochrany osobních údajů | Gotrid Perfume",
 };
 
 export default function OchranaOsobnichUdajuPage() {
+  const seller = currentSeller();
+
   return (
     <LegalPage title="Podmínky ochrany osobních údajů">
       <h2>I. Základní ustanovení</h2>
       <p>
         1. Správcem osobních údajů podle čl. 4 bod 7 nařízení Evropského parlamentu a Rady (EU)
-        2016/679 (dále jen „GDPR“) je Pavlo Hrytsan, IČ 19296037, se sídlem Na Jarově 2425/4, 130 00
-        Praha 3-Žižkov (dále jen „správce“).
+        2016/679 (dále jen „GDPR“) je {seller.legalName}, IČ {seller.ico}, se sídlem {seller.street},{" "}
+        {seller.city} (dále jen „správce“).
       </p>
       <p>
-        2. Kontaktní údaje správce: Gotrid Perfume, www.gotridperfume.cz, email
-        info@gotridperfume.cz, telefon +420 735 583 527.
+        2. Kontaktní údaje správce: Gotrid Perfume, www.gotridperfume.cz, email {CONTACT.email},
+        telefon {CONTACT.phone}.
       </p>
       <p>
         3. Osobními údaji se rozumí veškeré informace o identifikované nebo identifikovatelné

@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { CONTACT } from "@/lib/business-identity";
 import { LegalPage } from "@/components/legal-page";
 import { getSettings } from "@/lib/settings.server";
 import { formatPrice } from "@/lib/format";
@@ -71,7 +72,7 @@ export default async function DopravaAPlatbaPage() {
       <p>
         Email: info@gotridperfume.cz
         <br />
-        Telefon: +420 735 583 527
+        Telefon: {CONTACT.phone}
       </p>
     </LegalPage>
   );
