@@ -6,8 +6,17 @@
 // undercut), never designer/niche perfumes (Heureka/Zboží price-compare
 // against retailers who buy at real distributor volume; we can't win that
 // fight on a handful of units, so a click there is a click we pay for and
-// lose). Google/Meta feeds are untouched — this restriction is
-// Heureka/Sklik-specific.
+// lose).
+//
+// Extended to Google/Meta on 2026-09-17: those feeds have no per-click cost
+// (Merchant Center free listings, and Ads once that's rebuilt), so the
+// price-competitiveness reasoning above doesn't apply there — but almost
+// none of the excluded designer perfumes have a real per-product
+// description (feedDescription() falls back to repeating the name), and
+// "branded item, no unique content, priced under MSRP" is close to the
+// exact fingerprint that got the previous store's Ads account suspended
+// for counterfeit goods. Keeping Google/Meta to the same eligible set
+// avoids reproducing that on the next account.
 const ARABIC_PERFUME_BRANDS = new Set(
   [
     "Fragrance World", "French Avenue", "Gulf Orchid", "Khadlaj", "Emir",

@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { getFeedProducts } from "@/lib/feeds/get-feed-products";
 import { isConditionFlagged } from "@/lib/feeds/condition-flagged";
+import { isPaidAdsEligible } from "@/lib/feeds/paid-ads-eligibility";
 import { buildGoogleShoppingRss } from "@/lib/feeds/google-shopping-rss";
 
 // Rendered per-request rather than ISR-cached — see feeds/heureka.xml/route.ts
@@ -12,9 +13,10 @@ export const dynamic = "force-dynamic";
 // for a Meta-specific format later without touching the Google feed.
 export async function GET() {
   const allProducts = await getFeedProducts();
-  // Same counterfeit-policy exposure as Google's feed — see condition-flagged.ts.
+  // Same counterfeit-policy exposure as Google's feed — see
+  // condition-flagged.ts and paid-ads-eligibility.ts's 2026-09-17 note.
   const products = allProducts.filter(
-    (p) => !isConditionFlagged(p.name, p.isDefective),
+    (p) => !isConditionFlagged(p.name, p.isDefective) && isPaidAdsEligible(p.code, p.brandName),
   );
   const xml = buildGoogleShoppingRss(products);
 
