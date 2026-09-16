@@ -8,6 +8,7 @@ import {
 } from "@/lib/email/send-order-emails";
 import { sendMetaCapiEvent } from "@/lib/analytics/meta-capi";
 import { sendZboziConversion } from "@/lib/analytics/zbozi-conversion";
+import { resolveItemCodes, toItemId } from "@/lib/analytics/resolve-item-ids";
 import { SITE_URL } from "@/lib/site";
 import { isRateLimited, recordRateLimitHit, getClientIp } from "@/lib/rate-limit";
 import { getCurrentCustomerId } from "@/lib/customer/get-current-customer";
@@ -92,22 +93,36 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ orderNumber: order.number, accessToken: order.accessToken });
   }
 
-  void sendMetaCapiEvent({
-    eventName: "Purchase",
-    eventId: order.number,
-    eventSourceUrl: `${SITE_URL}/objednavka/${order.number}`,
-    user: {
-      email: order.email,
-      clientIp: req.headers.get("x-forwarded-for")?.split(",")[0]?.trim(),
-      userAgent: req.headers.get("user-agent") ?? undefined,
-    },
-    customData: {
-      currency: "CZK",
-      value: Number(order.total),
-      content_ids: order.items.map((i) => i.productId).filter(Boolean),
-      num_items: order.items.reduce((sum, i) => sum + i.qty, 0),
-    },
-  }).catch((err) => console.error(`[meta-capi] purchase event failed for ${order.number}`, err));
+  void (async () => {
+    // Meta's catalog keys products by `code` (see google-shopping-rss.ts's
+    // <g:id>), not the internal productId OrderItem stores — resolving
+    // through the same helper Heureka/Zboží already use for this so the
+    // catalog can actually match this Purchase back to a product.
+    const itemInputs = order.items.map((i) => ({
+      productId: i.productId,
+      name: i.name,
+      ean: i.ean,
+      qty: i.qty,
+      unitPrice: Number(i.unitPrice),
+    }));
+    const codeByProductId = await resolveItemCodes(itemInputs);
+    await sendMetaCapiEvent({
+      eventName: "Purchase",
+      eventId: order.number,
+      eventSourceUrl: `${SITE_URL}/objednavka/${order.number}`,
+      user: {
+        email: order.email,
+        clientIp: req.headers.get("x-forwarded-for")?.split(",")[0]?.trim(),
+        userAgent: req.headers.get("user-agent") ?? undefined,
+      },
+      customData: {
+        currency: "CZK",
+        value: Number(order.total),
+        content_ids: itemInputs.map((i) => toItemId(i, codeByProductId)),
+        num_items: order.items.reduce((sum, i) => sum + i.qty, 0),
+      },
+    });
+  })().catch((err) => console.error(`[meta-capi] purchase event failed for ${order.number}`, err));
 
   void sendZboziConversion({
     orderId: order.number,

@@ -50,9 +50,14 @@ function trackGlami(eventName: "ViewContent" | "AddToCart", data: Record<string,
   window.glami?.("track", eventName, { consent: 1, ...data });
 }
 
-export function trackViewContent(product: { id: string; name: string; price: number }) {
+// Both Meta's catalog (google-shopping-rss.ts's <g:id>) and GLAMI's feed
+// (glami.xml's <ITEM_ID>) key products by `code`, not the database `id` —
+// content_ids/item_ids here must match that or the catalog can never
+// resolve the event to a product (confirmed live: GLAMI's dashboard showed
+// these as "nespárované produkty", unmatched to any feed item).
+export function trackViewContent(product: { code: string; name: string; price: number }) {
   trackEvent("ViewContent", {
-    content_ids: [product.id],
+    content_ids: [product.code],
     content_name: product.name,
     content_type: "product",
     currency: "CZK",
@@ -60,22 +65,22 @@ export function trackViewContent(product: { id: string; name: string; price: num
   });
   trackGlami("ViewContent", {
     content_type: "product",
-    item_ids: [product.id],
+    item_ids: [product.code],
     currency: "CZK",
     value: product.price,
   });
 }
 
-export function trackAddToCart(product: { id: string; name: string; price: number; qty: number }) {
+export function trackAddToCart(product: { code: string; name: string; price: number; qty: number }) {
   trackEvent("AddToCart", {
-    content_ids: [product.id],
+    content_ids: [product.code],
     content_name: product.name,
     content_type: "product",
     currency: "CZK",
     value: product.price * product.qty,
   });
   trackGlami("AddToCart", {
-    item_ids: [product.id],
+    item_ids: [product.code],
     currency: "CZK",
     value: product.price * product.qty,
   });

@@ -7,7 +7,7 @@ import { trackViewContent } from "@/lib/analytics/client-events";
 export function ProductViewTracker({
   product,
 }: {
-  product: { id: string; name: string; price: number };
+  product: { id: string; code: string; name: string; price: number };
 }) {
   const { consent } = useConsent();
 

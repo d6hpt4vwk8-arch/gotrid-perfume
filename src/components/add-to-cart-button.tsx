@@ -7,6 +7,7 @@ import { trackAddToCart } from "@/lib/analytics/client-events";
 
 export interface AddToCartProduct {
   productId: string;
+  code: string;
   slug: string;
   name: string;
   price: number;
@@ -37,7 +38,7 @@ export function AddToCartButton({
         addItem(product);
         if (consent?.marketing) {
           trackAddToCart({
-            id: product.productId,
+            code: product.code,
             name: product.name,
             price: product.price,
             qty: 1,

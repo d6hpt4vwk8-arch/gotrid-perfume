@@ -7,6 +7,7 @@ import { WishlistButton } from "@/components/wishlist-button";
 
 export interface ProductCardData {
   id: string;
+  code: string;
   slug: string;
   name: string;
   price: Prisma.Decimal | number;
@@ -105,6 +106,7 @@ export function ProductCard({
           <AddToCartButton
             product={{
               productId: product.id,
+              code: product.code,
               slug: product.slug,
               name: product.name,
               price: Number(product.price),

@@ -4,6 +4,7 @@ import { prisma } from "@/lib/prisma";
 import { sendMetaCapiEvent } from "@/lib/analytics/meta-capi";
 import { sendZboziConversion } from "@/lib/analytics/zbozi-conversion";
 import { sendHeurekaOrderLog } from "@/lib/analytics/heureka-overeno";
+import { resolveItemCodes, toItemId } from "@/lib/analytics/resolve-item-ids";
 import { SITE_URL } from "@/lib/site";
 
 // Stripe requires the raw request body to verify the webhook signature —
@@ -38,30 +39,37 @@ export async function POST(req: NextRequest) {
       });
 
       if (order.marketingConsent) {
-        void sendMetaCapiEvent({
-          eventName: "Purchase",
-          eventId: order.number,
-          eventSourceUrl: `${SITE_URL}/objednavka/${order.number}`,
-          user: { email: order.email },
-          customData: {
-            currency: "CZK",
-            value: Number(order.total),
-            content_ids: order.items.map((i) => i.productId).filter(Boolean),
-            num_items: order.items.reduce((sum, i) => sum + i.qty, 0),
-          },
-        }).catch((err) =>
+        const itemInputs = order.items.map((i) => ({
+          productId: i.productId,
+          name: i.name,
+          ean: i.ean,
+          qty: i.qty,
+          unitPrice: Number(i.unitPrice),
+        }));
+
+        void (async () => {
+          // Meta's catalog keys products by `code`, not the internal
+          // productId OrderItem stores — see client-events.ts.
+          const codeByProductId = await resolveItemCodes(itemInputs);
+          await sendMetaCapiEvent({
+            eventName: "Purchase",
+            eventId: order.number,
+            eventSourceUrl: `${SITE_URL}/objednavka/${order.number}`,
+            user: { email: order.email },
+            customData: {
+              currency: "CZK",
+              value: Number(order.total),
+              content_ids: itemInputs.map((i) => toItemId(i, codeByProductId)),
+              num_items: order.items.reduce((sum, i) => sum + i.qty, 0),
+            },
+          });
+        })().catch((err) =>
           console.error(`[meta-capi] purchase event failed for ${order.number}`, err),
         );
 
         void sendZboziConversion({
           orderId: order.number,
-          items: order.items.map((i) => ({
-            productId: i.productId,
-            name: i.name,
-            ean: i.ean,
-            qty: i.qty,
-            unitPrice: Number(i.unitPrice),
-          })),
+          items: itemInputs,
           deliveryType: order.shippingMethod,
           deliveryPrice: Number(order.shippingPrice),
           otherCosts: Number(order.discountAmount) > 0 ? -Number(order.discountAmount) : undefined,

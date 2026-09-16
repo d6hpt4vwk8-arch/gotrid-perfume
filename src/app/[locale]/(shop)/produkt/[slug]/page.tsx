@@ -166,7 +166,7 @@ export default async function ProductPage({
         dangerouslySetInnerHTML={{ __html: jsonLdScript(jsonLd) }}
       />
       <ProductViewTracker
-        product={{ id: product.id, name: product.name, price: Number(product.price) }}
+        product={{ id: product.id, code: product.code, name: product.name, price: Number(product.price) }}
       />
       <HeurekaProductView />
 
@@ -327,6 +327,7 @@ export default async function ProductPage({
             <AddToCartButton
               product={{
                 productId: product.id,
+                code: product.code,
                 slug: product.slug,
                 name: product.name,
                 price: Number(product.price),
