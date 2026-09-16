@@ -13,9 +13,12 @@ function isWeekend(date: Date): boolean {
  * Estimated delivery date for an order placed right now: if today is a
  * weekend, processing starts the next business day; then `businessDays`
  * more business days for picking/shipping (Sat/Sun don't count). With the
- * default of 2, a Monday order lands Wednesday, a Friday order lands Tuesday.
+ * default of 3, a Monday order lands Thursday, a Friday order lands
+ * Wednesday. Bumped from 2 (2026-09-16): some items require a personal
+ * sourcing trip rather than an online reorder, and the margin doesn't
+ * support promising next-day-style speed on those.
  */
-export function estimateDeliveryDate(businessDays = 2, from: Date = new Date()): Date {
+export function estimateDeliveryDate(businessDays = 3, from: Date = new Date()): Date {
   const date = new Date(from);
   while (isWeekend(date)) date.setDate(date.getDate() + 1);
 
