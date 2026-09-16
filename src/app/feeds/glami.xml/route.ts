@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { getFeedProducts } from "@/lib/feeds/get-feed-products";
 import { isPaidAdsEligible } from "@/lib/feeds/paid-ads-eligibility";
+import { isConditionFlagged } from "@/lib/feeds/condition-flagged";
 import { cdata, escapeXml, isValidEan } from "@/lib/feeds/xml";
 import { stripVolume } from "@/lib/parse-volume";
 import { SITE_URL } from "@/lib/site";
@@ -35,7 +36,11 @@ export async function GET() {
   // left out of this feed entirely rather than sending the tag empty or
   // guessing a brand from the product name.
   const products = allProducts.filter(
-    (p) => p.stock > 0 && p.brandName && isPaidAdsEligible(p.code, p.brandName),
+    (p) =>
+      p.stock > 0 &&
+      p.brandName &&
+      !isConditionFlagged(p.name, p.isDefective) &&
+      isPaidAdsEligible(p.code, p.brandName),
   );
 
   const items = products

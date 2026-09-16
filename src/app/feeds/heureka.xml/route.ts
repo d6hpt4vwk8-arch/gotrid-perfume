@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { getFeedProducts } from "@/lib/feeds/get-feed-products";
 import { isPaidAdsEligible } from "@/lib/feeds/paid-ads-eligibility";
+import { isConditionFlagged } from "@/lib/feeds/condition-flagged";
 import { cdata, escapeXml, isValidEan } from "@/lib/feeds/xml";
 import { SITE_URL } from "@/lib/site";
 import { getSettings } from "@/lib/settings.server";
@@ -40,7 +41,11 @@ export async function GET() {
   // cheapest competitor there — paying per click for a listing that can't
   // win on price just funds clicks that were never going to convert.
   const products = allProducts.filter(
-    (p) => p.stock > 0 && !p.excludeFromHeureka && isPaidAdsEligible(p.code, p.brandName),
+    (p) =>
+      p.stock > 0 &&
+      !p.excludeFromHeureka &&
+      !isConditionFlagged(p.name, p.isDefective) &&
+      isPaidAdsEligible(p.code, p.brandName),
   );
 
   const items = products

@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { getFeedProducts } from "@/lib/feeds/get-feed-products";
+import { isConditionFlagged } from "@/lib/feeds/condition-flagged";
 import { buildGoogleShoppingRss } from "@/lib/feeds/google-shopping-rss";
 
 // Rendered per-request rather than ISR-cached — see feeds/heureka.xml/route.ts
@@ -10,7 +11,11 @@ export const dynamic = "force-dynamic";
 // Google Shopping RSS schema — kept as a separate URL so it can be swapped
 // for a Meta-specific format later without touching the Google feed.
 export async function GET() {
-  const products = await getFeedProducts();
+  const allProducts = await getFeedProducts();
+  // Same counterfeit-policy exposure as Google's feed — see condition-flagged.ts.
+  const products = allProducts.filter(
+    (p) => !isConditionFlagged(p.name, p.isDefective),
+  );
   const xml = buildGoogleShoppingRss(products);
 
   return new NextResponse(xml, {

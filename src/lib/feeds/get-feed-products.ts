@@ -21,6 +21,7 @@ export interface FeedProduct {
   images: string[];
   categoryBreadcrumb: string | null;
   excludeFromHeureka: boolean;
+  isDefective: boolean;
   /**
    * PARAM pairs for the marketplace feeds. These are what put an offer into
    * the comparison sites' category filters ("Objem 100 ml", "Pro koho
@@ -137,6 +138,7 @@ export async function getFeedProducts(): Promise<FeedProduct[]> {
       ? (breadcrumbs.get(p.categories[0].categoryId) ?? null)
       : null,
     excludeFromHeureka: p.excludeFromHeureka,
+    isDefective: p.isDefective,
     params: buildParams(p),
   }));
 
