@@ -48,8 +48,8 @@ export async function renderSecondOrderEmailHtml(params: {
       <p><a href="${SITE_URL}">${copy.cta}</a></p>
       <hr>
       <p style="font-size:12px;color:#666">
-        Tento e-mail dostáváte, protože jste se při registraci na Gotrid Perfume přihlásili k odběru
-        novinek. <a href="${unsubscribeUrl}">Odhlásit se z těchto e-mailů</a>.
+        Tento e-mail vám zasíláme jako zákazníkovi, který si u nás objednal, s nabídkou obdobného zboží
+        (§7 odst. 3 zákona č. 480/2004 Sb.). <a href="${unsubscribeUrl}">Odhlásit se z těchto e-mailů</a>.
       </p>
     `;
 }

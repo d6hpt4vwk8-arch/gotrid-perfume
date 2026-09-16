@@ -46,16 +46,18 @@ async function getCategoryIdsUnderRoot(rootName: string): Promise<string[]> {
 }
 
 /**
- * Looks at what a customer has bought before and picks a theme + a handful
- * of in-stock products to recommend in the "second order" email — perfumes
- * by default, or home/car fragrance if that's the only thing they've bought
+ * Looks at what a buyer has ordered before (matched by email, not
+ * customerId — guests never get a customerId, but their email is on every
+ * order they've placed either way) and picks a theme + a handful of
+ * in-stock products to recommend in the "second order" email — perfumes by
+ * default, or home/car fragrance if that's the only thing they've bought
  * so far.
  */
-export async function recommendProductsForCustomer(
-  customerId: string,
+export async function recommendProductsForBuyer(
+  email: string,
 ): Promise<{ theme: RecommendationTheme; products: RecommendedProduct[] }> {
   const items = await prisma.orderItem.findMany({
-    where: { order: { customerId }, productId: { not: null } },
+    where: { order: { email: { equals: email, mode: "insensitive" } }, productId: { not: null } },
     select: { product: { select: { id: true, categories: { select: { categoryId: true }, take: 1 } } } },
   });
 

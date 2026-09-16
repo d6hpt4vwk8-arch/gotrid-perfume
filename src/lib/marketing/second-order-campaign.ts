@@ -1,7 +1,7 @@
 import { prisma } from "@/lib/prisma";
 import { logAdminActivity } from "@/lib/admin/activity-log";
 import { sendSecondOrderEmail } from "@/lib/email/send-second-order-email";
-import { recommendProductsForCustomer } from "./recommend-products";
+import { recommendProductsForBuyer } from "./recommend-products";
 
 const COUNTABLE_STATUSES = ["NEW", "PAID", "PROCESSING", "SHIPPED", "DELIVERED"] as const;
 
@@ -33,7 +33,6 @@ interface SecondOrderCandidate {
   id: string;
   email: string;
   firstName: string;
-  customerId: string | null;
 }
 
 async function getSecondOrderCandidates(): Promise<{
@@ -47,18 +46,26 @@ async function getSecondOrderCandidates(): Promise<{
   });
   const cutoff = new Date(Date.now() - settings.secondOrderDelayDays * 24 * 60 * 60 * 1000);
 
-  // Registered + opted-in only — guests and non-consenting customers are
-  // never candidates in the first place.
-  const candidates = await prisma.order.findMany({
+  // Every past buyer is a candidate, guests included — an order's email is
+  // itself an "existing customer, similar goods" relationship under zákona
+  // č. 480/2004 Sb. §7/3 (see NewsletterUnsubscribe's comment in
+  // schema.prisma), so no separate opt-in is required, only a working
+  // opt-out. customerId/Customer.marketingOptIn used to gate this, which
+  // meant guests — 108 of 111 real orders — could never qualify no matter
+  // what they bought or how many times (owner's call, 2026-09-18: reach
+  // everyone, respect unsubscribes).
+  const orders = await prisma.order.findMany({
     where: {
       secondOrderEmailSentAt: null,
       createdAt: { lte: cutoff },
       status: { in: [...COUNTABLE_STATUSES] },
-      customerId: { not: null },
-      customer: { marketingOptIn: true },
     },
-    select: { id: true, email: true, firstName: true, customerId: true },
+    select: { id: true, email: true, firstName: true },
   });
+
+  const unsubscribed = await prisma.newsletterUnsubscribe.findMany({ select: { email: true } });
+  const unsubscribedEmails = new Set(unsubscribed.map((u) => u.email.toLowerCase()));
+  const candidates = orders.filter((o) => !unsubscribedEmails.has(o.email.trim().toLowerCase()));
 
   return { candidates, settings };
 }
@@ -71,7 +78,10 @@ export async function previewSecondOrderCandidates(): Promise<
   const result: { email: string; firstName: string; orderId: string }[] = [];
   for (const candidate of candidates) {
     const orderCount = await prisma.order.count({
-      where: { customerId: candidate.customerId, status: { in: [...COUNTABLE_STATUSES] } },
+      where: {
+        email: { equals: candidate.email, mode: "insensitive" },
+        status: { in: [...COUNTABLE_STATUSES] },
+      },
     });
     if (orderCount === 1) {
       result.push({ email: candidate.email, firstName: candidate.firstName, orderId: candidate.id });
@@ -89,7 +99,10 @@ export async function runSecondOrderCampaign(): Promise<{ emailed: number; skipp
 
   for (const candidate of candidates) {
     const orderCount = await prisma.order.count({
-      where: { customerId: candidate.customerId, status: { in: [...COUNTABLE_STATUSES] } },
+      where: {
+        email: { equals: candidate.email, mode: "insensitive" },
+        status: { in: [...COUNTABLE_STATUSES] },
+      },
     });
 
     if (orderCount > 1) {
@@ -106,7 +119,7 @@ export async function runSecondOrderCampaign(): Promise<{ emailed: number; skipp
       settings.secondOrderCouponPrefix,
       settings.secondOrderDiscountPercent,
     );
-    const { theme, products } = await recommendProductsForCustomer(candidate.customerId!);
+    const { theme, products } = await recommendProductsForBuyer(candidate.email);
     await sendSecondOrderEmail({
       email: candidate.email,
       firstName: candidate.firstName,

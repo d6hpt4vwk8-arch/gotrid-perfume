@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { prisma } from "@/lib/prisma";
+import { previewSecondOrderCandidates } from "@/lib/marketing/second-order-campaign";
 
 const PREVIEW_TYPES = [
   { type: "order-confirmation", label: "Potvrzení objednávky" },
@@ -29,6 +30,7 @@ export default async function EmailMarketingPage() {
     guestOrders,
     registeredOrders,
     confirmationFailures,
+    upcomingSecondOrder,
   ] = await Promise.all([
     prisma.abandonedCheckout.count(),
     prisma.abandonedCheckout.count({ where: { emailSentAt: { not: null } } }),
@@ -45,6 +47,7 @@ export default async function EmailMarketingPage() {
     prisma.adminActivityLog.count({
       where: { action: { in: ["order.confirmation_email_failed", "order.owner_notification_email_failed"] } },
     }),
+    previewSecondOrderCandidates(),
   ]);
 
   // Coupon code is embedded in the log detail string ("... s kódem XXXX ...")
@@ -148,21 +151,19 @@ export default async function EmailMarketingPage() {
 
       <section className="flex flex-col gap-3">
         <h2 className="text-lg font-semibold text-ink">Sleva na druhou objednávku</h2>
+        <p className="text-xs text-accent-2">
+          Od 2026-09-18 dostávají toto e-mail i hosté bez účtu (dřív jen registrovaní se zapnutým
+          odběrem) — právní základ: §7 odst. 3 zákona č. 480/2004 Sb. (existující zákazník, podobné
+          zboží), odhlášení respektováno přes NewsletterUnsubscribe.
+        </p>
         <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
           <StatCard label="Odesláno celkem" value={secondOrderSentLogs.length} />
+          <StatCard label="Kódy uplatněny" value={coupons.filter((c) => c.usedCount > 0).length} />
+          <StatCard label="Čeká na příští běh" value={upcomingSecondOrder.length} />
           <StatCard
-            label="Kódy uplatněny"
-            value={coupons.filter((c) => c.usedCount > 0).length}
-          />
-          <StatCard
-            label="Registrovaní zákazníci"
-            value={registeredOrders}
+            label="Objednávky host / účet"
+            value={`${guestOrders} / ${registeredOrders}`}
             hint={`z ${totalOrders} objednávek celkem`}
-          />
-          <StatCard
-            label="Objednávky jako host"
-            value={guestOrders}
-            hint="host nemá customerId → nikdy se nekvalifikuje na tento e-mail"
           />
         </div>
 
