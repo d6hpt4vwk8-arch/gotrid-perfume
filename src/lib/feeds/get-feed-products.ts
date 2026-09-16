@@ -22,6 +22,8 @@ export interface FeedProduct {
   categoryBreadcrumb: string | null;
   excludeFromHeureka: boolean;
   isDefective: boolean;
+  /** Heureka-only PRODUCTNAME override — see Product.heurekaName in schema.prisma. Null for the ~85% of the catalog whose regular name already matches Heureka's own catalog title. */
+  heurekaName: string | null;
   /**
    * PARAM pairs for the marketplace feeds. These are what put an offer into
    * the comparison sites' category filters ("Objem 100 ml", "Pro koho
@@ -138,6 +140,7 @@ export async function getFeedProducts(): Promise<FeedProduct[]> {
       ? (breadcrumbs.get(p.categories[0].categoryId) ?? null)
       : null,
     excludeFromHeureka: p.excludeFromHeureka,
+    heurekaName: p.heurekaName,
     isDefective: p.isDefective,
     params: buildParams(p),
   }));

@@ -130,6 +130,14 @@ model Product {
   // just funds clicks that can't convert.
   excludeFromHeureka Boolean @default(false)
 
+  // Overrides PRODUCTNAME sent to Heureka only (site display/other feeds
+  // untouched) — populated from Heureka's own "Report nespárovaných
+  // produktů" (EAN-matched suggested name), for products whose supplier
+  // name doesn't match Heureka's canonical catalog title closely enough
+  // for their automatic pairing to link the two. Null means "send the
+  // regular name", which is already correct for most of the catalog.
+  heurekaName String?
+
   // Manual merchandising override — higher shows first wherever products
   // aren't sorted by an explicit visitor choice (price/newest toggle): the
   // homepage "Novinky" section, a category's default listing order, and

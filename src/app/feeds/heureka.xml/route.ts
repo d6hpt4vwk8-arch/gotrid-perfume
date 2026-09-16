@@ -61,9 +61,16 @@ export async function GET() {
       // itself with a 3-day estimate.
       const deliveryDate = p.stock > 0 ? "0" : "7";
 
+      // heurekaName is the exact title Heureka's own catalog already uses
+      // for this EAN (from their "Report nespárovaných produktů", see
+      // Product.heurekaName) — sending our regular name instead is what
+      // left ~600 items unpaired, visible only via fulltext search rather
+      // than the compare-price product page real buyers land on.
+      const productName = p.heurekaName ?? p.name;
+
       return `  <SHOPITEM>
     <ITEM_ID>${escapeXml(p.code)}</ITEM_ID>
-    <PRODUCTNAME>${escapeXml(p.name)}</PRODUCTNAME>
+    <PRODUCTNAME>${escapeXml(productName)}</PRODUCTNAME>
     <DESCRIPTION>${cdata(p.description)}</DESCRIPTION>
     <URL>${escapeXml(url)}</URL>
     ${mainImage ? `<IMGURL>${escapeXml(mainImage)}</IMGURL>` : ""}
