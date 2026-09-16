@@ -22,6 +22,15 @@ function cartItemsHtml(items: CartItem[]): string {
   return `<table cellpadding="0" cellspacing="0" style="width:100%;margin:16px 0">${rows}</table>`;
 }
 
+export function renderAbandonedCheckoutEmailHtml(params: { firstName: string; cartSnapshot: CartItem[] }): string {
+  return `
+      <h1>Ahoj${params.firstName ? ` ${params.firstName}` : ""}!</h1>
+      <p>Všimli jsme si, že jste u nás nedokončili objednávku — nezapomněli jste na ni?</p>
+      ${cartItemsHtml(params.cartSnapshot)}
+      <p><a href="${SITE_URL}/kosik">Dokončit objednávku</a></p>
+    `;
+}
+
 export async function sendAbandonedCheckoutEmail(params: {
   email: string;
   firstName: string;
@@ -37,12 +46,7 @@ export async function sendAbandonedCheckoutEmail(params: {
     from: EMAIL_FROM,
     to: params.email,
     subject: "Nezapomněli jste na objednávku? — Gotrid Perfume",
-    html: `
-      <h1>Ahoj${params.firstName ? ` ${params.firstName}` : ""}!</h1>
-      <p>Všimli jsme si, že jste u nás nedokončili objednávku — nezapomněli jste na ni?</p>
-      ${cartItemsHtml(params.cartSnapshot)}
-      <p><a href="${SITE_URL}/kosik">Dokončit objednávku</a></p>
-    `,
+    html: renderAbandonedCheckoutEmailHtml(params),
   });
   if (error) throw new Error(`Resend error: ${error.message}`);
 }

@@ -16,6 +16,19 @@ function itemsTableHtml(items: OrderItem[]): string {
   return `<table cellpadding="6" style="border-collapse:collapse;width:100%">${rows}</table>`;
 }
 
+export function renderCustomerOrderConfirmationHtml(order: OrderWithItems): string {
+  return `
+      <h1>Ahoj ${order.firstName}!</h1>
+      <p>Děkujeme za objednávku! Objednávka <strong>${order.number}</strong> byla přijata.</p>
+      ${itemsTableHtml(order.items)}
+      <p>Doprava: ${SHIPPING_LABELS[order.shippingMethod]} — ${formatPrice(order.shippingPrice)}</p>
+      <p>Platba: ${PAYMENT_LABELS[order.paymentMethod]}${Number(order.codSurcharge) > 0 ? ` (příplatek ${formatPrice(order.codSurcharge)})` : ""}</p>
+      <p><strong>Celkem: ${formatPrice(order.total)}</strong></p>
+      <p>O odeslání zásilky vás budeme informovat samostatným e-mailem.</p>
+      <p><a href="${SITE_URL}/api/orders/${order.number}/access?token=${order.accessToken}">Zobrazit stav objednávky</a></p>
+    `;
+}
+
 export async function sendCustomerOrderConfirmation(order: OrderWithItems) {
   if (!isEmailConfigured()) {
     console.warn(`[email] Resend not configured — skipping customer confirmation for ${order.number}`);
@@ -27,16 +40,7 @@ export async function sendCustomerOrderConfirmation(order: OrderWithItems) {
     from: EMAIL_FROM,
     to: order.email,
     subject: `Potvrzení objednávky ${order.number} — Gotrid Perfume`,
-    html: `
-      <h1>Ahoj ${order.firstName}!</h1>
-      <p>Děkujeme za objednávku! Objednávka <strong>${order.number}</strong> byla přijata.</p>
-      ${itemsTableHtml(order.items)}
-      <p>Doprava: ${SHIPPING_LABELS[order.shippingMethod]} — ${formatPrice(order.shippingPrice)}</p>
-      <p>Platba: ${PAYMENT_LABELS[order.paymentMethod]}${Number(order.codSurcharge) > 0 ? ` (příplatek ${formatPrice(order.codSurcharge)})` : ""}</p>
-      <p><strong>Celkem: ${formatPrice(order.total)}</strong></p>
-      <p>O odeslání zásilky vás budeme informovat samostatným e-mailem.</p>
-      <p><a href="${SITE_URL}/api/orders/${order.number}/access?token=${order.accessToken}">Zobrazit stav objednávky</a></p>
-    `,
+    html: renderCustomerOrderConfirmationHtml(order),
   });
   // The Resend SDK returns { data, error } instead of throwing on API-level
   // failures (e.g. unverified sending domain) — surface it so the caller's

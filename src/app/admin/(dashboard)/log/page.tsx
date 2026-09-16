@@ -16,6 +16,10 @@ const ACTION_LABELS: Record<string, string> = {
   "order.auto_delivered": "Automaticky doručeno (Zásilkovna)",
   "order.auto_returned": "Automaticky vráceno (nevyzvednuto)",
   "marketing.second_order_email": "E-mail druhá objednávka",
+  "marketing.abandoned_checkout_email": "E-mail opuštěný košík",
+  "marketing.abandoned_checkout_email_failed": "Selhal e-mail opuštěný košík",
+  "order.confirmation_email_failed": "Selhalo potvrzení objednávky",
+  "order.owner_notification_email_failed": "Selhalo oznámení majiteli",
   "newsletter.send": "Odeslání newsletteru",
 };
 

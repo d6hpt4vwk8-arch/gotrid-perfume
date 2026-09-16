@@ -1,4 +1,5 @@
 import { prisma } from "@/lib/prisma";
+import { isConditionFlagged } from "@/lib/feeds/condition-flagged";
 
 // Root categories that mean "this customer buys home/car fragrance, not
 // perfume" — used to decide whether the "second order" email pitches
@@ -75,7 +76,10 @@ export async function recommendProductsForCustomer(
   const categoryIdLists = await Promise.all(targetRoots.map(getCategoryIdsUnderRoot));
   const categoryIds = categoryIdLists.flat();
 
-  const products = await prisma.product.findMany({
+  // Over-fetch and filter out testers/vintage/damaged-packaging items in JS
+  // (isConditionFlagged's regex isn't expressible as a Prisma `where`) so a
+  // "thank you, here's a discount" email never pitches an opened bottle.
+  const candidates = await prisma.product.findMany({
     where: {
       visible: true,
       stock: { gt: 0 },
@@ -87,11 +91,14 @@ export async function recommendProductsForCustomer(
       name: true,
       slug: true,
       price: true,
+      isDefective: true,
       images: { take: 1, orderBy: { sortOrder: "asc" }, select: { url: true } },
     },
     orderBy: { createdAt: "desc" },
-    take: 3,
+    take: 20,
   });
+
+  const products = candidates.filter((p) => !isConditionFlagged(p.name, p.isDefective)).slice(0, 3);
 
   return {
     theme,

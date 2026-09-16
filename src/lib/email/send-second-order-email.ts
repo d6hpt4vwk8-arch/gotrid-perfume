@@ -31,6 +31,29 @@ function productsHtml(products: RecommendedProduct[]): string {
   return `<table cellpadding="0" cellspacing="0" style="width:100%;margin:16px 0"><tr>${cells}</tr></table>`;
 }
 
+export async function renderSecondOrderEmailHtml(params: {
+  email: string;
+  firstName: string;
+  couponCode: string;
+  theme: RecommendationTheme;
+  products: RecommendedProduct[];
+}): Promise<string> {
+  const copy = THEME_COPY[params.theme];
+  const unsubscribeUrl = await buildUnsubscribeUrl(params.email);
+  return `
+      <h1>Ahoj${params.firstName ? ` ${params.firstName}` : ""}!</h1>
+      <p>${copy.heading}</p>
+      <p style="font-size:20px;font-weight:bold;letter-spacing:1px">${params.couponCode}</p>
+      ${productsHtml(params.products)}
+      <p><a href="${SITE_URL}">${copy.cta}</a></p>
+      <hr>
+      <p style="font-size:12px;color:#666">
+        Tento e-mail dostáváte, protože jste se při registraci na Gotrid Perfume přihlásili k odběru
+        novinek. <a href="${unsubscribeUrl}">Odhlásit se z těchto e-mailů</a>.
+      </p>
+    `;
+}
+
 export async function sendSecondOrderEmail(params: {
   email: string;
   firstName: string;
@@ -43,25 +66,12 @@ export async function sendSecondOrderEmail(params: {
     return;
   }
 
-  const copy = THEME_COPY[params.theme];
-  const unsubscribeUrl = await buildUnsubscribeUrl(params.email);
   const resend = getResendClient();
   const { error } = await resend.emails.send({
     from: EMAIL_FROM,
     to: params.email,
     subject: "Sleva na vaši další objednávku — Gotrid Perfume",
-    html: `
-      <h1>Ahoj${params.firstName ? ` ${params.firstName}` : ""}!</h1>
-      <p>${copy.heading}</p>
-      <p style="font-size:20px;font-weight:bold;letter-spacing:1px">${params.couponCode}</p>
-      ${productsHtml(params.products)}
-      <p><a href="${SITE_URL}">${copy.cta}</a></p>
-      <hr>
-      <p style="font-size:12px;color:#666">
-        Tento e-mail dostáváte, protože jste se při registraci na Gotrid Perfume přihlásili k odběru
-        novinek. <a href="${unsubscribeUrl}">Odhlásit se z těchto e-mailů</a>.
-      </p>
-    `,
+    html: await renderSecondOrderEmailHtml(params),
   });
   if (error) throw new Error(`Resend error: ${error.message}`);
 }

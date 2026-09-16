@@ -12,6 +12,7 @@ import { resolveItemCodes, toItemId } from "@/lib/analytics/resolve-item-ids";
 import { SITE_URL } from "@/lib/site";
 import { isRateLimited, recordRateLimitHit, getClientIp } from "@/lib/rate-limit";
 import { getCurrentCustomerId } from "@/lib/customer/get-current-customer";
+import { logAdminActivity } from "@/lib/admin/activity-log";
 
 // Rate-limited on successful orders, not validation failures — a customer
 // fixing a typo'd postcode shouldn't burn through the same budget as a
@@ -59,12 +60,26 @@ export async function POST(req: NextRequest) {
   await recordRateLimitHit(rateLimitKey);
 
   // Best-effort — a failed email must not roll back a paid/created order.
-  void sendCustomerOrderConfirmation(order).catch((err) =>
-    console.error(`[email] customer confirmation failed for ${order.number}`, err),
-  );
-  void sendOwnerNewOrderNotification(order).catch((err) =>
-    console.error(`[email] owner notification failed for ${order.number}`, err),
-  );
+  // Logged to AdminActivityLog (not just console.error) so a failure is
+  // visible in /admin/email-marketing instead of only in Vercel function logs.
+  void sendCustomerOrderConfirmation(order).catch((err) => {
+    console.error(`[email] customer confirmation failed for ${order.number}`, err);
+    void logAdminActivity({
+      action: "order.confirmation_email_failed",
+      entityType: "Order",
+      entityId: order.id,
+      detail: `${order.number}: ${err instanceof Error ? err.message : String(err)}`,
+    });
+  });
+  void sendOwnerNewOrderNotification(order).catch((err) => {
+    console.error(`[email] owner notification failed for ${order.number}`, err);
+    void logAdminActivity({
+      action: "order.owner_notification_email_failed",
+      entityType: "Order",
+      entityId: order.id,
+      detail: `${order.number}: ${err instanceof Error ? err.message : String(err)}`,
+    });
+  });
 
   if (order.paymentMethod === "CARD") {
     const origin = req.nextUrl.origin;
