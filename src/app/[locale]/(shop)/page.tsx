@@ -37,6 +37,10 @@ export default async function HomePage() {
           ...primaryVariantWhere,
           brand: { name: { in: KOREAN_COSMETICS_BRANDS } },
           stock: { gt: 0 },
+          // Curated as "featured Korean cosmetics" by brand alone — a
+          // damaged-packaging batch belongs only in Výprodej (see
+          // isDefective in schema.prisma), not showcased here.
+          isDefective: false,
         },
         orderBy: [{ priority: "desc" }, { createdAt: "desc" }],
         take: 12,
