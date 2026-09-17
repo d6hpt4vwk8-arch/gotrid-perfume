@@ -9,6 +9,7 @@ const NAV_ITEMS = [
   { href: "/admin/znacky", label: "Značky" },
   { href: "/admin/magazin", label: "Magazín" },
   { href: "/admin/objednavky", label: "Objednávky" },
+  { href: "/admin/zakaznici", label: "Zákazníci" },
   { href: "/admin/recenze", label: "Recenze" },
   { href: "/admin/slevove-kody", label: "Slevové kódy" },
   { href: "/admin/newsletter", label: "Newsletter" },

@@ -551,6 +551,18 @@ model Order {
   itemsTotal   Decimal @db.Decimal(10, 2)
   total        Decimal @db.Decimal(10, 2)
 
+  // What the customer was actually charged — total/itemsTotal/etc. above are
+  // always CZK (the DB's one source of truth for accounting/margin), but a
+  // Slovak card order is charged in EUR (see src/app/api/orders/route.ts,
+  // czkToEur(total, Settings.czkToEurRate) at the moment the Stripe session
+  // is created). Snapshotted here rather than recomputed on demand because
+  // Settings.czkToEurRate changes over time — recomputing later with today's
+  // rate would show a number that was never actually charged. Null on older
+  // orders predating this field and on every CZK order; admin UI falls back
+  // to `total`/"CZK" when null.
+  chargedCurrency String?
+  chargedAmount   Decimal? @db.Decimal(10, 2)
+
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 

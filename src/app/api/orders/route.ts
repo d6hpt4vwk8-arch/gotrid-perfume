@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
+import { prisma } from "@/lib/prisma";
 import { checkoutSchema } from "@/lib/orders/checkout-schema";
 import { CheckoutError, createOrder } from "@/lib/orders/create-order";
 import { isStripeConfigured, createCheckoutSession } from "@/lib/payments/stripe";
@@ -89,17 +90,29 @@ export async function POST(req: NextRequest) {
     // card isn't hit with the bank's own conversion fee on top of ours.
     const settings = await getSettings();
     const isSk = order.shippingCountry === "SK";
+    const amount = isSk ? czkToEur(order.total, settings.czkToEurRate) : Number(order.total);
+    const currency = isSk ? "eur" : "czk";
     const session = await createCheckoutSession({
       orderNumber: order.number,
       orderId: order.id,
-      amount: isSk ? czkToEur(order.total, settings.czkToEurRate) : Number(order.total),
-      currency: isSk ? "eur" : "czk",
+      amount,
+      currency,
       customerEmail: order.email,
       // Routes through the access-exchange endpoint so the token becomes an
       // HttpOnly cookie instead of landing in Stripe's own redirect/logs.
       successUrl: `${origin}/api/orders/${order.number}/access?token=${order.accessToken}`,
       cancelUrl: `${origin}/kosik`,
     });
+    if (isSk) {
+      // createOrder() defaulted chargedCurrency/chargedAmount to CZK/total —
+      // overwrite with what Stripe is actually charging, snapshotted now
+      // rather than left to be recomputed later against a possibly-changed
+      // Settings.czkToEurRate (see the field's comment in schema.prisma).
+      await prisma.order.update({
+        where: { id: order.id },
+        data: { chargedCurrency: "EUR", chargedAmount: amount },
+      });
+    }
     // Purchase fires from the Stripe webhook instead — card orders aren't
     // paid yet at this point, only once checkout.session.completed arrives.
     return NextResponse.json({

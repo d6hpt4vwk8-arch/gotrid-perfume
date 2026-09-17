@@ -1,7 +1,7 @@
 import Link from "next/link";
 import { Prisma } from "@prisma/client";
 import { prisma } from "@/lib/prisma";
-import { formatPrice } from "@/lib/format";
+import { formatPrice, formatEurAmount } from "@/lib/format";
 import { ORDER_STATUS_LABELS } from "@/lib/orders/status-labels";
 import { getCustomerReputationMap } from "@/lib/customer-reputation";
 import { getReturnStatsByMethod } from "@/lib/orders/return-stats.server";
@@ -190,7 +190,12 @@ export default async function AdminOrdersPage({
                     </span>
                   )}
                 </td>
-                <td className="px-3 py-2">{formatPrice(o.total)}</td>
+                <td className="px-3 py-2">
+                  {formatPrice(o.total)}
+                  {o.chargedCurrency === "EUR" && o.chargedAmount && (
+                    <div className="text-xs text-accent-2">klientovi {formatEurAmount(o.chargedAmount)}</div>
+                  )}
+                </td>
                 <td className="px-3 py-2">
                   {ORDER_STATUS_LABELS[o.status]}
                   {o.paymentMethod === "CARD" && o.status === "NEW" && (

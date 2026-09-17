@@ -27,6 +27,11 @@ export function formatEur(valueCzk: Prisma.Decimal | number, rate: Prisma.Decima
   return eur.format(czkToEur(valueCzk, rate));
 }
 
+/** Formats an amount that's already in EUR (e.g. Order.chargedAmount) — no CZK conversion. */
+export function formatEurAmount(value: Prisma.Decimal | number): string {
+  return eur.format(Number(value));
+}
+
 /** For server components that read the currency cookie directly (see currency-cookie.ts) instead of useCurrency(). */
 export function formatPriceIn(
   valueCzk: Prisma.Decimal | number,

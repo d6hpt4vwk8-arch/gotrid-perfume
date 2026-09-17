@@ -129,6 +129,14 @@ export async function createOrder(input: CheckoutInput, customerId?: string | nu
             shippingPrice,
             codSurcharge,
             total,
+            // Default: same as `total`, CZK. Overwritten right after this
+            // for CARD orders shipping to SK once the real Stripe-charged
+            // EUR amount is known (see src/app/api/orders/route.ts) — every
+            // other order (COD/bank transfer, or CZ) is genuinely charged
+            // this CZK amount, so it's correct as the final value, not a
+            // placeholder.
+            chargedCurrency: "CZK",
+            chargedAmount: total,
             items: {
               create: [
                 ...input.items.map((item) => {

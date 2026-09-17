@@ -1,7 +1,7 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { prisma } from "@/lib/prisma";
-import { formatPrice } from "@/lib/format";
+import { formatPrice, formatEurAmount } from "@/lib/format";
 import { getSettings } from "@/lib/settings.server";
 import { SHIPPING_LABELS, PAYMENT_LABELS } from "@/lib/shipping";
 import { ShippingIcon } from "@/components/shipping-icons";
@@ -200,6 +200,12 @@ export default async function AdminOrderDetailPage({
             <span>Celkem</span>
             <span>{formatPrice(order.total)}</span>
           </div>
+          {order.chargedCurrency === "EUR" && order.chargedAmount && (
+            <div className="flex justify-between text-accent-2">
+              <span>Klientovi naúčtováno (Stripe)</span>
+              <span>{formatEurAmount(order.chargedAmount)}</span>
+            </div>
+          )}
         </div>
       </div>
 
