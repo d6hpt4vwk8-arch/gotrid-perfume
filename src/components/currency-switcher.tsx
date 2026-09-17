@@ -18,23 +18,28 @@ export function CurrencySwitcher() {
     router.refresh();
   }
 
+  // Stacked vertically (not side-by-side) so it stays narrow next to the
+  // logo in the header — a horizontal CZK/EUR pair was crowding it on
+  // narrow screens.
   return (
-    <div className="flex items-center overflow-hidden rounded-sm border border-white/20 text-xs font-semibold text-white/70">
+    <div className="flex flex-col overflow-hidden rounded-sm border border-white/20 text-[11px] leading-none font-semibold text-white/70">
       <button
         type="button"
         onClick={() => handleClick("CZK")}
         aria-pressed={currency === "CZK"}
-        className={`px-2 py-1 ${currency === "CZK" ? "bg-white/15 text-white" : "hover:text-white"}`}
+        aria-label="Zobrazit ceny v korunách"
+        className={`px-1.5 py-1 ${currency === "CZK" ? "bg-white/15 text-white" : "hover:text-white"}`}
       >
-        CZK
+        Kč
       </button>
       <button
         type="button"
         onClick={() => handleClick("EUR")}
         aria-pressed={currency === "EUR"}
-        className={`px-2 py-1 ${currency === "EUR" ? "bg-white/15 text-white" : "hover:text-white"}`}
+        aria-label="Zobrazit ceny v eurech"
+        className={`border-t border-white/20 px-1.5 py-1 ${currency === "EUR" ? "bg-white/15 text-white" : "hover:text-white"}`}
       >
-        EUR
+        €
       </button>
     </div>
   );

@@ -43,6 +43,20 @@ body {
   overflow-x: hidden;
 }
 
+/* Mobile Safari auto-zooms the whole page when a focused input/select/
+   textarea has a computed font-size under 16px, and often doesn't zoom
+   back out on blur — a visitor reads that as "the site is too wide". The
+   search bar (14px) is the most-tapped offender since it sits in the
+   header on every page. Forcing 16px only below the sm breakpoint removes
+   the zoom trigger without changing how anything looks on desktop. */
+@media (max-width: 640px) {
+  input,
+  select,
+  textarea {
+    font-size: 16px;
+  }
+}
+
 @keyframes toast-in {
   from {
     opacity: 0;
