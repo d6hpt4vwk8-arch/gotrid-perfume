@@ -18,6 +18,7 @@ const ACTION_LABELS: Record<string, string> = {
   "marketing.second_order_email": "E-mail druhá objednávka",
   "marketing.abandoned_checkout_email": "E-mail opuštěný košík",
   "marketing.abandoned_checkout_email_failed": "Selhal e-mail opuštěný košík",
+  "marketing.abandoned_checkout_skipped_out_of_stock": "Přeskočen e-mail opuštěný košík (vyprodáno)",
   "order.confirmation_email_failed": "Selhalo potvrzení objednávky",
   "order.owner_notification_email_failed": "Selhalo oznámení majiteli",
   "newsletter.send": "Odeslání newsletteru",

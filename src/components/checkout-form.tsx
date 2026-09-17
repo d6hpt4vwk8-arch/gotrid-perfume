@@ -133,11 +133,22 @@ export function CheckoutForm({
     phone: string;
     cartSnapshot: typeof items;
   } | null>(null);
+  // Set true the moment an order actually goes through (handleSubmit,
+  // below) — window.location.href on success still fires pagehide, so
+  // without this the sendBeacon fallback captured a "still checking out"
+  // snapshot for an order that had, half a second earlier, already been
+  // placed. A real customer got a "did you forget your order?" email for an
+  // order she'd already received (capturedAt trailed order.createdAt by
+  // 0.6s) — this stops the false capture at the source; the server-side
+  // buffer in runAbandonedCheckoutRecovery is the backstop if this is ever
+  // bypassed some other way.
+  const orderPlacedRef = useRef(false);
   useEffect(() => {
-    if (!contactDone || items.length === 0) return;
+    if (orderPlacedRef.current || !contactDone || items.length === 0) return;
     const payload = { email: email.trim(), firstName: firstName.trim(), phone: phone.trim(), cartSnapshot: items };
     abandonedPayloadRef.current = payload;
     const timer = setTimeout(() => {
+      if (orderPlacedRef.current) return;
       fetch("/api/checkout/capture-abandoned", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -186,6 +197,7 @@ export function CheckoutForm({
 
   useEffect(() => {
     const onPageHide = () => {
+      if (orderPlacedRef.current) return;
       const payload = abandonedPayloadRef.current;
       if (!payload) return;
       const blob = new Blob([JSON.stringify(payload)], { type: "application/json" });
@@ -278,6 +290,7 @@ export function CheckoutForm({
         return;
       }
 
+      orderPlacedRef.current = true;
       clear();
       if (data.redirectUrl) {
         window.location.href = data.redirectUrl;

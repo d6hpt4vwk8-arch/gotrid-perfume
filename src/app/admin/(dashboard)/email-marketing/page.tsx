@@ -25,6 +25,7 @@ export default async function EmailMarketingPage() {
     abandonedRecovered,
     abandonedPending,
     abandonedFailedLogs,
+    abandonedSkippedOutOfStock,
     recentAbandoned,
     secondOrderSentLogs,
     guestOrders,
@@ -37,6 +38,9 @@ export default async function EmailMarketingPage() {
     prisma.abandonedCheckout.count({ where: { recoveredAt: { not: null } } }),
     prisma.abandonedCheckout.count({ where: { emailSentAt: null, recoveredAt: null } }),
     prisma.adminActivityLog.count({ where: { action: "marketing.abandoned_checkout_email_failed" } }),
+    prisma.adminActivityLog.count({
+      where: { action: "marketing.abandoned_checkout_skipped_out_of_stock" },
+    }),
     prisma.abandonedCheckout.findMany({ orderBy: { capturedAt: "desc" }, take: 50 }),
     prisma.adminActivityLog.findMany({
       where: { action: "marketing.second_order_email" },
@@ -99,11 +103,16 @@ export default async function EmailMarketingPage() {
 
       <section className="flex flex-col gap-3">
         <h2 className="text-lg font-semibold text-ink">Opuštěné košíky</h2>
-        <div className="grid grid-cols-2 gap-3 sm:grid-cols-5">
+        <div className="grid grid-cols-2 gap-3 sm:grid-cols-6">
           <StatCard label="Zachyceno celkem" value={abandonedTotal} />
           <StatCard label="Odesláno připomenutí" value={abandonedEmailed} />
           <StatCard label="Vráceno a objednáno" value={abandonedRecovered} />
           <StatCard label="Čeká na odeslání" value={abandonedPending} />
+          <StatCard
+            label="Přeskočeno (vyprodáno)"
+            value={abandonedSkippedOutOfStock}
+            hint="košík mezitím vyprodán, e-mail se neposlal"
+          />
           <StatCard
             label="Selhalo odeslání"
             value={abandonedFailedLogs}
