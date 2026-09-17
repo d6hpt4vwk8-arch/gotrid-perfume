@@ -498,6 +498,11 @@ model Order {
   shippingPostalCode String?
   shippingCountry    String  @default("CZ")
 
+  // Free-text note the customer can leave at checkout ("please ship a bit
+  // later", delivery instructions, …) — surfaced prominently in the admin
+  // order list/detail so it doesn't require opening every order to notice.
+  customerNote String? @db.Text
+
   // Cookie-consent choice at time of order (TZ §5.9) — gates the server-side
   // Meta Purchase event fired later from the Stripe webhook, which has no
   // access to the original request's consent state otherwise.

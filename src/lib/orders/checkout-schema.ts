@@ -24,6 +24,7 @@ export const checkoutSchema = z
     // Re-validated server-side against the real ledger balance and
     // Settings' cap/minimum in src/lib/loyalty.ts — never trusted as-is.
     pointsToRedeem: z.number().int().min(0).max(1_000_000).optional().default(0),
+    customerNote: z.string().trim().max(1000).optional(),
     items: z
       .array(
         z.object({

@@ -50,6 +50,12 @@ export default async function AdminOrderDetailPage({
           2 hodin automaticky zruší a sklad se uvolní.
         </div>
       )}
+      {order.customerNote && (
+        <div className="rounded-sm border border-amber-300 bg-amber-50 p-4 text-sm text-amber-900">
+          <span className="block font-semibold">📝 Poznámka zákazníka</span>
+          <p className="mt-1 whitespace-pre-wrap">{order.customerNote}</p>
+        </div>
+      )}
       <div className="flex items-center justify-between">
         <h1 className="text-2xl font-bold text-ink">Objednávka {order.number}</h1>
         <div className="flex items-center gap-4">

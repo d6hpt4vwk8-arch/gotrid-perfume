@@ -1,5 +1,6 @@
 import { prisma } from "@/lib/prisma";
 import { slugify } from "@/lib/slug";
+import { notifyStockAlerts } from "@/lib/stock-alerts";
 import { downloadProductImages } from "./download-images";
 import { parseDecimal, parseIntSafe } from "./parse-number";
 import { parseXlsxRows } from "./parse-xlsx";
@@ -59,12 +60,12 @@ async function importRow(row: ImportRawRow): Promise<
 
   const existing = await prisma.product.findUnique({
     where: { code: row.code.trim() },
-    select: { id: true, slug: true },
+    select: { id: true, slug: true, stock: true },
   });
 
   const slug = existing?.slug ?? uniqueSlugCandidate(row.name, row.code);
 
-  await prisma.$transaction(async (tx) => {
+  const product = await prisma.$transaction(async (tx) => {
     const product = await tx.product.upsert({
       where: { code: row.code.trim() },
       update: {
@@ -110,7 +111,19 @@ async function importRow(row: ImportRawRow): Promise<
         })),
       });
     }
+
+    return product;
   });
+
+  // Bulk XLSX re-import is how Tamda's catalog gets restocked (no live feed
+  // sync exists for that supplier, unlike SP Venture/perfumes-wholesale.eu) —
+  // without this, anyone who signed up for a "notify me when back in stock"
+  // alert on a Tamda product would never hear back.
+  if (existing && existing.stock <= 0 && product.stock > 0) {
+    void notifyStockAlerts(product).catch((err) =>
+      console.error(`[xlsx-import] stock-alert notify failed for ${product.code}`, err),
+    );
+  }
 
   return { status: existing ? "updated" : "created", warnings };
 }

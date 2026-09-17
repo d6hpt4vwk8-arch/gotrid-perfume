@@ -173,6 +173,11 @@ export default async function AdminOrdersPage({
                   <Link href={`/admin/objednavky/${o.id}`} className="font-medium hover:underline">
                     {o.number}
                   </Link>
+                  {o.customerNote && (
+                    <span title={o.customerNote} className="ml-1.5">
+                      📝
+                    </span>
+                  )}
                 </td>
                 <td className="px-3 py-2 text-accent-2">
                   {new Date(o.createdAt).toLocaleString("cs-CZ")}

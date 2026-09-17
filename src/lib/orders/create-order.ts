@@ -137,6 +137,7 @@ export async function createOrder(input: CheckoutInput, customerId?: string | nu
             shippingCity: input.shippingCity,
             shippingPostalCode: input.shippingPostalCode,
             shippingCountry: input.shippingCountry,
+            customerNote: input.customerNote || null,
             marketingConsent: input.marketingConsent,
             couponCode,
             discountAmount,

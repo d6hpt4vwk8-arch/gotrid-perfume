@@ -69,6 +69,7 @@ export function CheckoutForm({
   const [city, setCity] = useState(customer?.addressCity ?? "");
   const [postalCode, setPostalCode] = useState(customer?.addressPostalCode ?? "");
   const [newsletterOptIn, setNewsletterOptIn] = useState(customer?.marketingOptIn ?? false);
+  const [customerNote, setCustomerNote] = useState("");
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -280,6 +281,7 @@ export function CheckoutForm({
           couponCode: coupon?.code,
           giftProductId: giftProductId ?? undefined,
           pointsToRedeem,
+          customerNote: customerNote.trim() || undefined,
         }),
       });
 
@@ -564,6 +566,18 @@ export function CheckoutForm({
             <GiftPicker unlocked />
           </fieldset>
         )}
+
+        <fieldset className="flex flex-col gap-1">
+          <legend className="mb-1 text-sm font-semibold text-ink">Poznámka k objednávce</legend>
+          <textarea
+            value={customerNote}
+            onChange={(e) => setCustomerNote(e.target.value)}
+            maxLength={1000}
+            rows={3}
+            placeholder="Např. odešlete prosím později, přání k dárku, poznámka k doručení…"
+            className="rounded-sm border border-line px-3 py-2 text-sm text-ink"
+          />
+        </fieldset>
 
         {error && <p className="text-sm text-red-600">{error}</p>}
 
