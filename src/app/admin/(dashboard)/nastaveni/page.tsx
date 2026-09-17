@@ -206,6 +206,57 @@ export default async function AdminSettingsPage() {
             X7K2Q9) — funguje jen jednou, nedá se sdílet ani používat opakovaně.
           </span>
         </label>
+        <h2 className="mt-2 text-sm font-semibold text-ink">Věrnostní body</h2>
+        <label className="flex flex-col gap-1 text-sm">
+          Kolik % z útraty se vrací v bodech (1 bod = 1 Kč)
+          <input
+            name="loyaltyEarnPercent"
+            type="number"
+            step="1"
+            min="0"
+            max="50"
+            defaultValue={settings.loyaltyEarnPercent}
+            className="rounded-sm border border-line px-3 py-2"
+          />
+        </label>
+        <label className="flex flex-col gap-1 text-sm">
+          Max. % objednávky, které lze zaplatit body
+          <input
+            name="loyaltyRedeemCapPercent"
+            type="number"
+            step="1"
+            min="0"
+            max="100"
+            defaultValue={settings.loyaltyRedeemCapPercent}
+            className="rounded-sm border border-line px-3 py-2"
+          />
+          <span className="text-xs text-accent-2">
+            Zbytek se vždy platí skutečnými penězi — body nemohou vynulovat celou objednávku.
+          </span>
+        </label>
+        <label className="flex flex-col gap-1 text-sm">
+          Minimální hodnota objednávky pro uplatnění bodů (Kč)
+          <input
+            name="loyaltyMinOrderValue"
+            type="number"
+            step="0.01"
+            min="0"
+            defaultValue={settings.loyaltyMinOrderValue}
+            className="rounded-sm border border-line px-3 py-2"
+          />
+        </label>
+        <label className="flex flex-col gap-1 text-sm">
+          Body vyprší po (měsících neaktivity)
+          <input
+            name="loyaltyExpiryMonths"
+            type="number"
+            step="1"
+            min="1"
+            defaultValue={settings.loyaltyExpiryMonths}
+            className="rounded-sm border border-line px-3 py-2"
+          />
+        </label>
+
         <button
           type="submit"
           className="w-fit rounded-sm bg-ink px-5 py-2.5 text-sm font-medium text-white hover:bg-accent"

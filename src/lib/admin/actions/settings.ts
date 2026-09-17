@@ -44,6 +44,10 @@ const settingsSchema = z.object({
   // Manually updated, not fetched from a live FX API — see the field's
   // comment in schema.prisma.
   czkToEurRate: z.coerce.number().min(15).max(40),
+  loyaltyEarnPercent: z.coerce.number().int().min(0).max(50),
+  loyaltyRedeemCapPercent: z.coerce.number().int().min(0).max(100),
+  loyaltyMinOrderValue: z.coerce.number().min(0).max(100_000),
+  loyaltyExpiryMonths: z.coerce.number().int().min(1).max(60),
 });
 
 export async function updateSettings(formData: FormData) {

@@ -13,6 +13,10 @@ export interface ShopSettings {
   shippingPriceZasilkovnaSk: number | null;
   codSurcharge: number;
   czkToEurRate: number;
+  loyaltyEarnPercent: number;
+  loyaltyRedeemCapPercent: number;
+  loyaltyMinOrderValue: number;
+  loyaltyExpiryMonths: number;
 }
 
 // Read on every storefront page (BenefitsBar, checkout, CartProvider) — like
@@ -52,6 +56,10 @@ export const getSettings = unstable_cache(
         row.shippingPriceZasilkovnaSk === null ? null : Number(row.shippingPriceZasilkovnaSk),
       codSurcharge: Number(row.codSurcharge),
       czkToEurRate: Number(row.czkToEurRate),
+      loyaltyEarnPercent: row.loyaltyEarnPercent,
+      loyaltyRedeemCapPercent: row.loyaltyRedeemCapPercent,
+      loyaltyMinOrderValue: Number(row.loyaltyMinOrderValue),
+      loyaltyExpiryMonths: row.loyaltyExpiryMonths,
     };
   },
   ["shop-settings"],

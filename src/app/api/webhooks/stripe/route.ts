@@ -4,6 +4,7 @@ import { prisma } from "@/lib/prisma";
 import { sendMetaCapiEvent } from "@/lib/analytics/meta-capi";
 import { sendZboziConversion } from "@/lib/analytics/zbozi-conversion";
 import { sendHeurekaOrderLog } from "@/lib/analytics/heureka-overeno";
+import { awardPointsForOrder } from "@/lib/loyalty";
 import { resolveItemCodes, toItemId } from "@/lib/analytics/resolve-item-ids";
 import { SITE_URL } from "@/lib/site";
 
@@ -93,6 +94,10 @@ export async function POST(req: NextRequest) {
           unitPrice: Number(i.unitPrice),
         })),
       }).catch((err) => console.error(`[heureka-overeno] failed for ${order.number}`, err));
+
+      void awardPointsForOrder(order.id).catch((err) =>
+        console.error(`[loyalty] award failed for ${order.number}`, err),
+      );
     }
   }
 

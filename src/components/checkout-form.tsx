@@ -74,6 +74,9 @@ export function CheckoutForm({
 
   const [coupon, setCoupon] = useState<AppliedCoupon | null>(null);
 
+  const [loyalty, setLoyalty] = useState<{ balance: number; maxRedeemable: number } | null>(null);
+  const [useLoyaltyPoints, setUseLoyaltyPoints] = useState(true);
+
   const shippingPrice = useMemo(
     () => getShippingPrice(shippingMethod, itemsTotal, settings, shippingCountry),
     [shippingMethod, itemsTotal, settings, shippingCountry],
@@ -83,7 +86,8 @@ export function CheckoutForm({
     () => getCodSurcharge(paymentMethod, settings),
     [paymentMethod, settings],
   );
-  const total = itemsTotal + shippingPrice + codSurcharge - (coupon?.discountAmount ?? 0);
+  const pointsToRedeem = useLoyaltyPoints ? (loyalty?.maxRedeemable ?? 0) : 0;
+  const total = itemsTotal + shippingPrice + codSurcharge - (coupon?.discountAmount ?? 0) - pointsToRedeem;
 
   // Every DB price is CZK — a Slovak card charged in CZK eats the bank's own
   // conversion fee on top of ours, so once Slovensko is picked, everything
@@ -145,6 +149,40 @@ export function CheckoutForm({
     }, 2000);
     return () => clearTimeout(timer);
   }, [contactDone, email, firstName, phone, items]);
+
+  // Debounced points-balance lookup, keyed by email like the abandoned-cart
+  // capture above — works for guests too (not just logged-in customers),
+  // since the ledger in src/lib/loyalty.ts is keyed by email, not
+  // customerId (same reasoning as the second-order discount email: most
+  // checkouts here are guests, so an account-only lookup would reach almost
+  // nobody). Re-fires when the coupon changes too, since the eligible total
+  // (net of any coupon discount) affects the redemption cap.
+  const eligibleTotal = itemsTotal - (coupon?.discountAmount ?? 0);
+  useEffect(() => {
+    if (!/^\S+@\S+\.\S+$/.test(email.trim())) {
+      setLoyalty(null);
+      return;
+    }
+    let cancelled = false;
+    const timer = setTimeout(() => {
+      fetch("/api/loyalty/preview", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email: email.trim(), itemsTotal: eligibleTotal }),
+      })
+        .then((res) => (res.ok ? res.json() : null))
+        .then((data) => {
+          if (!cancelled && data) setLoyalty(data);
+        })
+        .catch(() => {
+          // Best-effort — a failed lookup just means no points offered this time.
+        });
+    }, 600);
+    return () => {
+      cancelled = true;
+      clearTimeout(timer);
+    };
+  }, [email, eligibleTotal]);
 
   useEffect(() => {
     const onPageHide = () => {
@@ -229,6 +267,7 @@ export function CheckoutForm({
           newsletterOptIn,
           couponCode: coupon?.code,
           giftProductId: giftProductId ?? undefined,
+          pointsToRedeem,
         }),
       });
 
@@ -483,6 +522,29 @@ export function CheckoutForm({
           <CouponField onApplied={setCoupon} />
         </fieldset>
 
+        {loyalty && loyalty.balance > 0 && (
+          <fieldset className="flex flex-col gap-2">
+            <legend className="mb-1 text-sm font-semibold text-ink">Věrnostní body</legend>
+            {loyalty.maxRedeemable > 0 ? (
+              <label className="flex items-center gap-2 text-sm text-ink">
+                <input
+                  type="checkbox"
+                  checked={useLoyaltyPoints}
+                  onChange={(e) => setUseLoyaltyPoints(e.target.checked)}
+                  className="accent-accent"
+                />
+                Uplatnit {loyalty.maxRedeemable} bodů (−{price(loyalty.maxRedeemable)}) — máte celkem{" "}
+                {loyalty.balance} bodů
+              </label>
+            ) : (
+              <p className="text-sm text-accent-2">
+                Máte {loyalty.balance} bodů, ale tuto objednávku jimi nelze uplatnit (minimální
+                hodnota objednávky pro uplatnění je {price(settings.loyaltyMinOrderValue)}).
+              </p>
+            )}
+          </fieldset>
+        )}
+
         {coupon?.grantsGift && (
           <fieldset className="flex flex-col gap-2">
             <legend className="mb-1 text-sm font-semibold text-ink">Dárek k objednávce</legend>
@@ -537,6 +599,12 @@ export function CheckoutForm({
             <div className="flex justify-between text-ok">
               <span>Sleva ({coupon.code})</span>
               <span>−{price(coupon.discountAmount)}</span>
+            </div>
+          )}
+          {pointsToRedeem > 0 && (
+            <div className="flex justify-between text-ok">
+              <span>Věrnostní body</span>
+              <span>−{price(pointsToRedeem)}</span>
             </div>
           )}
           <div className="flex justify-between text-base font-bold">

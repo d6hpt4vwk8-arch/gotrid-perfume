@@ -4,6 +4,7 @@ import { generateOrderNumber } from "./generate-order-number";
 import { canUseCod, getCodSurcharge, getShippingPrice } from "@/lib/shipping";
 import { getSettings } from "@/lib/settings.server";
 import { previewCoupon, validateCoupon } from "@/lib/coupons";
+import { redeemPoints } from "@/lib/loyalty";
 import { CheckoutError } from "./checkout-error";
 import type { CheckoutInput } from "./checkout-schema";
 
@@ -104,7 +105,21 @@ export async function createOrder(input: CheckoutInput, customerId?: string | nu
           couponCode = result.code;
           discountAmount = result.discountAmount;
         }
-        const total = itemsTotal + shippingPrice + codSurcharge - discountAmount;
+
+        // Re-validated against the real ledger balance inside this same
+        // transaction — never trusts input.pointsToRedeem as-is (see
+        // redeemPoints' own doc comment). Capped against itemsTotal net of
+        // the coupon discount already applied, so the two mechanisms can't
+        // stack past what the customer is actually paying for goods.
+        const pointsRedeemed = await redeemPoints(
+          tx,
+          input.email,
+          input.pointsToRedeem,
+          itemsTotal - discountAmount,
+          settings,
+        );
+
+        const total = itemsTotal + shippingPrice + codSurcharge - discountAmount - pointsRedeemed;
 
         const order = await tx.order.create({
           data: {
@@ -125,6 +140,7 @@ export async function createOrder(input: CheckoutInput, customerId?: string | nu
             marketingConsent: input.marketingConsent,
             couponCode,
             discountAmount,
+            pointsRedeemed,
             itemsTotal,
             shippingPrice,
             codSurcharge,
@@ -168,6 +184,18 @@ export async function createOrder(input: CheckoutInput, customerId?: string | nu
           },
           include: { items: true },
         });
+
+        if (pointsRedeemed > 0) {
+          await tx.loyaltyTransaction.create({
+            data: {
+              email: input.email.trim().toLowerCase(),
+              orderId: order.id,
+              type: "REDEEM",
+              points: -pointsRedeemed,
+              note: `Uplatněno na objednávce ${order.number}`,
+            },
+          });
+        }
 
         if (input.newsletterOptIn) {
           // Upsert by email rather than customerId — covers guest checkouts

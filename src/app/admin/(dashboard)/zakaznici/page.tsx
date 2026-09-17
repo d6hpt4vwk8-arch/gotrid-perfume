@@ -10,6 +10,7 @@ interface CustomerRow {
   phone: string;
   hasAccount: boolean;
   marketingOptIn: boolean;
+  pointsBalance: number;
   orderCount: number;
   totalSpent: number;
   firstOrderAt: Date;
@@ -22,7 +23,7 @@ interface CustomerRow {
 // from us, joining in Customer only for account/marketing-opt-in status
 // where an account happens to exist.
 export default async function AdminCustomersPage() {
-  const [orders, customers] = await Promise.all([
+  const [orders, customers, pointsByEmailRaw] = await Promise.all([
     prisma.order.findMany({
       where: { status: { in: [...REAL_ORDER_STATUSES] } },
       select: {
@@ -37,11 +38,13 @@ export default async function AdminCustomersPage() {
       orderBy: { createdAt: "asc" },
     }),
     prisma.customer.findMany({ select: { email: true, marketingOptIn: true } }),
+    prisma.loyaltyTransaction.groupBy({ by: ["email"], _sum: { points: true } }),
   ]);
 
   const marketingOptInByEmail = new Map(
     customers.map((c) => [c.email.toLowerCase(), c.marketingOptIn]),
   );
+  const pointsByEmail = new Map(pointsByEmailRaw.map((p) => [p.email, p._sum.points ?? 0]));
 
   const byEmail = new Map<string, CustomerRow>();
   for (const o of orders) {
@@ -59,6 +62,7 @@ export default async function AdminCustomersPage() {
         phone: o.phone,
         hasAccount: Boolean(o.customerId),
         marketingOptIn: marketingOptInByEmail.get(key) ?? false,
+        pointsBalance: pointsByEmail.get(key) ?? 0,
         orderCount: 1,
         totalSpent: Number(o.total),
         firstOrderAt: o.createdAt,
@@ -87,6 +91,7 @@ export default async function AdminCustomersPage() {
               <th className="px-3 py-2">Kontakt</th>
               <th className="px-3 py-2">Účet</th>
               <th className="px-3 py-2">Objednávky</th>
+              <th className="px-3 py-2">Body</th>
               <th className="px-3 py-2">Celkem utraceno</th>
               <th className="px-3 py-2">První / poslední objednávka</th>
             </tr>
@@ -119,6 +124,7 @@ export default async function AdminCustomersPage() {
                     </span>
                   )}
                 </td>
+                <td className="px-3 py-2">{r.pointsBalance > 0 ? r.pointsBalance : "—"}</td>
                 <td className="px-3 py-2 font-medium">{formatPrice(r.totalSpent)}</td>
                 <td className="whitespace-nowrap px-3 py-2 text-xs text-accent-2">
                   {r.firstOrderAt.toLocaleDateString("cs-CZ")}
@@ -128,7 +134,7 @@ export default async function AdminCustomersPage() {
             ))}
             {rows.length === 0 && (
               <tr>
-                <td colSpan={6} className="px-3 py-4 text-center text-accent-2">
+                <td colSpan={7} className="px-3 py-4 text-center text-accent-2">
                   Zatím žádní zákazníci.
                 </td>
               </tr>

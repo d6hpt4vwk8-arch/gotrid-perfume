@@ -1,20 +1,24 @@
 import Link from "next/link";
 import { redirect } from "next/navigation";
 import { prisma } from "@/lib/prisma";
-import { formatPrice } from "@/lib/format";
+import { formatPrice, formatEurAmount } from "@/lib/format";
 import { ORDER_STATUS_LABELS } from "@/lib/orders/status-labels";
 import { getCurrentCustomer } from "@/lib/customer/get-current-customer";
 import { updateSavedAddress, updateMarketingOptIn } from "@/lib/customer/actions";
 import { CustomerLogoutButton } from "@/components/customer/logout-button";
+import { getLoyaltyBalance } from "@/lib/loyalty";
 
 export default async function AccountPage() {
   const customer = await getCurrentCustomer();
   if (!customer) redirect("/prihlaseni?next=/muj-ucet");
 
-  const orders = await prisma.order.findMany({
-    where: { customerId: customer.id },
-    orderBy: { createdAt: "desc" },
-  });
+  const [orders, loyaltyBalance] = await Promise.all([
+    prisma.order.findMany({
+      where: { customerId: customer.id },
+      orderBy: { createdAt: "desc" },
+    }),
+    getLoyaltyBalance(prisma, customer.email),
+  ]);
 
   return (
     <main className="mx-auto flex max-w-3xl flex-1 flex-col gap-10 px-4 py-10">
@@ -46,11 +50,25 @@ export default async function AccountPage() {
                     {ORDER_STATUS_LABELS[order.status]}
                   </span>
                 </div>
-                <span className="font-bold text-accent">{formatPrice(order.total)}</span>
+                <div className="text-right">
+                  <span className="font-bold text-accent">{formatPrice(order.total)}</span>
+                  {order.chargedCurrency === "EUR" && order.chargedAmount && (
+                    <div className="text-xs text-accent-2">{formatEurAmount(order.chargedAmount)}</div>
+                  )}
+                </div>
               </li>
             ))}
           </ul>
         )}
+      </section>
+
+      <section className="flex flex-col gap-2 rounded-sm border border-line bg-line/20 p-4">
+        <h2 className="text-lg font-bold text-ink">Věrnostní body</h2>
+        <p className="text-2xl font-bold text-accent">{loyaltyBalance} bodů</p>
+        <p className="text-sm text-accent-2">
+          1 bod = 1 Kč slevy. Body získáváte za každý zaplacený nákup a můžete je uplatnit při
+          příští objednávce na pokladně.
+        </p>
       </section>
 
       <section className="flex flex-col gap-4">

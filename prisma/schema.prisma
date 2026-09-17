@@ -563,11 +563,56 @@ model Order {
   chargedCurrency String?
   chargedAmount   Decimal? @db.Decimal(10, 2)
 
+  // Loyalty points — see LoyaltyTransaction below for the actual ledger;
+  // these are a denormalized snapshot on the order itself, same pattern as
+  // couponCode/discountAmount, so the order detail page doesn't need a join
+  // to show what happened. pointsEarned is set once the order becomes a
+  // real sale (src/lib/loyalty.ts's awardPointsForOrder — same trigger
+  // points as sendHeurekaOrderLog), pointsRedeemed at order creation.
+  pointsEarned        Int                  @default(0)
+  pointsRedeemed      Int                  @default(0)
+  loyaltyTransactions LoyaltyTransaction[]
+
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
   @@index([customerId])
   @@index([status])
+}
+
+// ---------------------------------------------------------------------------
+// LoyaltyTransaction — points-program ledger. Keyed by email (lowercased),
+// not customerId: 108 of 111 real orders are guest checkouts (no Customer
+// row), and a points program scoped to registered accounts would reach
+// almost nobody — same lesson already learned the hard way with the
+// "second order" discount email (see second-order-campaign.ts). Balance for
+// an email is always SUM(points) over its transactions, never a cached
+// counter, so it can't drift out of sync with its own history.
+// ---------------------------------------------------------------------------
+
+enum LoyaltyTransactionType {
+  EARN
+  REDEEM
+  EXPIRE
+  // Manual correction from the admin panel — a support gesture ("sorry
+  // about the late delivery, here are 50 points") or a fix for a mistake,
+  // never something the storefront itself creates.
+  ADJUST
+}
+
+model LoyaltyTransaction {
+  id      String  @id @default(cuid())
+  email   String
+  orderId String?
+  order   Order?  @relation(fields: [orderId], references: [id])
+  // Positive for EARN/ADJUST-credit, negative for REDEEM/EXPIRE/ADJUST-debit.
+  points    Int
+  type      LoyaltyTransactionType
+  note      String?
+  createdAt DateTime               @default(now())
+
+  @@index([email])
+  @@index([orderId])
 }
 
 // ---------------------------------------------------------------------------
@@ -692,6 +737,21 @@ model Settings {
   // consumer price, and a live-rate dependency would make checkout fail
   // whenever that API is down.
   czkToEurRate Decimal @default(24.5) @db.Decimal(10, 4)
+
+  // Loyalty points program (see LoyaltyTransaction) — owner-agreed defaults
+  // 2026-09-19, kept well under the ~43% real gross margin so a fully
+  // engaged repeat customer never turns an order into a loss: earn 3% of
+  // cash actually paid for goods (never on shipping/COD surcharge, and
+  // never on the points-funded portion of a purchase — see
+  // src/lib/loyalty.ts), redeemable for at most 30% of any one order's
+  // total so every sale still collects real money, only above a 300 Kč
+  // minimum order so points can't zero out a token-sized order, and expire
+  // after 12 months of no activity so the balance doesn't grow into an
+  // unbounded liability from customers who never come back.
+  loyaltyEarnPercent      Int     @default(3)
+  loyaltyRedeemCapPercent Int     @default(30)
+  loyaltyMinOrderValue    Decimal @default(300) @db.Decimal(10, 2)
+  loyaltyExpiryMonths     Int     @default(12)
 
   // One-time milestone alert (see checkZasilkovnaVolumeMilestone) — set once
   // the owner has been notified that Zásilkovna volume crossed the

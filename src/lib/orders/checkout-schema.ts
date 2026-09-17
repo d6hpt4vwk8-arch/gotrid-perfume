@@ -21,6 +21,9 @@ export const checkoutSchema = z
     newsletterOptIn: z.boolean().optional().default(false),
     couponCode: z.string().trim().max(50).optional(),
     giftProductId: z.string().max(200).optional(),
+    // Re-validated server-side against the real ledger balance and
+    // Settings' cap/minimum in src/lib/loyalty.ts — never trusted as-is.
+    pointsToRedeem: z.number().int().min(0).max(1_000_000).optional().default(0),
     items: z
       .array(
         z.object({

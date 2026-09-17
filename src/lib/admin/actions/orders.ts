@@ -5,6 +5,7 @@ import { prisma } from "@/lib/prisma";
 import { logAdminActivity } from "@/lib/admin/activity-log";
 import { requireAdmin } from "@/lib/admin/require-admin";
 import { sendHeurekaOrderLog } from "@/lib/analytics/heureka-overeno";
+import { awardPointsForOrder } from "@/lib/loyalty";
 import type { OrderStatus } from "@prisma/client";
 
 const VALID_STATUSES: OrderStatus[] = [
@@ -63,6 +64,10 @@ export async function updateOrderStatus(id: string, formData: FormData) {
           unitPrice: Number(i.unitPrice),
         })),
       }).catch((err) => console.error(`[heureka-overeno] failed for ${order.number}`, err));
+
+      void awardPointsForOrder(order.id).catch((err) =>
+        console.error(`[loyalty] award failed for ${order.number}`, err),
+      );
     }
   }
   if (before.trackingNumber !== order.trackingNumber) {
