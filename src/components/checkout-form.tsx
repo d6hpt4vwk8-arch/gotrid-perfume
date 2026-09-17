@@ -5,6 +5,7 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import { useCart } from "@/lib/cart-context";
 import { useConsent } from "@/lib/consent-context";
 import { formatEur, formatPrice } from "@/lib/format";
+import { useCurrency } from "@/lib/currency-context";
 import {
   PAYMENT_LABELS,
   PICKUP_ADDRESS,
@@ -38,12 +39,19 @@ export function CheckoutForm({
 }) {
   const { items, total: itemsTotal, clear, giftProductId } = useCart();
   const { consent } = useConsent();
+  // Seeds the checkout with the country that matches whatever currency the
+  // visitor was already browsing in (the header's CurrencySwitcher) — still
+  // freely changeable below, but avoids the jarring "browsed in EUR, then
+  // checkout suddenly shows CZK" experience of always defaulting to CZ.
+  const { currency: browsingCurrency } = useCurrency();
 
   const [email, setEmail] = useState(customer?.email ?? "");
   const [phone, setPhone] = useState(customer?.phone ?? "");
   const [firstName, setFirstName] = useState(customer?.firstName ?? "");
   const [lastName, setLastName] = useState(customer?.lastName ?? "");
-  const [shippingCountry, setShippingCountry] = useState<"CZ" | "SK">("CZ");
+  const [shippingCountry, setShippingCountry] = useState<"CZ" | "SK">(
+    browsingCurrency === "EUR" ? "SK" : "CZ",
+  );
   const [shippingMethod, setShippingMethod] = useState<ShippingMethod>("ZASILKOVNA");
   const [paymentMethod, setPaymentMethod] = useState<PaymentMethod>("BANK_TRANSFER");
   // `street`/`city`/`zip` are only ever set by GlsPickupPointPicker

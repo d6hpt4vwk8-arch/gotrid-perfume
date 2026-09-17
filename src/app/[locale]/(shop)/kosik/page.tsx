@@ -5,7 +5,7 @@ import Link from "next/link";
 import { useState } from "react";
 import { useCart } from "@/lib/cart-context";
 import type { AppliedCoupon } from "@/components/coupon-field";
-import { formatPrice } from "@/lib/format";
+import { useCurrency } from "@/lib/currency-context";
 import { TrustBadges } from "@/components/trust-badges";
 import { PaymentIcons } from "@/components/payment-icons";
 import { CheckoutSteps } from "@/components/checkout-steps";
@@ -14,6 +14,7 @@ import { GiftPicker } from "@/components/gift-picker";
 
 export default function CartPage() {
   const { items, setQty, removeItem, total, freeShippingThreshold } = useCart();
+  const { price } = useCurrency();
   const remaining = freeShippingThreshold - total;
   const [coupon, setCoupon] = useState<AppliedCoupon | null>(null);
   const totalAfterDiscount = Math.max(0, total - (coupon?.discountAmount ?? 0));
@@ -50,7 +51,7 @@ export default function CartPage() {
         {remaining > 0 ? (
           <>
             <span className="text-ink">
-              Ještě <span className="font-semibold">{formatPrice(remaining)}</span> do dopravy zdarma
+              Ještě <span className="font-semibold">{price(remaining)}</span> do dopravy zdarma
             </span>
             <div className="h-1.5 w-full overflow-hidden rounded-full bg-line">
               <div
@@ -76,7 +77,7 @@ export default function CartPage() {
               <Link href={`/produkt/${item.slug}`} className="text-sm font-semibold text-ink hover:underline">
                 {item.name}
               </Link>
-              <span className="text-sm text-accent-2">{formatPrice(item.price)} / ks</span>
+              <span className="text-sm text-accent-2">{price(item.price)} / ks</span>
               <div className="flex items-center gap-2 pt-1">
                 <input
                   type="number"
@@ -95,7 +96,7 @@ export default function CartPage() {
                 </button>
               </div>
             </div>
-            <span className="font-bold text-accent">{formatPrice(item.price * item.qty)}</span>
+            <span className="font-bold text-accent">{price(item.price * item.qty)}</span>
           </li>
         ))}
       </ul>
@@ -108,12 +109,12 @@ export default function CartPage() {
         {coupon && !coupon.grantsGift && (
           <div className="flex justify-between text-ok">
             <span>Sleva ({coupon.code})</span>
-            <span>−{formatPrice(coupon.discountAmount)}</span>
+            <span>−{price(coupon.discountAmount)}</span>
           </div>
         )}
         <div className="flex items-center justify-between text-lg font-bold">
           <span>Celkem</span>
-          <span>{formatPrice(totalAfterDiscount)}</span>
+          <span>{price(totalAfterDiscount)}</span>
         </div>
         <span className="text-xs text-accent-2">Dopravu spočítáme v dalším kroku.</span>
       </div>

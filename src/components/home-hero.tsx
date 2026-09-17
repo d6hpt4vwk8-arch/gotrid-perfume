@@ -1,8 +1,12 @@
+import { headers } from "next/headers";
 import Image from "next/image";
 import Link from "next/link";
 import type { ReactNode } from "react";
+import type { Prisma } from "@prisma/client";
 import { prisma } from "@/lib/prisma";
-import { formatPrice } from "@/lib/format";
+import { formatPriceIn } from "@/lib/format";
+import { readCurrencyCookie } from "@/lib/currency-cookie";
+import { getSettings } from "@/lib/settings.server";
 import { getActiveGiftCoupon, getGiftOptions } from "@/lib/gifts.server";
 import { HeroSlider } from "@/components/hero-slider";
 import { CopyCodeButton } from "@/components/copy-code-button";
@@ -20,14 +24,18 @@ const HERO_PRODUCT_SLUGS = [
 ];
 
 export async function HomeHero() {
-  const [products, giftCoupon, giftOptions] = await Promise.all([
+  const [products, giftCoupon, giftOptions, settings, headerList] = await Promise.all([
     prisma.product.findMany({
       where: { slug: { in: HERO_PRODUCT_SLUGS }, visible: true },
       include: { brand: true, images: { orderBy: { sortOrder: "asc" }, take: 1 } },
     }),
     getActiveGiftCoupon(),
     getGiftOptions(),
+    getSettings(),
+    headers(),
   ]);
+  const currency = readCurrencyCookie(headerList.get("cookie"));
+  const price = (czk: Prisma.Decimal | number) => formatPriceIn(czk, currency, settings.czkToEurRate);
   const featured = HERO_PRODUCT_SLUGS.map((slug) => products.find((p) => p.slug === slug)).filter(
     (p): p is NonNullable<typeof p> => Boolean(p),
   );
@@ -97,7 +105,7 @@ export async function HomeHero() {
                   <span className="line-clamp-2 text-[11px] leading-snug font-semibold text-ink sm:text-xs">
                     {product.name}
                   </span>
-                  <span className="text-sm font-bold text-ink">{formatPrice(product.price)}</span>
+                  <span className="text-sm font-bold text-ink">{price(product.price)}</span>
                 </div>
               </Link>
             ))}
@@ -123,7 +131,7 @@ export async function HomeHero() {
             </span>
             <h2 className="text-3xl leading-[1.15] font-bold sm:text-4xl lg:text-[2.6rem]">
               {giftCoupon.minOrderValue
-                ? `Nákup nad ${formatPrice(Number(giftCoupon.minOrderValue))}? Dárek zdarma!`
+                ? `Nákup nad ${price(Number(giftCoupon.minOrderValue))}? Dárek zdarma!`
                 : "Vyberte si dárek zdarma!"}
             </h2>
             <p className="max-w-md text-sm leading-relaxed text-white/70">

@@ -3,7 +3,7 @@
 import Image from "next/image";
 import { useEffect, useState } from "react";
 import { useCart } from "@/lib/cart-context";
-import { formatPrice } from "@/lib/format";
+import { useCurrency } from "@/lib/currency-context";
 
 interface GiftOption {
   productId: string;
@@ -21,6 +21,7 @@ interface GiftOption {
  */
 export function GiftPicker({ unlocked }: { unlocked: boolean }) {
   const { giftProductId, setGiftProductId } = useCart();
+  const { price } = useCurrency();
   const [gifts, setGifts] = useState<GiftOption[]>([]);
   const [loaded, setLoaded] = useState(false);
 
@@ -76,7 +77,7 @@ export function GiftPicker({ unlocked }: { unlocked: boolean }) {
               </span>
             )}
             <span className="flex-1 text-sm text-ink">{gift.name}</span>
-            <span className="text-xs text-accent-2">v hodnotě {formatPrice(gift.value)}</span>
+            <span className="text-xs text-accent-2">v hodnotě {price(gift.value)}</span>
           </label>
         ))}
       </div>

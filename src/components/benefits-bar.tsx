@@ -1,13 +1,21 @@
+import { headers } from "next/headers";
 import { getSettings } from "@/lib/settings.server";
-import { formatPrice } from "@/lib/format";
+import { formatPriceIn } from "@/lib/format";
+import { readCurrencyCookie } from "@/lib/currency-cookie";
 import { getActiveGiftCoupon } from "@/lib/gifts.server";
 import { BenefitsRotator } from "@/components/benefits-rotator";
 
 export async function BenefitsBar() {
-  const [settings, giftCoupon] = await Promise.all([getSettings(), getActiveGiftCoupon()]);
+  const [settings, giftCoupon, headerList] = await Promise.all([
+    getSettings(),
+    getActiveGiftCoupon(),
+    headers(),
+  ]);
+  const currency = readCurrencyCookie(headerList.get("cookie"));
+  const price = (czk: number) => formatPriceIn(czk, currency, settings.czkToEurRate);
 
   const items = [
-    `Doprava zdarma od ${formatPrice(settings.freeShippingThreshold)}`,
+    `Doprava zdarma od ${price(settings.freeShippingThreshold)}`,
     "Doručení do 2–3 pracovních dnů",
     "100 % originální produkty",
     // Public "leak" of the gift promo (see also the homepage hero slide) —
@@ -16,7 +24,7 @@ export async function BenefitsBar() {
     ...(giftCoupon
       ? [
           `Dárek zdarma s kódem ${giftCoupon.code}${
-            giftCoupon.minOrderValue ? ` při nákupu nad ${formatPrice(Number(giftCoupon.minOrderValue))}` : ""
+            giftCoupon.minOrderValue ? ` při nákupu nad ${price(Number(giftCoupon.minOrderValue))}` : ""
           }`,
         ]
       : []),

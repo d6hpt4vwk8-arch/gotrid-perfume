@@ -1,7 +1,9 @@
+"use client";
+
 import Image from "next/image";
 import Link from "next/link";
 import type { Prisma } from "@prisma/client";
-import { formatPrice } from "@/lib/format";
+import { useCurrency } from "@/lib/currency-context";
 import { AddToCartButton } from "@/components/add-to-cart-button";
 import { WishlistButton } from "@/components/wishlist-button";
 
@@ -26,6 +28,7 @@ export function ProductCard({
   /** Settings.freeShippingThreshold — omit to just skip the badge (e.g. the wishlist page, which has no server parent to source it from). */
   freeShippingThreshold?: number;
 }) {
+  const { price } = useCurrency();
   const image = product.images[0];
   const discountPercent = product.compareAtPrice
     ? Math.round((1 - Number(product.price) / Number(product.compareAtPrice)) * 100)
@@ -87,11 +90,9 @@ export function ProductCard({
           {product.name}
         </span>
         <div className="flex items-baseline gap-2">
-          <span className="font-bold text-accent">{formatPrice(product.price)}</span>
+          <span className="font-bold text-accent">{price(product.price)}</span>
           {product.compareAtPrice && (
-            <span className="text-sm text-accent-2 line-through">
-              {formatPrice(product.compareAtPrice)}
-            </span>
+            <span className="text-sm text-accent-2 line-through">{price(product.compareAtPrice)}</span>
           )}
         </div>
         <span

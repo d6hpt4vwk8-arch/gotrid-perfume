@@ -5,6 +5,7 @@ import { SearchBar } from "@/components/search-bar";
 import { CartIconLink } from "@/components/cart-icon-link";
 import { WishlistIconLink } from "@/components/wishlist-icon-link";
 import { MobileCategoryMenu } from "@/components/mobile-category-menu";
+import { CurrencySwitcher } from "@/components/currency-switcher";
 import { getCurrentCustomerId } from "@/lib/customer/get-current-customer";
 
 export async function SiteHeader() {
@@ -31,6 +32,7 @@ export async function SiteHeader() {
           </Link>
 
           <div className="order-2 flex items-center gap-4 text-white sm:order-3 sm:ml-auto">
+            <CurrencySwitcher />
             <Link
               href={customerId ? "/muj-ucet" : "/prihlaseni"}
               className="flex items-center gap-1.5 text-sm font-medium"

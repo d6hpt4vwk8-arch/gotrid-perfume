@@ -1,8 +1,10 @@
+import { headers } from "next/headers";
 import type { Metadata } from "next";
 import { CONTACT } from "@/lib/business-identity";
 import { LegalPage } from "@/components/legal-page";
 import { getSettings } from "@/lib/settings.server";
-import { formatPrice } from "@/lib/format";
+import { formatPriceIn } from "@/lib/format";
+import { readCurrencyCookie } from "@/lib/currency-cookie";
 import { PICKUP_ADDRESS } from "@/lib/shipping";
 
 export const metadata: Metadata = {
@@ -14,7 +16,9 @@ export const metadata: Metadata = {
 // changed in /admin/nastaveni (still listed PPL/DPD/Balíkovna after they
 // were retired from checkout).
 export default async function DopravaAPlatbaPage() {
-  const settings = await getSettings();
+  const [settings, headerList] = await Promise.all([getSettings(), headers()]);
+  const currency = readCurrencyCookie(headerList.get("cookie"));
+  const price = (czk: number) => formatPriceIn(czk, currency, settings.czkToEurRate);
 
   return (
     <LegalPage title="Doprava a platba">
@@ -25,15 +29,15 @@ export default async function DopravaAPlatbaPage() {
       </p>
       <ul>
         <li>
-          Zásilkovna — výdejní místo dle vašeho výběru: {formatPrice(settings.shippingPrices.ZASILKOVNA)},
+          Zásilkovna — výdejní místo dle vašeho výběru: {price(settings.shippingPrices.ZASILKOVNA)},
           doba doručení 1–3 pracovní dny,
         </li>
         <li>
-          GLS — výdejní místo/box dle vašeho výběru: {formatPrice(settings.shippingPrices.GLS_MISTO)}, doba
+          GLS — výdejní místo/box dle vašeho výběru: {price(settings.shippingPrices.GLS_MISTO)}, doba
           doručení 1–3 pracovní dny,
         </li>
         <li>
-          GLS kurýr — doručení na adresu: {formatPrice(settings.shippingPrices.GLS)}, doba doručení
+          GLS kurýr — doručení na adresu: {price(settings.shippingPrices.GLS)}, doba doručení
           1–3 pracovní dny,
         </li>
         <li>
@@ -41,7 +45,7 @@ export default async function DopravaAPlatbaPage() {
         </li>
       </ul>
       <p>
-        Doprava zdarma při objednávce nad {formatPrice(settings.freeShippingThreshold)} (netýká se
+        Doprava zdarma při objednávce nad {price(settings.freeShippingThreshold)} (netýká se
         osobního odběru, který je zdarma vždy).
       </p>
 
@@ -57,7 +61,7 @@ export default async function DopravaAPlatbaPage() {
         <li>Bankovní převod — QR platba s údaji zaslanými po dokončení objednávky,</li>
         <li>
           Dobírka — platba v hotovosti nebo kartou při převzetí zásilky (příplatek{" "}
-          {formatPrice(settings.codSurcharge)}, dostupné jen do {formatPrice(settings.freeShippingThreshold)}
+          {price(settings.codSurcharge)}, dostupné jen do {price(settings.freeShippingThreshold)}
           ).
         </li>
       </ul>

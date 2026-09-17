@@ -8,7 +8,7 @@ import type { BrandFacet } from "@/lib/category-brands.server";
 import type { ScentFamilyFacet } from "@/lib/category-scent-facets.server";
 import type { PerfumeStructureFacets } from "@/lib/perfume-structure-facets.server";
 import type { CosmeticsFacets } from "@/lib/category-cosmetics-facets.server";
-import { formatPrice } from "@/lib/format";
+import { useCurrency } from "@/lib/currency-context";
 import type { ProductCardData } from "@/components/product-card";
 
 const SORT_LABELS: Record<string, string> = {
@@ -54,6 +54,7 @@ export function CategoryFilters({
   const router = useRouter();
   const pathname = usePathname();
   const searchParams = useSearchParams();
+  const { price } = useCurrency();
 
   const selectedBrands = searchParams.getAll("brand");
   const selectedScents = searchParams.getAll("scent");
@@ -212,7 +213,7 @@ export function CategoryFilters({
                     </span>
                     <span className="flex flex-col gap-0.5 overflow-hidden">
                       <span className="line-clamp-2 text-ink group-hover:underline">{product.name}</span>
-                      <span className="font-semibold text-accent">{formatPrice(product.price)}</span>
+                      <span className="font-semibold text-accent">{price(product.price)}</span>
                     </span>
                   </Link>
                 </li>

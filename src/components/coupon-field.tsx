@@ -2,7 +2,7 @@
 
 import { useEffect, useRef, useState } from "react";
 import { useCart } from "@/lib/cart-context";
-import { formatPrice } from "@/lib/format";
+import { useCurrency } from "@/lib/currency-context";
 
 export interface AppliedCoupon {
   code: string;
@@ -19,6 +19,7 @@ export interface AppliedCoupon {
  */
 export function CouponField({ onApplied }: { onApplied?: (coupon: AppliedCoupon | null) => void }) {
   const { couponCode, setCouponCode, total: itemsTotal } = useCart();
+  const { price } = useCurrency();
   const [input, setInput] = useState("");
   const [applied, setApplied] = useState<AppliedCoupon | null>(null);
   const [error, setError] = useState<string | null>(null);
@@ -77,7 +78,7 @@ export function CouponField({ onApplied }: { onApplied?: (coupon: AppliedCoupon 
             {applied.grantsGift ? (
               " — vyberte si dárek zdarma níže"
             ) : (
-              <> — sleva {formatPrice(applied.discountAmount)}</>
+              <> — sleva {price(applied.discountAmount)}</>
             )}
           </span>
           <button

@@ -1,8 +1,11 @@
 import Link from "next/link";
+import { headers } from "next/headers";
 import { notFound } from "next/navigation";
 import type { Metadata } from "next";
+import type { Prisma } from "@prisma/client";
 import { prisma } from "@/lib/prisma";
-import { formatPrice } from "@/lib/format";
+import { formatPriceIn } from "@/lib/format";
+import { readCurrencyCookie } from "@/lib/currency-cookie";
 import { AddToCartButton } from "@/components/add-to-cart-button";
 import { ProductViewTracker } from "@/components/product-view-tracker";
 import { HeurekaProductView } from "@/components/heureka-product-view";
@@ -105,7 +108,7 @@ export default async function ProductPage({
 
   const primaryCategory = product.categories[0]?.category;
 
-  const [relatedProducts, sizeVariants, categoryBreadcrumb, frequentlyBoughtTogether, settings] =
+  const [relatedProducts, sizeVariants, categoryBreadcrumb, frequentlyBoughtTogether, settings, headerList] =
     await Promise.all([
       getRelatedProducts(
         product.id,
@@ -115,7 +118,10 @@ export default async function ProductPage({
       primaryCategory ? getCategoryBreadcrumb(primaryCategory.fullSlug) : Promise.resolve([]),
       getFrequentlyBoughtTogether(product.id),
       getSettings(),
+      headers(),
     ]);
+  const currency = readCurrencyCookie(headerList.get("cookie"));
+  const price = (czk: Prisma.Decimal | number) => formatPriceIn(czk, currency, settings.czkToEurRate);
 
   // Shown next to Add to cart so price-comparison traffic (Zbozi/Heureka)
   // sees the real shipping cost before checkout, not just at the very end —
@@ -222,11 +228,11 @@ export default async function ProductPage({
           )}
 
           <div className="flex items-baseline gap-3">
-            <span className="text-2xl font-bold text-accent">{formatPrice(product.price)}</span>
+            <span className="text-2xl font-bold text-accent">{price(product.price)}</span>
             {product.compareAtPrice && (
               <>
                 <span className="text-lg text-accent-2 line-through">
-                  {formatPrice(product.compareAtPrice)}
+                  {price(product.compareAtPrice)}
                 </span>
                 <span className="rounded-sm bg-red-600 px-1.5 py-1 text-xs font-bold text-white">
                   -{Math.round((1 - Number(product.price) / Number(product.compareAtPrice)) * 100)}%
@@ -309,7 +315,7 @@ export default async function ProductPage({
             {product.stock > 0 && (
               <p className="pl-6 text-sm text-accent-2">
                 Ihned k odeslání od{" "}
-                <span className="font-medium text-ink">{formatPrice(cheapestShippingPrice)}</span>
+                <span className="font-medium text-ink">{price(cheapestShippingPrice)}</span>
                 {deliveryEstimate && (
                   <>
                     , u vás doma již{" "}

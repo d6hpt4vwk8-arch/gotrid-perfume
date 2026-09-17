@@ -4,7 +4,7 @@ import Image from "next/image";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
-import { formatPrice } from "@/lib/format";
+import { useCurrency } from "@/lib/currency-context";
 
 interface SearchResult {
   slug: string;
@@ -15,6 +15,7 @@ interface SearchResult {
 }
 
 export function SearchBar({ dark = false }: { dark?: boolean }) {
+  const { price } = useCurrency();
   const [query, setQuery] = useState("");
   const [results, setResults] = useState<SearchResult[]>([]);
   const [open, setOpen] = useState(false);
@@ -100,7 +101,7 @@ export function SearchBar({ dark = false }: { dark?: boolean }) {
                     <span className="line-clamp-1">{r.name}</span>
                     {r.brand && <span className="text-xs text-neutral-400">{r.brand}</span>}
                   </span>
-                  <span className="font-medium">{formatPrice(r.price)}</span>
+                  <span className="font-medium">{price(r.price)}</span>
                 </Link>
               </li>
             ))}
