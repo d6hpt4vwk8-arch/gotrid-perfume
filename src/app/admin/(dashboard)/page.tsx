@@ -24,6 +24,7 @@ export default async function AdminDashboardPage() {
     settings,
     topSellers,
     lowStock,
+    pendingReviews,
   ] = await Promise.all([
     prisma.product.count(),
     prisma.order.count(),
@@ -60,6 +61,7 @@ export default async function AdminDashboardPage() {
       take: 10,
       select: { id: true, name: true, stock: true },
     }),
+    prisma.review.count({ where: { published: false } }),
   ]);
 
   const netProfit30d = ordersForProfit.reduce((sum, order) => {
@@ -78,6 +80,7 @@ export default async function AdminDashboardPage() {
     { label: "Objednávky celkem", value: orders, href: "/admin/objednavky" },
     { label: "Značky", value: brands, href: "/admin/znacky" },
     { label: "Kategorie", value: categories, href: "/admin/kategorie" },
+    { label: "Recenze čeká na schválení", value: pendingReviews, href: "/admin/recenze" },
   ];
 
   return (

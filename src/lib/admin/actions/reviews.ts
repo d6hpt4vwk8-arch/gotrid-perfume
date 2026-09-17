@@ -37,6 +37,7 @@ export async function deleteReview(id: string) {
   await requireAdmin();
   const review = await prisma.review.delete({ where: { id } });
   revalidatePath(`/admin/produkty/${review.productId}`);
+  revalidatePath("/admin/recenze");
   revalidatePath("/");
 }
 
@@ -44,5 +45,6 @@ export async function setReviewPublished(id: string, published: boolean) {
   await requireAdmin();
   const review = await prisma.review.update({ where: { id }, data: { published } });
   revalidatePath(`/admin/produkty/${review.productId}`);
+  revalidatePath("/admin/recenze");
   revalidatePath("/");
 }
