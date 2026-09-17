@@ -14,6 +14,7 @@ import {
   parseFilterParams,
   type CategoryFilterParams,
 } from "@/lib/product-filters";
+import { buildDescriptionSearchWhere, buildExactSearchWhere, findFuzzyProductIds } from "@/lib/product-search";
 import { ProductCard } from "@/components/product-card";
 import { CategoryFilters } from "@/components/category-filters";
 import { Pagination } from "@/components/pagination";
@@ -38,19 +39,35 @@ export default async function SearchPage({
     );
   }
 
-  const searchWhere: Prisma.ProductWhereInput = {
-    OR: [
-      { name: { contains: query, mode: "insensitive" } },
-      { ean: { contains: query, mode: "insensitive" } },
-      { brand: { name: { contains: query, mode: "insensitive" } } },
-    ],
-  };
-
   const filters = parseFilterParams(rawParams);
   const perfumeCategoryIds = await resolvePerfumeFilterCategoryIds(
     filters.genderSlugs,
     filters.concentrationSlugs,
   );
+
+  // Three tiers, same fallback order as /api/search: exact name/EAN/brand
+  // match, then the description, then fuzzy name matching (pg_trgm) for a
+  // typo like "Latafa" for "Lattafa" — each tier only runs if the previous
+  // one, combined with the visitor's own filters, found literally nothing.
+  // Whichever tier finally has results is what facets/pagination below are
+  // built from, so a fuzzy-tier result page still has working filters.
+  let searchWhere: Prisma.ProductWhereInput = buildExactSearchWhere(query);
+  let usedFallback: "description" | "fuzzy" | null = null;
+
+  if ((await prisma.product.count({ where: buildProductWhere(searchWhere, filters, perfumeCategoryIds) })) === 0) {
+    const descriptionWhere = buildDescriptionSearchWhere(query);
+    if ((await prisma.product.count({ where: buildProductWhere(descriptionWhere, filters, perfumeCategoryIds) })) > 0) {
+      searchWhere = descriptionWhere;
+      usedFallback = "description";
+    } else {
+      const fuzzyIds = await findFuzzyProductIds(query, 100);
+      if (fuzzyIds.length > 0) {
+        searchWhere = { id: { in: fuzzyIds } };
+        usedFallback = "fuzzy";
+      }
+    }
+  }
+
   const where = buildProductWhere(searchWhere, filters, perfumeCategoryIds);
 
   const [products, total, brands, scentFacets, structureFacets, cosmeticsFacets, settings] =
@@ -102,6 +119,16 @@ export default async function SearchPage({
   return (
     <main className="mx-auto flex max-w-6xl flex-1 flex-col gap-6 px-4 py-10">
       <h1 className="text-2xl font-bold text-ink">Výsledky hledání: „{query}“</h1>
+      {usedFallback === "description" && (
+        <p className="-mt-4 text-sm text-accent-2">
+          Přesně tento výraz jsme v názvu nenašli — zobrazujeme produkty, které ho zmiňují v popisu.
+        </p>
+      )}
+      {usedFallback === "fuzzy" && (
+        <p className="-mt-4 text-sm text-accent-2">
+          Přesnou shodu jsme nenašli — zobrazujeme nejpodobnější produkty (třeba jste se překlepli).
+        </p>
+      )}
 
       <div className="flex flex-col gap-6 sm:flex-row">
         <CategoryFilters

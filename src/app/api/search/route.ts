@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { isRateLimited, recordRateLimitHit, getClientIp } from "@/lib/rate-limit";
+import { buildDescriptionSearchWhere, buildExactSearchWhere, findFuzzyProductIds } from "@/lib/product-search";
 
 // Fires on every keystroke from the client — unlike the other public routes
 // this had no length cap or rate limit at all (security audit finding),
@@ -8,6 +9,9 @@ import { isRateLimited, recordRateLimitHit, getClientIp } from "@/lib/rate-limit
 const MAX_QUERY_LENGTH = 100;
 const MAX_ATTEMPTS = 60;
 const WINDOW_MS = 60 * 1000;
+const RESULT_LIMIT = 8;
+
+const PRODUCT_INCLUDE = { brand: true, images: { orderBy: { sortOrder: "asc" as const }, take: 1 } };
 
 export async function GET(req: NextRequest) {
   const ip = getClientIp(req);
@@ -20,18 +24,33 @@ export async function GET(req: NextRequest) {
 
   await recordRateLimitHit(`search:${ip}`);
 
-  const products = await prisma.product.findMany({
-    where: {
-      visible: true,
-      OR: [
-        { name: { contains: q, mode: "insensitive" } },
-        { ean: { contains: q, mode: "insensitive" } },
-        { brand: { name: { contains: q, mode: "insensitive" } } },
-      ],
-    },
-    take: 8,
-    include: { brand: true, images: { orderBy: { sortOrder: "asc" }, take: 1 } },
+  // Three tiers so a typo ("Latafa" for "Lattafa") or a word that's only in
+  // the description doesn't come back empty — see product-search.ts.
+  let products = await prisma.product.findMany({
+    where: { visible: true, ...buildExactSearchWhere(q) },
+    take: RESULT_LIMIT,
+    include: PRODUCT_INCLUDE,
   });
+
+  if (products.length === 0) {
+    products = await prisma.product.findMany({
+      where: { visible: true, ...buildDescriptionSearchWhere(q) },
+      take: RESULT_LIMIT,
+      include: PRODUCT_INCLUDE,
+    });
+  }
+
+  if (products.length === 0) {
+    const fuzzyIds = await findFuzzyProductIds(q, RESULT_LIMIT);
+    if (fuzzyIds.length > 0) {
+      const fuzzyProducts = await prisma.product.findMany({
+        where: { id: { in: fuzzyIds }, visible: true },
+        include: PRODUCT_INCLUDE,
+      });
+      const byId = new Map(fuzzyProducts.map((p) => [p.id, p]));
+      products = fuzzyIds.map((id) => byId.get(id)).filter((p): p is NonNullable<typeof p> => Boolean(p));
+    }
+  }
 
   return NextResponse.json({
     results: products.map((p) => ({
