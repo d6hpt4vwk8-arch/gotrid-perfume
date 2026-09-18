@@ -1,13 +1,15 @@
 import { SITE_URL } from "@/lib/site";
+import { emailButton, renderEmailLayout } from "./layout";
 import { EMAIL_FROM, getResendClient, isEmailConfigured } from "./resend";
 
 export function renderPasswordResetEmailHtml(resetUrl: string): string {
-  return `
+  const inner = `
       <h1>Ahoj!</h1>
       <p>Požádali jste o obnovení hesla k účtu na Gotrid Perfume. Odkaz je platný 1 hodinu.</p>
-      <p><a href="${resetUrl}">Nastavit nové heslo</a></p>
+      ${emailButton(resetUrl, "Nastavit nové heslo")}
       <p>Pokud jste o obnovení hesla nežádali, tento e-mail můžete ignorovat.</p>
     `;
+  return renderEmailLayout(inner, { preheader: "Odkaz pro nastavení nového hesla je platný 1 hodinu." });
 }
 
 export async function sendPasswordResetEmail(email: string, token: string) {

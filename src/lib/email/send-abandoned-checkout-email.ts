@@ -1,6 +1,7 @@
 import { SITE_URL } from "@/lib/site";
 import { formatPrice } from "@/lib/format";
 import type { CartItem } from "@/lib/cart-context";
+import { emailButton, renderEmailLayout } from "./layout";
 import { EMAIL_FROM, getResendClient, isEmailConfigured } from "./resend";
 
 function cartItemsHtml(items: CartItem[]): string {
@@ -8,27 +9,28 @@ function cartItemsHtml(items: CartItem[]): string {
     .map(
       (item) => `
         <tr>
-          <td style="padding:8px">
-            ${item.image ? `<img src="${SITE_URL}${item.image}" alt="" width="60" style="display:block">` : ""}
+          <td style="padding:10px 0;border-bottom:1px solid #e2e0dc">
+            ${item.image ? `<img src="${SITE_URL}${item.image}" alt="" width="60" style="display:block;border-radius:4px">` : ""}
           </td>
-          <td style="padding:8px">
-            <a href="${SITE_URL}/produkt/${item.slug}" style="color:#111">${item.name}</a>
+          <td style="padding:10px 12px;border-bottom:1px solid #e2e0dc">
+            <a href="${SITE_URL}/produkt/${item.slug}" style="color:#131110;text-decoration:none;font-size:14px">${item.name}</a>
           </td>
-          <td style="padding:8px">${item.qty}×</td>
-          <td style="padding:8px">${formatPrice(item.price)}</td>
+          <td style="padding:10px 0;border-bottom:1px solid #e2e0dc;font-size:14px;color:#8a857e">${item.qty}×</td>
+          <td style="padding:10px 0;border-bottom:1px solid #e2e0dc;font-size:14px;font-weight:600;text-align:right">${formatPrice(item.price)}</td>
         </tr>`,
     )
     .join("");
-  return `<table cellpadding="0" cellspacing="0" style="width:100%;margin:16px 0">${rows}</table>`;
+  return `<table cellpadding="0" cellspacing="0" style="width:100%;margin:8px 0 24px">${rows}</table>`;
 }
 
 export function renderAbandonedCheckoutEmailHtml(params: { firstName: string; cartSnapshot: CartItem[] }): string {
-  return `
+  const inner = `
       <h1>Ahoj${params.firstName ? ` ${params.firstName}` : ""}!</h1>
-      <p>Všimli jsme si, že jste u nás nedokončili objednávku — nezapomněli jste na ni?</p>
+      <p>Všimli jsme si, že jste u nás nedokončili objednávku — nezapomněli jste na ni? Vaše vybrané položky na vás stále čekají v košíku.</p>
       ${cartItemsHtml(params.cartSnapshot)}
-      <p><a href="${SITE_URL}/kosik">Dokončit objednávku</a></p>
+      ${emailButton(`${SITE_URL}/kosik`, "Dokončit objednávku")}
     `;
+  return renderEmailLayout(inner, { preheader: "Vaše položky na vás stále čekají v košíku." });
 }
 
 export async function sendAbandonedCheckoutEmail(params: {

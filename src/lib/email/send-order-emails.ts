@@ -2,6 +2,7 @@ import type { Order, OrderItem } from "@prisma/client";
 import { formatPrice } from "@/lib/format";
 import { PAYMENT_LABELS, SHIPPING_LABELS } from "@/lib/shipping";
 import { SITE_URL } from "@/lib/site";
+import { emailButton, renderEmailLayout } from "./layout";
 import { EMAIL_FROM, OWNER_EMAIL, getResendClient, isEmailConfigured } from "./resend";
 
 type OrderWithItems = Order & { items: OrderItem[] };
@@ -9,24 +10,29 @@ type OrderWithItems = Order & { items: OrderItem[] };
 function itemsTableHtml(items: OrderItem[]): string {
   const rows = items
     .map(
-      (item) =>
-        `<tr><td>${item.name}${item.isGift ? " (dárek zdarma)" : ""}</td><td>${item.qty}×</td><td>${formatPrice(item.unitPrice)}</td></tr>`,
+      (item) => `
+        <tr>
+          <td style="padding:10px 0;border-bottom:1px solid #e2e0dc;font-size:14px">${item.name}${item.isGift ? " (dárek zdarma)" : ""}</td>
+          <td style="padding:10px 0;border-bottom:1px solid #e2e0dc;font-size:14px;color:#8a857e">${item.qty}×</td>
+          <td style="padding:10px 0;border-bottom:1px solid #e2e0dc;font-size:14px;font-weight:600;text-align:right">${formatPrice(item.unitPrice)}</td>
+        </tr>`,
     )
     .join("");
-  return `<table cellpadding="6" style="border-collapse:collapse;width:100%">${rows}</table>`;
+  return `<table cellpadding="0" cellspacing="0" style="width:100%;margin:8px 0 24px">${rows}</table>`;
 }
 
 export function renderCustomerOrderConfirmationHtml(order: OrderWithItems): string {
-  return `
+  const inner = `
       <h1>Ahoj ${order.firstName}!</h1>
       <p>Děkujeme za objednávku! Objednávka <strong>${order.number}</strong> byla přijata.</p>
       ${itemsTableHtml(order.items)}
-      <p>Doprava: ${SHIPPING_LABELS[order.shippingMethod]} — ${formatPrice(order.shippingPrice)}</p>
-      <p>Platba: ${PAYMENT_LABELS[order.paymentMethod]}${Number(order.codSurcharge) > 0 ? ` (příplatek ${formatPrice(order.codSurcharge)})` : ""}</p>
-      <p><strong>Celkem: ${formatPrice(order.total)}</strong></p>
+      <p style="margin-bottom:4px">Doprava: ${SHIPPING_LABELS[order.shippingMethod]} — ${formatPrice(order.shippingPrice)}</p>
+      <p style="margin-bottom:4px">Platba: ${PAYMENT_LABELS[order.paymentMethod]}${Number(order.codSurcharge) > 0 ? ` (příplatek ${formatPrice(order.codSurcharge)})` : ""}</p>
+      <p style="font-size:17px;font-weight:700;margin-bottom:24px">Celkem: ${formatPrice(order.total)}</p>
       <p>O odeslání zásilky vás budeme informovat samostatným e-mailem.</p>
-      <p><a href="${SITE_URL}/api/orders/${order.number}/access?token=${order.accessToken}">Zobrazit stav objednávky</a></p>
+      ${emailButton(`${SITE_URL}/api/orders/${order.number}/access?token=${order.accessToken}`, "Zobrazit stav objednávky")}
     `;
+  return renderEmailLayout(inner, { preheader: `Objednávka ${order.number} byla přijata.` });
 }
 
 export async function sendCustomerOrderConfirmation(order: OrderWithItems) {
@@ -49,14 +55,15 @@ export async function sendCustomerOrderConfirmation(order: OrderWithItems) {
 }
 
 export function renderOwnerNewOrderNotificationHtml(order: OrderWithItems): string {
-  return `
+  const inner = `
       <h1>Nová objednávka ${order.number}</h1>
-      <p>${order.firstName} ${order.lastName} — ${order.email} — ${order.phone}</p>
+      <p style="margin-bottom:4px">${order.firstName} ${order.lastName} — ${order.email} — ${order.phone}</p>
       ${itemsTableHtml(order.items)}
-      <p>Doprava: ${SHIPPING_LABELS[order.shippingMethod]}</p>
-      <p>Platba: ${PAYMENT_LABELS[order.paymentMethod]}${Number(order.codSurcharge) > 0 ? ` (příplatek ${formatPrice(order.codSurcharge)})` : ""}</p>
-      <p><strong>Celkem: ${formatPrice(order.total)}</strong></p>
+      <p style="margin-bottom:4px">Doprava: ${SHIPPING_LABELS[order.shippingMethod]}</p>
+      <p style="margin-bottom:4px">Platba: ${PAYMENT_LABELS[order.paymentMethod]}${Number(order.codSurcharge) > 0 ? ` (příplatek ${formatPrice(order.codSurcharge)})` : ""}</p>
+      <p style="font-size:17px;font-weight:700">Celkem: ${formatPrice(order.total)}</p>
     `;
+  return renderEmailLayout(inner);
 }
 
 export async function sendOwnerNewOrderNotification(order: OrderWithItems) {

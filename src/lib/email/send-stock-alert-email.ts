@@ -1,13 +1,15 @@
 import type { Product } from "@prisma/client";
 import { SITE_URL } from "@/lib/site";
+import { emailButton, renderEmailLayout } from "./layout";
 import { EMAIL_FROM, getResendClient, isEmailConfigured } from "./resend";
 
 export function renderStockAlertEmailHtml(product: Product): string {
-  return `
+  const inner = `
       <h1>Ahoj!</h1>
       <p><strong>${product.name}</strong> je opět skladem! Produkt, na který jste čekali, je znovu k dispozici.</p>
-      <p><a href="${SITE_URL}/produkt/${product.slug}">Zobrazit produkt a objednat</a></p>
+      ${emailButton(`${SITE_URL}/produkt/${product.slug}`, "Zobrazit produkt a objednat")}
     `;
+  return renderEmailLayout(inner, { preheader: `${product.name} je opět skladem.` });
 }
 
 export async function sendStockAlertEmail(email: string, product: Product) {
