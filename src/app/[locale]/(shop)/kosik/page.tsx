@@ -2,7 +2,7 @@
 
 import Image from "next/image";
 import Link from "next/link";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useCart } from "@/lib/cart-context";
 import type { AppliedCoupon } from "@/components/coupon-field";
 import { useCurrency } from "@/lib/currency-context";
@@ -11,6 +11,7 @@ import { PaymentIcons } from "@/components/payment-icons";
 import { CheckoutSteps } from "@/components/checkout-steps";
 import { CouponField } from "@/components/coupon-field";
 import { GiftPicker } from "@/components/gift-picker";
+import { ProductCard, type ProductCardData } from "@/components/product-card";
 
 export default function CartPage() {
   const { items, setQty, removeItem, total, freeShippingThreshold } = useCart();
@@ -18,6 +19,22 @@ export default function CartPage() {
   const remaining = freeShippingThreshold - total;
   const [coupon, setCoupon] = useState<AppliedCoupon | null>(null);
   const totalAfterDiscount = Math.max(0, total - (coupon?.discountAmount ?? 0));
+
+  const cartProductIds = items.map((i) => i.productId).join(",");
+  const [recommendations, setRecommendations] = useState<ProductCardData[]>([]);
+
+  useEffect(() => {
+    if (!cartProductIds) {
+      setRecommendations([]);
+      return;
+    }
+    const controller = new AbortController();
+    fetch(`/api/cart-recommendations?ids=${cartProductIds}`, { signal: controller.signal })
+      .then((res) => res.json())
+      .then((data: { products: ProductCardData[] }) => setRecommendations(data.products))
+      .catch(() => {});
+    return () => controller.abort();
+  }, [cartProductIds]);
 
   if (items.length === 0) {
     return (
@@ -104,6 +121,17 @@ export default function CartPage() {
       <CouponField onApplied={setCoupon} />
 
       <GiftPicker unlocked={coupon?.grantsGift ?? false} />
+
+      {recommendations.length > 0 && (
+        <div className="flex flex-col gap-4 border-t border-line pt-6">
+          <h2 className="text-sm font-bold text-ink">Doplňte objednávku</h2>
+          <div className="grid grid-cols-2 gap-x-4 gap-y-8 sm:grid-cols-3">
+            {recommendations.map((product) => (
+              <ProductCard key={product.slug} product={product} freeShippingThreshold={freeShippingThreshold} />
+            ))}
+          </div>
+        </div>
+      )}
 
       <div className="flex flex-col gap-1 text-sm text-ink">
         {coupon && !coupon.grantsGift && (

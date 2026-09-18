@@ -1,3 +1,4 @@
+import { Prisma } from "@prisma/client";
 import { prisma } from "@/lib/prisma";
 
 /**
@@ -33,4 +34,47 @@ export async function getFrequentlyBoughtTogether(productId: string, limit = 4) 
   // Preserve the co-purchase-count ordering from the raw query — Prisma's
   // findMany doesn't guarantee result order for an `id: { in }` filter.
   return rows.map((r) => byId.get(r.productId)).filter((p): p is NonNullable<typeof p> => Boolean(p));
+}
+
+/**
+ * Same co-purchase signal as getFrequentlyBoughtTogether, but for a whole
+ * cart (multiple product ids) instead of one product page — backs the
+ * "Doplňte objednávku" section on the cart page. Falls back to the shop's
+ * own priority-ranked catalog when the cart's items don't have enough
+ * shared order history yet (a brand-new product, or too few past orders),
+ * so the section never just renders empty.
+ */
+export async function getFrequentlyBoughtTogetherForCart(cartProductIds: string[], limit = 3) {
+  if (cartProductIds.length === 0) return [];
+
+  const rows = await prisma.$queryRaw<{ productId: string; coCount: bigint }[]>`
+    SELECT oi2."productId" AS "productId", COUNT(DISTINCT oi2."orderId") AS "coCount"
+    FROM "OrderItem" oi1
+    JOIN "OrderItem" oi2
+      ON oi2."orderId" = oi1."orderId"
+     AND oi2."productId" IS NOT NULL
+     AND oi2."productId" NOT IN (${Prisma.join(cartProductIds)})
+    WHERE oi1."productId" IN (${Prisma.join(cartProductIds)})
+    GROUP BY oi2."productId"
+    HAVING COUNT(DISTINCT oi2."orderId") >= 2
+    ORDER BY "coCount" DESC
+    LIMIT ${limit}
+  `;
+
+  if (rows.length > 0) {
+    const products = await prisma.product.findMany({
+      where: { id: { in: rows.map((r) => r.productId) }, visible: true, stock: { gt: 0 } },
+      include: { brand: true, images: { orderBy: { sortOrder: "asc" }, take: 1 } },
+    });
+    const byId = new Map(products.map((p) => [p.id, p]));
+    const ordered = rows.map((r) => byId.get(r.productId)).filter((p): p is NonNullable<typeof p> => Boolean(p));
+    if (ordered.length > 0) return ordered;
+  }
+
+  return prisma.product.findMany({
+    where: { visible: true, stock: { gt: 0 }, id: { notIn: cartProductIds } },
+    include: { brand: true, images: { orderBy: { sortOrder: "asc" }, take: 1 } },
+    orderBy: { priority: "desc" },
+    take: limit,
+  });
 }
