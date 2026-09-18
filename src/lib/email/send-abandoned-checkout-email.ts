@@ -1,7 +1,8 @@
 import { SITE_URL } from "@/lib/site";
 import { formatPrice } from "@/lib/format";
 import type { CartItem } from "@/lib/cart-context";
-import { emailButton, renderEmailLayout } from "./layout";
+import { getPopularProductsExcluding } from "@/lib/marketing/recommend-products";
+import { emailBenefits, emailButton, emailHelpCard, emailProductGrid, renderEmailLayout } from "./layout";
 import { EMAIL_FROM, getResendClient, isEmailConfigured } from "./resend";
 
 function cartItemsHtml(items: CartItem[]): string {
@@ -23,12 +24,23 @@ function cartItemsHtml(items: CartItem[]): string {
   return `<table cellpadding="0" cellspacing="0" style="width:100%;margin:8px 0 24px">${rows}</table>`;
 }
 
-export function renderAbandonedCheckoutEmailHtml(params: { firstName: string; cartSnapshot: CartItem[] }): string {
+export async function renderAbandonedCheckoutEmailHtml(params: {
+  firstName: string;
+  cartSnapshot: CartItem[];
+}): Promise<string> {
+  const cartProductIds = params.cartSnapshot.map((i) => i.productId);
+  const [benefits, crossSell] = await Promise.all([
+    emailBenefits(),
+    getPopularProductsExcluding(cartProductIds),
+  ]);
   const inner = `
       <h1>Ahoj${params.firstName ? ` ${params.firstName}` : ""}!</h1>
       <p>Všimli jsme si, že jste u nás nedokončili objednávku — nezapomněli jste na ni? Vaše vybrané položky na vás stále čekají v košíku.</p>
       ${cartItemsHtml(params.cartSnapshot)}
       ${emailButton(`${SITE_URL}/kosik`, "Dokončit objednávku")}
+      ${benefits}
+      ${emailHelpCard()}
+      ${emailProductGrid("Mohlo by se vám také líbit", crossSell)}
     `;
   return renderEmailLayout(inner, { preheader: "Vaše položky na vás stále čekají v košíku." });
 }
@@ -48,7 +60,7 @@ export async function sendAbandonedCheckoutEmail(params: {
     from: EMAIL_FROM,
     to: params.email,
     subject: "Nezapomněli jste na objednávku? — Gotrid Perfume",
-    html: renderAbandonedCheckoutEmailHtml(params),
+    html: await renderAbandonedCheckoutEmailHtml(params),
   });
   if (error) throw new Error(`Resend error: ${error.message}`);
 }

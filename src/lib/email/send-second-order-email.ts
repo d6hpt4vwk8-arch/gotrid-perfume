@@ -1,8 +1,7 @@
 import { SITE_URL } from "@/lib/site";
-import { formatPrice } from "@/lib/format";
 import { buildUnsubscribeUrl } from "@/lib/marketing/unsubscribe";
 import type { RecommendedProduct, RecommendationTheme } from "@/lib/marketing/recommend-products";
-import { emailButton, renderEmailLayout } from "./layout";
+import { emailBenefits, emailButton, emailHelpCard, emailProductGrid, renderEmailLayout } from "./layout";
 import { EMAIL_FROM, getResendClient, isEmailConfigured } from "./resend";
 
 const THEME_COPY: Record<RecommendationTheme, { heading: string; cta: string }> = {
@@ -17,21 +16,6 @@ const THEME_COPY: Record<RecommendationTheme, { heading: string; cta: string }> 
   },
 };
 
-function productsHtml(products: RecommendedProduct[]): string {
-  if (products.length === 0) return "";
-  const cells = products
-    .map(
-      (p) => `
-        <td style="padding:8px;text-align:center;vertical-align:top">
-          ${p.imageUrl ? `<img src="${SITE_URL}${p.imageUrl}" alt="" width="120" style="display:block;margin:0 auto 8px;border-radius:4px">` : ""}
-          <a href="${SITE_URL}/produkt/${p.slug}" style="font-size:13px;color:#131110;text-decoration:none">${p.name}</a>
-          <div style="font-size:13px;font-weight:700;margin-top:4px">${formatPrice(p.price)}</div>
-        </td>`,
-    )
-    .join("");
-  return `<table cellpadding="0" cellspacing="0" style="width:100%;margin:8px 0 24px"><tr>${cells}</tr></table>`;
-}
-
 export async function renderSecondOrderEmailHtml(params: {
   email: string;
   firstName: string;
@@ -40,15 +24,17 @@ export async function renderSecondOrderEmailHtml(params: {
   products: RecommendedProduct[];
 }): Promise<string> {
   const copy = THEME_COPY[params.theme];
-  const unsubscribeUrl = await buildUnsubscribeUrl(params.email);
+  const [unsubscribeUrl, benefits] = await Promise.all([buildUnsubscribeUrl(params.email), emailBenefits()]);
   const inner = `
       <h1>Ahoj${params.firstName ? ` ${params.firstName}` : ""}!</h1>
       <p>${copy.heading}</p>
       <table role="presentation" cellpadding="0" cellspacing="0" style="margin:0 0 24px;">
         <tr><td style="border:1px dashed #8a857e;border-radius:4px;padding:12px 20px;font-size:18px;font-weight:700;letter-spacing:1px;">${params.couponCode}</td></tr>
       </table>
-      ${productsHtml(params.products)}
+      ${emailProductGrid("Vyberte si z nabídky", params.products)}
       ${emailButton(SITE_URL, copy.cta)}
+      ${benefits}
+      ${emailHelpCard()}
     `;
   return renderEmailLayout(inner, {
     preheader: copy.heading,

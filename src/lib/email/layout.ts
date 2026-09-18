@@ -1,4 +1,8 @@
 import { CONTACT, currentSeller, sellerLine } from "@/lib/business-identity";
+import { SITE_URL } from "@/lib/site";
+import { formatPrice } from "@/lib/format";
+import { getSettings } from "@/lib/settings.server";
+import type { RecommendedProduct } from "@/lib/marketing/recommend-products";
 
 // Shared visual wrapper for every outgoing email — same ink/ground/line/accent
 // tokens as globals.css, kept here as plain hex since email clients don't
@@ -7,6 +11,7 @@ const INK = "#131110";
 const GROUND = "#ffffff";
 const LINE = "#e2e0dc";
 const MUTED = "#8a857e";
+const OK = "#4b6b4f";
 const PAGE_BG = "#f3f2f0";
 
 export function emailButton(href: string, label: string): string {
@@ -15,6 +20,67 @@ export function emailButton(href: string, label: string): string {
       <tr>
         <td style="background:${INK};border-radius:4px;">
           <a href="${href}" style="display:inline-block;padding:12px 26px;color:${GROUND};text-decoration:none;font-size:14px;font-weight:600;">${label}</a>
+        </td>
+      </tr>
+    </table>`;
+}
+
+// Same trust claims as TrustBadges/BenefitsBar on the site itself — never
+// invent marketing copy that isn't already true and shown on the storefront.
+export async function emailBenefits(): Promise<string> {
+  const settings = await getSettings();
+  const items = [
+    `Doprava zdarma od ${formatPrice(settings.freeShippingThreshold)}`,
+    "100 % originální produkty",
+    "Vrácení zboží do 14 dnů",
+    "Zabezpečená platba",
+  ];
+  const cells = items
+    .map(
+      (item) => `
+        <td style="padding:6px 12px 6px 0;font-size:13px;color:${INK};white-space:nowrap;">
+          <span style="color:${OK};font-weight:700;">✓</span> ${item}
+        </td>`,
+    )
+    .join("");
+  return `
+    <table role="presentation" cellpadding="0" cellspacing="0" style="width:100%;margin:0 0 24px;border-top:1px solid ${LINE};border-bottom:1px solid ${LINE};">
+      <tr><td style="padding:14px 0;"><table role="presentation" cellpadding="0" cellspacing="0"><tr>${cells}</tr></table></td></tr>
+    </table>`;
+}
+
+// "You might also like" product cards — reused for order-confirmation,
+// abandoned-checkout, stock-alert and second-order cross-sell blocks.
+export function emailProductGrid(heading: string, products: RecommendedProduct[]): string {
+  if (products.length === 0) return "";
+  const cells = products
+    .map(
+      (p) => `
+        <td style="padding:8px;text-align:center;vertical-align:top;width:${Math.floor(100 / products.length)}%;">
+          ${p.imageUrl ? `<a href="${SITE_URL}/produkt/${p.slug}"><img src="${SITE_URL}${p.imageUrl}" alt="" width="120" style="display:block;margin:0 auto 8px;border-radius:4px;max-width:100%;"></a>` : ""}
+          <a href="${SITE_URL}/produkt/${p.slug}" style="font-size:13px;color:${INK};text-decoration:none;">${p.name}</a>
+          <div style="font-size:13px;font-weight:700;margin-top:4px;">${formatPrice(p.price)}</div>
+        </td>`,
+    )
+    .join("");
+  return `
+    <p style="font-size:13px;font-weight:700;text-transform:uppercase;letter-spacing:0.5px;color:${MUTED};margin:0 0 12px;">${heading}</p>
+    <table role="presentation" cellpadding="0" cellspacing="0" style="width:100%;margin:0 0 24px;"><tr>${cells}</tr></table>`;
+}
+
+// "Need help?" contact callout — same phone/email as the footer, repeated
+// as a standalone card in marketing-adjacent emails (abandoned checkout,
+// second order) where a hesitant customer is more likely to reach for it
+// mid-email than to scroll all the way down to the footer.
+export function emailHelpCard(): string {
+  return `
+    <table role="presentation" cellpadding="0" cellspacing="0" style="width:100%;margin:0 0 24px;">
+      <tr>
+        <td style="background:${PAGE_BG};border-radius:6px;padding:20px 24px;">
+          <p style="margin:0 0 6px;font-size:14px;font-weight:700;color:${INK};">Můžeme vám s něčím pomoct?</p>
+          <p style="margin:0;font-size:13px;color:${MUTED};">
+            ${CONTACT.phone} · <a href="mailto:${CONTACT.email}" style="color:${INK};">${CONTACT.email}</a><br>${CONTACT.supportHours}
+          </p>
         </td>
       </tr>
     </table>`;

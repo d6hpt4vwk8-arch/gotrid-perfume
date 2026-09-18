@@ -113,3 +113,81 @@ export async function recommendProductsForBuyer(
     })),
   };
 }
+
+/**
+ * Generic "you might also like" cross-sell for emails that aren't tied to
+ * purchase history (order confirmation, abandoned checkout) — just the
+ * shop's own priority-ranked in-stock catalog, minus whatever the customer
+ * already has in their order/cart so the same product never repeats.
+ */
+export async function getPopularProductsExcluding(
+  excludeIds: string[],
+  take = 3,
+): Promise<RecommendedProduct[]> {
+  const candidates = await prisma.product.findMany({
+    where: { visible: true, stock: { gt: 0 }, id: { notIn: excludeIds } },
+    select: {
+      id: true,
+      name: true,
+      slug: true,
+      price: true,
+      isDefective: true,
+      images: { take: 1, orderBy: { sortOrder: "asc" }, select: { url: true } },
+    },
+    orderBy: { priority: "desc" },
+    take: 20,
+  });
+
+  return candidates
+    .filter((p) => !isConditionFlagged(p.name, p.isDefective))
+    .slice(0, take)
+    .map((p) => ({
+      id: p.id,
+      name: p.name,
+      slug: p.slug,
+      price: Number(p.price),
+      imageUrl: p.images[0]?.url ?? null,
+    }));
+}
+
+/**
+ * "Similar products" cross-sell for the stock-alert email — other in-stock
+ * items sharing a category with the one that just came back, so someone who
+ * was waiting on a sold-out scent sees close alternatives too.
+ */
+export async function getSimilarProducts(productId: string, take = 3): Promise<RecommendedProduct[]> {
+  const categoryIds = (
+    await prisma.productCategory.findMany({ where: { productId }, select: { categoryId: true } })
+  ).map((c) => c.categoryId);
+  if (categoryIds.length === 0) return [];
+
+  const candidates = await prisma.product.findMany({
+    where: {
+      visible: true,
+      stock: { gt: 0 },
+      id: { not: productId },
+      categories: { some: { categoryId: { in: categoryIds } } },
+    },
+    select: {
+      id: true,
+      name: true,
+      slug: true,
+      price: true,
+      isDefective: true,
+      images: { take: 1, orderBy: { sortOrder: "asc" }, select: { url: true } },
+    },
+    orderBy: { priority: "desc" },
+    take: 20,
+  });
+
+  return candidates
+    .filter((p) => !isConditionFlagged(p.name, p.isDefective))
+    .slice(0, take)
+    .map((p) => ({
+      id: p.id,
+      name: p.name,
+      slug: p.slug,
+      price: Number(p.price),
+      imageUrl: p.images[0]?.url ?? null,
+    }));
+}

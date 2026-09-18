@@ -27,7 +27,7 @@ export async function GET(_req: NextRequest, { params }: { params: Promise<{ typ
     if (!order) {
       return NextResponse.json({ error: "Zatím žádná objednávka k náhledu." }, { status: 404 });
     }
-    return new NextResponse(renderCustomerOrderConfirmationHtml(order), {
+    return new NextResponse(await renderCustomerOrderConfirmationHtml(order), {
       headers: { "Content-Type": "text/html; charset=utf-8" },
     });
   }
@@ -49,7 +49,7 @@ export async function GET(_req: NextRequest, { params }: { params: Promise<{ typ
       },
     ];
     return new NextResponse(
-      renderAbandonedCheckoutEmailHtml({ firstName: sample?.firstName ?? "Zákazníku", cartSnapshot }),
+      await renderAbandonedCheckoutEmailHtml({ firstName: sample?.firstName ?? "Zákazníku", cartSnapshot }),
       { headers: { "Content-Type": "text/html; charset=utf-8" } },
     );
   }
@@ -106,7 +106,7 @@ export async function GET(_req: NextRequest, { params }: { params: Promise<{ typ
     if (!product) {
       return NextResponse.json({ error: "Zatím žádný produkt k náhledu." }, { status: 404 });
     }
-    return new NextResponse(renderStockAlertEmailHtml(product), {
+    return new NextResponse(await renderStockAlertEmailHtml(product), {
       headers: { "Content-Type": "text/html; charset=utf-8" },
     });
   }

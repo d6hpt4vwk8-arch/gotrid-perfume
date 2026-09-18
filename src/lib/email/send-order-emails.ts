@@ -2,7 +2,8 @@ import type { Order, OrderItem } from "@prisma/client";
 import { formatPrice } from "@/lib/format";
 import { PAYMENT_LABELS, SHIPPING_LABELS } from "@/lib/shipping";
 import { SITE_URL } from "@/lib/site";
-import { emailButton, renderEmailLayout } from "./layout";
+import { getPopularProductsExcluding } from "@/lib/marketing/recommend-products";
+import { emailBenefits, emailButton, emailProductGrid, renderEmailLayout } from "./layout";
 import { EMAIL_FROM, OWNER_EMAIL, getResendClient, isEmailConfigured } from "./resend";
 
 type OrderWithItems = Order & { items: OrderItem[] };
@@ -21,7 +22,12 @@ function itemsTableHtml(items: OrderItem[]): string {
   return `<table cellpadding="0" cellspacing="0" style="width:100%;margin:8px 0 24px">${rows}</table>`;
 }
 
-export function renderCustomerOrderConfirmationHtml(order: OrderWithItems): string {
+export async function renderCustomerOrderConfirmationHtml(order: OrderWithItems): Promise<string> {
+  const orderedProductIds = order.items.map((i) => i.productId).filter((id): id is string => id !== null);
+  const [benefits, crossSell] = await Promise.all([
+    emailBenefits(),
+    getPopularProductsExcluding(orderedProductIds),
+  ]);
   const inner = `
       <h1>Ahoj ${order.firstName}!</h1>
       <p>Děkujeme za objednávku! Objednávka <strong>${order.number}</strong> byla přijata.</p>
@@ -31,6 +37,8 @@ export function renderCustomerOrderConfirmationHtml(order: OrderWithItems): stri
       <p style="font-size:17px;font-weight:700;margin-bottom:24px">Celkem: ${formatPrice(order.total)}</p>
       <p>O odeslání zásilky vás budeme informovat samostatným e-mailem.</p>
       ${emailButton(`${SITE_URL}/api/orders/${order.number}/access?token=${order.accessToken}`, "Zobrazit stav objednávky")}
+      ${benefits}
+      ${emailProductGrid("Mohlo by se vám také líbit", crossSell)}
     `;
   return renderEmailLayout(inner, { preheader: `Objednávka ${order.number} byla přijata.` });
 }
@@ -46,7 +54,7 @@ export async function sendCustomerOrderConfirmation(order: OrderWithItems) {
     from: EMAIL_FROM,
     to: order.email,
     subject: `Potvrzení objednávky ${order.number} — Gotrid Perfume`,
-    html: renderCustomerOrderConfirmationHtml(order),
+    html: await renderCustomerOrderConfirmationHtml(order),
   });
   // The Resend SDK returns { data, error } instead of throwing on API-level
   // failures (e.g. unverified sending domain) — surface it so the caller's
