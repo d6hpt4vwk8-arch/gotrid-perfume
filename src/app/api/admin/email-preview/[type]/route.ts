@@ -1,8 +1,13 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
-import { renderCustomerOrderConfirmationHtml } from "@/lib/email/send-order-emails";
+import {
+  renderCustomerOrderConfirmationHtml,
+  renderOwnerNewOrderNotificationHtml,
+} from "@/lib/email/send-order-emails";
 import { renderAbandonedCheckoutEmailHtml } from "@/lib/email/send-abandoned-checkout-email";
 import { renderSecondOrderEmailHtml } from "@/lib/email/send-second-order-email";
+import { renderPasswordResetEmailHtml } from "@/lib/email/send-password-reset-email";
+import { renderStockAlertEmailHtml } from "@/lib/email/send-stock-alert-email";
 import { isConditionFlagged } from "@/lib/feeds/condition-flagged";
 import type { CartItem } from "@/lib/cart-context";
 
@@ -71,6 +76,39 @@ export async function GET(_req: NextRequest, { params }: { params: Promise<{ typ
       })),
     });
     return new NextResponse(html, { headers: { "Content-Type": "text/html; charset=utf-8" } });
+  }
+
+  if (type === "owner-notification") {
+    const order = await prisma.order.findFirst({
+      orderBy: { createdAt: "desc" },
+      include: { items: true },
+    });
+    if (!order) {
+      return NextResponse.json({ error: "Zatím žádná objednávka k náhledu." }, { status: 404 });
+    }
+    return new NextResponse(renderOwnerNewOrderNotificationHtml(order), {
+      headers: { "Content-Type": "text/html; charset=utf-8" },
+    });
+  }
+
+  if (type === "password-reset") {
+    return new NextResponse(
+      renderPasswordResetEmailHtml("https://gotridperfume.cz/obnovit-heslo?token=nahled-ukazkovy-token"),
+      { headers: { "Content-Type": "text/html; charset=utf-8" } },
+    );
+  }
+
+  if (type === "stock-alert") {
+    const product = await prisma.product.findFirst({
+      where: { visible: true },
+      orderBy: { priority: "desc" },
+    });
+    if (!product) {
+      return NextResponse.json({ error: "Zatím žádný produkt k náhledu." }, { status: 404 });
+    }
+    return new NextResponse(renderStockAlertEmailHtml(product), {
+      headers: { "Content-Type": "text/html; charset=utf-8" },
+    });
   }
 
   return NextResponse.json({ error: "Neznámý typ náhledu." }, { status: 404 });

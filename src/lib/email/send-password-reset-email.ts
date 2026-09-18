@@ -1,6 +1,15 @@
 import { SITE_URL } from "@/lib/site";
 import { EMAIL_FROM, getResendClient, isEmailConfigured } from "./resend";
 
+export function renderPasswordResetEmailHtml(resetUrl: string): string {
+  return `
+      <h1>Ahoj!</h1>
+      <p>Požádali jste o obnovení hesla k účtu na Gotrid Perfume. Odkaz je platný 1 hodinu.</p>
+      <p><a href="${resetUrl}">Nastavit nové heslo</a></p>
+      <p>Pokud jste o obnovení hesla nežádali, tento e-mail můžete ignorovat.</p>
+    `;
+}
+
 export async function sendPasswordResetEmail(email: string, token: string) {
   if (!isEmailConfigured()) {
     console.warn(`[email] Resend not configured — skipping password reset email for ${email}`);
@@ -13,12 +22,7 @@ export async function sendPasswordResetEmail(email: string, token: string) {
     from: EMAIL_FROM,
     to: email,
     subject: "Obnovení hesla — Gotrid Perfume",
-    html: `
-      <h1>Ahoj!</h1>
-      <p>Požádali jste o obnovení hesla k účtu na Gotrid Perfume. Odkaz je platný 1 hodinu.</p>
-      <p><a href="${resetUrl}">Nastavit nové heslo</a></p>
-      <p>Pokud jste o obnovení hesla nežádali, tento e-mail můžete ignorovat.</p>
-    `,
+    html: renderPasswordResetEmailHtml(resetUrl),
   });
   if (error) throw new Error(`Resend error: ${error.message}`);
 }

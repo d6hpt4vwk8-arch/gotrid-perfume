@@ -48,6 +48,17 @@ export async function sendCustomerOrderConfirmation(order: OrderWithItems) {
   if (error) throw new Error(`Resend error: ${error.message}`);
 }
 
+export function renderOwnerNewOrderNotificationHtml(order: OrderWithItems): string {
+  return `
+      <h1>Nová objednávka ${order.number}</h1>
+      <p>${order.firstName} ${order.lastName} — ${order.email} — ${order.phone}</p>
+      ${itemsTableHtml(order.items)}
+      <p>Doprava: ${SHIPPING_LABELS[order.shippingMethod]}</p>
+      <p>Platba: ${PAYMENT_LABELS[order.paymentMethod]}${Number(order.codSurcharge) > 0 ? ` (příplatek ${formatPrice(order.codSurcharge)})` : ""}</p>
+      <p><strong>Celkem: ${formatPrice(order.total)}</strong></p>
+    `;
+}
+
 export async function sendOwnerNewOrderNotification(order: OrderWithItems) {
   if (!isEmailConfigured()) {
     console.warn(`[email] Resend not configured — skipping owner notification for ${order.number}`);
@@ -59,14 +70,7 @@ export async function sendOwnerNewOrderNotification(order: OrderWithItems) {
     from: EMAIL_FROM,
     to: OWNER_EMAIL,
     subject: `Nová objednávka ${order.number} (${formatPrice(order.total)})`,
-    html: `
-      <h1>Nová objednávka ${order.number}</h1>
-      <p>${order.firstName} ${order.lastName} — ${order.email} — ${order.phone}</p>
-      ${itemsTableHtml(order.items)}
-      <p>Doprava: ${SHIPPING_LABELS[order.shippingMethod]}</p>
-      <p>Platba: ${PAYMENT_LABELS[order.paymentMethod]}${Number(order.codSurcharge) > 0 ? ` (příplatek ${formatPrice(order.codSurcharge)})` : ""}</p>
-      <p><strong>Celkem: ${formatPrice(order.total)}</strong></p>
-    `,
+    html: renderOwnerNewOrderNotificationHtml(order),
   });
   if (error) throw new Error(`Resend error: ${error.message}`);
 }
