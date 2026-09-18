@@ -12,11 +12,13 @@ import { CheckoutSteps } from "@/components/checkout-steps";
 import { CouponField } from "@/components/coupon-field";
 import { GiftPicker } from "@/components/gift-picker";
 import { ProductCard, type ProductCardData } from "@/components/product-card";
+import { estimateDeliveryDate, formatDeliveryEstimate } from "@/lib/delivery-estimate";
 
 export default function CartPage() {
   const { items, setQty, removeItem, total, freeShippingThreshold } = useCart();
   const { price } = useCurrency();
   const remaining = freeShippingThreshold - total;
+  const deliveryEstimate = formatDeliveryEstimate(estimateDeliveryDate());
   const [coupon, setCoupon] = useState<AppliedCoupon | null>(null);
   const totalAfterDiscount = Math.max(0, total - (coupon?.discountAmount ?? 0));
 
@@ -65,6 +67,9 @@ export default function CartPage() {
       />
 
       <div className="flex flex-col gap-2 border border-line p-3 text-sm">
+        <span className="text-ink">
+          Objednáte-li dnes, doručíme k vám již <span className="font-medium">{deliveryEstimate}</span>.
+        </span>
         {remaining > 0 ? (
           <>
             <span className="text-ink">
