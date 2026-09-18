@@ -6,6 +6,7 @@ import { ORDER_STATUS_LABELS } from "@/lib/orders/status-labels";
 import { getCustomerReputationMap } from "@/lib/customer-reputation";
 import { getReturnStatsByMethod } from "@/lib/orders/return-stats.server";
 import { SHIPPING_LABELS } from "@/lib/shipping";
+import { OrderStatusQuickSelect } from "@/components/admin/order-status-quick-select";
 import type { OrderStatus } from "@prisma/client";
 
 const PAGE_SIZE = 30;
@@ -202,15 +203,22 @@ export default async function AdminOrdersPage({
                   )}
                 </td>
                 <td className="px-3 py-2">
-                  {ORDER_STATUS_LABELS[o.status]}
-                  {o.paymentMethod === "CARD" && o.status === "NEW" && (
-                    <span
-                      title="Platba kartou zatím nepotvrzena — nevyřizovat, dokud se nezmění na Zaplaceno"
-                      className="ml-1.5 rounded-full bg-red-100 px-2 py-0.5 text-xs font-medium text-red-700"
-                    >
-                      ⚠ čeká na platbu
-                    </span>
-                  )}
+                  <div className="flex items-center gap-1.5">
+                    <OrderStatusQuickSelect
+                      orderId={o.id}
+                      status={o.status}
+                      trackingNumber={o.trackingNumber}
+                      weight={o.weight.toString()}
+                    />
+                    {o.paymentMethod === "CARD" && o.status === "NEW" && (
+                      <span
+                        title="Platba kartou zatím nepotvrzena — nevyřizovat, dokud se nezmění na Zaplaceno"
+                        className="rounded-full bg-red-100 px-2 py-0.5 text-xs font-medium text-red-700"
+                      >
+                        ⚠ čeká na platbu
+                      </span>
+                    )}
+                  </div>
                 </td>
               </tr>
             ))}

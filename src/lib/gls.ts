@@ -213,7 +213,15 @@ export async function reprintLabel(parcelId: number): Promise<Buffer> {
   return Buffer.from(response.Labels, "base64");
 }
 
-export const GLS_DELIVERED_STATUS_CODE = "5"; // Appendix G: "The parcel has been delivered."
+// Appendix G's own table prints these as bare numbers ("5 The parcel has
+// been delivered."), but the live GetParcelListStatuses response pads them
+// to 2 digits ("05", not "5") — confirmed against real orders, where this
+// comparison silently matched nothing for every GLS parcel ever delivered.
+// Every code below is a genuine end-recipient handover, not just the
+// door-delivery case: 54 parcel box, 55 ParcelShop, 58 neighbour, 59
+// ParcelShop pickup (the terminal state for a GLS_MISTO order, which never
+// reaches 05 since it was never meant for door delivery).
+export const GLS_DELIVERED_STATUS_CODES = ["05", "54", "55", "58", "59"];
 // Appendix G lists two codes with the same "returned to sender" meaning —
 // 23 (general) and 40 (a second, separately-numbered occurrence in the same
 // table) — most commonly reached via 57 ("reached the maximum storage time

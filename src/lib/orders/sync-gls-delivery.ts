@@ -1,6 +1,6 @@
 import { prisma } from "@/lib/prisma";
 import { logAdminActivity } from "@/lib/admin/activity-log";
-import { getParcelStatuses, GLS_DELIVERED_STATUS_CODE, GLS_RETURNED_STATUS_CODES } from "@/lib/gls";
+import { getParcelStatuses, GLS_DELIVERED_STATUS_CODES, GLS_RETURNED_STATUS_CODES } from "@/lib/gls";
 
 /**
  * Marks orders as DELIVERED once GLS's own tracking confirms delivery
@@ -37,7 +37,7 @@ export async function syncGlsDeliveryStatus(): Promise<{
   for (const order of orders) {
     const status = statuses.get(order.glsParcelNumber!);
     if (!status) continue;
-    if (status.statusCode === GLS_DELIVERED_STATUS_CODE) {
+    if (GLS_DELIVERED_STATUS_CODES.includes(status.statusCode)) {
       await prisma.order.update({ where: { id: order.id }, data: { status: "DELIVERED" } });
       await logAdminActivity({
         action: "order.auto_delivered",
