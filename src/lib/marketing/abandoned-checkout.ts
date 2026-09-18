@@ -25,7 +25,42 @@ const MAX_AGE_HOURS = 72;
 // "did you forget your order?" email for an order she'd already completed
 // and received. This buffer treats any order placed shortly before the
 // capture as the same completed checkout, not a coincidence.
-const ALREADY_ORDERED_BUFFER_MS = 10 * 60 * 1000;
+export const ALREADY_ORDERED_BUFFER_MS = 10 * 60 * 1000;
+
+/**
+ * Same "did they already order?" rule as the loop below, exposed for
+ * read-only display. The cron only looks at rows older than CUTOFF_HOURS,
+ * so a checkout captured in the last two hours shows as "Čeká" in
+ * /admin/email-marketing even once the customer has completed the order —
+ * that gap is normally closed the next time the cron runs, but until then
+ * this lets the admin page show the real state instead of stale "Čeká".
+ * Doesn't write recoveredAt itself — that stays the cron's job, since only
+ * the cron run is allowed to decide "this candidate is resolved, skip it".
+ */
+export async function findAlreadyOrderedFlags(
+  checkouts: { email: string; capturedAt: Date }[],
+): Promise<boolean[]> {
+  const emails = [...new Set(checkouts.map((c) => c.email.toLowerCase()))];
+  if (emails.length === 0) return [];
+
+  const orders = await prisma.order.findMany({
+    where: { OR: emails.map((email) => ({ email: { equals: email, mode: "insensitive" as const } })) },
+    select: { email: true, createdAt: true },
+  });
+  const orderDatesByEmail = new Map<string, Date[]>();
+  for (const o of orders) {
+    const key = o.email.toLowerCase();
+    const list = orderDatesByEmail.get(key);
+    if (list) list.push(o.createdAt);
+    else orderDatesByEmail.set(key, [o.createdAt]);
+  }
+
+  return checkouts.map((c) => {
+    const cutoff = c.capturedAt.getTime() - ALREADY_ORDERED_BUFFER_MS;
+    const dates = orderDatesByEmail.get(c.email.toLowerCase()) ?? [];
+    return dates.some((d) => d.getTime() >= cutoff);
+  });
+}
 
 export async function runAbandonedCheckoutRecovery(): Promise<{
   emailed: number;

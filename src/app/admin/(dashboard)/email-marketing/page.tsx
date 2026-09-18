@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { prisma } from "@/lib/prisma";
 import { previewSecondOrderCandidates } from "@/lib/marketing/second-order-campaign";
+import { findAlreadyOrderedFlags } from "@/lib/marketing/abandoned-checkout";
 
 const PREVIEW_TYPES = [
   { type: "order-confirmation", label: "Potvrzení objednávky" },
@@ -22,8 +23,8 @@ export default async function EmailMarketingPage() {
   const [
     abandonedTotal,
     abandonedEmailed,
-    abandonedRecovered,
-    abandonedPending,
+    abandonedRecoveredByCron,
+    pendingRows,
     abandonedFailedLogs,
     abandonedSkippedOutOfStock,
     recentAbandoned,
@@ -36,7 +37,15 @@ export default async function EmailMarketingPage() {
     prisma.abandonedCheckout.count(),
     prisma.abandonedCheckout.count({ where: { emailSentAt: { not: null } } }),
     prisma.abandonedCheckout.count({ where: { recoveredAt: { not: null } } }),
-    prisma.abandonedCheckout.count({ where: { emailSentAt: null, recoveredAt: null } }),
+    // Fetched in full (not just counted) because the pending/recovered split
+    // below needs the live already-ordered check per row — the cron only
+    // updates recoveredAt for rows older than its own 2-hour cutoff, so a
+    // plain count here would still call a same-day, already-ordered
+    // customer "pending".
+    prisma.abandonedCheckout.findMany({
+      where: { emailSentAt: null, recoveredAt: null },
+      select: { id: true, email: true, capturedAt: true },
+    }),
     prisma.adminActivityLog.count({ where: { action: "marketing.abandoned_checkout_email_failed" } }),
     prisma.adminActivityLog.count({
       where: { action: "marketing.abandoned_checkout_skipped_out_of_stock" },
@@ -53,6 +62,18 @@ export default async function EmailMarketingPage() {
     }),
     previewSecondOrderCandidates(),
   ]);
+
+  // A row captured in the last two hours whose customer already checked out
+  // would otherwise show/count as "Čeká" until tomorrow's cron run (see
+  // findAlreadyOrderedFlags's own comment for why) — checked against every
+  // currently-pending row, not just the 50 shown in the table below, so the
+  // stat card total matches what the table actually displays.
+  const pendingAlreadyOrderedFlags = await findAlreadyOrderedFlags(pendingRows);
+  const alreadyOrderedIds = new Set(
+    pendingRows.filter((_, i) => pendingAlreadyOrderedFlags[i]).map((r) => r.id),
+  );
+  const abandonedPending = pendingRows.length - alreadyOrderedIds.size;
+  const abandonedRecovered = abandonedRecoveredByCron + alreadyOrderedIds.size;
 
   // Coupon code is embedded in the log detail string ("... s kódem XXXX ...")
   // rather than stored as its own column — parse it back out to show
@@ -131,11 +152,12 @@ export default async function EmailMarketingPage() {
             </thead>
             <tbody>
               {recentAbandoned.map((row) => {
-                const status = row.recoveredAt
-                  ? "Objednal(a) sám/sama před odesláním"
-                  : row.emailSentAt
-                    ? "Připomenutí odesláno"
-                    : "Čeká";
+                const status =
+                  row.recoveredAt || alreadyOrderedIds.has(row.id)
+                    ? "Objednal(a) sám/sama před odesláním"
+                    : row.emailSentAt
+                      ? "Připomenutí odesláno"
+                      : "Čeká";
                 return (
                   <tr key={row.id} className="border-b border-line last:border-0">
                     <td className="whitespace-nowrap px-3 py-2 text-accent-2">
