@@ -19,6 +19,15 @@ interface HeurekaOrderItem {
  * Rendered only on the order confirmation page, alongside SklikConversion.
  * `itemId` should match the feed's <ITEM_ID> (product.code) so Heureka can
  * reconcile against the catalog it already has.
+ *
+ * Gated on `analytics` consent, not `marketing` — owner's explicit call
+ * (2026-09-18): this reports first-party order stats back to a price
+ * comparison site the shop already lists on, not third-party ad
+ * personalization, so it's closer to GA4-style analytics than a retargeting
+ * pixel. Confirmed live via Heureka's own stats page that the marketing gate
+ * left this at 0 counted conversions against 430 real clicks over a month —
+ * most Heureka referrals never interact with the consent banner at all
+ * before leaving or buying, so the stricter gate silently never fires.
  */
 export function HeurekaConversion({
   orderId,
@@ -32,7 +41,7 @@ export function HeurekaConversion({
   const { consent } = useConsent();
 
   useEffect(() => {
-    if (!consent?.marketing || !CONVERSION_KEY) return;
+    if (!consent?.analytics || !CONVERSION_KEY) return;
     loadHeurekaScript("thank_you");
     window.heureka?.("authenticate", CONVERSION_KEY);
     window.heureka?.("set_order_id", orderId);
@@ -43,7 +52,7 @@ export function HeurekaConversion({
     window.heureka?.("set_currency", "CZK");
     window.heureka?.("send", "Order");
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [consent?.marketing, orderId]);
+  }, [consent?.analytics, orderId]);
 
   return null;
 }
