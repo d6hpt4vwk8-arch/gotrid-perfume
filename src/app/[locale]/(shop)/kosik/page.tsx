@@ -124,7 +124,7 @@ export default function CartPage() {
 
       {recommendations.length > 0 && (
         <div className="flex flex-col gap-4 border-t border-line pt-6">
-          <h2 className="text-sm font-bold text-ink">Doplňte objednávku</h2>
+          <h2 className="text-sm font-bold text-ink">Mohlo by se vám také líbit</h2>
           <div className="grid grid-cols-2 gap-x-4 gap-y-8 sm:grid-cols-3">
             {recommendations.map((product) => (
               <ProductCard key={product.slug} product={product} freeShippingThreshold={freeShippingThreshold} />
