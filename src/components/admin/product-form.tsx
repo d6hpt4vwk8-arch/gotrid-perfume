@@ -234,6 +234,17 @@ export function ProductForm({
         />
       </label>
 
+      <label className="flex flex-col gap-1 text-sm">
+        Složení (INCI) — jen pro kosmetiku, u parfémů nechte prázdné
+        <textarea
+          name="ingredients"
+          rows={4}
+          defaultValue={product?.ingredients ?? ""}
+          placeholder="Aqua, Glycerin, Cetearyl Alcohol, …"
+          className="rounded-sm border border-line px-3 py-2 font-mono text-xs"
+        />
+      </label>
+
       <label className="flex items-center gap-2 text-sm">
         <input type="checkbox" name="visible" defaultChecked={product?.visible ?? true} />
         Viditelný na webu

@@ -110,6 +110,13 @@ model Product {
 
   description String? @db.Text
 
+  // INCI/composition list for cosmetics (skincare, haircare, makeup) — EU
+  // Regulation (EC) No 1223/2009 expects the ingredient list to be
+  // available to the consumer before purchase, and most competitors already
+  // publish it online rather than relying on the physical label alone. Left
+  // null for perfumes/fragrance, where this isn't the expected norm.
+  ingredients String? @db.Text
+
   images ProductImage[]
 
   categories ProductCategory[]

@@ -375,6 +375,15 @@ export default async function ProductPage({
               </dl>
             </div>
           )}
+
+          {product.ingredients && (
+            <div className="mt-2">
+              <h2 className="mb-2 text-[11px] font-semibold tracking-wide text-accent-2 uppercase">
+                Složení (INCI)
+              </h2>
+              <p className="text-sm whitespace-pre-line text-ink/70">{product.ingredients}</p>
+            </div>
+          )}
         </div>
       </div>
 

@@ -29,6 +29,7 @@ const productSchema = z.object({
   visible: z.coerce.boolean().default(false),
   giftEligible: z.coerce.boolean().default(false),
   description: z.preprocess(emptyToUndefined, z.string().max(20_000).optional()),
+  ingredients: z.preprocess(emptyToUndefined, z.string().max(5_000).optional()),
 });
 
 function parseProductForm(formData: FormData) {
@@ -105,6 +106,7 @@ export async function createProduct(formData: FormData) {
       visible: data.visible,
       giftEligible: data.giftEligible,
       description: data.description,
+      ingredients: data.ingredients,
     },
   });
 
@@ -137,6 +139,7 @@ export async function updateProduct(id: string, formData: FormData) {
       visible: data.visible,
       giftEligible: data.giftEligible,
       description: data.description,
+      ingredients: data.ingredients,
     },
   });
 
