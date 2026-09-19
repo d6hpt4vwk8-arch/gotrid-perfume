@@ -124,6 +124,7 @@ export async function runSecondOrderCampaign(): Promise<{ emailed: number; skipp
       email: candidate.email,
       firstName: candidate.firstName,
       couponCode,
+      discountPercent: settings.secondOrderDiscountPercent,
       theme,
       products,
     });

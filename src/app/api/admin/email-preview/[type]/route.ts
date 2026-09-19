@@ -62,10 +62,12 @@ export async function GET(_req: NextRequest, { params }: { params: Promise<{ typ
       include: { images: { orderBy: { sortOrder: "asc" }, take: 1 } },
     });
     const products = candidates.filter((p) => !isConditionFlagged(p.name, p.isDefective)).slice(0, 3);
+    const settings = await prisma.settings.upsert({ where: { id: "singleton" }, update: {}, create: { id: "singleton" } });
     const html = await renderSecondOrderEmailHtml({
       email: "nahled@example.com",
       firstName: "Zákazníku",
       couponCode: "DRUHY7X3K9M",
+      discountPercent: settings.secondOrderDiscountPercent,
       theme: "perfume",
       products: products.map((p) => ({
         id: p.id,
