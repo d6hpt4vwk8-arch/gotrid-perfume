@@ -44,7 +44,15 @@ export async function findAlreadyOrderedFlags(
   if (emails.length === 0) return [];
 
   const orders = await prisma.order.findMany({
-    where: { OR: emails.map((email) => ({ email: { equals: email, mode: "insensitive" as const } })) },
+    where: {
+      OR: emails.map((email) => ({ email: { equals: email, mode: "insensitive" as const } })),
+      // A CARD order that was never actually paid (see the 2-hour
+      // auto-cancel note in src/app/admin/(dashboard)/objednavky/[id]/page.tsx)
+      // isn't a completed purchase — it's the exact same "filled in checkout,
+      // never finished" outcome this whole recovery flow exists to catch, so
+      // it must not count as "already ordered" and suppress the reminder.
+      NOT: { paymentMethod: "CARD", status: "CANCELLED" },
+    },
     select: { email: true, createdAt: true },
   });
   const orderDatesByEmail = new Map<string, Date[]>();
@@ -96,6 +104,10 @@ export async function runAbandonedCheckoutRecovery(): Promise<{
         where: {
           email: { equals: candidate.email, mode: "insensitive" },
           createdAt: { gte: new Date(candidate.capturedAt.getTime() - ALREADY_ORDERED_BUFFER_MS) },
+          // Same reasoning as findAlreadyOrderedFlags above: an unpaid CARD
+          // order that auto-cancelled after 2 hours never became a real
+          // sale, so it must not block this reminder from going out.
+          NOT: { paymentMethod: "CARD", status: "CANCELLED" },
         },
         select: { id: true },
       });
