@@ -30,6 +30,15 @@ import type { Customer } from "@prisma/client";
 type ShippingMethod = keyof typeof SHIPPING_LABELS;
 type PaymentMethod = keyof typeof PAYMENT_LABELS;
 
+// Paused 2026-09-19 (owner's call): earn/redeem rates are still flat and
+// undifferentiated by product, and the program hasn't been announced to any
+// real audience yet — hidden from checkout and the account page until the
+// rules are actually worked out. Existing balances are left untouched in
+// the ledger; Settings.loyaltyEarnPercent/loyaltyRedeemCapPercent are also
+// zeroed as a backend guardrail so nothing can be earned or redeemed even
+// through a stale client. Flip this back on once the rules are set.
+const LOYALTY_PROGRAM_ENABLED = false;
+
 export function CheckoutForm({
   settings,
   customer,
@@ -87,7 +96,7 @@ export function CheckoutForm({
     () => getCodSurcharge(paymentMethod, settings),
     [paymentMethod, settings],
   );
-  const pointsToRedeem = useLoyaltyPoints ? (loyalty?.maxRedeemable ?? 0) : 0;
+  const pointsToRedeem = LOYALTY_PROGRAM_ENABLED && useLoyaltyPoints ? (loyalty?.maxRedeemable ?? 0) : 0;
   const total = itemsTotal + shippingPrice + codSurcharge - (coupon?.discountAmount ?? 0) - pointsToRedeem;
 
   // Every DB price is CZK — a Slovak card charged in CZK eats the bank's own
@@ -171,7 +180,7 @@ export function CheckoutForm({
   // (net of any coupon discount) affects the redemption cap.
   const eligibleTotal = itemsTotal - (coupon?.discountAmount ?? 0);
   useEffect(() => {
-    if (!/^\S+@\S+\.\S+$/.test(email.trim())) {
+    if (!LOYALTY_PROGRAM_ENABLED || !/^\S+@\S+\.\S+$/.test(email.trim())) {
       setLoyalty(null);
       return;
     }
@@ -537,7 +546,7 @@ export function CheckoutForm({
           <CouponField onApplied={setCoupon} />
         </fieldset>
 
-        {loyalty && loyalty.balance > 0 && (
+        {LOYALTY_PROGRAM_ENABLED && loyalty && loyalty.balance > 0 && (
           <fieldset className="flex flex-col gap-2">
             <legend className="mb-1 text-sm font-semibold text-ink">Věrnostní body</legend>
             {loyalty.maxRedeemable > 0 ? (
