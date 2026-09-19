@@ -13,6 +13,7 @@ import { resolveItemCodes, toItemId } from "@/lib/analytics/resolve-item-ids";
 import { SITE_URL } from "@/lib/site";
 import { isRateLimited, recordRateLimitHit, getClientIp } from "@/lib/rate-limit";
 import { getCurrentCustomerId } from "@/lib/customer/get-current-customer";
+import { ATTRIBUTION_COOKIE } from "@/lib/attribution";
 import { logAdminActivity } from "@/lib/admin/activity-log";
 import { getSettings } from "@/lib/settings.server";
 import { czkToEur } from "@/lib/format";
@@ -53,7 +54,16 @@ export async function POST(req: NextRequest) {
   let order;
   try {
     const customerId = await getCurrentCustomerId();
-    order = await createOrder(parsed.data, customerId);
+    const rawTrafficSource = req.cookies.get(ATTRIBUTION_COOKIE)?.value;
+    let trafficSource: string | null = null;
+    if (rawTrafficSource) {
+      try {
+        trafficSource = decodeURIComponent(rawTrafficSource);
+      } catch {
+        // Malformed cookie — leave the order's traffic source empty rather than fail checkout over it.
+      }
+    }
+    order = await createOrder(parsed.data, customerId, trafficSource);
   } catch (err) {
     if (err instanceof CheckoutError) {
       return NextResponse.json({ error: err.message }, { status: 409 });

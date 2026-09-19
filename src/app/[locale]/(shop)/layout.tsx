@@ -4,6 +4,7 @@ import { SiteFooter } from "@/components/site-footer";
 import { Providers } from "@/components/providers";
 import { CookieBanner } from "@/components/cookie-banner";
 import { MetaPixel } from "@/components/meta-pixel";
+import { AttributionTracker } from "@/components/attribution-tracker";
 import { SklikPixel } from "@/components/sklik-pixel";
 import { GlamiPixel } from "@/components/glami-pixel";
 import { Clarity } from "@/components/clarity";
@@ -76,6 +77,7 @@ export default async function ShopLayout({ children }: { children: React.ReactNo
         initialCurrency={initialCurrency}
         czkToEurRate={settings.czkToEurRate}
       >
+        <AttributionTracker />
         <MetaPixel />
         <SklikPixel />
         <GlamiPixel />

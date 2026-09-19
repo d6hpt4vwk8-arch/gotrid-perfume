@@ -195,6 +195,9 @@ export default async function AdminOrdersPage({
                       😊
                     </span>
                   )}
+                  {o.trafficSource && (
+                    <div className="text-xs text-accent-2">{o.trafficSource}</div>
+                  )}
                 </td>
                 <td className="px-3 py-2">
                   {formatPrice(o.total)}

@@ -515,6 +515,15 @@ model Order {
   // access to the original request's consent state otherwise.
   marketingConsent Boolean @default(false)
 
+  // First-touch acquisition channel, computed client-side on the visitor's
+  // very first page view of this session (see src/lib/attribution.ts +
+  // AttributionTracker) from the landing referrer/UTM params and carried in
+  // a first-party cookie until checkout. Not fed to or shared with any ad
+  // platform — purely so the admin order view can answer "where did this
+  // order come from" without cross-referencing Heureka/Sklik/GA dashboards
+  // by hand. Null for orders placed before this existed.
+  trafficSource String?
+
   status         OrderStatus @default(NEW)
   trackingNumber String?
 

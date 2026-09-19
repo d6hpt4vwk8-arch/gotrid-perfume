@@ -12,7 +12,11 @@ export { CheckoutError };
 
 const MAX_ORDER_NUMBER_ATTEMPTS = 5;
 
-export async function createOrder(input: CheckoutInput, customerId?: string | null) {
+export async function createOrder(
+  input: CheckoutInput,
+  customerId?: string | null,
+  trafficSource?: string | null,
+) {
   const productIds = input.items.map((i) => i.productId);
   const products = await prisma.product.findMany({
     where: { id: { in: productIds }, visible: true },
@@ -139,6 +143,7 @@ export async function createOrder(input: CheckoutInput, customerId?: string | nu
             shippingCountry: input.shippingCountry,
             customerNote: input.customerNote || null,
             marketingConsent: input.marketingConsent,
+            trafficSource: trafficSource || null,
             couponCode,
             discountAmount,
             pointsRedeemed,

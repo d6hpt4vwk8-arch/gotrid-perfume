@@ -118,6 +118,9 @@ export default async function AdminOrderDetailPage({
           </span>
           <span>{order.email}</span>
           <span>{order.phone}</span>
+          {order.trafficSource && (
+            <span className="text-xs text-accent-2">Zdroj: {order.trafficSource}</span>
+          )}
         </div>
         <div className="flex flex-col gap-1">
           <span className="text-xs font-semibold uppercase text-accent-2">Doprava a platba</span>
