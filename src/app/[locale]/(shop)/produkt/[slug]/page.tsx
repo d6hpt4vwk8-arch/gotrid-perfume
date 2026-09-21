@@ -79,7 +79,7 @@ async function getRelatedProducts(productId: string, categoryIds: string[]) {
       stock: { gt: 0 },
     },
     include: { brand: true, images: { orderBy: { sortOrder: "asc" }, take: 1 } },
-    orderBy: [{ priority: "desc" }, { createdAt: "desc" }],
+    orderBy: [{ ownStock: "desc" }, { priority: "desc" }, { createdAt: "desc" }],
     take: 8,
   });
 }

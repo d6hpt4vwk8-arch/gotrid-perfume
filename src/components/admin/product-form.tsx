@@ -134,6 +134,22 @@ export function ProductForm({
         </span>
       </label>
 
+      <label className="flex flex-col gap-1 text-sm">
+        Vlastní sklad (ks)
+        <input
+          name="ownStock"
+          type="number"
+          min={0}
+          defaultValue={product?.ownStock ?? 0}
+          className="w-40 rounded-sm border border-line px-3 py-2"
+        />
+        <span className="text-xs text-accent-2">
+          Kolik kusů máme fyzicky u sebe — jiné číslo než „Sklad“ výše, které jen odráží
+          dostupnost u dodavatele. Cokoli zde nad 0 se zobrazuje ještě přednostněji než
+          „Priorita zobrazení“ (hlavní stránka, výpis kategorie, podobné produkty, košík).
+        </span>
+      </label>
+
       <div className="grid grid-cols-2 gap-4">
         <label className="flex flex-col gap-1 text-sm">
           Značka

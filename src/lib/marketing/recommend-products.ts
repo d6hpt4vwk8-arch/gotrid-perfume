@@ -134,7 +134,7 @@ export async function getPopularProductsExcluding(
       isDefective: true,
       images: { take: 1, orderBy: { sortOrder: "asc" }, select: { url: true } },
     },
-    orderBy: { priority: "desc" },
+    orderBy: [{ ownStock: "desc" }, { priority: "desc" }],
     take: 20,
   });
 
@@ -176,7 +176,7 @@ export async function getSimilarProducts(productId: string, take = 3): Promise<R
       isDefective: true,
       images: { take: 1, orderBy: { sortOrder: "asc" }, select: { url: true } },
     },
-    orderBy: { priority: "desc" },
+    orderBy: [{ ownStock: "desc" }, { priority: "desc" }],
     take: 20,
   });
 

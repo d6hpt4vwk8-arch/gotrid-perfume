@@ -103,7 +103,7 @@ export async function getFrequentlyBoughtTogetherForCart(cartProductIds: string[
         categories: { some: { categoryId: { in: cartCategoryIds } } },
       },
       include: { brand: true, images: { orderBy: { sortOrder: "asc" }, take: 1 } },
-      orderBy: { priority: "desc" },
+      orderBy: [{ ownStock: "desc" }, { priority: "desc" }],
       take: limit,
     });
     if (sameCategory.length > 0) return sameCategory;
@@ -114,7 +114,7 @@ export async function getFrequentlyBoughtTogetherForCart(cartProductIds: string[
   return prisma.product.findMany({
     where: { visible: true, stock: { gt: 0 }, id: { notIn: cartProductIds } },
     include: { brand: true, images: { orderBy: { sortOrder: "asc" }, take: 1 } },
-    orderBy: { priority: "desc" },
+    orderBy: [{ ownStock: "desc" }, { priority: "desc" }],
     take: limit,
   });
 }

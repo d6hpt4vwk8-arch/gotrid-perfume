@@ -5,6 +5,7 @@ import { LogoutButton } from "@/components/admin/logout-button";
 const NAV_ITEMS = [
   { href: "/admin", label: "Přehled" },
   { href: "/admin/produkty", label: "Produkty" },
+  { href: "/admin/vlastni-sklad", label: "Vlastní sklad" },
   { href: "/admin/kategorie", label: "Kategorie" },
   { href: "/admin/znacky", label: "Značky" },
   { href: "/admin/magazin", label: "Magazín" },

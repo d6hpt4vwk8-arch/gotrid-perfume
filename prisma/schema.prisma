@@ -124,6 +124,17 @@ model Product {
   stock   Int     @default(0)
   visible Boolean @default(true)
 
+  // Units physically held at our own location, separate from `stock` above
+  // (which is the supplier-fed "available to drop-ship" number, imported
+  // from each supplier's own feed and unrelated to what we've actually
+  // bought and have in hand). Manually maintained — nothing decrements it
+  // automatically, since we can't tell whether a given sale shipped from
+  // our own shelf or was drop-shipped fresh. Used purely to push genuinely
+  // in-hand stock ahead of everything else wherever `priority` already
+  // governs ordering (homepage sections, category listings, cross-sell) —
+  // see each such `orderBy`.
+  ownStock Int @default(0)
+
   // A separate listing for a damaged-packaging batch of an otherwise normal
   // product (same EAN, own code/price/stock) — shows a "Poškozený obal"
   // badge on the card/detail page instead of merging into the regular

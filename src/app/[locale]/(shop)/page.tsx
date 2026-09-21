@@ -27,7 +27,7 @@ export default async function HomePage() {
       getCategoryNavTree(),
       prisma.product.findMany({
         where: { visible: true, ...primaryVariantWhere, compareAtPrice: { not: null }, stock: { gt: 0 } },
-        orderBy: [{ priority: "desc" }, { createdAt: "desc" }],
+        orderBy: [{ ownStock: "desc" }, { priority: "desc" }, { createdAt: "desc" }],
         take: 12,
         include: { brand: true, images: { orderBy: { sortOrder: "asc" }, take: 1 } },
       }),
@@ -42,7 +42,7 @@ export default async function HomePage() {
           // isDefective in schema.prisma), not showcased here.
           isDefective: false,
         },
-        orderBy: [{ priority: "desc" }, { createdAt: "desc" }],
+        orderBy: [{ ownStock: "desc" }, { priority: "desc" }, { createdAt: "desc" }],
         take: 12,
         include: { brand: true, images: { orderBy: { sortOrder: "asc" }, take: 1 } },
       }),
@@ -53,7 +53,7 @@ export default async function HomePage() {
           categories: { some: { category: { fullSlug: "parfemy/arabske-parfemy" } } },
           stock: { gt: 0 },
         },
-        orderBy: [{ priority: "desc" }, { createdAt: "desc" }],
+        orderBy: [{ ownStock: "desc" }, { priority: "desc" }, { createdAt: "desc" }],
         take: 12,
         include: { brand: true, images: { orderBy: { sortOrder: "asc" }, take: 1 } },
       }),

@@ -138,12 +138,16 @@ export function buildOrderBy(sort: SortOption): Prisma.ProductOrderByWithRelatio
       return [{ salesCount: "desc" }, { createdAt: "desc" }];
     case "newest":
     default:
-      // Manually pinned picks (priority) lead, same as before; the tie-break
-      // used to be createdAt (so the rest of the category was effectively
-      // random from a shopper's perspective) — salesCount surfaces real
-      // demand there instead, without turning the whole category into a
-      // duplicate of the dedicated "Nejprodávanější" sort, since curated
-      // picks still occupy the top slots.
-      return [{ priority: "desc" }, { salesCount: "desc" }];
+      // Genuinely in-hand stock (ownStock) leads even manually pinned
+      // picks — selling through what we've actually bought and are
+      // holding matters more than a curated pick that still has to be
+      // drop-shipped fresh. Manually pinned picks (priority) come next,
+      // same as before; the tie-break used to be createdAt (so the rest
+      // of the category was effectively random from a shopper's
+      // perspective) — salesCount surfaces real demand there instead,
+      // without turning the whole category into a duplicate of the
+      // dedicated "Nejprodávanější" sort, since curated picks still
+      // occupy the top slots.
+      return [{ ownStock: "desc" }, { priority: "desc" }, { salesCount: "desc" }];
   }
 }
