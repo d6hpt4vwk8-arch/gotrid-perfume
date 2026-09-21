@@ -40,6 +40,15 @@ export async function createCheckoutSession({
 
   return stripe.checkout.sessions.create({
     mode: "payment",
+    // Explicit, not left to Stripe's automatic per-session selection —
+    // checkout-schema.ts only ever ships to CZ/SK, so nothing here should
+    // ever need Bancontact/MB WAY/Satispay/Pix/BLIK/EPS/Klarna etc., which
+    // the Dashboard has enabled for the separate, manually-created Payment
+    // Links used for one-off wholesale sales abroad (e.g. a Belgian buyer
+    // paying via Bancontact) — those aren't created through this function
+    // and are unaffected by this restriction. Apple Pay, Google Pay and
+    // Link still ride on top of "card" automatically and aren't listed here.
+    payment_method_types: ["card"],
     customer_email: customerEmail,
     client_reference_id: orderId,
     success_url: successUrl,
