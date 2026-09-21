@@ -122,10 +122,15 @@ export function CartProvider({
 
       const newTotal = totalRef.current + item.price * qty;
       const remaining = freeShippingThreshold - newTotal;
+      // Leads with confirmation that the click actually did something —
+      // a real Clarity recording showed a customer clicking "Přidat do
+      // košíku" three times over two minutes on the same product, because
+      // the only feedback was this toast talking about the shipping
+      // threshold, never actually saying the item was added.
       const message =
         remaining > 0
-          ? `Ještě ${formatPrice(remaining)} do dopravy zdarma`
-          : "Máte nárok na dopravu zdarma! 🎉";
+          ? `Přidáno do košíku! Ještě ${formatPrice(remaining)} do dopravy zdarma`
+          : "Přidáno do košíku! Máte nárok na dopravu zdarma 🎉";
 
       if (toastTimeoutRef.current) clearTimeout(toastTimeoutRef.current);
       setToast(message);

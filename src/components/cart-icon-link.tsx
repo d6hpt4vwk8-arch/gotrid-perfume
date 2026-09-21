@@ -1,10 +1,28 @@
 "use client";
 
 import Link from "next/link";
+import { useEffect, useRef, useState } from "react";
 import { useCart } from "@/lib/cart-context";
 
 export function CartIconLink() {
   const { itemCount } = useCart();
+  const previousCount = useRef(itemCount);
+  const [bumping, setBumping] = useState(false);
+
+  // Visible from anywhere on the page, unlike the bottom-corner toast —
+  // a second, harder-to-miss confirmation that a click on "Přidat do
+  // košíku" actually landed (see cart-context.tsx's addItem comment for
+  // why this matters). Skips the very first render so a cart hydrated
+  // from localStorage doesn't bump on page load.
+  useEffect(() => {
+    if (itemCount > previousCount.current) {
+      setBumping(true);
+      const timeout = setTimeout(() => setBumping(false), 400);
+      previousCount.current = itemCount;
+      return () => clearTimeout(timeout);
+    }
+    previousCount.current = itemCount;
+  }, [itemCount]);
 
   return (
     <Link href="/kosik" className="relative flex items-center gap-1.5 text-sm font-medium">
@@ -14,7 +32,7 @@ export function CartIconLink() {
         fill="none"
         stroke="currentColor"
         strokeWidth={1.8}
-        className="h-5 w-5"
+        className={`h-5 w-5 ${bumping ? "animate-[cart-bump_0.4s_ease-out]" : ""}`}
         aria-hidden
       >
         <path
@@ -25,7 +43,9 @@ export function CartIconLink() {
       </svg>
       <span className="hidden sm:inline">Košík</span>
       {itemCount > 0 && (
-        <span className="flex h-5 min-w-5 items-center justify-center rounded-full bg-white px-1 text-xs font-semibold text-ink">
+        <span
+          className={`flex h-5 min-w-5 items-center justify-center rounded-full bg-white px-1 text-xs font-semibold text-ink ${bumping ? "animate-[cart-bump_0.4s_ease-out]" : ""}`}
+        >
           {itemCount}
         </span>
       )}

@@ -67,3 +67,15 @@ body {
     transform: translateY(0);
   }
 }
+
+@keyframes cart-bump {
+  0% {
+    transform: scale(1);
+  }
+  35% {
+    transform: scale(1.35);
+  }
+  100% {
+    transform: scale(1);
+  }
+}
