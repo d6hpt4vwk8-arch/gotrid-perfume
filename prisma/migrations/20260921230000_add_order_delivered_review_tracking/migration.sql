@@ -1,0 +1,2 @@
+ALTER TABLE "Order" ADD COLUMN "deliveredAt" TIMESTAMP(3);
+ALTER TABLE "Order" ADD COLUMN "reviewRequestSentAt" TIMESTAMP(3);

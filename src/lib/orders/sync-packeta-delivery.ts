@@ -39,7 +39,10 @@ export async function syncPacketaDeliveryStatus(): Promise<{
     }
 
     if (status.statusCode === PACKETA_DELIVERED_STATUS_CODE) {
-      await prisma.order.update({ where: { id: order.id }, data: { status: "DELIVERED" } });
+      await prisma.order.update({
+        where: { id: order.id },
+        data: { status: "DELIVERED", deliveredAt: new Date() },
+      });
       await logAdminActivity({
         action: "order.auto_delivered",
         entityType: "Order",

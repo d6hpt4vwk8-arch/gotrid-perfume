@@ -40,6 +40,11 @@ export async function updateOrderStatus(id: string, formData: FormData) {
       ...(before.status !== "REFUNDED" && status === "REFUNDED"
         ? { refundedAt: new Date() }
         : {}),
+      // Same first-transition-only stamping, anchors the review-request
+      // email's "N days after delivery" wait (see review-request-campaign.ts).
+      ...(before.status !== "DELIVERED" && status === "DELIVERED"
+        ? { deliveredAt: new Date() }
+        : {}),
     },
     include: { items: true },
   });

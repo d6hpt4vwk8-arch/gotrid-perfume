@@ -38,7 +38,10 @@ export async function syncGlsDeliveryStatus(): Promise<{
     const status = statuses.get(order.glsParcelNumber!);
     if (!status) continue;
     if (GLS_DELIVERED_STATUS_CODES.includes(status.statusCode)) {
-      await prisma.order.update({ where: { id: order.id }, data: { status: "DELIVERED" } });
+      await prisma.order.update({
+        where: { id: order.id },
+        data: { status: "DELIVERED", deliveredAt: new Date() },
+      });
       await logAdminActivity({
         action: "order.auto_delivered",
         entityType: "Order",

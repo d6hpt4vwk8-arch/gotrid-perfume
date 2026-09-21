@@ -7,6 +7,7 @@ const PREVIEW_TYPES = [
   { type: "order-confirmation", label: "Potvrzení objednávky" },
   { type: "abandoned-checkout", label: "Opuštěný košík" },
   { type: "second-order", label: "Sleva na druhou objednávku" },
+  { type: "review-request", label: "Žádost o recenzi" },
 ];
 
 function StatCard({ label, value, hint }: { label: string; value: string | number; hint?: string }) {

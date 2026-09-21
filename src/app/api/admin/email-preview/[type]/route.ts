@@ -8,6 +8,7 @@ import { renderAbandonedCheckoutEmailHtml } from "@/lib/email/send-abandoned-che
 import { renderSecondOrderEmailHtml } from "@/lib/email/send-second-order-email";
 import { renderPasswordResetEmailHtml } from "@/lib/email/send-password-reset-email";
 import { renderStockAlertEmailHtml } from "@/lib/email/send-stock-alert-email";
+import { renderReviewRequestEmailHtml } from "@/lib/email/send-review-request-email";
 import { isConditionFlagged } from "@/lib/feeds/condition-flagged";
 import type { CartItem } from "@/lib/cart-context";
 
@@ -111,6 +112,21 @@ export async function GET(_req: NextRequest, { params }: { params: Promise<{ typ
     return new NextResponse(await renderStockAlertEmailHtml(product), {
       headers: { "Content-Type": "text/html; charset=utf-8" },
     });
+  }
+
+  if (type === "review-request") {
+    const order = await prisma.order.findFirst({
+      where: { status: "DELIVERED", items: { some: { productId: { not: null } } } },
+      orderBy: { createdAt: "desc" },
+      include: { items: { take: 1, include: { product: { select: { slug: true } } } } },
+    });
+    const slug = order?.items[0]?.product?.slug ?? "ukazkovy-produkt";
+    const html = await renderReviewRequestEmailHtml({
+      email: "nahled@example.com",
+      firstName: order?.firstName ?? "Zákazníku",
+      reviewProductSlug: slug,
+    });
+    return new NextResponse(html, { headers: { "Content-Type": "text/html; charset=utf-8" } });
   }
 
   return NextResponse.json({ error: "Neznámý typ náhledu." }, { status: 404 });

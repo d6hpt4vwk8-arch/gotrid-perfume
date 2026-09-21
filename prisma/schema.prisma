@@ -552,6 +552,18 @@ model Order {
   // the whole order history every run.
   secondOrderEmailSentAt DateTime?
 
+  // Stamped once, the first time an order reaches DELIVERED — same
+  // first-transition-only pattern as refundedAt above, used instead of
+  // updatedAt so a later unrelated edit doesn't shift it. Anchors the
+  // review-request email's "N days after delivery" wait (see
+  // src/lib/marketing/review-request-campaign.ts) to when the customer
+  // actually got the parcel, not to whatever this order was last touched.
+  deliveredAt DateTime?
+  // Set once the review-request campaign has emailed this order (or
+  // determined it doesn't qualify), same skip-what's-resolved purpose as
+  // secondOrderEmailSentAt above.
+  reviewRequestSentAt DateTime?
+
   // Zásilkovna/Packeta shipment, created on-demand from the admin order page
   // (src/app/api/admin/orders/[id]/label/route.ts). packetaId is set once the
   // label has been generated so re-printing re-fetches the same packet
