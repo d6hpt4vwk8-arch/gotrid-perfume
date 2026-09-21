@@ -590,6 +590,18 @@ export function CheckoutForm({
 
         {error && <p className="text-sm text-red-600">{error}</p>}
 
+        {/* The submit button below silently disables itself when a
+            pickup-point delivery method is chosen but no point was ever
+            picked — confirmed via a real Clarity session recording as a
+            dead-click pattern: the customer reaches the bottom of checkout,
+            clicks a plain greyed-out button with no explanation, and gives
+            up. This makes the reason visible right next to the button. */}
+        {usesPickupPoint && !pickupPoint && (
+          <p className="text-sm text-red-600">
+            Vyberte prosím výdejní místo výše, abyste mohli dokončit objednávku.
+          </p>
+        )}
+
         <div className="flex flex-col gap-2">
           <TrustBadges />
           <PaymentIcons />
