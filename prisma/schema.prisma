@@ -527,6 +527,13 @@ model Order {
   status         OrderStatus @default(NEW)
   trackingNumber String?
 
+  // Set once, the first time an admin moves this order to REFUNDED (see
+  // updateOrderStatus) — the dobropis (credit note) PDF dates itself from
+  // this instead of updatedAt, which changes on any later edit (tracking
+  // number, weight, ...) and would otherwise silently reissue the credit
+  // note under the wrong date.
+  refundedAt DateTime?
+
   // Set once the "come back and order again" campaign has either emailed
   // this customer or determined they don't qualify (already reordered,
   // unsubscribed) — see src/lib/marketing/second-order-campaign.ts. Lets the

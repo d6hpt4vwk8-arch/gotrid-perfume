@@ -1,7 +1,6 @@
 import { Document, Page, Text, View, StyleSheet } from "@react-pdf/renderer";
 import type { Order, OrderItem } from "@prisma/client";
 import { formatPrice } from "@/lib/format";
-import { SHIPPING_LABELS, PAYMENT_LABELS } from "@/lib/shipping";
 import { sellerForDate } from "@/lib/business-identity";
 import "@/lib/pdf/register-fonts";
 
@@ -30,23 +29,27 @@ const styles = StyleSheet.create({
   colPrice: { flex: 1, textAlign: "right" },
   colTotal: { flex: 1, textAlign: "right" },
   totalsBox: { marginTop: 20, alignItems: "flex-end" },
-  totalRow: { flexDirection: "row", gap: 20, marginBottom: 2 },
-  grandTotal: { fontSize: 13, fontWeight: 700, marginTop: 6 },
+  grandTotal: { fontSize: 13, fontWeight: 700, marginTop: 6, color: "#b91c1c" },
   footer: { marginTop: 30, fontSize: 8, color: "#888" },
 });
 
-export function FakturaDocument({ order }: { order: Order & { items: OrderItem[] } }) {
-  // Resolved from the order's own date, never from "today" — a faktura is
-  // re-rendered on every download, and reissuing a past sale under a company
-  // that didn't exist then would be plainly wrong. See business-identity.ts.
+// The order model has no partial-refund tracking (see refundedAt's comment
+// in schema.prisma) — REFUNDED is all-or-nothing, so the credit note always
+// reverses the full original faktura rather than a partial line-item subset.
+export function DobropisDocument({ order }: { order: Order & { items: OrderItem[] } }) {
+  const issuedAt = order.refundedAt ?? order.updatedAt;
+  // Dated from the sale itself, same reasoning as FakturaDocument — this
+  // reverses that specific faktura, so it must name the entity that was
+  // actually party to it, not whoever is selling today.
   const seller = sellerForDate(new Date(order.createdAt));
 
   return (
     <Document>
       <Page size="A4" style={styles.page}>
-        <Text style={styles.title}>Faktura — {order.number}</Text>
+        <Text style={styles.title}>Dobropis k faktuře {order.number}</Text>
         <Text style={styles.subtitle}>
-          Vystaveno {new Date(order.createdAt).toLocaleDateString("cs-CZ")}
+          Vystaveno {issuedAt.toLocaleDateString("cs-CZ")} · Důvod: vrácení objednávky
+          zákazníkovi (stav „Vrácená“)
         </Text>
 
         <View style={styles.row}>
@@ -84,39 +87,19 @@ export function FakturaDocument({ order }: { order: Order & { items: OrderItem[]
         {order.items.map((item) => (
           <View key={item.id} style={styles.tableRow}>
             <Text style={styles.colName}>{item.name}</Text>
-            <Text style={styles.colQty}>{item.qty}</Text>
+            <Text style={styles.colQty}>−{item.qty}</Text>
             <Text style={styles.colPrice}>{formatPrice(item.unitPrice)}</Text>
-            <Text style={styles.colTotal}>{formatPrice(Number(item.unitPrice) * item.qty)}</Text>
+            <Text style={styles.colTotal}>−{formatPrice(Number(item.unitPrice) * item.qty)}</Text>
           </View>
         ))}
 
         <View style={styles.totalsBox}>
-          <View style={styles.totalRow}>
-            <Text>Zboží</Text>
-            <Text>{formatPrice(order.itemsTotal)}</Text>
-          </View>
-          <View style={styles.totalRow}>
-            <Text>Doprava ({SHIPPING_LABELS[order.shippingMethod]})</Text>
-            <Text>{formatPrice(order.shippingPrice)}</Text>
-          </View>
-          {Number(order.codSurcharge) > 0 && (
-            <View style={styles.totalRow}>
-              <Text>Příplatek za dobírku</Text>
-              <Text>{formatPrice(order.codSurcharge)}</Text>
-            </View>
-          )}
-          {Number(order.discountAmount) > 0 && (
-            <View style={styles.totalRow}>
-              <Text>Sleva {order.couponCode ? `(${order.couponCode})` : ""}</Text>
-              <Text>−{formatPrice(order.discountAmount)}</Text>
-            </View>
-          )}
-          <Text style={styles.grandTotal}>Celkem k úhradě: {formatPrice(order.total)}</Text>
+          <Text style={styles.grandTotal}>Vráceno celkem: −{formatPrice(order.total)}</Text>
         </View>
 
         <Text style={styles.footer}>
-          Způsob platby: {PAYMENT_LABELS[order.paymentMethod]}. Cena je konečná.{" "}
-          {seller.dic ? `DIČ ${seller.dic}.` : "Dodavatel není plátcem DPH."}
+          Tento dobropis stornuje fakturu {order.number} v plné výši. Původní fakturu najdete v
+          administraci u téže objednávky.
         </Text>
       </Page>
     </Document>

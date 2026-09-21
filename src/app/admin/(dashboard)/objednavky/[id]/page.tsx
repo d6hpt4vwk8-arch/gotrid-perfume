@@ -97,6 +97,16 @@ export default async function AdminOrderDetailPage({
           >
             Faktura (PDF)
           </a>
+          {order.status === "REFUNDED" && (
+            <a
+              href={`/api/admin/orders/${order.id}/dobropis`}
+              target="_blank"
+              rel="noreferrer"
+              className="text-sm font-medium text-red-700 underline"
+            >
+              Dobropis (PDF)
+            </a>
+          )}
         </div>
       </div>
 

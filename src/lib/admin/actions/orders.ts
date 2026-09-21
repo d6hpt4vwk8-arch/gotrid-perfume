@@ -31,7 +31,16 @@ export async function updateOrderStatus(id: string, formData: FormData) {
   const before = await prisma.order.findUniqueOrThrow({ where: { id } });
   const order = await prisma.order.update({
     where: { id },
-    data: { status: status as OrderStatus, trackingNumber, weight },
+    data: {
+      status: status as OrderStatus,
+      trackingNumber,
+      weight,
+      // Only stamped the first time — a later unrelated edit (tracking
+      // number, weight) must not shift the dobropis's dated reference.
+      ...(before.status !== "REFUNDED" && status === "REFUNDED"
+        ? { refundedAt: new Date() }
+        : {}),
+    },
     include: { items: true },
   });
 
