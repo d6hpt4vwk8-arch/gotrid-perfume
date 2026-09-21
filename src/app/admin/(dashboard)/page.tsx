@@ -73,6 +73,8 @@ export default async function AdminDashboardPage() {
     const shippingCost = settings.shippingCosts[order.shippingMethod];
     return sum + Number(order.total) - costOfGoods - shippingCost;
   }, 0);
+  const avgOrderValue30d = revenue._count > 0 ? Number(revenue._sum.total ?? 0) / revenue._count : 0;
+  const avgMargin30d = revenue._count > 0 ? netProfit30d / revenue._count : 0;
 
   const stats = [
     { label: "Produkty", value: products, href: "/admin/produkty" },
@@ -99,7 +101,7 @@ export default async function AdminDashboardPage() {
         ))}
       </div>
 
-      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+      <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
         <div className="rounded-sm border border-line bg-white p-4">
           <div className="text-sm text-accent-2">Výnos za posledních 30 dní</div>
           <div className="text-2xl font-bold text-ink">
@@ -116,6 +118,12 @@ export default async function AdminDashboardPage() {
           <div className="text-xs text-accent-2">
             Po odečtení nákladů na zboží a dopravu (bez poplatků za platbu kartou)
           </div>
+        </div>
+
+        <div className="rounded-sm border border-line bg-white p-4">
+          <div className="text-sm text-accent-2">Průměrná hodnota objednávky</div>
+          <div className="text-2xl font-bold text-ink">{formatPrice(avgOrderValue30d)}</div>
+          <div className="text-xs text-accent-2">Průměrná marže: {formatPrice(avgMargin30d)}</div>
         </div>
       </div>
 
