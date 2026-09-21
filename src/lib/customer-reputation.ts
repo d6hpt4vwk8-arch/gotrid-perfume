@@ -41,3 +41,28 @@ export async function getCustomerReputationMap(
   }
   return result;
 }
+
+// More than this many real cancellations and cash-on-delivery stops being
+// offered to that e-mail at checkout (see create-order.ts) — the icon-only
+// 😠 flag above is admin-facing only and blocks nothing on its own.
+const COD_CANCELLED_ORDER_LIMIT = 2;
+
+/**
+ * Whether `email` has cancelled more than COD_CANCELLED_ORDER_LIMIT orders
+ * and should no longer be offered cash-on-delivery. A CARD order that
+ * auto-cancelled because the customer simply never finished paying (see the
+ * 2-hour auto-cancel note on the admin order page) says nothing about
+ * whether they show up for a courier — same exclusion reasoning as
+ * findAlreadyOrderedFlags in abandoned-checkout.ts — so only cancellations
+ * on payment methods the customer had actually committed to count here.
+ */
+export async function hasTooManyCancelledOrders(email: string): Promise<boolean> {
+  const count = await prisma.order.count({
+    where: {
+      email: { equals: email, mode: "insensitive" },
+      status: "CANCELLED",
+      NOT: { paymentMethod: "CARD" },
+    },
+  });
+  return count > COD_CANCELLED_ORDER_LIMIT;
+}

@@ -5,6 +5,7 @@ import { canUseCod, getCodSurcharge, getShippingPrice } from "@/lib/shipping";
 import { getSettings } from "@/lib/settings.server";
 import { previewCoupon, validateCoupon } from "@/lib/coupons";
 import { redeemPoints } from "@/lib/loyalty";
+import { hasTooManyCancelledOrders } from "@/lib/customer-reputation";
 import { CheckoutError } from "./checkout-error";
 import type { CheckoutInput } from "./checkout-schema";
 
@@ -40,10 +41,17 @@ export async function createOrder(
 
   const settings = await getSettings();
 
-  if (input.paymentMethod === "CASH_ON_DELIVERY" && !canUseCod(itemsTotal, settings)) {
-    throw new CheckoutError(
-      `Dobírka není dostupná pro objednávky nad ${settings.freeShippingThreshold} Kč, zvolte prosím jiný způsob platby.`,
-    );
+  if (input.paymentMethod === "CASH_ON_DELIVERY") {
+    if (!canUseCod(itemsTotal, settings)) {
+      throw new CheckoutError(
+        `Dobírka není dostupná pro objednávky nad ${settings.freeShippingThreshold} Kč, zvolte prosím jiný způsob platby.`,
+      );
+    }
+    if (await hasTooManyCancelledOrders(input.email)) {
+      throw new CheckoutError(
+        "Dobírka pro tuto e-mailovou adresu bohužel není dostupná, zvolte prosím jiný způsob platby.",
+      );
+    }
   }
 
   const shippingPrice = getShippingPrice(input.shippingMethod, itemsTotal, settings, input.shippingCountry);
