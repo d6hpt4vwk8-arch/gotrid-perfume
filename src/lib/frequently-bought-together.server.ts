@@ -71,6 +71,46 @@ export async function getFrequentlyBoughtTogetherForCart(cartProductIds: string[
     if (ordered.length > 0) return ordered;
   }
 
+  // No co-purchase signal yet (needs 2+ shared past orders, which is rare
+  // across an 18k+-SKU catalog) — fall back to products sharing a category
+  // with something actually in the cart, not straight to the shop-wide
+  // bestseller list. A pure global `orderBy: priority` fallback showed the
+  // same 3 VVBETTER skincare items on every single cart regardless of
+  // contents, because that whole brand happens to be pinned at the max
+  // priority (100) shopwide — a niche-perfume cart got pitched Korean
+  // sunscreen just as often as anything else.
+  const cartCategoryIds = (
+    await prisma.productCategory.findMany({
+      where: {
+        productId: { in: cartProductIds },
+        // "Výprodej" is a cross-cutting clearance tag applied on top of a
+        // product's real category (a perfume, a tanning oil and a face mist
+        // can all be "on sale" at once) — matching on it alone reproduces
+        // exactly the irrelevant-fallback bug this is fixing, just scoped to
+        // "everything discounted" instead of "everything top-priority".
+        category: { name: { not: "Výprodej" } },
+      },
+      select: { categoryId: true },
+    })
+  ).map((c) => c.categoryId);
+
+  if (cartCategoryIds.length > 0) {
+    const sameCategory = await prisma.product.findMany({
+      where: {
+        visible: true,
+        stock: { gt: 0 },
+        id: { notIn: cartProductIds },
+        categories: { some: { categoryId: { in: cartCategoryIds } } },
+      },
+      include: { brand: true, images: { orderBy: { sortOrder: "asc" }, take: 1 } },
+      orderBy: { priority: "desc" },
+      take: limit,
+    });
+    if (sameCategory.length > 0) return sameCategory;
+  }
+
+  // Last resort only — none of the cart's own categories have anything
+  // else in stock to suggest.
   return prisma.product.findMany({
     where: { visible: true, stock: { gt: 0 }, id: { notIn: cartProductIds } },
     include: { brand: true, images: { orderBy: { sortOrder: "asc" }, take: 1 } },
