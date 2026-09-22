@@ -1,12 +1,12 @@
 import { NextRequest, NextResponse } from "next/server";
 import { runSecondOrderCampaign } from "@/lib/marketing/second-order-campaign";
 import { runReviewRequestCampaign } from "@/lib/marketing/review-request-campaign";
+import { runPriceDropCampaign } from "@/lib/marketing/price-drop-campaign";
 import { runAbandonedCheckoutRecovery } from "@/lib/marketing/abandoned-checkout";
 import { syncPacketaDeliveryStatus } from "@/lib/orders/sync-packeta-delivery";
 import { syncGlsDeliveryStatus } from "@/lib/orders/sync-gls-delivery";
 import { syncPerfumesWholesaleStock } from "@/lib/sync/perfumeswholesale-stock";
 import { checkZasilkovnaVolumeMilestone } from "@/lib/marketing/zasilkovna-volume-check.server";
-import { syncFioPayments } from "@/lib/orders/sync-fio-payments";
 import { expireInactiveLoyaltyPoints } from "@/lib/loyalty";
 
 // Triggered by Vercel Cron (see vercel.json) — same auth pattern as
@@ -32,37 +32,43 @@ export async function GET(req: NextRequest) {
     return NextResponse.json({ error: "Neautorizováno." }, { status: 401 });
   }
 
+  // syncFioPayments is deliberately not called here: BANK_IBAN moved to the
+  // Gotrid s.r.o. Air Bank account (2026-09-22, entity switch), so incoming
+  // transfers no longer land in the Fio account this job reads. Fio has no
+  // equivalent auto-confirmation until an Air Bank statement integration is
+  // built (their transaction API needs a ČNB-licensed AISP aggregator, not a
+  // simple token) — until then, BANK_TRANSFER orders are confirmed by hand.
   const [
     secondOrder,
     reviewRequest,
+    priceDrop,
     abandonedCheckout,
     delivery,
     glsDelivery,
     perfumesWholesaleStock,
     zasilkovnaVolume,
-    fioPayments,
     loyaltyExpiry,
   ] = await Promise.all([
     runSecondOrderCampaign(),
     runReviewRequestCampaign(),
+    runPriceDropCampaign(),
     runAbandonedCheckoutRecovery(),
     syncPacketaDeliveryStatus(),
     syncGlsDeliveryStatus(),
     syncPerfumesWholesaleStock(),
     checkZasilkovnaVolumeMilestone(),
-    syncFioPayments(),
     expireInactiveLoyaltyPoints(),
   ]);
 
   return NextResponse.json({
     secondOrder,
     reviewRequest,
+    priceDrop,
     abandonedCheckout,
     delivery,
     glsDelivery,
     perfumesWholesaleStock,
     zasilkovnaVolume,
-    fioPayments,
     loyaltyExpiry,
   });
 }

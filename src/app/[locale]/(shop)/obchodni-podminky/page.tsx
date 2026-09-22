@@ -121,7 +121,7 @@ export default function ObchodniPodminkyPage() {
       <h2>V. Platební podmínky a dodání zboží</h2>
       <p>1. Kupní cenu lze uhradit:</p>
       <ul>
-        <li>bezhotovostně převodem na bankovní účet prodávajícího č. 2603407458/2010, vedený u Fio banky,</li>
+        <li>bezhotovostně převodem na bankovní účet prodávajícího č. 3728844015/3030, vedený u Air Bank,</li>
         <li>bezhotovostně platební kartou,</li>
         <li>dobírkou v hotovosti při převzetí zboží,</li>
         <li>v hotovosti nebo platební kartou při osobním odběru v provozovně.</li>

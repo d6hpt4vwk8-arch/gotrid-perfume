@@ -33,12 +33,8 @@ const SOLE_TRADER: SellerIdentity = {
 // Gotrid s.r.o. — registered 17. 9. 2026 (Městský soud v Praze, C 456103),
 // sídlo is the registered-agent address, not the Na Jarově warehouse (that
 // stays the GLS/Balíkovna/Zásilkovna pickup address regardless of entity).
-// Not yet confirmed in ARES as of 18. 9. 2026 — re-check ares.gov.cz before
-// relying on this for anything ARES-facing. DIČ left null (not yet a VAT
-// payer) pending confirmation. Set COMPANY_SWITCH_DATE once the company's
-// own bank account and Stripe payout entity are actually ready — filling
-// this in does nothing on its own; nothing renders under the s.r.o. until
-// that date is also set.
+// Address confirmed live against ares.gov.cz. DIČ left null (not yet a VAT
+// payer).
 const COMPANY: SellerIdentity | null = {
   legalName: "Gotrid s.r.o.",
   ico: "30030404",
@@ -48,8 +44,12 @@ const COMPANY: SellerIdentity | null = {
   vatNote: "Není plátcem DPH",
 };
 
+// Company bank account and Stripe verification were the two gating
+// conditions — both ready as of 2026-09-22, so the switch takes effect
+// today. Local (Europe/Prague, CEST) midnight, not UTC, so every order
+// placed today counts as the company's.
 /** First day the s.r.o. is the seller. Orders before it stay with the sole trader forever. */
-const COMPANY_SWITCH_DATE: Date | null = null;
+const COMPANY_SWITCH_DATE: Date | null = new Date("2026-09-22T00:00:00+02:00");
 
 /** Contact details are the shop's, not the legal entity's — unaffected by the switch. */
 export const CONTACT = {
