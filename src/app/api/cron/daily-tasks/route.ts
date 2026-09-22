@@ -1,7 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { runSecondOrderCampaign } from "@/lib/marketing/second-order-campaign";
 import { runReviewRequestCampaign } from "@/lib/marketing/review-request-campaign";
-import { runPriceDropCampaign } from "@/lib/marketing/price-drop-campaign";
 import { runAbandonedCheckoutRecovery } from "@/lib/marketing/abandoned-checkout";
 import { syncPacketaDeliveryStatus } from "@/lib/orders/sync-packeta-delivery";
 import { syncGlsDeliveryStatus } from "@/lib/orders/sync-gls-delivery";
@@ -41,7 +40,6 @@ export async function GET(req: NextRequest) {
   const [
     secondOrder,
     reviewRequest,
-    priceDrop,
     abandonedCheckout,
     delivery,
     glsDelivery,
@@ -51,7 +49,6 @@ export async function GET(req: NextRequest) {
   ] = await Promise.all([
     runSecondOrderCampaign(),
     runReviewRequestCampaign(),
-    runPriceDropCampaign(),
     runAbandonedCheckoutRecovery(),
     syncPacketaDeliveryStatus(),
     syncGlsDeliveryStatus(),
@@ -63,7 +60,6 @@ export async function GET(req: NextRequest) {
   return NextResponse.json({
     secondOrder,
     reviewRequest,
-    priceDrop,
     abandonedCheckout,
     delivery,
     glsDelivery,
