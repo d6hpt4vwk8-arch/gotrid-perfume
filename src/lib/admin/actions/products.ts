@@ -195,3 +195,31 @@ export async function toggleProductVisible(id: string, visible: boolean) {
   await prisma.product.update({ where: { id }, data: { visible } });
   revalidatePath("/admin/produkty");
 }
+
+// Dedicated single-field action for the inline editor on /admin/vlastni-sklad
+// — a physical recount there is many small edits in a row, and routing each
+// one through updateProduct's full form (name/price/category/scent
+// families/...) would be slower and risk touching fields the recount has no
+// data for. Mirrors toggleProductVisible's shape for the same reason.
+export async function updateOwnStock(id: string, ownStock: number) {
+  await requireAdmin();
+  const parsed = z.coerce.number().int().min(0).max(1_000_000).safeParse(ownStock);
+  if (!parsed.success) throw new Error("Neplatné množství.");
+
+  const before = await prisma.product.findUniqueOrThrow({
+    where: { id },
+    select: { ownStock: true, name: true },
+  });
+  await prisma.product.update({ where: { id }, data: { ownStock: parsed.data } });
+
+  await logAdminActivity({
+    action: "product.own_stock_change",
+    entityType: "Product",
+    entityId: id,
+    detail: `${before.name}: vlastní sklad ${before.ownStock} ks → ${parsed.data} ks`,
+  });
+
+  revalidatePath("/admin/vlastni-sklad");
+  revalidatePath("/admin/produkty");
+  revalidatePath(`/admin/produkty/${id}`);
+}
