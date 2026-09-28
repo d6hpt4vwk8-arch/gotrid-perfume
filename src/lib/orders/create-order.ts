@@ -93,6 +93,22 @@ export async function createOrder(
           if (updated.count === 0) {
             throw new CheckoutError(`Produkt "${product.name}" mezitím vyprodán.`);
           }
+
+          // A sale of a product we physically hold ships from our own shelf
+          // first (2026-09-28, owner request) rather than sitting untouched
+          // while we buy a fresh unit from the supplier — ownStock used to
+          // require a manual recount after every such sale, silently going
+          // stale (and skewing the "Zamrzlé peníze ve skladu" total on
+          // /admin/vlastni-sklad). Clamped at the pre-transaction snapshot
+          // rather than re-read live: ownStock isn't the availability gate
+          // (stock's guarded decrement above is), so it doesn't need the
+          // same race protection.
+          if (product.ownStock > 0) {
+            await tx.product.update({
+              where: { id: product.id },
+              data: { ownStock: { decrement: Math.min(item.qty, product.ownStock) } },
+            });
+          }
         }
 
         if (giftProduct) {
@@ -107,6 +123,12 @@ export async function createOrder(
             throw new CheckoutError(
               `Dárek "${giftProduct.name}" mezitím vyprodán, zvolte prosím jiný.`,
             );
+          }
+          if (giftProduct.ownStock > 0) {
+            await tx.product.update({
+              where: { id: giftProduct.id },
+              data: { ownStock: { decrement: Math.min(1, giftProduct.ownStock) } },
+            });
           }
         }
 
