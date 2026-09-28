@@ -138,7 +138,12 @@ export default async function ProductPage({
       : null;
 
   const specs = getProductSpecs(product);
-  const deliveryEstimate = product.stock > 0 ? estimateDeliveryDate() : null;
+  // Perfumes get one extra business day on top of the site default — some
+  // perfume SKUs depend on a slower supplier (SP Venture) whose own
+  // handoff-to-courier time is less predictable than for drugstore/cosmetic
+  // items sourced faster elsewhere (2026-09-23, owner request).
+  const isPerfume = product.categories.some((c) => c.category.fullSlug.startsWith("parfemy"));
+  const deliveryEstimate = product.stock > 0 ? estimateDeliveryDate(isPerfume ? 4 : 3) : null;
 
   const jsonLd = {
     "@context": "https://schema.org",
@@ -314,7 +319,13 @@ export default async function ProductPage({
               {product.stock > 0 ? `Skladem (${product.stock} ks)` : "Vyprodáno"}
             </span>
 
-            {product.stock > 0 && (
+            {product.stock > 0 && product.slowerDelivery && (
+              <p className="pl-6 text-sm text-amber-700">
+                Tento produkt máme na jiném skladu — doručení proto trvá déle než u zbytku
+                nabídky, klidně i týden. Pokud vám to nevadí, klidně objednávejte.
+              </p>
+            )}
+            {product.stock > 0 && !product.slowerDelivery && (
               <p className="pl-6 text-sm text-accent-2">
                 Ihned k odeslání od{" "}
                 <span className="font-medium text-ink">{price(cheapestShippingPrice)}</span>
@@ -341,6 +352,7 @@ export default async function ProductPage({
                 price: Number(product.price),
                 image: product.images[0]?.url ?? null,
                 stock: product.stock,
+                isDefective: product.isDefective,
               }}
             />
           </div>

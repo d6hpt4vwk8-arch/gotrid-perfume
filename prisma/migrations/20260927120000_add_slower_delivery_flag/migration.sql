@@ -1,0 +1,1 @@
+ALTER TABLE "Product" ADD COLUMN "slowerDelivery" BOOLEAN NOT NULL DEFAULT false;

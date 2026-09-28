@@ -142,6 +142,18 @@ model Product {
   // indistinguishable from full-price stock at checkout.
   isDefective Boolean @default(false)
 
+  // Set by the SP Venture sync (spventure-stock.ts) when a code's stock had
+  // to be confirmed via the supplier's public site search rather than found
+  // in their own product/avail feed — in practice this means the item isn't
+  // sitting in SP Venture's main warehouse (that's what the feed actually
+  // reflects), so fulfilling an order for it takes noticeably longer than
+  // the rest of the SPV catalog. Shown to the customer as an honest
+  // delivery-time heads-up on the product page rather than hidden, so we
+  // don't have to drop ~11% of the SPV assortment (2026-09-27 count) just
+  // to avoid the surprise. Cleared back to false once the code reappears in
+  // the feed itself.
+  slowerDelivery Boolean @default(false)
+
   // Hides the product from the Heureka.cz XML feed specifically (still sold
   // on-site and in other feeds) — for items priced well above the cheapest
   // competitor on Heureka's price comparison, where paying per-click there
@@ -185,6 +197,7 @@ model Product {
   reviews       Review[]
   orderItems    OrderItem[]
   stockAlerts   StockAlert[]
+  priceAlerts   PriceAlert[]
   scentFamilies ProductScentFamily[]
   skinTypes     ProductSkinType[]
   concerns      ProductConcern[]
@@ -330,6 +343,26 @@ model StockAlert {
   @@index([productId, notified])
 }
 
+// Auto-registered (no separate opt-in form) whenever a logged-in customer
+// hearts a product on the wishlist page (src/app/[locale]/(shop)/oblibene) —
+// email always comes from the customer session server-side, never typed by
+// hand, so this only ever covers account holders. Same one-shot notify
+// pattern as StockAlert, but keyed on a price drop instead of a restock.
+// priceAtSignup is snapshotted at signup time so the campaign only fires
+// once the live Product.price drops below it.
+model PriceAlert {
+  id            String   @id @default(cuid())
+  productId     String
+  product       Product  @relation(fields: [productId], references: [id], onDelete: Cascade)
+  email         String
+  priceAtSignup Decimal  @db.Decimal(10, 2)
+  notified      Boolean  @default(false)
+  createdAt     DateTime @default(now())
+
+  @@unique([productId, email])
+  @@index([productId, notified])
+}
+
 model ProductImage {
   id        String  @id @default(cuid())
   productId String
@@ -451,6 +484,11 @@ enum ShippingMethod {
   // (courier to home address) since it's a different price and a different
   // delivery mechanism (GLS's PSD service, see gls.ts).
   GLS_MISTO
+  // Zásilkovna's home-delivery-to-address service ("Packeta Home HD"),
+  // distinct from the pickup-point ZASILKOVNA above the same way GLS_MISTO
+  // is distinct from GLS. Added 2026-09-25, Slovensko-only for now (no CZ
+  // price confirmed yet) — see the SK-only guard in checkout-schema.ts.
+  ZASILKOVNA_HD
 }
 
 enum PaymentMethod {
@@ -754,6 +792,12 @@ model Settings {
   // purpose: until the owner sets a real number here, getShippingPrice()
   // falls back to the CZ Zásilkovna price rather than guessing one.
   shippingPriceZasilkovnaSk Decimal? @db.Decimal(10, 2)
+  // Zásilkovna home-delivery-to-address for Slovensko (ZASILKOVNA_HD) —
+  // unlike ZASILKOVNA above this has no CZ counterpart yet, so it's a plain
+  // required field like the other carriers rather than a nullable override.
+  // Default from Packeta's 25.9.2026 price list: 98 Kč base (up to 1 kg,
+  // no VAT) + ~18.5% fuel surcharge + 21% VAT ≈ 145 Kč.
+  shippingPriceZasilkovnaHd Decimal @default(145) @db.Decimal(10, 2)
   // Extra fee charged when paying by CASH_ON_DELIVERY, on top of the
   // shipping price above — covers the higher handling/risk cost of COD.
   codSurcharge            Decimal @default(30) @db.Decimal(10, 2)
@@ -770,6 +814,7 @@ model Settings {
   shippingCostBalikovna  Decimal @default(69) @db.Decimal(10, 2)
   shippingCostGls        Decimal @default(99) @db.Decimal(10, 2)
   shippingCostGlsMisto   Decimal @default(54.45) @db.Decimal(10, 2)
+  shippingCostZasilkovnaHd Decimal @default(145) @db.Decimal(10, 2)
 
   // "Come back and order again" email campaign — days after a customer's
   // (only) order before we email them. Each email gets its own freshly

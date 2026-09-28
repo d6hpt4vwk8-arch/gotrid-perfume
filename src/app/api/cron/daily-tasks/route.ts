@@ -4,7 +4,6 @@ import { runReviewRequestCampaign } from "@/lib/marketing/review-request-campaig
 import { runAbandonedCheckoutRecovery } from "@/lib/marketing/abandoned-checkout";
 import { syncPacketaDeliveryStatus } from "@/lib/orders/sync-packeta-delivery";
 import { syncGlsDeliveryStatus } from "@/lib/orders/sync-gls-delivery";
-import { syncPerfumesWholesaleStock } from "@/lib/sync/perfumeswholesale-stock";
 import { checkZasilkovnaVolumeMilestone } from "@/lib/marketing/zasilkovna-volume-check.server";
 import { expireInactiveLoyaltyPoints } from "@/lib/loyalty";
 
@@ -14,15 +13,18 @@ import { expireInactiveLoyaltyPoints } from "@/lib/loyalty";
 // plan caps the number of cron jobs, so new daily tasks should be added
 // here rather than as separate cron entries).
 //
-// syncPerfumesWholesaleStock writes one row at a time for every changed
-// product (thousands on a normal day, its catalog is ~10k SKUs) — without
-// this, the route silently died past the platform's default ~10-15s
-// function timeout on any day with an unusually large stock delta, with no
-// error logged (the invocation is just killed), and a missed day made the
-// next day's delta bigger, compounding until it stopped completing at all
-// (confirmed: no perfumeswholesale_sync activity-log entries 2026-08-29
-// through 2026-09-02, while the separate SP Venture cron kept succeeding
-// daily in the same window).
+// syncPerfumesWholesaleStock is deliberately NOT called below (2026-09-27,
+// owner request) — PWH isn't an active supplier right now, so syncing its
+// ~10k-SKU stock daily is pure wasted load. Re-add it to the Promise.all
+// below (and the import above) if PWH sourcing resumes; when it ran, it
+// wrote one row at a time for every changed product (thousands on a normal
+// day) — without a generous timeout the route silently died past the
+// platform's default ~10-15s function timeout on any day with an unusually
+// large stock delta, with no error logged (the invocation is just killed),
+// and a missed day made the next day's delta bigger, compounding until it
+// stopped completing at all (confirmed: no perfumeswholesale_sync
+// activity-log entries 2026-08-29 through 2026-09-02, while the separate SP
+// Venture cron kept succeeding daily in the same window).
 export const maxDuration = 300;
 
 export async function GET(req: NextRequest) {
@@ -43,7 +45,6 @@ export async function GET(req: NextRequest) {
     abandonedCheckout,
     delivery,
     glsDelivery,
-    perfumesWholesaleStock,
     zasilkovnaVolume,
     loyaltyExpiry,
   ] = await Promise.all([
@@ -52,7 +53,6 @@ export async function GET(req: NextRequest) {
     runAbandonedCheckoutRecovery(),
     syncPacketaDeliveryStatus(),
     syncGlsDeliveryStatus(),
-    syncPerfumesWholesaleStock(),
     checkZasilkovnaVolumeMilestone(),
     expireInactiveLoyaltyPoints(),
   ]);
@@ -63,7 +63,6 @@ export async function GET(req: NextRequest) {
     abandonedCheckout,
     delivery,
     glsDelivery,
-    perfumesWholesaleStock,
     zasilkovnaVolume,
     loyaltyExpiry,
   });

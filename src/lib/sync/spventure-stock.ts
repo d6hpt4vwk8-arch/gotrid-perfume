@@ -1,7 +1,7 @@
-// Syncs our stock numbers for SP Venture (perfumes-b2b.com) products against
-// their live product.xml feed. Runs daily via Vercel Cron
-// (src/app/api/cron/sync-spventure-stock/route.ts) and can also be run by
-// hand via scripts/sync-spventure-stock.ts.
+// Syncs our stock, purchase price, and "slowerDelivery" flag for SP Venture
+// (perfumes-b2b.com) products against their live product.xml feed. Runs
+// daily via Vercel Cron (src/app/api/cron/sync-spventure-stock/route.ts)
+// and can also be run by hand via scripts/sync-spventure-stock.ts.
 //
 // Important quirk of SP Venture's feed (verified 2026-08-16 by diffing
 // product.xml against avail.xml): BOTH feeds only ever list items with
@@ -54,15 +54,26 @@ function extractTag(block: string, tag: string): string {
   return match ? decodeEntities(match[1].trim()) : "";
 }
 
-function parseStockByCode(xml: string): Map<string, number> {
+interface FeedEntry {
+  stock: number;
+  /** The feed's <PRICE> for this code, or null when the tag was missing/unparseable. */
+  price: number | null;
+}
+
+function parseFeedByCode(xml: string): Map<string, FeedEntry> {
   const blocks = xml.split("<SHOPITEM>").slice(1);
-  const byCode = new Map<string, number>();
+  const byCode = new Map<string, FeedEntry>();
   for (const raw of blocks) {
     const block = raw.split("</SHOPITEM>")[0];
     const itemCode = extractTag(block, "ITEM_CODE");
     if (!itemCode) continue;
     const stockRaw = extractTag(block, "STOCK");
-    byCode.set(itemCode, stockRaw ? parseInt(stockRaw, 10) : 0);
+    const priceRaw = extractTag(block, "PRICE");
+    const price = priceRaw ? parseFloat(priceRaw) : NaN;
+    byCode.set(itemCode, {
+      stock: stockRaw ? parseInt(stockRaw, 10) : 0,
+      price: Number.isFinite(price) ? price : null,
+    });
   }
   return byCode;
 }
@@ -129,7 +140,7 @@ export async function syncSpVentureStock(dryRun = false): Promise<SpVentureSyncR
   const res = await fetch(FEED_URL);
   if (!res.ok) throw new Error(`SP Venture feed fetch failed: ${res.status}`);
   const xml = await res.text();
-  const feedStock = parseStockByCode(xml);
+  const feed = parseFeedByCode(xml);
 
   const products = await prisma.product.findMany({
     where: { code: { startsWith: CODE_PREFIX } },
@@ -139,7 +150,7 @@ export async function syncSpVentureStock(dryRun = false): Promise<SpVentureSyncR
   // it (see the header note) — the feed's silence is not evidence of zero.
   const missingCodes = products
     .map((p) => p.code.slice(CODE_PREFIX.length))
-    .filter((code) => !feedStock.has(code));
+    .filter((code) => !feed.has(code));
   const siteStock = await lookupMissingCodes(missingCodes);
 
   const result: SpVentureSyncResult = {
@@ -150,10 +161,21 @@ export async function syncSpVentureStock(dryRun = false): Promise<SpVentureSyncR
 
   for (const product of products) {
     const itemCode = product.code.slice(CODE_PREFIX.length);
-    const feedValue = feedStock.get(itemCode) ?? siteStock.get(itemCode);
+    const feedEntry = feed.get(itemCode);
+    const feedValue = feedEntry?.stock ?? siteStock.get(itemCode);
     // Feed didn't list it and the site lookup was inconclusive — leave the
     // current number alone instead of guessing.
     if (feedValue === undefined) continue;
+
+    // Found in SP Venture's own feed = sitting in their main warehouse and
+    // priced accurately right now; found only via the public site search =
+    // confirmed 2026-09-27 (a customer's order for a feed-missing code
+    // couldn't be found through the account's own search either, though the
+    // anonymous site search showed it) that this class of product tends to
+    // ship from elsewhere and take noticeably longer — flagged for the
+    // customer via `slowerDelivery` rather than silently promising normal
+    // delivery. Cleared automatically once the code is back in the feed.
+    const slowerDelivery = !feedEntry;
 
     // We only buy SPV stock from the supplier after a customer orders, not
     // ahead of time — a product down to their last unit has a real chance
@@ -162,9 +184,20 @@ export async function syncSpVentureStock(dryRun = false): Promise<SpVentureSyncR
     // restocked above that (2026-09-04, per owner request).
     const desiredVisible =
       feedValue === 1 ? false : feedValue > 1 && product.stock <= 1 ? true : product.visible;
+
+    // The feed's PRICE is the only place we ever learn SP Venture's current
+    // wholesale price after initial import — this sync previously touched
+    // stock/visible only, so purchasePrice silently went stale forever
+    // (found 2026-09-27: a lip balm bought in at ~40 Kč was actually 87 Kč
+    // by the time it needed reordering). Only applied when the feed lists
+    // the code — a site-lookup-only hit gives us no price at all.
+    const feedPrice = feedEntry?.price ?? null;
+    const priceChanged = feedPrice !== null && feedPrice !== Number(product.purchasePrice);
+
     const stockChanged = feedValue !== product.stock;
     const visibilityChanged = desiredVisible !== product.visible;
-    if (!stockChanged && !visibilityChanged) continue;
+    const slowerDeliveryChanged = slowerDelivery !== product.slowerDelivery;
+    if (!stockChanged && !visibilityChanged && !priceChanged && !slowerDeliveryChanged) continue;
 
     if (stockChanged) {
       result.updated.push({ code: product.code, name: product.name, from: product.stock, to: feedValue });
@@ -172,7 +205,12 @@ export async function syncSpVentureStock(dryRun = false): Promise<SpVentureSyncR
     if (!dryRun) {
       const updated = await prisma.product.update({
         where: { id: product.id },
-        data: { stock: feedValue, visible: desiredVisible },
+        data: {
+          stock: feedValue,
+          visible: desiredVisible,
+          slowerDelivery,
+          ...(feedPrice !== null ? { purchasePrice: feedPrice } : {}),
+        },
       });
       if (product.stock <= 0 && feedValue > 0) {
         void notifyStockAlerts(updated).catch((err) =>
