@@ -6,6 +6,7 @@ import { logAdminActivity } from "@/lib/admin/activity-log";
 import { requireAdmin } from "@/lib/admin/require-admin";
 import { sendHeurekaOrderLog } from "@/lib/analytics/heureka-overeno";
 import { awardPointsForOrder } from "@/lib/loyalty";
+import { sendShippedEmail } from "@/lib/email/send-shipped-email";
 import type { OrderStatus } from "@prisma/client";
 
 const VALID_STATUSES: OrderStatus[] = [
@@ -57,6 +58,32 @@ export async function updateOrderStatus(id: string, formData: FormData) {
       detail: `${order.number}: ${before.status} → ${order.status}`,
     });
 
+    // Neither stock (supplier-fed) nor ownStock used to be touched at all on
+    // cancel/refund — an unpaid/unclaimed COD order silently kept both
+    // numbers permanently short, as if the goods had actually shipped.
+    // Restore both the first time an order enters a reversed state, and
+    // re-take them if it's reactivated afterward (status bounced back to an
+    // active one) — symmetric, so bouncing CANCELLED -> PROCESSING -> ... a
+    // second time doesn't double-credit or double-charge the inventory.
+    // ownStock uses the exact amount recorded on each OrderItem
+    // (ownStockTaken) rather than the product's current ownStock, which may
+    // have changed for unrelated reasons since the order was placed.
+    const wasReversed = before.status === "CANCELLED" || before.status === "REFUNDED";
+    const isReversed = order.status === "CANCELLED" || order.status === "REFUNDED";
+    if (wasReversed !== isReversed) {
+      const sign = isReversed ? 1 : -1;
+      for (const item of order.items) {
+        if (!item.productId) continue;
+        await prisma.product.update({
+          where: { id: item.productId },
+          data: {
+            stock: { increment: sign * item.qty },
+            ownStock: { increment: sign * item.ownStockTaken },
+          },
+        });
+      }
+    }
+
     // COD/bank-transfer orders have no payment webhook to confirm them —
     // the admin moving one past NEW here *is* the confirmation (see
     // canDownloadInvoice's reasoning in status-labels.ts). CARD orders are
@@ -81,6 +108,12 @@ export async function updateOrderStatus(id: string, formData: FormData) {
 
       void awardPointsForOrder(order.id).catch((err) =>
         console.error(`[loyalty] award failed for ${order.number}`, err),
+      );
+    }
+
+    if (before.status !== "SHIPPED" && order.status === "SHIPPED") {
+      void sendShippedEmail(order).catch((err) =>
+        console.error(`[email] shipped notification failed for ${order.number}`, err),
       );
     }
   }

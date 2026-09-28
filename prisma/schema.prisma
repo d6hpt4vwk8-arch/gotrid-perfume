@@ -752,6 +752,14 @@ model OrderItem {
   // labelled and excluded from sales stats.
   isGift Boolean @default(false)
 
+  // How much of `qty` was taken out of the product's ownStock at order time
+  // (create-order.ts), as opposed to the supplier-fed `stock` — recorded
+  // here (not just left implicit) so updateOrderStatus can restore exactly
+  // this much to ownStock on cancel/refund, and re-take it if the order is
+  // reactivated afterward. The product's own ownStock may have changed by
+  // then (restocked, sold elsewhere), so it can't be recomputed later.
+  ownStockTaken Int @default(0)
+
   @@index([orderId])
   @@index([productId])
 }

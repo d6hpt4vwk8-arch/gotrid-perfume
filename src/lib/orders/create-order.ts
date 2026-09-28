@@ -83,6 +83,12 @@ export async function createOrder(
   for (let attempt = 0; attempt < MAX_ORDER_NUMBER_ATTEMPTS; attempt++) {
     const number = generateOrderNumber();
     try {
+      // Recorded per product (not just applied) so the OrderItem rows below
+      // can carry exactly how much came out of ownStock — updateOrderStatus
+      // needs that exact figure to restore it correctly on cancel/refund,
+      // since the product's ownStock may look completely different by then.
+      const ownStockTakenByProductId = new Map<string, number>();
+
       return await prisma.$transaction(async (tx) => {
         for (const item of input.items) {
           const product = productById.get(item.productId)!;
@@ -103,10 +109,12 @@ export async function createOrder(
           // rather than re-read live: ownStock isn't the availability gate
           // (stock's guarded decrement above is), so it doesn't need the
           // same race protection.
-          if (product.ownStock > 0) {
+          const ownStockTaken = Math.min(item.qty, Math.max(0, product.ownStock));
+          ownStockTakenByProductId.set(product.id, ownStockTaken);
+          if (ownStockTaken > 0) {
             await tx.product.update({
               where: { id: product.id },
-              data: { ownStock: { decrement: Math.min(item.qty, product.ownStock) } },
+              data: { ownStock: { decrement: ownStockTaken } },
             });
           }
         }
@@ -124,10 +132,15 @@ export async function createOrder(
               `Dárek "${giftProduct.name}" mezitím vyprodán, zvolte prosím jiný.`,
             );
           }
-          if (giftProduct.ownStock > 0) {
+          // Own key (not giftProduct.id) — the gift can be the same product
+          // as a paid line already in the cart, which would otherwise
+          // overwrite that line's recorded ownStockTaken in the map above.
+          const giftOwnStockTaken = Math.min(1, Math.max(0, giftProduct.ownStock));
+          ownStockTakenByProductId.set(`gift:${giftProduct.id}`, giftOwnStockTaken);
+          if (giftOwnStockTaken > 0) {
             await tx.product.update({
               where: { id: giftProduct.id },
-              data: { ownStock: { decrement: Math.min(1, giftProduct.ownStock) } },
+              data: { ownStock: { decrement: giftOwnStockTaken } },
             });
           }
         }
@@ -200,6 +213,7 @@ export async function createOrder(
                     qty: item.qty,
                     unitPrice: product.price,
                     vatRate: product.vatRate,
+                    ownStockTaken: ownStockTakenByProductId.get(product.id) ?? 0,
                   };
                 }),
                 ...(giftProduct
@@ -212,6 +226,7 @@ export async function createOrder(
                         unitPrice: new Prisma.Decimal(0),
                         vatRate: giftProduct.vatRate,
                         isGift: true,
+                        ownStockTaken: ownStockTakenByProductId.get(`gift:${giftProduct.id}`) ?? 0,
                       },
                     ]
                   : []),
