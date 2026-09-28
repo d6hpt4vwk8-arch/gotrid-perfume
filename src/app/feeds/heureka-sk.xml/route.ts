@@ -81,6 +81,16 @@ ${items}
 </SHOP>`;
 
   return new NextResponse(xml, {
-    headers: { "Content-Type": "application/xml; charset=utf-8" },
+    headers: {
+      "Content-Type": "application/xml; charset=utf-8",
+      // force-dynamic (see comment above) skips Next's build-time cache, but
+      // shopping-feed crawlers (Google, Heureka, Zboží, Glami, Meta) poll
+      // these URLs many times a day — without this, every single hit was
+      // re-querying the whole catalog and re-rendering the full XML from
+      // scratch. s-maxage lets Vercel's edge cache the response for an hour;
+      // stale-while-revalidate keeps serving that cached copy during the
+      // background refresh instead of blocking a crawler on a cold render.
+      "Cache-Control": "public, s-maxage=3600, stale-while-revalidate=600",
+    },
   });
 }
