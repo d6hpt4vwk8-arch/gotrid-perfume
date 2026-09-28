@@ -10,6 +10,7 @@ export const SHIPPING_LABELS: Record<ShippingMethod, string> = {
   BALIKOVNA: "Balíkovna",
   GLS: "GLS kurýr",
   GLS_MISTO: "GLS — výdejní místo",
+  ZASILKOVNA_HD: "Zásilkovna — na adresu (Slovensko)",
   OSOBNI_ODBER: `Osobní odběr — ${PICKUP_ADDRESS}`,
 };
 
@@ -31,10 +32,13 @@ export function getShippingPrice(
   // free, not tied to the free-shipping threshold or Settings.
   if (method === "OSOBNI_ODBER") return 0;
   if (itemsTotal >= settings.freeShippingThreshold) return 0;
-  // SK only ever reaches here with method === "ZASILKOVNA" — enforced in
-  // checkout-schema.ts, not just assumed here. Falls back to the CZ price
-  // until the owner sets a real cross-border number in admin settings.
-  if (country === "SK") return settings.shippingPriceZasilkovnaSk ?? settings.shippingPrices.ZASILKOVNA;
+  // Cross-border SK pickup-point price can differ from the CZ one; falls
+  // back to the CZ price until the owner sets a real cross-border number.
+  // Keyed on method (not just country) — ZASILKOVNA_HD has its own flat
+  // price in shippingPrices and must not be overridden by this branch.
+  if (method === "ZASILKOVNA" && country === "SK") {
+    return settings.shippingPriceZasilkovnaSk ?? settings.shippingPrices.ZASILKOVNA;
+  }
   return settings.shippingPrices[method];
 }
 

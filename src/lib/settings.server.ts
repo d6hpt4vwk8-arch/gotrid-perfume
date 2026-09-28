@@ -40,6 +40,7 @@ export const getSettings = unstable_cache(
         BALIKOVNA: Number(row.shippingPriceBalikovna),
         GLS: Number(row.shippingPriceGls),
         GLS_MISTO: Number(row.shippingPriceGlsMisto),
+        ZASILKOVNA_HD: Number(row.shippingPriceZasilkovnaHd),
         // Not DB-backed — personal pickup has no carrier cost, always free.
         OSOBNI_ODBER: 0,
       },
@@ -50,6 +51,7 @@ export const getSettings = unstable_cache(
         BALIKOVNA: Number(row.shippingCostBalikovna),
         GLS: Number(row.shippingCostGls),
         GLS_MISTO: Number(row.shippingCostGlsMisto),
+        ZASILKOVNA_HD: Number(row.shippingCostZasilkovnaHd),
         OSOBNI_ODBER: 0,
       },
       shippingPriceZasilkovnaSk:

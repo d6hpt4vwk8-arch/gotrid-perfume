@@ -19,3 +19,25 @@ export function isConditionFlagged(
 ): boolean {
   return isDefective || CONDITION_PATTERN.test(name);
 }
+
+// Narrower than isConditionFlagged above, and for a different purpose: this
+// drives the add-to-cart confirmation modal (AddToCartButton), which the
+// owner only wants for products where a customer could otherwise be
+// surprised — a tester (missing retail box, but full/unused) or genuinely
+// opened/damaged goods. Vintage stock is deliberately excluded here: it's
+// old but sealed/unused, so there's nothing to warn about at checkout —
+// it's still excluded from ad feeds by isConditionFlagged above, just
+// doesn't need its own popup.
+const TESTER_LIKE_PATTERN = /\btester\b|bez krabič|bez obalu/i;
+const OPENED_PATTERN = /otevřen|rozbalen|%\s*plná/i;
+
+export type PurchaseWarningReason = "tester" | "opened";
+
+export function getPurchaseWarning(
+  name: string,
+  isDefective: boolean,
+): PurchaseWarningReason | null {
+  if (isDefective || OPENED_PATTERN.test(name)) return "opened";
+  if (TESTER_LIKE_PATTERN.test(name)) return "tester";
+  return null;
+}

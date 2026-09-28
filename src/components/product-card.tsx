@@ -113,6 +113,7 @@ export function ProductCard({
               price: Number(product.price),
               image: image?.url ?? null,
               stock: product.stock,
+              isDefective: product.isDefective,
             }}
             className="w-full rounded-sm bg-ink px-3 py-2.5 text-xs font-semibold text-white transition hover:bg-accent disabled:cursor-not-allowed disabled:bg-line disabled:text-accent-2"
           />

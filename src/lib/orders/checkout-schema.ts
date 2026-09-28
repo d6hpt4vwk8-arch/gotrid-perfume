@@ -6,7 +6,16 @@ export const checkoutSchema = z
     phone: z.string().min(9, "Zadejte platné telefonní číslo.").max(30),
     firstName: z.string().min(1, "Zadejte jméno.").max(100),
     lastName: z.string().min(1, "Zadejte příjmení.").max(100),
-    shippingMethod: z.enum(["ZASILKOVNA", "PPL", "DPD", "BALIKOVNA", "OSOBNI_ODBER", "GLS", "GLS_MISTO"]),
+    shippingMethod: z.enum([
+      "ZASILKOVNA",
+      "PPL",
+      "DPD",
+      "BALIKOVNA",
+      "OSOBNI_ODBER",
+      "GLS",
+      "GLS_MISTO",
+      "ZASILKOVNA_HD",
+    ]),
     shippingCountry: z.enum(["CZ", "SK"]).optional().default("CZ"),
     paymentMethod: z.enum(["CARD", "BANK_TRANSFER", "CASH_ON_DELIVERY"]),
     pickupPointId: z.string().max(50).optional(),
@@ -41,7 +50,10 @@ export const checkoutSchema = z
       data.shippingMethod === "BALIKOVNA" ||
       data.shippingMethod === "GLS_MISTO";
     const usesAddress =
-      data.shippingMethod === "PPL" || data.shippingMethod === "DPD" || data.shippingMethod === "GLS";
+      data.shippingMethod === "PPL" ||
+      data.shippingMethod === "DPD" ||
+      data.shippingMethod === "GLS" ||
+      data.shippingMethod === "ZASILKOVNA_HD";
     if (usesPickupPoint && !data.pickupPointId) {
       ctx.addIssue({
         code: z.ZodIssueCode.custom,
@@ -77,14 +89,29 @@ export const checkoutSchema = z
         });
       }
     }
-    // Zásilkovna is the only carrier with a real Slovak pickup-point network
-    // today — enforced here, not just hidden in the UI, so a direct API call
-    // can't smuggle in a combination we can't actually fulfil.
-    if (data.shippingCountry === "SK" && data.shippingMethod !== "ZASILKOVNA") {
+    // Zásilkovna (pickup point or, since 2026-09-25, home delivery) is the
+    // only carrier that reaches Slovensko today — enforced here, not just
+    // hidden in the UI, so a direct API call can't smuggle in a combination
+    // we can't actually fulfil.
+    if (
+      data.shippingCountry === "SK" &&
+      data.shippingMethod !== "ZASILKOVNA" &&
+      data.shippingMethod !== "ZASILKOVNA_HD"
+    ) {
       ctx.addIssue({
         code: z.ZodIssueCode.custom,
         path: ["shippingMethod"],
         message: "Na Slovensko lze zatím doručit pouze přes Zásilkovnu.",
+      });
+    }
+    // ZASILKOVNA_HD only has a confirmed SK price so far (no CZ number yet)
+    // — reject it for CZ the same defensive way, rather than silently
+    // charging whatever shippingPrices.ZASILKOVNA_HD happens to default to.
+    if (data.shippingMethod === "ZASILKOVNA_HD" && data.shippingCountry !== "SK") {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        path: ["shippingMethod"],
+        message: "Zásilkovna na adresu je zatím dostupná jen pro Slovensko.",
       });
     }
     // DPD retired 2026-09-04 (no API integration; GLS now covers the same

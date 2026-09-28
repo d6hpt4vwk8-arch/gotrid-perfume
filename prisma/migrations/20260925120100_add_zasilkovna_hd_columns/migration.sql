@@ -1,0 +1,2 @@
+ALTER TABLE "Settings" ADD COLUMN "shippingPriceZasilkovnaHd" DECIMAL(10,2) NOT NULL DEFAULT 145;
+ALTER TABLE "Settings" ADD COLUMN "shippingCostZasilkovnaHd" DECIMAL(10,2) NOT NULL DEFAULT 145;
