@@ -22,7 +22,7 @@ const VALID_STATUSES: OrderStatus[] = [
 export async function updateOrderStatus(id: string, formData: FormData) {
   await requireAdmin();
   const status = String(formData.get("status") ?? "");
-  const trackingNumber = String(formData.get("trackingNumber") ?? "").trim() || null;
+  const submittedTrackingNumber = String(formData.get("trackingNumber") ?? "").trim() || null;
   const weightRaw = String(formData.get("weight") ?? "").trim().replace(",", ".");
   const weight = weightRaw && Number(weightRaw) > 0 ? weightRaw : "0.5";
   if (!VALID_STATUSES.includes(status as OrderStatus)) {
@@ -30,6 +30,15 @@ export async function updateOrderStatus(id: string, formData: FormData) {
   }
 
   const before = await prisma.order.findUniqueOrThrow({ where: { id } });
+  // A blank submission never clears an existing tracking number — it only
+  // means the admin's form still had last page-load's (possibly stale)
+  // value. Confirmed live 2026-09-25 on GT260923-3357: creating a GLS label
+  // (which writes trackingNumber directly) and then submitting this same
+  // page's status dropdown ~20s later, before the page had reloaded to show
+  // the new number, blanked it right back out. A carrier label is the only
+  // way trackingNumber gets set in the first place, so there's no legitimate
+  // reason for this form to null out a number that's already there.
+  const trackingNumber = submittedTrackingNumber ?? before.trackingNumber;
   const order = await prisma.order.update({
     where: { id },
     data: {
