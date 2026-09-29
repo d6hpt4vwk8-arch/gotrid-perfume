@@ -89,7 +89,19 @@ export default async function OrderConfirmationPage({
         </span>
         {order.trackingNumber && (
           <span>
-            Sledovací číslo zásilky: <strong>{order.trackingNumber}</strong>
+            Sledovací číslo zásilky:{" "}
+            {order.shippingMethod === "GLS" || order.shippingMethod === "GLS_MISTO" ? (
+              <a
+                href={`https://gls-group.com/CZ/cs/sledovani-zasilek?match=${order.trackingNumber}`}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="font-bold underline"
+              >
+                {order.trackingNumber}
+              </a>
+            ) : (
+              <strong>{order.trackingNumber}</strong>
+            )}
           </span>
         )}
       </div>
