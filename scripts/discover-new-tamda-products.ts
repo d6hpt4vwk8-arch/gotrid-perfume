@@ -35,9 +35,20 @@ const PAGES_PER_CATEGORY = Number(process.argv.find((a) => a.startsWith("--pages
 // Sequential, not concurrent: a handful of parallel requests silently got
 // empty/bot-walled responses in testing (2026-09-28) while every one of the
 // same URLs succeeded when fetched one at a time — Tamda's origin looks like
-// it rate-limits concurrent connections from one IP. A small delay between
-// requests is cheap insurance against the same thing recurring.
-const REQUEST_DELAY_MS = 400;
+// it rate-limits concurrent connections from one IP.
+//
+// Sequential alone wasn't enough either: a real 25-pages×11-categories run
+// the same day got throttled PARTWAY THROUGH (3 whole categories silently
+// came back with zero products, while the same URLs worked fine seconds
+// after the run finished) even at 400ms between requests with no
+// concurrency at all — so this looks like a sustained-rate limit, not just
+// an anti-burst one. RETRY_ON_EMPTY treats "200 OK but zero products" on a
+// known-real category as a rate-limit symptom (these categories never
+// actually have zero listings) and backs off hard before retrying, rather
+// than trusting a suspicious empty result.
+const REQUEST_DELAY_MS = 700;
+const RETRY_BACKOFF_MS = 8000;
+const MAX_RETRIES = 2;
 const USER_AGENT = "Mozilla/5.0 (compatible; GotridPerfumeStockCheck/1.0)";
 
 function sleep(ms: number) {
@@ -75,29 +86,51 @@ async function fetchPage(url: string): Promise<string | null> {
   }
 }
 
-function extractProductIds(html: string): Set<string> {
-  const ids = new Set<string>();
-  const re = /data-product-id="(\d+)"/g;
-  let m: RegExpExecArray | null;
-  while ((m = re.exec(html))) ids.add(m[1]);
-  return ids;
+// Category grid cards render `data-product-id="ID"` and, separately, the
+// product's own link as `<span class="product-title"><a href="URL">` — both
+// appear exactly once per card and in the same document order (verified
+// 2026-09-28: 66 of each on a 66-product page), so zipping the two id-order
+// lists together gives a reliable id→url pairing without needing a second
+// lookup request per candidate (an earlier version of this script tried
+// resolving id→url via Tamda's own search box — search.html does NOT match
+// internal product IDs, only names/EANs/barcodes, so that returned nothing
+// for every single candidate).
+function extractProductIdUrlPairs(html: string): Map<string, string> {
+  const ids = [...html.matchAll(/data-product-id="(\d+)"/g)].map((m) => m[1]);
+  const urls = [...html.matchAll(/class="product-title">\s*<a href="([^"]+)"/g)].map((m) => m[1]);
+  const pairs = new Map<string, string>();
+  const n = Math.min(ids.length, urls.length);
+  for (let i = 0; i < n; i++) pairs.set(ids[i], urls[i]);
+  return pairs;
 }
 
-async function discoverCategory(slug: string): Promise<Set<string>> {
-  const ids = new Set<string>();
+// Fetches one page, retrying with a long backoff if it comes back looking
+// rate-limited (200 OK but zero products — see RETRY_BACKOFF_MS above).
+// Returns whatever it last got, even an empty map, once retries are spent.
+async function fetchPageWithRetry(url: string): Promise<Map<string, string>> {
+  for (let attempt = 0; attempt <= MAX_RETRIES; attempt++) {
+    const html = await fetchPage(url);
+    const pairs = html ? extractProductIdUrlPairs(html) : new Map<string, string>();
+    if (pairs.size > 0 || attempt === MAX_RETRIES) return pairs;
+    console.warn(`    [rate-limit suspected] ${url} came back empty, backing off ${RETRY_BACKOFF_MS}ms (attempt ${attempt + 1}/${MAX_RETRIES + 1})`);
+    await sleep(RETRY_BACKOFF_MS);
+  }
+  return new Map();
+}
+
+async function discoverCategory(slug: string): Promise<Map<string, string>> {
+  const found = new Map<string, string>();
   const urls = [`https://tamdaexpress.eu/${slug}.html`];
   for (let p = 2; p <= PAGES_PER_CATEGORY; p++) {
     urls.push(`https://tamdaexpress.eu/${slug}-page-${p}.html`);
   }
 
   for (const url of urls) {
-    const html = await fetchPage(url);
-    if (html) {
-      for (const id of extractProductIds(html)) ids.add(id);
-    }
+    const pagePairs = await fetchPageWithRetry(url);
+    for (const [id, productUrl] of pagePairs) found.set(id, productUrl);
     await sleep(REQUEST_DELAY_MS);
   }
-  return ids;
+  return found;
 }
 
 interface Candidate {
@@ -108,23 +141,25 @@ interface Candidate {
   url: string | null;
 }
 
-async function fetchCandidateDetails(tamdaId: string): Promise<Candidate> {
-  // Product URLs are slugged, not ID-based, so there's no direct /product/{id}
-  // route — but Tamda's search-by-code also matches internal IDs, same as it
-  // matches EAN/barcode (confirmed 2026-09-28 via the storefront search box).
-  const html = await fetchPage(`https://tamdaexpress.eu/search.html?search_performed=Y&q=${tamdaId}`);
-  if (!html) return { tamdaId, name: null, ean: null, breadcrumb: null, url: null };
-
-  const linkMatch = html.match(new RegExp(`<a[^>]*href="(https://tamdaexpress\\.eu/[a-z0-9-]+\\.html)"[^>]*>[^<]*</a>[^]{0,20}data-product-id="${tamdaId}"`));
-  const productUrl = linkMatch ? linkMatch[1] : null;
-  if (!productUrl) return { tamdaId, name: null, ean: null, breadcrumb: null, url: null };
-
-  const productHtml = await fetchPage(productUrl);
+async function fetchCandidateDetails(tamdaId: string, productUrl: string): Promise<Candidate> {
+  let productHtml: string | null = null;
+  for (let attempt = 0; attempt <= MAX_RETRIES; attempt++) {
+    productHtml = await fetchPage(productUrl);
+    if (productHtml) break;
+    if (attempt < MAX_RETRIES) await sleep(RETRY_BACKOFF_MS);
+  }
   if (!productHtml) return { tamdaId, name: null, ean: null, breadcrumb: null, url: productUrl };
 
-  const nameMatch = productHtml.match(/<h1[^>]*>([^<]+)<\/h1>/);
-  const eanMatch = productHtml.match(/EAN\D{0,20}(\d{8,14})/);
-  const breadcrumbMatch = productHtml.match(/<nav[^>]*breadcrumb[^>]*>([\s\S]{0,500}?)<\/nav>/i);
+  // <h1> wraps its text in a further <bdi> tag with no useful attributes to
+  // anchor on, so <title> (always plain text, always "<Name>" with no
+  // suffix on this site) is the reliable source. EAN sits several tags away
+  // from the literal word ("EAN</em></span><span><em>12345</em>"), not the
+  // 20-char gap assumed in an earlier version of this regex. Breadcrumbs are
+  // a div (class "ty-breadcrumbs"), not a <nav> — confirmed 2026-09-29 by
+  // reading a real product page's markup directly.
+  const nameMatch = productHtml.match(/<title>([^<]+)<\/title>/);
+  const eanMatch = productHtml.match(/EAN\D{0,80}?(\d{8,14})/);
+  const breadcrumbMatch = productHtml.match(/<div class="ty-breadcrumbs[^"]*">([\s\S]{0,1500}?)<\/div>/);
   const breadcrumb = breadcrumbMatch
     ? breadcrumbMatch[1].replace(/<[^>]+>/g, " ").replace(/\s+/g, " ").trim()
     : null;
@@ -141,11 +176,11 @@ async function fetchCandidateDetails(tamdaId: string): Promise<Candidate> {
 async function main() {
   console.log(`Discovering products across ${CATEGORY_SLUGS.length} categories (${PAGES_PER_CATEGORY} page fetches each)...`);
 
-  const allDiscovered = new Set<string>();
+  const allDiscovered = new Map<string, string>();
   for (const slug of CATEGORY_SLUGS) {
-    const ids = await discoverCategory(slug);
-    console.log(`  ${slug}: ${ids.size} unique product IDs seen`);
-    for (const id of ids) allDiscovered.add(id);
+    const found = await discoverCategory(slug);
+    console.log(`  ${slug}: ${found.size} unique product IDs seen`);
+    for (const [id, url] of found) allDiscovered.set(id, url);
   }
   console.log(`\nTotal unique product IDs discovered: ${allDiscovered.size}`);
 
@@ -155,22 +190,23 @@ async function main() {
   });
   const existingIds = new Set(existing.map((p) => p.code.replace("TDE-", "")));
 
-  const newIds = [...allDiscovered].filter((id) => !existingIds.has(id));
-  console.log(`Already in our catalog: ${allDiscovered.size - newIds.length}`);
-  console.log(`Candidates not yet in our catalog: ${newIds.length}`);
+  const newEntries = [...allDiscovered].filter(([id]) => !existingIds.has(id));
+  console.log(`Already in our catalog: ${allDiscovered.size - newEntries.length}`);
+  console.log(`Candidates not yet in our catalog: ${newEntries.length}`);
 
-  if (newIds.length === 0) {
+  if (newEntries.length === 0) {
     console.log("\nNothing new this run.");
     return;
   }
 
-  console.log("\nFetching details for candidates (this hits their site twice per candidate, be patient)...");
+  console.log("\nFetching details for candidates (one request per candidate — we already have its URL)...");
   const candidates: Candidate[] = [];
-  for (let i = 0; i < newIds.length; i++) {
-    candidates.push(await fetchCandidateDetails(newIds[i]));
+  for (let i = 0; i < newEntries.length; i++) {
+    const [id, url] = newEntries[i];
+    candidates.push(await fetchCandidateDetails(id, url));
     await sleep(REQUEST_DELAY_MS);
-    if ((i + 1) % 4 === 0 || i === newIds.length - 1) {
-      console.log(`  ${i + 1}/${newIds.length}`);
+    if ((i + 1) % 4 === 0 || i === newEntries.length - 1) {
+      console.log(`  ${i + 1}/${newEntries.length}`);
     }
   }
 
