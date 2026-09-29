@@ -217,11 +217,21 @@ export async function reprintLabel(parcelId: number): Promise<Buffer> {
 // been delivered."), but the live GetParcelListStatuses response pads them
 // to 2 digits ("05", not "5") — confirmed against real orders, where this
 // comparison silently matched nothing for every GLS parcel ever delivered.
-// Every code below is a genuine end-recipient handover, not just the
-// door-delivery case: 54 parcel box, 55 ParcelShop, 58 neighbour, 59
-// ParcelShop pickup (the terminal state for a GLS_MISTO order, which never
-// reaches 05 since it was never meant for door delivery).
-export const GLS_DELIVERED_STATUS_CODES = ["05", "54", "55", "58", "59"];
+// 54/55/56/59/86 all LOOK terminal from their English Appendix G text but
+// are not — confirmed 2026-09-29 by pulling full live status histories for
+// several real orders: 59 ("Vyzvednutí v ParcelShopu") fires ~40 minutes
+// after label creation (it's GLS's own courier collecting the parcel from
+// OUR drop-off point, not the customer), 86 ("Vyzvednuto") is a mid-route
+// hub scan at GLS's Zápy depot, and 54/55/56 mean "parcel is now sitting at
+// the pickup point," which can sit for days before the customer actually
+// comes. A live GLS_MISTO order (GT260923-3357) had been auto-marked
+// DELIVERED off code 59 while its real history stopped at 86 — three days
+// into transit, nowhere near the destination depot. Two successful GLS_MISTO
+// deliveries in the same audit showed the real pattern: 59 → (hours/days
+// later) 54 "ready in the box" → (hours later) 05 "Doručeno", with the
+// recipient's actual name attached to 05. 05 and 58 are the only codes that
+// carry that kind of unambiguous final-handover signal.
+export const GLS_DELIVERED_STATUS_CODES = ["05", "58"];
 // Appendix G lists two codes with the same "returned to sender" meaning —
 // 23 (general) and 40 (a second, separately-numbered occurrence in the same
 // table) — most commonly reached via 57 ("reached the maximum storage time
