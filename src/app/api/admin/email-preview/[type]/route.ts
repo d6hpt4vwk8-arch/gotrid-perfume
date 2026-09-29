@@ -116,15 +116,12 @@ export async function GET(_req: NextRequest, { params }: { params: Promise<{ typ
 
   if (type === "review-request") {
     const order = await prisma.order.findFirst({
-      where: { status: "DELIVERED", items: { some: { productId: { not: null } } } },
+      where: { status: "DELIVERED" },
       orderBy: { createdAt: "desc" },
-      include: { items: { take: 1, include: { product: { select: { slug: true } } } } },
     });
-    const slug = order?.items[0]?.product?.slug ?? "ukazkovy-produkt";
     const html = await renderReviewRequestEmailHtml({
       email: "nahled@example.com",
       firstName: order?.firstName ?? "Zákazníku",
-      reviewProductSlug: slug,
     });
     return new NextResponse(html, { headers: { "Content-Type": "text/html; charset=utf-8" } });
   }

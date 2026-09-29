@@ -10,7 +10,6 @@ interface ReviewCandidate {
   id: string;
   email: string;
   firstName: string;
-  items: { productId: string | null }[];
 }
 
 async function getReviewRequestCandidates(): Promise<ReviewCandidate[]> {
@@ -26,7 +25,6 @@ async function getReviewRequestCandidates(): Promise<ReviewCandidate[]> {
       id: true,
       email: true,
       firstName: true,
-      items: { select: { productId: true }, take: 1 },
     },
   });
 
@@ -38,39 +36,16 @@ async function getReviewRequestCandidates(): Promise<ReviewCandidate[]> {
   return orders.filter((o) => !unsubscribedEmails.has(o.email.trim().toLowerCase()));
 }
 
-export async function runReviewRequestCampaign(): Promise<{
-  emailed: number;
-  skippedNoProduct: number;
-}> {
+export async function runReviewRequestCampaign(): Promise<{ emailed: number }> {
   const candidates = await getReviewRequestCandidates();
-  if (candidates.length === 0) return { emailed: 0, skippedNoProduct: 0 };
+  if (candidates.length === 0) return { emailed: 0 };
 
   let emailed = 0;
-  let skippedNoProduct = 0;
 
   for (const candidate of candidates) {
-    const productId = candidate.items[0]?.productId;
-    // ReviewForm lives on a product page (reviews are per-product, not
-    // store-wide) — an order with no linked product left (deleted since,
-    // or a line item that was never tied to one) has nowhere to send the
-    // review link to, so it's resolved without emailing rather than
-    // retried forever.
-    const product = productId
-      ? await prisma.product.findUnique({ where: { id: productId }, select: { slug: true } })
-      : null;
-    if (!product) {
-      await prisma.order.update({
-        where: { id: candidate.id },
-        data: { reviewRequestSentAt: new Date() },
-      });
-      skippedNoProduct++;
-      continue;
-    }
-
     await sendReviewRequestEmail({
       email: candidate.email,
       firstName: candidate.firstName,
-      reviewProductSlug: product.slug,
     });
     await prisma.order.update({
       where: { id: candidate.id },
@@ -85,5 +60,5 @@ export async function runReviewRequestCampaign(): Promise<{
     emailed++;
   }
 
-  return { emailed, skippedNoProduct };
+  return { emailed };
 }

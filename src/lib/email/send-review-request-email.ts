@@ -1,4 +1,3 @@
-import { SITE_URL } from "@/lib/site";
 import { buildUnsubscribeUrl } from "@/lib/marketing/unsubscribe";
 import { emailBenefits, emailButton, emailHelpCard, renderEmailLayout } from "./layout";
 import { EMAIL_FROM, getResendClient, isEmailConfigured } from "./resend";
@@ -6,19 +5,29 @@ import { EMAIL_FROM, getResendClient, isEmailConfigured } from "./resend";
 export const REVIEW_COUPON_CODE = "RECENZE30";
 export const REVIEW_COUPON_DISPLAY = "30 Kč při objednávce od 250 Kč";
 
+// Own-site product reviews don't carry any weight with a stranger yet — a
+// new shop has no track record there. Point people at places a review
+// actually means something to someone else: Zboží.cz (owner turned off its
+// verified-only mode 2026-09 to stop double-emailing customers already
+// getting Heureka's own verified-review invite for the same order, so
+// anyone can post there now, not just verified buyers) and the shop's
+// Facebook page, both freely writable by any visitor. Heureka's own
+// "Ověřeno zákazníky" flow is a separate invite Heureka itself emails
+// after a verified purchase — this link can only let someone look at
+// existing reviews, not start a fresh one, so it's offered as a "you might
+// already have that invite in your inbox" nudge, not a primary CTA.
+const ZBOZI_REVIEW_URL = "https://www.zbozi.cz/obchod/235023/";
+const FACEBOOK_REVIEW_URL = "https://www.facebook.com/Gotrid.perfume/reviews";
+const HEUREKA_REVIEW_URL = "https://obchody.heureka.cz/gotridperfume-cz/recenze/";
+
 export async function renderReviewRequestEmailHtml(params: {
   email: string;
   firstName: string;
-  // Product page to send the "Napsat recenzi" button to — the first item
-  // of the delivered order, since reviews are per-product (see
-  // ReviewForm on the product page), not store-wide.
-  reviewProductSlug: string;
 }): Promise<string> {
   const [unsubscribeUrl, benefits] = await Promise.all([
     buildUnsubscribeUrl(params.email),
     emailBenefits(),
   ]);
-  const reviewUrl = `${SITE_URL}/produkt/${params.reviewProductSlug}#recenze`;
   const inner = `
       <h1>Ahoj${params.firstName ? ` ${params.firstName}` : ""}!</h1>
       <p>Doufáme, že vám vaše objednávka dorazila v pořádku a jste s ní spokojeni. Pár slov od
@@ -33,7 +42,11 @@ export async function renderReviewRequestEmailHtml(params: {
       </table>
       <p style="font-size:13px;color:#8a857e;margin:-12px 0 20px;">Jako poděkování za recenzi máte tento kód na vaši
       příští objednávku — stačí ho zadat v košíku.</p>
-      ${emailButton(reviewUrl, "Napsat recenzi")}
+      ${emailButton(ZBOZI_REVIEW_URL, "Napsat recenzi na Zboží.cz")}
+      <p style="font-size:13px;color:#8a857e;margin:-12px 0 24px;">Nebo nám napište pár slov na
+      <a href="${FACEBOOK_REVIEW_URL}" style="color:#131110">Facebooku</a> — případně, pokud vám od nedávné
+      objednávky přišla pozvánka od Heureky, budeme rádi i za hodnocení
+      <a href="${HEUREKA_REVIEW_URL}" style="color:#131110">tam</a>.</p>
       ${benefits}
       ${emailHelpCard()}
     `;
@@ -46,7 +59,6 @@ export async function renderReviewRequestEmailHtml(params: {
 export async function sendReviewRequestEmail(params: {
   email: string;
   firstName: string;
-  reviewProductSlug: string;
 }): Promise<void> {
   if (!isEmailConfigured()) {
     console.warn(`[email] Resend not configured — skipping review-request email for ${params.email}`);
