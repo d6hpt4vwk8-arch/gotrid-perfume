@@ -15,6 +15,14 @@ const LIMIT = Number(process.argv.find((a) => a.startsWith("--limit="))?.split("
 const CONCURRENCY = 6;
 
 const DEFAULT_VAT_RATE = 21;
+// Owner's call 2026-09-29, after a same-day import (Yankee Candle Golden
+// Pumpkin Signature 567g, stock 3) sold out at the supplier within hours of
+// going live: a new product isn't worth adding if the supplier barely has
+// any — too easy to list something we can no longer actually buy in by the
+// time an order comes in. Existing products already on the site keep
+// syncing to their real stock regardless (see spventure-stock.ts) — this
+// only gates what gets newly created.
+const MIN_STOCK_FOR_NEW = 4;
 
 // Top-level branches we don't carry — not part of this store's assortment.
 const SKIP_TOP = new Set(["LEGO®", "LEGO"]);
@@ -355,9 +363,13 @@ async function main() {
   });
   const existingByEan = new Map(existingProducts.map((p) => [p.ean!, p]));
 
-  let toProcess = [...byEan.values()];
+  let toProcess = [...byEan.values()].filter(
+    (item) => existingByEan.has(item.ean) || item.stock >= MIN_STOCK_FOR_NEW,
+  );
+  const skippedLowStock = byEan.size - toProcess.length;
   if (LIMIT > 0) toProcess = toProcess.slice(0, LIMIT);
   console.log(`Will process: ${toProcess.length} (new: ${toProcess.filter((i) => !existingByEan.has(i.ean)).length}, update: ${toProcess.filter((i) => existingByEan.has(i.ean)).length})`);
+  console.log(`Skipped (new, but supplier stock < ${MIN_STOCK_FOR_NEW}): ${skippedLowStock}`);
 
   if (DRY_RUN) {
     console.log("Dry run — stopping before any writes.");
