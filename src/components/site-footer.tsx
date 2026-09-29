@@ -67,7 +67,6 @@ export async function SiteFooter() {
           <h3 className="text-sm font-semibold text-white">Nákup s jistotou</h3>
           <ul className="mt-2 flex flex-col gap-1.5 text-sm text-white/65">
             <li>Zboží nakupujeme přímo od evropských distributorů</li>
-            <li>Doklady o původu na vyžádání</li>
             <li>14 dní na vrácení zboží</li>
           </ul>
         </div>
