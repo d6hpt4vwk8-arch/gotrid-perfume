@@ -64,11 +64,12 @@ export async function SiteFooter() {
           </div>
         </div>
         <div>
-          <h3 className="text-sm font-semibold text-white">Garance originality</h3>
-          <p className="mt-2 text-sm text-white/65">
-            Veškeré produkty jsou 100% originální značkové zboží, nakupované přímo od
-            distributorů — žádné kopie, žádné padělky.
-          </p>
+          <h3 className="text-sm font-semibold text-white">Nákup s jistotou</h3>
+          <ul className="mt-2 flex flex-col gap-1.5 text-sm text-white/65">
+            <li>Zboží nakupujeme přímo od evropských distributorů</li>
+            <li>Doklady o původu ke každé dodávce</li>
+            <li>14 dní na vrácení zboží</li>
+          </ul>
         </div>
         <div>
           <h3 className="text-sm font-semibold text-white">Informace</h3>
@@ -88,6 +89,12 @@ export async function SiteFooter() {
             {sellerLine(seller)}
             <br />
             {seller.street}, {seller.city}
+            {seller.commercialRegister && (
+              <>
+                <br />
+                {seller.commercialRegister}
+              </>
+            )}
             <br />
             <a href={`mailto:${CONTACT.email}`} className="hover:text-white hover:underline">
               {CONTACT.email}

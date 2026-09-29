@@ -19,6 +19,16 @@ export interface SellerIdentity {
   city: string;
   /** Rendered on invoices and quoted in the obchodní podmínky. */
   vatNote: string;
+  /**
+   * "Zapsáno u <soud> pod číslem <spisová značka>" — only s.r.o.'s have this
+   * (an OSVČ isn't entered in obchodní rejstřík at all, so null for one).
+   * Same one-line format used by every real competitor checked (Notino,
+   * ProdejParfemu) right next to IČO/DIČ — a defensive "100% original, no
+   * fakes" claim reads like a shady-dropshipper tell, but a real, checkable
+   * court registration is exactly the boring, factual signal a legitimate
+   * shop is expected to show.
+   */
+  commercialRegister: string | null;
 }
 
 const SOLE_TRADER: SellerIdentity = {
@@ -28,6 +38,7 @@ const SOLE_TRADER: SellerIdentity = {
   street: "Na Jarově 2425/4",
   city: "130 00 Praha 3-Žižkov",
   vatNote: "Není plátcem DPH",
+  commercialRegister: null,
 };
 
 // Gotrid s.r.o. — registered 17. 9. 2026 (Městský soud v Praze, C 456103),
@@ -42,6 +53,7 @@ const COMPANY: SellerIdentity | null = {
   street: "Sokolská 1883/8",
   city: "120 00 Praha 2-Nové Město",
   vatNote: "Není plátcem DPH",
+  commercialRegister: "Zapsáno u Městského soudu v Praze, oddíl C, vložka 456103",
 };
 
 // Company bank account and Stripe verification were the two gating

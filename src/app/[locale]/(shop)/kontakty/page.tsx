@@ -22,6 +22,7 @@ export default function KontaktyPage() {
           </p>
           <p>IČO: {seller.ico}</p>
           {seller.dic && <p>DIČ: {seller.dic}</p>}
+          {seller.commercialRegister && <p>{seller.commercialRegister}</p>}
           <p>
             <a href={`mailto:${CONTACT.email}`} className="hover:text-accent hover:underline">
               {CONTACT.email}

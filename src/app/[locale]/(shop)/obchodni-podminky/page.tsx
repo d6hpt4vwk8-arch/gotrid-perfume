@@ -21,6 +21,12 @@ export default function ObchodniPodminkyPage() {
         {seller.dic
           ? `Prodávající je plátcem DPH, DIČ: ${seller.dic}.`
           : "Prodávající není plátcem DPH."}
+        {seller.commercialRegister && (
+          <>
+            <br />
+            {seller.commercialRegister}.
+          </>
+        )}
         <br />
         Kontaktní údaje: email: {CONTACT.email}, telefon: {CONTACT.phone}
         <br />
