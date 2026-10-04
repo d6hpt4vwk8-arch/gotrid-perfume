@@ -13,7 +13,19 @@ const COLOR_WORDS = new Set([
   "black", "brown", "blonde", "blond", "auburn", "chocolate", "mocha", "toffee", "hazelnut",
   "cinnamon", "sable", "sepia", "charcoal", "taupe", "mauve", "plum", "berry", "wine", "shell",
   "linen", "cameo",
+  // Czech color words — small non-cosmetics items (toothbrushes) sold in several colors
+  "růžový", "tyrkysový", "oranžový", "fialový", "modrý",
 ]);
+
+// Colour swatches for the product-page selector — only for the Czech colour
+// words above; any group with a label missing here keeps the plain text buttons.
+export const SHADE_SWATCH_COLORS: Record<string, string> = {
+  "růžový": "#E0559B",
+  "tyrkysový": "#1FA9A3",
+  "oranžový": "#F28C1E",
+  "fialový": "#8B4FC4",
+  "modrý": "#2F6BD6",
+};
 
 // "1N", "06", "4W", "4.1" — a short numeric code, optionally with a trailing
 // letter or decimal sub-shade.

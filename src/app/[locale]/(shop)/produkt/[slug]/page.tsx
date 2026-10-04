@@ -20,7 +20,7 @@ import { Breadcrumbs } from "@/components/breadcrumbs";
 import { getFrequentlyBoughtTogether } from "@/lib/frequently-bought-together.server";
 import { getSameLineProducts } from "@/lib/product-line.server";
 import { parseVolumeMl, formatVolumeLabel } from "@/lib/parse-volume";
-import { parseShadeLabel } from "@/lib/parse-shade";
+import { parseShadeLabel, SHADE_SWATCH_COLORS } from "@/lib/parse-shade";
 import { estimateDeliveryDate, formatDeliveryEstimate } from "@/lib/delivery-estimate";
 import { getSettings } from "@/lib/settings.server";
 import { ReviewForm } from "@/components/review-form";
@@ -260,6 +260,48 @@ export default async function ProductPage({
             const isSizeGroup = new Set(volumeLabels).size > 1;
             const labelFor = (name: string) =>
               (isSizeGroup ? formatVolumeLabel(name) : parseShadeLabel(name)) ?? name;
+
+            const swatchFor = (name: string) => SHADE_SWATCH_COLORS[(labelFor(name) ?? "").toLowerCase()];
+            const useSwatches = !isSizeGroup && sizeVariants.every((v) => swatchFor(v.name));
+
+            if (useSwatches) {
+              const currentLabel = labelFor(product.name);
+              return (
+                <div className="flex flex-col gap-2">
+                  <span className="text-[11px] font-semibold tracking-wide text-accent-2 uppercase">
+                    Barva: <span className="text-ink normal-case">{currentLabel}</span>
+                  </span>
+                  <div className="flex flex-wrap gap-3">
+                    {sizeVariants.map((variant) => {
+                      const label = labelFor(variant.name);
+                      const isCurrent = variant.id === product.id;
+                      const circle = (
+                        <span
+                          className={`block h-8 w-8 rounded-full border border-line ${
+                            isCurrent ? "ring-2 ring-ink ring-offset-2" : ""
+                          } ${variant.stock <= 0 ? "opacity-40" : ""}`}
+                          style={{ backgroundColor: swatchFor(variant.name) }}
+                        />
+                      );
+                      return isCurrent ? (
+                        <span key={variant.id} title={label} aria-label={label} aria-current="true">
+                          {circle}
+                        </span>
+                      ) : (
+                        <Link
+                          key={variant.id}
+                          href={`/produkt/${variant.slug}`}
+                          title={variant.stock <= 0 ? `${label} (vyprodáno)` : label}
+                          aria-label={label}
+                        >
+                          {circle}
+                        </Link>
+                      );
+                    })}
+                  </div>
+                </div>
+              );
+            }
 
             return (
               <div className="flex flex-col gap-2">
