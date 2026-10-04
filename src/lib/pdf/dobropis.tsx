@@ -64,9 +64,17 @@ export function DobropisDocument({ order }: { order: Order & { items: OrderItem[
           </View>
           <View style={styles.col}>
             <Text style={styles.label}>Odběratel</Text>
-            <Text>
-              {order.firstName} {order.lastName}
-            </Text>
+            {order.companyName ? (
+              <>
+                <Text>{order.companyName}</Text>
+                <Text>IČO: {order.ico}</Text>
+                {order.dic && <Text>DIČ: {order.dic}</Text>}
+              </>
+            ) : (
+              <Text>
+                {order.firstName} {order.lastName}
+              </Text>
+            )}
             {order.shippingStreet && <Text>{order.shippingStreet}</Text>}
             {(order.shippingCity || order.shippingPostalCode) && (
               <Text>

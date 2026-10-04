@@ -6,6 +6,13 @@ export const checkoutSchema = z
     phone: z.string().min(9, "Zadejte platné telefonní číslo.").max(30),
     firstName: z.string().min(1, "Zadejte jméno.").max(100),
     lastName: z.string().min(1, "Zadejte příjmení.").max(100),
+    // "Nakupuji na firmu" — companyName+ico become required together (see
+    // superRefine below) once this is checked. dic stays optional since a
+    // non-VAT-payer company legitimately has none.
+    isCompany: z.boolean().optional().default(false),
+    companyName: z.string().trim().max(200).optional(),
+    ico: z.string().trim().max(20).optional(),
+    dic: z.string().trim().max(20).optional(),
     shippingMethod: z.enum([
       "ZASILKOVNA",
       "PPL",
@@ -45,6 +52,22 @@ export const checkoutSchema = z
       .max(200),
   })
   .superRefine((data, ctx) => {
+    if (data.isCompany) {
+      if (!data.companyName?.trim()) {
+        ctx.addIssue({
+          code: z.ZodIssueCode.custom,
+          path: ["companyName"],
+          message: "Zadejte název firmy.",
+        });
+      }
+      if (!data.ico?.trim()) {
+        ctx.addIssue({
+          code: z.ZodIssueCode.custom,
+          path: ["ico"],
+          message: "Zadejte IČO.",
+        });
+      }
+    }
     const usesPickupPoint =
       data.shippingMethod === "ZASILKOVNA" ||
       data.shippingMethod === "BALIKOVNA" ||

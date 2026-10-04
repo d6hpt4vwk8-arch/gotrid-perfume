@@ -128,6 +128,12 @@ export default async function AdminOrderDetailPage({
           </span>
           <span>{order.email}</span>
           <span>{order.phone}</span>
+          {order.companyName && (
+            <span className="mt-1 text-xs text-accent-2">
+              Na firmu: {order.companyName}, IČO {order.ico}
+              {order.dic ? `, DIČ ${order.dic}` : ""}
+            </span>
+          )}
           {order.trafficSource && (
             <span className="text-xs text-accent-2">Zdroj: {order.trafficSource}</span>
           )}

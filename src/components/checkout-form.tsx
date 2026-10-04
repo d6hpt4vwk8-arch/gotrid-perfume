@@ -78,6 +78,10 @@ export function CheckoutForm({
   const [city, setCity] = useState(customer?.addressCity ?? "");
   const [postalCode, setPostalCode] = useState(customer?.addressPostalCode ?? "");
   const [newsletterOptIn, setNewsletterOptIn] = useState(customer?.marketingOptIn ?? false);
+  const [isCompany, setIsCompany] = useState(false);
+  const [companyName, setCompanyName] = useState("");
+  const [ico, setIco] = useState("");
+  const [dic, setDic] = useState("");
   const [customerNote, setCustomerNote] = useState("");
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -116,10 +120,29 @@ export function CheckoutForm({
     }
   }, [paymentMethod, codAvailable]);
 
-  // Zásilkovna is the only carrier with a real Slovak pickup-point network
-  // today — switching to Slovensko forces it, mirroring the COD fallback above.
+  // Zásilkovna (pickup point or home delivery) is the only carrier reaching
+  // Slovensko today — switching to Slovensko forces one of its two methods,
+  // mirroring the COD fallback above. Only resets away from a non-Zásilkovna
+  // method (e.g. GLS, left over from a Česko selection); picking the other
+  // Zásilkovna variant (ZASILKOVNA_HD) must not be immediately reverted.
   useEffect(() => {
-    if (shippingCountry === "SK" && shippingMethod !== "ZASILKOVNA") {
+    if (
+      shippingCountry === "SK" &&
+      shippingMethod !== "ZASILKOVNA" &&
+      shippingMethod !== "ZASILKOVNA_HD"
+    ) {
+      setShippingMethod("ZASILKOVNA");
+      setPickupPoint(null);
+    }
+  }, [shippingCountry, shippingMethod]);
+
+  // Mirror image of the effect above: ZASILKOVNA_HD only exists for
+  // Slovensko (see checkout-schema.ts), so leaving SK with it still selected
+  // must fall back to a real Česko method instead of leaving shippingMethod
+  // on a value none of the visible radios matches (no option shown as
+  // checked, yet the stale method's SK price kept being charged underneath).
+  useEffect(() => {
+    if (shippingCountry === "CZ" && shippingMethod === "ZASILKOVNA_HD") {
       setShippingMethod("ZASILKOVNA");
       setPickupPoint(null);
     }
@@ -129,7 +152,13 @@ export function CheckoutForm({
     shippingMethod === "ZASILKOVNA" || shippingMethod === "BALIKOVNA" || shippingMethod === "GLS_MISTO";
   const isPersonalPickup = shippingMethod === "OSOBNI_ODBER";
 
-  const contactDone = Boolean(email.trim() && phone.trim() && firstName.trim() && lastName.trim());
+  const contactDone = Boolean(
+    email.trim() &&
+      phone.trim() &&
+      firstName.trim() &&
+      lastName.trim() &&
+      (!isCompany || (companyName.trim() && ico.trim())),
+  );
 
   // Once contact details are filled in but before the order is actually
   // submitted, debounce-capture a snapshot so a daily job can send one
@@ -258,6 +287,10 @@ export function CheckoutForm({
           phone,
           firstName,
           lastName,
+          isCompany,
+          companyName: isCompany ? companyName : undefined,
+          ico: isCompany ? ico : undefined,
+          dic: isCompany ? dic : undefined,
           shippingMethod,
           shippingCountry,
           paymentMethod,
@@ -384,6 +417,43 @@ export function CheckoutForm({
             />
             Chci dostávat novinky a slevy e-mailem
           </label>
+          <label className="flex items-start gap-2 text-sm text-ink">
+            <input
+              type="checkbox"
+              checked={isCompany}
+              onChange={(e) => setIsCompany(e.target.checked)}
+              className="mt-0.5 accent-accent"
+            />
+            Nakupuji na firmu
+          </label>
+          {isCompany && (
+            <div className="flex flex-col gap-3 border-l-2 border-line pl-3">
+              <input
+                required
+                name="organization"
+                autoComplete="organization"
+                placeholder="Název firmy"
+                value={companyName}
+                onChange={(e) => setCompanyName(e.target.value)}
+                className="rounded-sm border border-line px-3 py-2 text-sm text-ink"
+              />
+              <div className="flex gap-3">
+                <input
+                  required
+                  placeholder="IČO"
+                  value={ico}
+                  onChange={(e) => setIco(e.target.value)}
+                  className="w-full rounded-sm border border-line px-3 py-2 text-sm text-ink"
+                />
+                <input
+                  placeholder="DIČ (nepovinné)"
+                  value={dic}
+                  onChange={(e) => setDic(e.target.value)}
+                  className="w-full rounded-sm border border-line px-3 py-2 text-sm text-ink"
+                />
+              </div>
+            </div>
+          )}
         </fieldset>
 
         <fieldset className="flex flex-col gap-2">
@@ -426,7 +496,18 @@ export function CheckoutForm({
             // carriers (Zásilkovna + GLS) to build volume for better
             // negotiated rates; see the matching block in checkout-schema.ts.
             .filter((method) => method !== "BALIKOVNA")
-            .filter((method) => shippingCountry !== "SK" || method === "ZASILKOVNA")
+            // ZASILKOVNA_HD ("Zásilkovna — na adresu") only has a confirmed
+            // SK price so far (see checkout-schema.ts) — hide it under Česko
+            // instead of letting the customer pick it and then hit that
+            // schema's rejection message at submit time.
+            .filter((method) => shippingCountry === "SK" || method !== "ZASILKOVNA_HD")
+            // Zásilkovna (pickup point or, since 2026-09-25, home delivery)
+            // is the only carrier reaching Slovensko — both its variants are
+            // allowed for SK, everything else (GLS, osobní odběr, …) is CZ-only.
+            .filter(
+              (method) =>
+                shippingCountry !== "SK" || method === "ZASILKOVNA" || method === "ZASILKOVNA_HD",
+            )
             .map((method) => (
               <label key={method} className="flex items-center gap-2 text-sm text-ink">
                 <input

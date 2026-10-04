@@ -6,6 +6,7 @@ import type { ShippingMethod } from "@prisma/client";
 // OSOBNI_ODBER has no external brand, so it keeps a simple pin icon.
 const LOGO_SRC: Partial<Record<ShippingMethod, string>> = {
   ZASILKOVNA: "/shipping-logos/zasilkovna.svg",
+  ZASILKOVNA_HD: "/shipping-logos/zasilkovna.svg",
   PPL: "/shipping-logos/ppl.svg",
   DPD: "/shipping-logos/dpd.svg",
   BALIKOVNA: "/shipping-logos/balikovna.svg",

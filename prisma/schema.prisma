@@ -536,6 +536,15 @@ model Order {
   firstName String
   lastName  String
 
+  // "Nakupuji na firmu" — set only when the customer checked that box.
+  // companyName+ico are required together (enforced in checkoutSchema, not
+  // here) once isCompany is true; dic stays optional since a non-VAT-payer
+  // company has none. When companyName is null the order is a private-person
+  // purchase and faktura/dobropis fall back to firstName+lastName as before.
+  companyName String?
+  ico         String?
+  dic         String?
+
   items OrderItem[]
 
   shippingMethod ShippingMethod
