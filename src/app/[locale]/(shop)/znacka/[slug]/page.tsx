@@ -1,3 +1,4 @@
+import { attachColorSwatches } from "@/lib/color-swatches.server";
 import { notFound } from "next/navigation";
 import { prisma } from "@/lib/prisma";
 import { primaryVariantWhere } from "@/lib/product-filters";
@@ -13,7 +14,7 @@ export default async function BrandPage({
   const brand = await prisma.brand.findUnique({ where: { slug } });
   if (!brand) notFound();
 
-  const [products, settings] = await Promise.all([
+  const [rawProducts, settings] = await Promise.all([
     prisma.product.findMany({
       where: { visible: true, brandId: brand.id, ...primaryVariantWhere, stock: { gt: 0 } },
       orderBy: { createdAt: "desc" },
@@ -21,6 +22,7 @@ export default async function BrandPage({
     }),
     getSettings(),
   ]);
+  const products = await attachColorSwatches(rawProducts);
 
   return (
     <main className="mx-auto flex max-w-6xl flex-1 flex-col gap-6 px-4 py-10">

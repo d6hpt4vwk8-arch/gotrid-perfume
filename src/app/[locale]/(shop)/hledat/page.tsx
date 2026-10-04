@@ -1,3 +1,4 @@
+import { attachColorSwatches } from "@/lib/color-swatches.server";
 import type { Prisma } from "@prisma/client";
 import { after } from "next/server";
 import { prisma } from "@/lib/prisma";
@@ -70,7 +71,7 @@ export default async function SearchPage({
 
   const where = buildProductWhere(searchWhere, filters, perfumeCategoryIds);
 
-  const [products, total, brands, scentFacets, structureFacets, cosmeticsFacets, settings] =
+  const [rawProducts, total, brands, scentFacets, structureFacets, cosmeticsFacets, settings] =
     await Promise.all([
       prisma.product.findMany({
         where,
@@ -86,6 +87,7 @@ export default async function SearchPage({
       getCosmeticsFacets(searchWhere),
       getSettings(),
     ]);
+  const products = await attachColorSwatches(rawProducts);
 
   // Logged after the response is sent — a failed write here must never
   // affect what the visitor actually sees. Only page 1 counts a query as

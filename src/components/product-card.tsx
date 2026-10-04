@@ -18,6 +18,8 @@ export interface ProductCardData {
   isDefective: boolean;
   brand: { name: string } | null;
   images: { url: string }[];
+  /** In-stock colours of this product's colour-variant group — set only when there are 2+. */
+  colorSwatches?: { label: string; color: string }[];
 }
 
 export function ProductCard({
@@ -89,6 +91,21 @@ export function ProductCard({
         <span className="line-clamp-2 text-sm font-semibold text-ink group-hover:underline">
           {product.name}
         </span>
+        {product.colorSwatches && product.colorSwatches.length > 1 && (
+          <div
+            className="flex items-center gap-1.5"
+            title={`Dostupné barvy: ${product.colorSwatches.map((c) => c.label).join(", ")}`}
+          >
+            {product.colorSwatches.map((c) => (
+              <span
+                key={c.label}
+                className="h-3.5 w-3.5 rounded-full border border-line"
+                style={{ backgroundColor: c.color }}
+              />
+            ))}
+            <span className="text-[11px] text-accent-2">{product.colorSwatches.length} {product.colorSwatches.length < 5 ? "barvy" : "barev"}</span>
+          </div>
+        )}
         <div className="flex items-baseline gap-2">
           <span className="font-bold text-accent">{price(product.price)}</span>
           {product.compareAtPrice && (

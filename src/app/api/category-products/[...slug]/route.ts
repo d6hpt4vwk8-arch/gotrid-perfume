@@ -1,3 +1,4 @@
+import { attachColorSwatches } from "@/lib/color-swatches.server";
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { findCategoryByFullSlug } from "@/lib/categories.server";
@@ -50,13 +51,15 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ slug
   const baseWhere = { categories: { some: { categoryId: { in: categoryIds } } } };
   const where = buildProductWhere(baseWhere, filters, perfumeCategoryIds);
 
-  const products = await prisma.product.findMany({
+  const rawProducts = await prisma.product.findMany({
     where,
     orderBy: buildOrderBy(filters.sort),
     skip: (filters.page - 1) * PAGE_SIZE,
     take: PAGE_SIZE,
     include: { brand: true, images: { orderBy: { sortOrder: "asc" }, take: 1 } },
   });
+
+  const products = await attachColorSwatches(rawProducts);
 
   return NextResponse.json({
     products: products.map((p) => ({
@@ -68,6 +71,7 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ slug
       stock: p.stock,
       brand: p.brand ? { name: p.brand.name } : null,
       images: p.images.map((img) => ({ url: img.url })),
+      colorSwatches: p.colorSwatches,
     })),
   });
 }
