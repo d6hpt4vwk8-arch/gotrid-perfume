@@ -738,6 +738,14 @@ model Coupon {
   usedCount     Int        @default(0)
   expiresAt     DateTime?
 
+  // The shared "second order" code: only usable by an e-mail we actually sent
+  // the second-order campaign to (within Settings.secondOrderValidDays of that
+  // send), once per e-mail — see assertSecondOrderEligible() in
+  // src/lib/coupons.ts. allowedEmails is the manual override: addresses the
+  // owner has activated by hand (skips the campaign/time check, still once each).
+  secondOrderOnly Boolean   @default(false)
+  allowedEmails   String[]  @default([])
+
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 }
@@ -834,11 +842,13 @@ model Settings {
   shippingCostZasilkovnaHd Decimal @default(145) @db.Decimal(10, 2)
 
   // "Come back and order again" email campaign — days after a customer's
-  // (only) order before we email them. Each email gets its own freshly
-  // generated single-use coupon (prefix + random suffix, usageLimit 1) at
-  // this discount percentage, so the code can't be reused or shared for
-  // repeat discounts (see src/lib/marketing/second-order-campaign.ts).
+  // (only) order before we email them. Every email gets the same shared
+  // coupon (prefix + percent, e.g. DRUHY5, secondOrderOnly) at this
+  // discount percentage; eligibility is checked per e-mail at checkout (see
+  // src/lib/marketing/second-order-campaign.ts and src/lib/coupons.ts).
   secondOrderDelayDays       Int    @default(14)
+  // How long after the campaign e-mail the shared second-order code works.
+  secondOrderValidDays       Int    @default(14)
   secondOrderDiscountPercent Int    @default(5)
   secondOrderCouponPrefix    String @default("DRUHY")
 

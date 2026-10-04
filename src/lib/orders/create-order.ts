@@ -148,7 +148,7 @@ export async function createOrder(
         let couponCode: string | undefined;
         let discountAmount = 0;
         if (input.couponCode) {
-          const result = await validateCoupon(tx, input.couponCode, itemsTotal);
+          const result = await validateCoupon(tx, input.couponCode, itemsTotal, input.email);
           couponCode = result.code;
           discountAmount = result.discountAmount;
         }

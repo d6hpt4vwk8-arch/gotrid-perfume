@@ -202,9 +202,22 @@ export default async function AdminSettingsPage() {
             className="rounded-sm border border-line px-3 py-2"
           />
           <span className="text-xs text-accent-2">
-            Každý e-mail dostane vlastní jednorázový kód (např. {raw.secondOrderCouponPrefix}
-            X7K2Q9) — funguje jen jednou, nedá se sdílet ani používat opakovaně.
+            Všichni dostanou stejný kód ({raw.secondOrderCouponPrefix}
+            {raw.secondOrderDiscountPercent}). Platí jen pro e-mail, na který jsme kampaň poslali, a
+            jen jednou — člověk bez objednávky ho nepoužije.
           </span>
+        </label>
+        <label className="flex flex-col gap-1 text-sm">
+          Platnost kódu po odeslání e-mailu (dny)
+          <input
+            name="secondOrderValidDays"
+            type="number"
+            step="1"
+            min="1"
+            max="365"
+            defaultValue={raw.secondOrderValidDays}
+            className="rounded-sm border border-line px-3 py-2"
+          />
         </label>
         <h2 className="mt-2 text-sm font-semibold text-ink">Věrnostní body</h2>
         <label className="flex flex-col gap-1 text-sm">

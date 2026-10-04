@@ -67,8 +67,9 @@ export async function GET(_req: NextRequest, { params }: { params: Promise<{ typ
     const html = await renderSecondOrderEmailHtml({
       email: "nahled@example.com",
       firstName: "Zákazníku",
-      couponCode: "DRUHY7X3K9M",
+      couponCode: `${settings.secondOrderCouponPrefix}${settings.secondOrderDiscountPercent}`,
       discountPercent: settings.secondOrderDiscountPercent,
+      validUntil: new Date(Date.now() + settings.secondOrderValidDays * 24 * 60 * 60 * 1000),
       theme: "perfume",
       products: products.map((p) => ({
         id: p.id,

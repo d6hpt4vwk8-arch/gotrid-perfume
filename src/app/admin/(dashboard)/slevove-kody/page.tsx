@@ -86,6 +86,21 @@ export default async function AdminCouponsPage() {
                 <input type="checkbox" name="active" defaultChecked={c.active} />
                 Aktivní
               </label>
+              <label className="flex items-center gap-2 pb-1.5" title="Funguje jen pro e-maily, kterým jsme poslali kampaň „druhá objednávka“, a jen jednou.">
+                <input type="checkbox" name="secondOrderOnly" defaultChecked={c.secondOrderOnly} />
+                Jen 2. objednávka
+              </label>
+              {c.secondOrderOnly && (
+                <label className="flex w-full flex-col gap-1">
+                  Ručně povolené e-maily (jeden na řádek) — kód jim půjde použít i mimo kampaň
+                  <textarea
+                    name="allowedEmails"
+                    rows={2}
+                    defaultValue={c.allowedEmails.join("\n")}
+                    className="w-full max-w-md rounded border border-line px-2 py-1"
+                  />
+                </label>
+              )}
               <button type="submit" className="text-xs text-accent-2 underline">
                 Uložit
               </button>

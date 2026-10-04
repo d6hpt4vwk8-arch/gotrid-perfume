@@ -24,6 +24,19 @@ const couponSchema = z
     minOrderValue: z.preprocess(emptyToUndefined, z.coerce.number().min(0).optional()),
     usageLimit: z.preprocess(emptyToUndefined, z.coerce.number().int().positive().optional()),
     expiresAt: z.preprocess(emptyToUndefined, z.string().optional()),
+    secondOrderOnly: z.coerce.boolean().default(false),
+    allowedEmails: z.preprocess(
+      (v) => (typeof v === "string" ? v : ""),
+      z
+        .string()
+        .transform((v) =>
+          v
+            .split(/[\s,;]+/)
+            .map((e) => e.trim().toLowerCase())
+            .filter(Boolean),
+        )
+        .pipe(z.array(z.string().email("Neplatný e-mail v seznamu povolených adres."))),
+    ),
   })
   .refine((data) => data.type === "GIFT" || data.value > 0, {
     message: "Hodnota slevy musí být kladná.",
@@ -32,7 +45,11 @@ const couponSchema = z
 
 function parseCouponForm(formData: FormData) {
   const raw = Object.fromEntries(formData);
-  const parsed = couponSchema.safeParse({ ...raw, active: formData.get("active") === "on" });
+  const parsed = couponSchema.safeParse({
+    ...raw,
+    active: formData.get("active") === "on",
+    secondOrderOnly: formData.get("secondOrderOnly") === "on",
+  });
   if (!parsed.success) {
     throw new Error(parsed.error.issues[0]?.message ?? "Neplatná data slevového kódu.");
   }
@@ -52,6 +69,8 @@ export async function createCoupon(formData: FormData) {
       minOrderValue: data.minOrderValue,
       usageLimit: data.usageLimit,
       expiresAt: data.expiresAt ? new Date(data.expiresAt) : undefined,
+      secondOrderOnly: data.secondOrderOnly,
+      allowedEmails: data.allowedEmails,
     },
   });
   await logAdminActivity({
@@ -78,6 +97,8 @@ export async function updateCoupon(id: string, formData: FormData) {
       minOrderValue: data.minOrderValue,
       usageLimit: data.usageLimit,
       expiresAt: data.expiresAt ? new Date(data.expiresAt) : null,
+      secondOrderOnly: data.secondOrderOnly,
+      allowedEmails: data.allowedEmails,
     },
   });
   await logAdminActivity({

@@ -22,6 +22,7 @@ export async function renderSecondOrderEmailHtml(params: {
   firstName: string;
   couponCode: string;
   discountPercent: number;
+  validUntil: Date;
   theme: RecommendationTheme;
   products: RecommendedProduct[];
 }): Promise<string> {
@@ -39,6 +40,7 @@ export async function renderSecondOrderEmailHtml(params: {
           </td>
         </tr>
       </table>
+      <p style="font-size:13px;color:#8a857e;margin:-12px 0 24px;">Kód platí do ${params.validUntil.toLocaleDateString("cs-CZ")}, jednou, při objednávce na tento e-mail (${params.email}). Pokud vám nefunguje, napište nám na info@gotridperfume.cz.</p>
       ${emailProductGrid("Vyberte si z nabídky", params.products)}
       ${emailButton(SITE_URL, copy.cta)}
       ${benefits}
@@ -55,6 +57,7 @@ export async function sendSecondOrderEmail(params: {
   firstName: string;
   couponCode: string;
   discountPercent: number;
+  validUntil: Date;
   theme: RecommendationTheme;
   products: RecommendedProduct[];
 }): Promise<void> {

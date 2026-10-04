@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { runSecondOrderCampaign } from "@/lib/marketing/second-order-campaign";
+import { runSecondOrderCampaign, cleanupExpiredSecondOrderCoupons } from "@/lib/marketing/second-order-campaign";
 import { runReviewRequestCampaign } from "@/lib/marketing/review-request-campaign";
 import { runAbandonedCheckoutRecovery } from "@/lib/marketing/abandoned-checkout";
 import { syncPacketaDeliveryStatus } from "@/lib/orders/sync-packeta-delivery";
@@ -47,6 +47,7 @@ export async function GET(req: NextRequest) {
     glsDelivery,
     zasilkovnaVolume,
     loyaltyExpiry,
+    couponCleanup,
   ] = await Promise.all([
     runSecondOrderCampaign(),
     runReviewRequestCampaign(),
@@ -55,6 +56,7 @@ export async function GET(req: NextRequest) {
     syncGlsDeliveryStatus(),
     checkZasilkovnaVolumeMilestone(),
     expireInactiveLoyaltyPoints(),
+    cleanupExpiredSecondOrderCoupons(),
   ]);
 
   return NextResponse.json({
@@ -65,5 +67,6 @@ export async function GET(req: NextRequest) {
     glsDelivery,
     zasilkovnaVolume,
     loyaltyExpiry,
+    couponCleanup,
   });
 }

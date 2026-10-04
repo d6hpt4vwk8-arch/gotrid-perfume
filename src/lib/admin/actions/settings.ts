@@ -34,6 +34,7 @@ const settingsSchema = z.object({
   shippingCostGls: z.coerce.number().min(0).max(10_000),
   shippingCostGlsMisto: z.coerce.number().min(0).max(10_000),
   secondOrderDelayDays: z.coerce.number().int().min(1).max(365),
+  secondOrderValidDays: z.coerce.number().int().min(1).max(365),
   secondOrderDiscountPercent: z.coerce.number().int().min(1).max(90),
   secondOrderCouponPrefix: z
     .string()

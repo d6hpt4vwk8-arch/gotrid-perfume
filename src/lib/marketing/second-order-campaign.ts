@@ -5,28 +5,45 @@ import { recommendProductsForBuyer } from "./recommend-products";
 
 const COUNTABLE_STATUSES = ["NEW", "PAID", "PROCESSING", "SHIPPED", "DELIVERED"] as const;
 
-function randomSuffix(): string {
-  // Excludes visually ambiguous chars (0/O, 1/I) since this gets typed at checkout.
-  const alphabet = "23456789ABCDEFGHJKLMNPQRSTUVWXYZ";
-  let out = "";
-  for (let i = 0; i < 6; i++) out += alphabet[Math.floor(Math.random() * alphabet.length)];
-  return out;
+/**
+ * The one shared second-order code ("DRUHY5"): created on first use and kept in
+ * sync with the configured percent. It carries no per-customer state — who may
+ * use it, and until when, is decided at checkout (secondOrderOnly, see
+ * src/lib/coupons.ts), so the coupon list in the admin stays a single row.
+ */
+async function ensureSecondOrderCoupon(prefix: string, percent: number): Promise<string> {
+  const code = `${prefix}${percent}`;
+  await prisma.coupon.upsert({
+    where: { code },
+    update: { type: "PERCENT", value: percent, active: true, secondOrderOnly: true },
+    create: { code, type: "PERCENT", value: percent, active: true, secondOrderOnly: true },
+  });
+  return code;
 }
 
-/** Creates a single-use coupon just for this email — can't be reused or shared for repeat discounts. */
-async function createOneTimeCoupon(prefix: string, percent: number): Promise<string> {
-  for (let attempt = 0; attempt < 5; attempt++) {
-    const code = `${prefix}${randomSuffix()}`;
-    try {
-      await prisma.coupon.create({
-        data: { code, type: "PERCENT", value: percent, active: true, usageLimit: 1 },
-      });
-      return code;
-    } catch {
-      // Unique constraint collision (astronomically unlikely) — retry with a new suffix.
-    }
-  }
-  throw new Error("Nepodařilo se vygenerovat unikátní slevový kód.");
+/**
+ * Deletes the per-customer one-off coupons from the old scheme (prefix + 6
+ * random chars) once they've expired unused — keeps the admin list from
+ * piling up. Never touches the shared code or anything created by hand.
+ */
+export async function cleanupExpiredSecondOrderCoupons(): Promise<number> {
+  const settings = await prisma.settings.findUnique({ where: { id: "singleton" } });
+  const prefix = settings?.secondOrderCouponPrefix ?? "DRUHY";
+  const pattern = new RegExp(`^${prefix}[2-9A-HJ-NP-Z]{6}$`);
+  const stale = await prisma.coupon.findMany({
+    where: {
+      expiresAt: { lt: new Date() },
+      usedCount: 0,
+      usageLimit: 1,
+      secondOrderOnly: false,
+      code: { startsWith: prefix },
+    },
+    select: { id: true, code: true },
+  });
+  const ids = stale.filter((c) => pattern.test(c.code)).map((c) => c.id);
+  if (ids.length === 0) return 0;
+  const { count } = await prisma.coupon.deleteMany({ where: { id: { in: ids } } });
+  return count;
 }
 
 interface SecondOrderCandidate {
@@ -37,7 +54,7 @@ interface SecondOrderCandidate {
 
 async function getSecondOrderCandidates(): Promise<{
   candidates: SecondOrderCandidate[];
-  settings: { secondOrderDiscountPercent: number; secondOrderCouponPrefix: string };
+  settings: { secondOrderDiscountPercent: number; secondOrderCouponPrefix: string; secondOrderValidDays: number };
 }> {
   const settings = await prisma.settings.upsert({
     where: { id: "singleton" },
@@ -115,16 +132,18 @@ export async function runSecondOrderCampaign(): Promise<{ emailed: number; skipp
       continue;
     }
 
-    const couponCode = await createOneTimeCoupon(
+    const couponCode = await ensureSecondOrderCoupon(
       settings.secondOrderCouponPrefix,
       settings.secondOrderDiscountPercent,
     );
+    const validUntil = new Date(Date.now() + settings.secondOrderValidDays * 24 * 60 * 60 * 1000);
     const { theme, products } = await recommendProductsForBuyer(candidate.email);
     await sendSecondOrderEmail({
       email: candidate.email,
       firstName: candidate.firstName,
       couponCode,
       discountPercent: settings.secondOrderDiscountPercent,
+      validUntil,
       theme,
       products,
     });
