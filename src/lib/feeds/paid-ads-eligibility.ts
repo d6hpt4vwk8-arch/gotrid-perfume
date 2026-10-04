@@ -67,7 +67,7 @@ const MASS_MARKET_BRANDS = new Set(
     "Schwarzkopf Professional", "Wella Professionals", "Kérastase",
     "L'Oréal Professionnel", "Moroccanoil", "Alfaparf Milano", "RefectoCil",
     "label.m", "Alcina", "Londa Professional", "Invisibobble", "Tangle Teezer",
-    "Hairburst", "Revlon Professional", "PURING", "HS Milano",
+    "Hairburst", "Revlon Professional", "PURING", "HS Milano", "Olaplex",
     // Home fragrance / candles — not a wearable-perfume fingerprint
     "Yankee Candle", "WoodWick", "Millefiori", "Bolsius", "Chesapeake Bay",
     "California Scents", "Mr&Mrs Fragrance",
