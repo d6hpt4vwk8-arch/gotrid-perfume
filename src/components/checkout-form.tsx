@@ -83,6 +83,9 @@ export function CheckoutForm({
   const [ico, setIco] = useState("");
   const [dic, setDic] = useState("");
   const [customerNote, setCustomerNote] = useState("");
+  // Free greeting sticker on the parcel — only offered when the cart holds a perfume.
+  const [giftSticker, setGiftSticker] = useState(false);
+  const [giftEligible, setGiftEligible] = useState(false);
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -119,6 +122,32 @@ export function CheckoutForm({
   // grows past it while COD is already selected (e.g. visitor goes back and
   // adds more), fall back to bank transfer rather than leave a now-invalid
   // choice selected.
+  const cartProductKey = items.map((i) => i.productId).sort().join(",");
+  useEffect(() => {
+    if (!cartProductKey) {
+      setGiftEligible(false);
+      return;
+    }
+    let cancelled = false;
+    fetch("/api/checkout/gift-sticker", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ productIds: cartProductKey.split(",") }),
+    })
+      .then((r) => r.json())
+      .then((d) => {
+        if (cancelled) return;
+        setGiftEligible(Boolean(d.eligible));
+        if (!d.eligible) setGiftSticker(false);
+      })
+      .catch(() => {
+        if (!cancelled) setGiftEligible(false);
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, [cartProductKey]);
+
   useEffect(() => {
     if (paymentMethod === "CASH_ON_DELIVERY" && !codAvailable) {
       setPaymentMethod("BANK_TRANSFER");
@@ -331,6 +360,7 @@ export function CheckoutForm({
           giftProductId: giftProductId ?? undefined,
           pointsToRedeem,
           customerNote: customerNote.trim() || undefined,
+          giftSticker: giftEligible && giftSticker,
         }),
       });
 
@@ -670,14 +700,38 @@ export function CheckoutForm({
           </fieldset>
         )}
 
+        {giftEligible && (
+          <label className="flex items-start gap-2 rounded-sm border border-line bg-line/20 px-3 py-3 text-sm text-ink">
+            <input
+              type="checkbox"
+              checked={giftSticker}
+              onChange={(e) => setGiftSticker(e.target.checked)}
+              className="mt-0.5"
+            />
+            <span>
+              <span className="font-semibold">🎁 Kupuji jako dárek</span>
+              <span className="mt-0.5 block text-accent-2">
+                Na obal balíčku vám zdarma nalepíme štítek s vaším přáním. Text přání napište
+                do poznámky níže, třeba „Všechno nejlepší! Od tety“.
+              </span>
+            </span>
+          </label>
+        )}
+
         <fieldset className="flex flex-col gap-1">
-          <legend className="mb-1 text-sm font-semibold text-ink">Poznámka k objednávce</legend>
+          <legend className="mb-1 text-sm font-semibold text-ink">
+            {giftEligible && giftSticker ? "Poznámka a text přání na štítek" : "Poznámka k objednávce"}
+          </legend>
           <textarea
             value={customerNote}
             onChange={(e) => setCustomerNote(e.target.value)}
             maxLength={1000}
             rows={3}
-            placeholder="Např. odešlete prosím později, přání k dárku, poznámka k doručení…"
+            placeholder={
+              giftEligible && giftSticker
+                ? "Např. Všechno nejlepší! Od tety"
+                : "Např. odešlete prosím později, poznámka k doručení…"
+            }
             className="rounded-sm border border-line px-3 py-2 text-sm text-ink"
           />
         </fieldset>

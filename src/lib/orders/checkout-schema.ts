@@ -41,6 +41,7 @@ export const checkoutSchema = z
     // Settings' cap/minimum in src/lib/loyalty.ts — never trusted as-is.
     pointsToRedeem: z.number().int().min(0).max(1_000_000).optional().default(0),
     customerNote: z.string().trim().max(1000).optional(),
+    giftSticker: z.boolean().optional().default(false),
     items: z
       .array(
         z.object({

@@ -568,6 +568,11 @@ model Order {
   // order list/detail so it doesn't require opening every order to notice.
   customerNote String? @db.Text
 
+  // Customer asked us to stick a short greeting (written in customerNote) on
+  // the parcel — offered free on perfume orders only; set server-side in
+  // create-order.ts, never trusted from the form alone.
+  giftSticker Boolean @default(false)
+
   // Cookie-consent choice at time of order (TZ §5.9) — gates the server-side
   // Meta Purchase event fired later from the Stripe webhook, which has no
   // access to the original request's consent state otherwise.

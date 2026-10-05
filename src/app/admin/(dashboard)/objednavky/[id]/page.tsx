@@ -50,6 +50,14 @@ export default async function AdminOrderDetailPage({
           2 hodin automaticky zruší a sklad se uvolní.
         </div>
       )}
+      {order.giftSticker && (
+        <div className="rounded-sm border border-pink-300 bg-pink-50 p-4 text-sm text-pink-900">
+          <span className="block font-semibold">🎁 Dárek: nalepit štítek s přáním na obal</span>
+          <p className="mt-1 whitespace-pre-wrap">
+            {order.customerNote ? `Text z poznámky: ${order.customerNote}` : "Zákazník nenapsal text přání, napište mu před odesláním."}
+          </p>
+        </div>
+      )}
       {order.customerNote && (
         <div className="rounded-sm border border-amber-300 bg-amber-50 p-4 text-sm text-amber-900">
           <span className="block font-semibold">📝 Poznámka zákazníka</span>

@@ -6,6 +6,7 @@ import { getSettings } from "@/lib/settings.server";
 import { previewCoupon, validateCoupon } from "@/lib/coupons";
 import { redeemPoints } from "@/lib/loyalty";
 import { hasTooManyCancelledOrders } from "@/lib/customer-reputation";
+import { cartHasPerfume } from "@/lib/gift-sticker";
 import { CheckoutError } from "./checkout-error";
 import type { CheckoutInput } from "./checkout-schema";
 
@@ -40,6 +41,9 @@ export async function createOrder(
   }, 0);
 
   const settings = await getSettings();
+
+  // Honoured only when the cart really contains a perfume, whatever the form sent.
+  const giftSticker = input.giftSticker ? await cartHasPerfume(productIds) : false;
 
   if (input.paymentMethod === "CASH_ON_DELIVERY") {
     if (!canUseCod(itemsTotal, settings)) {
@@ -188,6 +192,7 @@ export async function createOrder(
             shippingPostalCode: input.shippingPostalCode,
             shippingCountry: input.shippingCountry,
             customerNote: input.customerNote || null,
+            giftSticker,
             marketingConsent: input.marketingConsent,
             trafficSource: trafficSource || null,
             couponCode,

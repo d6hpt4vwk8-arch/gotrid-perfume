@@ -174,6 +174,11 @@ export default async function AdminOrdersPage({
                   <Link href={`/admin/objednavky/${o.id}`} className="font-medium hover:underline">
                     {o.number}
                   </Link>
+                  {o.giftSticker && (
+                    <span title="Dárek: nalepit štítek s přáním" className="ml-1.5">
+                      🎁
+                    </span>
+                  )}
                   {o.customerNote && (
                     <span title={o.customerNote} className="ml-1.5">
                       📝
