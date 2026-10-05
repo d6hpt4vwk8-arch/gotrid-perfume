@@ -56,12 +56,14 @@ export function getShippingCost(
   method: ShippingMethod,
   settings: ShopSettings,
   country: string = "CZ",
+  paymentMethod?: string,
 ): number {
+  const codFee = paymentMethod === "CASH_ON_DELIVERY" ? settings.shippingCostCod : 0;
   if (country === "SK") {
     const sk = settings.shippingCostsSk[method];
-    if (sk !== null && sk !== undefined) return sk;
+    if (sk !== null && sk !== undefined) return sk + codFee;
   }
-  return settings.shippingCosts[method];
+  return settings.shippingCosts[method] + codFee;
 }
 
 // Above the free-shipping threshold we don't offer COD — a bank

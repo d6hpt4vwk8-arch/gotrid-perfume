@@ -41,6 +41,7 @@ const settingsSchema = z.object({
   // What the carrier actually bills us — for the net-profit figure on the
   // order detail page, kept separate from the shippingPriceX fields above
   // (what the customer is charged).
+  shippingCostCod: z.coerce.number().min(0).max(10_000),
   shippingCostZasilkovna: z.coerce.number().min(0).max(10_000),
   shippingCostPpl: z.coerce.number().min(0).max(10_000),
   shippingCostDpd: z.coerce.number().min(0).max(10_000),

@@ -38,7 +38,7 @@ export default async function AdminOrderDetailPage({
     (sum, item) => sum + (item.isGift || !item.product ? 0 : Number(item.product.purchasePrice) * item.qty),
     0,
   );
-  const shippingCost = getShippingCost(order.shippingMethod, settings, order.shippingCountry);
+  const shippingCost = getShippingCost(order.shippingMethod, settings, order.shippingCountry, order.paymentMethod);
   const netProfit = Number(order.total) - costOfGoods - shippingCost;
 
   return (

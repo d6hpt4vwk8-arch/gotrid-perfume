@@ -152,6 +152,16 @@ export default async function AdminSettingsPage() {
           pro výpočet čistého zisku u objednávky.
         </p>
         <label className="flex flex-col gap-1 text-sm">
+          Poplatek dopravce za dobírku (Kč)
+          <input
+            name="shippingCostCod"
+            type="number"
+            step="0.01"
+            defaultValue={settings.shippingCostCod}
+            className="rounded-sm border border-line px-3 py-2"
+          />
+        </label>
+        <label className="flex flex-col gap-1 text-sm">
           Zásilkovna (Kč)
           <input
             name="shippingCostZasilkovna"

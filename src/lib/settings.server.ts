@@ -17,6 +17,8 @@ export interface ShopSettings {
   shippingPriceGlsSk: number | null;
   shippingPriceGlsMistoSk: number | null;
   codSurcharge: number;
+  // Extra the carrier bills us on a COD parcel — added to the shipping cost of COD orders in profit figures.
+  shippingCostCod: number;
   czkToEurRate: number;
   loyaltyEarnPercent: number;
   loyaltyRedeemCapPercent: number;
@@ -70,6 +72,7 @@ export const getSettings = unstable_cache(
       shippingPriceGlsMistoSk:
         row.shippingPriceGlsMistoSk === null ? null : Number(row.shippingPriceGlsMistoSk),
       codSurcharge: Number(row.codSurcharge),
+      shippingCostCod: Number(row.shippingCostCod),
       czkToEurRate: Number(row.czkToEurRate),
       loyaltyEarnPercent: row.loyaltyEarnPercent,
       loyaltyRedeemCapPercent: row.loyaltyRedeemCapPercent,

@@ -849,6 +849,9 @@ model Settings {
   shippingCostZasilkovnaSk Decimal? @db.Decimal(10, 2)
   shippingCostGlsSk        Decimal? @db.Decimal(10, 2)
   shippingCostGlsMistoSk   Decimal? @db.Decimal(10, 2)
+  // Extra the carrier bills us on a cash-on-delivery parcel (Zásilkovna: 21 Kč
+  // + 21 % VAT) — added to the shipping cost of COD orders in the profit figures.
+  shippingCostCod          Decimal @default(25.41) @db.Decimal(10, 2)
 
   // "Come back and order again" email campaign — days after a customer's
   // (only) order before we email them. Every email gets the same shared

@@ -47,6 +47,7 @@ export default async function AdminDashboardPage() {
         total: true,
         shippingMethod: true,
         shippingCountry: true,
+        paymentMethod: true,
         items: { select: { qty: true, isGift: true, product: { select: { purchasePrice: true } } } },
       },
     }),
@@ -72,7 +73,7 @@ export default async function AdminDashboardPage() {
         itemSum + (item.isGift || !item.product ? 0 : Number(item.product.purchasePrice) * item.qty),
       0,
     );
-    const shippingCost = getShippingCost(order.shippingMethod, settings, order.shippingCountry);
+    const shippingCost = getShippingCost(order.shippingMethod, settings, order.shippingCountry, order.paymentMethod);
     return sum + Number(order.total) - costOfGoods - shippingCost;
   }, 0);
   const avgOrderValue30d = revenue._count > 0 ? Number(revenue._sum.total ?? 0) / revenue._count : 0;
