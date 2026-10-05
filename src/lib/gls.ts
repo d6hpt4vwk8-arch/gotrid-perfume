@@ -3,14 +3,15 @@ import { createHash } from "node:crypto";
 // MyGLS REST API (GLS Czech Republic) — spec: "MyGLS API for system
 // integration" ver. 25.12.11, api.mygls.hu/docs/MyGLS_API.pdf (the same spec
 // is shared verbatim across GLS's CEE countries, only the domain differs —
-// CZ uses api.mygls.cz). Account created 2026-09-03, Client Number 53017674.
+// CZ uses api.mygls.cz). Account moved to Gotrid s.r.o. on 2026-10-05, Client Number 53018270
+// (the old sole-trader account 53017674 stays open only for its past parcels).
 const API_URL = "https://api.mygls.cz";
 // https://api.test.mygls.cz uses the same credential shape — useful for
 // manual testing without registering a real parcel.
 
 // MyGLS Client Number — not secret (visible in the account's own "Nastavení"
 // page), hardcoded like Balíkovna's CUSTOMER_ID rather than kept in .env.
-const CLIENT_NUMBER = 53017674;
+const CLIENT_NUMBER = 53018270;
 const WEBSHOP_ENGINE = "GotridPerfume";
 
 // A4_4x1's content is authored for a full A4 sheet width, so even with the
