@@ -61,7 +61,7 @@ export function CheckoutForm({
   const [shippingCountry, setShippingCountry] = useState<"CZ" | "SK">(
     browsingCurrency === "EUR" ? "SK" : "CZ",
   );
-  const [shippingMethod, setShippingMethod] = useState<ShippingMethod>("ZASILKOVNA");
+  const [shippingMethod, setShippingMethod] = useState<ShippingMethod>("GLS_MISTO");
   const [paymentMethod, setPaymentMethod] = useState<PaymentMethod>("BANK_TRANSFER");
   // `street`/`city`/`zip` are only ever set by GlsPickupPointPicker
   // (GLS_MISTO) — Zásilkovna/Balíkovna resolve the point's address from
@@ -167,7 +167,7 @@ export function CheckoutForm({
       shippingMethod !== "GLS" &&
       shippingMethod !== "GLS_MISTO"
     ) {
-      setShippingMethod("ZASILKOVNA");
+      setShippingMethod("GLS_MISTO");
       setPickupPoint(null);
     }
   }, [shippingCountry, shippingMethod]);
@@ -179,7 +179,7 @@ export function CheckoutForm({
   // checked, yet the stale method's SK price kept being charged underneath).
   useEffect(() => {
     if (shippingCountry === "CZ" && shippingMethod === "ZASILKOVNA_HD") {
-      setShippingMethod("ZASILKOVNA");
+      setShippingMethod("GLS_MISTO");
       setPickupPoint(null);
     }
   }, [shippingCountry, shippingMethod]);
@@ -548,6 +548,9 @@ export function CheckoutForm({
                 method === "GLS" ||
                 method === "GLS_MISTO",
             )
+            // GLS ParcelShop is listed (and preselected) first: it costs us
+            // less than Zásilkovna per parcel (see shippingCost* in settings).
+            .sort((a, b) => Number(b === "GLS_MISTO") - Number(a === "GLS_MISTO"))
             .map((method) => (
               <label key={method} className="flex items-center gap-2 text-sm text-ink">
                 <input
