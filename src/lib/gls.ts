@@ -139,6 +139,11 @@ export async function createParcel(
 ): Promise<{ parcelId: number; parcelNumber: string; labelPdf: Buffer }> {
   const { Street, HouseNumber } = splitStreetAndNumber(input.address.street);
   const codAmount = input.codAmount;
+  // COD is only ever offered for Česko at checkout (CZK); a Slovak COD parcel
+  // would need EUR and separate GLS terms — refuse rather than label it wrong.
+  if (codAmount && input.address.country !== "CZ") {
+    throw new GlsError("Dobírka GLS je zatím podporována jen pro Českou republiku.");
+  }
 
   const response = await callApi<PrintLabelsResponse>("PrintLabels", {
     ...authBase(),

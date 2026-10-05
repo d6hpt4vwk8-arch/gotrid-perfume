@@ -11,6 +11,9 @@ export interface ShopSettings {
   // Null until the owner sets a real cross-border price in admin settings —
   // callers should fall back to shippingPrices.ZASILKOVNA until then.
   shippingPriceZasilkovnaSk: number | null;
+  // Null until the owner sets a real Slovak GLS price — getShippingPrice() falls back to the CZ one.
+  shippingPriceGlsSk: number | null;
+  shippingPriceGlsMistoSk: number | null;
   codSurcharge: number;
   czkToEurRate: number;
   loyaltyEarnPercent: number;
@@ -56,6 +59,9 @@ export const getSettings = unstable_cache(
       },
       shippingPriceZasilkovnaSk:
         row.shippingPriceZasilkovnaSk === null ? null : Number(row.shippingPriceZasilkovnaSk),
+      shippingPriceGlsSk: row.shippingPriceGlsSk === null ? null : Number(row.shippingPriceGlsSk),
+      shippingPriceGlsMistoSk:
+        row.shippingPriceGlsMistoSk === null ? null : Number(row.shippingPriceGlsMistoSk),
       codSurcharge: Number(row.codSurcharge),
       czkToEurRate: Number(row.czkToEurRate),
       loyaltyEarnPercent: row.loyaltyEarnPercent,

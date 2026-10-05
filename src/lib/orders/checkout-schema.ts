@@ -112,19 +112,33 @@ export const checkoutSchema = z
         });
       }
     }
-    // Zásilkovna (pickup point or, since 2026-09-25, home delivery) is the
-    // only carrier that reaches Slovensko today — enforced here, not just
-    // hidden in the UI, so a direct API call can't smuggle in a combination
-    // we can't actually fulfil.
+    // Zásilkovna (pickup point or home delivery) and, since 2026-10-05 (new
+    // MyGLS account), GLS (courier or ParcelShop) reach Slovensko — enforced
+    // here, not just hidden in the UI, so a direct API call can't smuggle in
+    // a combination we can't actually fulfil.
     if (
       data.shippingCountry === "SK" &&
       data.shippingMethod !== "ZASILKOVNA" &&
-      data.shippingMethod !== "ZASILKOVNA_HD"
+      data.shippingMethod !== "ZASILKOVNA_HD" &&
+      data.shippingMethod !== "GLS" &&
+      data.shippingMethod !== "GLS_MISTO"
     ) {
       ctx.addIssue({
         code: z.ZodIssueCode.custom,
         path: ["shippingMethod"],
-        message: "Na Slovensko lze zatím doručit pouze přes Zásilkovnu.",
+        message: "Na Slovensko lze doručit pouze přes Zásilkovnu nebo GLS.",
+      });
+    }
+    // GLS's COD agreement is CZK-only, so no dobírka for a GLS parcel to Slovensko.
+    if (
+      data.shippingCountry === "SK" &&
+      data.paymentMethod === "CASH_ON_DELIVERY" &&
+      (data.shippingMethod === "GLS" || data.shippingMethod === "GLS_MISTO")
+    ) {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        path: ["paymentMethod"],
+        message: "Dobírka není u GLS na Slovensko dostupná, zvolte prosím jiný způsob platby.",
       });
     }
     // ZASILKOVNA_HD only has a confirmed SK price so far (no CZ number yet)

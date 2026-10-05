@@ -95,7 +95,12 @@ export function CheckoutForm({
     () => getShippingPrice(shippingMethod, itemsTotal, settings, shippingCountry),
     [shippingMethod, itemsTotal, settings, shippingCountry],
   );
-  const codAvailable = useMemo(() => canUseCod(itemsTotal, settings), [itemsTotal, settings]);
+  // GLS to Slovensko has no COD (CZK-only COD agreement) — see gls.ts / checkout-schema.ts.
+  const glsToSk = shippingCountry === "SK" && (shippingMethod === "GLS" || shippingMethod === "GLS_MISTO");
+  const codAvailable = useMemo(
+    () => canUseCod(itemsTotal, settings) && !glsToSk,
+    [itemsTotal, settings, glsToSk],
+  );
   const codSurcharge = useMemo(
     () => getCodSurcharge(paymentMethod, settings),
     [paymentMethod, settings],
@@ -120,16 +125,18 @@ export function CheckoutForm({
     }
   }, [paymentMethod, codAvailable]);
 
-  // Zásilkovna (pickup point or home delivery) is the only carrier reaching
-  // Slovensko today — switching to Slovensko forces one of its two methods,
-  // mirroring the COD fallback above. Only resets away from a non-Zásilkovna
-  // method (e.g. GLS, left over from a Česko selection); picking the other
-  // Zásilkovna variant (ZASILKOVNA_HD) must not be immediately reverted.
+  // Zásilkovna (pickup point or home delivery) and GLS (courier or ParcelShop)
+  // reach Slovensko — switching to Slovensko forces one of those methods,
+  // mirroring the COD fallback above. Only resets away from a method that
+  // isn't offered there (e.g. osobní odběr, left over from a Česko
+  // selection); picking any allowed SK method must not be reverted.
   useEffect(() => {
     if (
       shippingCountry === "SK" &&
       shippingMethod !== "ZASILKOVNA" &&
-      shippingMethod !== "ZASILKOVNA_HD"
+      shippingMethod !== "ZASILKOVNA_HD" &&
+      shippingMethod !== "GLS" &&
+      shippingMethod !== "GLS_MISTO"
     ) {
       setShippingMethod("ZASILKOVNA");
       setPickupPoint(null);
@@ -501,12 +508,15 @@ export function CheckoutForm({
             // instead of letting the customer pick it and then hit that
             // schema's rejection message at submit time.
             .filter((method) => shippingCountry === "SK" || method !== "ZASILKOVNA_HD")
-            // Zásilkovna (pickup point or, since 2026-09-25, home delivery)
-            // is the only carrier reaching Slovensko — both its variants are
-            // allowed for SK, everything else (GLS, osobní odběr, …) is CZ-only.
+            // Zásilkovna (both variants) and GLS (courier + ParcelShop, since
+            // 2026-10-05) reach Slovensko — everything else (osobní odběr, …) is CZ-only.
             .filter(
               (method) =>
-                shippingCountry !== "SK" || method === "ZASILKOVNA" || method === "ZASILKOVNA_HD",
+                shippingCountry !== "SK" ||
+                method === "ZASILKOVNA" ||
+                method === "ZASILKOVNA_HD" ||
+                method === "GLS" ||
+                method === "GLS_MISTO",
             )
             .map((method) => (
               <label key={method} className="flex items-center gap-2 text-sm text-ink">
@@ -549,6 +559,7 @@ export function CheckoutForm({
           ) : shippingMethod === "GLS_MISTO" ? (
             <div className="pt-2">
               <GlsPickupPointPicker
+                country={shippingCountry}
                 selectedPointName={pickupPoint?.name ?? null}
                 onSelect={setPickupPoint}
               />
@@ -613,7 +624,9 @@ export function CheckoutForm({
                 {PAYMENT_LABELS[method]}
                 {method === "CASH_ON_DELIVERY" &&
                   (disabled
-                    ? ` (nedostupné nad ${price(settings.freeShippingThreshold)})`
+                    ? glsToSk
+                      ? " (není dostupná u GLS na Slovensko)"
+                      : ` (nedostupné nad ${price(settings.freeShippingThreshold)})`
                     : settings.codSurcharge > 0
                       ? ` (+${price(settings.codSurcharge)})`
                       : "")}

@@ -18,6 +18,20 @@ const settingsSchema = z.object({
     .refine((v) => v === null || (Number.isFinite(v) && v >= 0 && v <= 10_000), {
       message: "Neplatná cena pro Slovensko.",
     }),
+  shippingPriceGlsSk: z
+    .string()
+    .optional()
+    .transform((v) => (v === undefined || v.trim() === "" ? null : Number(v)))
+    .refine((v) => v === null || (Number.isFinite(v) && v >= 0 && v <= 10_000), {
+      message: "Neplatná cena GLS pro Slovensko.",
+    }),
+  shippingPriceGlsMistoSk: z
+    .string()
+    .optional()
+    .transform((v) => (v === undefined || v.trim() === "" ? null : Number(v)))
+    .refine((v) => v === null || (Number.isFinite(v) && v >= 0 && v <= 10_000), {
+      message: "Neplatná cena GLS (výdejní místo) pro Slovensko.",
+    }),
   shippingPricePpl: z.coerce.number().min(0).max(10_000),
   shippingPriceDpd: z.coerce.number().min(0).max(10_000),
   shippingPriceBalikovna: z.coerce.number().min(0).max(10_000),

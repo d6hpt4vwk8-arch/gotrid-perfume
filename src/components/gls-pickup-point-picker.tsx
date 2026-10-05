@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 
-const WIDGET_URL = "https://ps-maps.gls-czech.com/?find=1&ctrcode=CZ&lng=cs";
+const WIDGET_BASE_URL = "https://ps-maps.gls-czech.com/?find=1";
 
 export interface GlsPickupPoint {
   id: string;
@@ -22,9 +22,12 @@ export interface GlsPickupPoint {
  * order (see checkout-schema.ts / gls.ts).
  */
 export function GlsPickupPointPicker({
+  country = "CZ",
   selectedPointName,
   onSelect,
 }: {
+  /** Which country's ParcelShop map to show (the widget takes ctrcode + lng). */
+  country?: "CZ" | "SK";
   selectedPointName: string | null;
   onSelect: (point: GlsPickupPoint) => void;
 }) {
@@ -75,7 +78,9 @@ export function GlsPickupPointPicker({
             >
               ✕
             </button>
-            <iframe src={WIDGET_URL} title="Výdejní místa GLS" className="h-full w-full border-0" />
+            <iframe
+              src={`${WIDGET_BASE_URL}&ctrcode=${country}&lng=${country === "SK" ? "sk" : "cs"}`}
+              title="Výdejní místa GLS" className="h-full w-full border-0" />
           </div>
         </div>
       )}

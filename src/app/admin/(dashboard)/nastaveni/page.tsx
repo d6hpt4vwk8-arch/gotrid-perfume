@@ -48,6 +48,32 @@ export default async function AdminSettingsPage() {
           </span>
         </label>
         <label className="flex flex-col gap-1 text-sm">
+          GLS kurýr — Slovensko (Kč)
+          <input
+            name="shippingPriceGlsSk"
+            type="number"
+            step="0.01"
+            defaultValue={settings.shippingPriceGlsSk ?? ""}
+            className="rounded-sm border border-line px-3 py-2"
+          />
+          <span className="text-xs text-accent-2">
+            Prázdné = použije se cena GLS kurýr pro ČR.
+          </span>
+        </label>
+        <label className="flex flex-col gap-1 text-sm">
+          GLS výdejní místo — Slovensko (Kč)
+          <input
+            name="shippingPriceGlsMistoSk"
+            type="number"
+            step="0.01"
+            defaultValue={settings.shippingPriceGlsMistoSk ?? ""}
+            className="rounded-sm border border-line px-3 py-2"
+          />
+          <span className="text-xs text-accent-2">
+            Prázdné = použije se cena GLS výdejní místo pro ČR.
+          </span>
+        </label>
+        <label className="flex flex-col gap-1 text-sm">
           Kurz CZK → EUR (pro Slovensko)
           <input
             name="czkToEurRate"

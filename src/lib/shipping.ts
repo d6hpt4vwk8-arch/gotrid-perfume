@@ -39,6 +39,12 @@ export function getShippingPrice(
   if (method === "ZASILKOVNA" && country === "SK") {
     return settings.shippingPriceZasilkovnaSk ?? settings.shippingPrices.ZASILKOVNA;
   }
+  if (country === "SK" && method === "GLS") {
+    return settings.shippingPriceGlsSk ?? settings.shippingPrices.GLS;
+  }
+  if (country === "SK" && method === "GLS_MISTO") {
+    return settings.shippingPriceGlsMistoSk ?? settings.shippingPrices.GLS_MISTO;
+  }
   return settings.shippingPrices[method];
 }
 
