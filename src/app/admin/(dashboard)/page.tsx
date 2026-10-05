@@ -1,4 +1,5 @@
 import { getShippingCost } from "@/lib/shipping";
+import { purchaseCost } from "@/lib/cost-of-goods";
 import Link from "next/link";
 import { prisma } from "@/lib/prisma";
 import { formatPrice } from "@/lib/format";
@@ -48,7 +49,7 @@ export default async function AdminDashboardPage() {
         shippingMethod: true,
         shippingCountry: true,
         paymentMethod: true,
-        items: { select: { qty: true, isGift: true, product: { select: { purchasePrice: true } } } },
+        items: { select: { qty: true, isGift: true, product: { select: { purchasePrice: true, vatRate: true } } } },
       },
     }),
     getSettings(),
@@ -70,7 +71,8 @@ export default async function AdminDashboardPage() {
   const netProfit30d = ordersForProfit.reduce((sum, order) => {
     const costOfGoods = order.items.reduce(
       (itemSum, item) =>
-        itemSum + (item.isGift || !item.product ? 0 : Number(item.product.purchasePrice) * item.qty),
+        itemSum +
+        (item.isGift || !item.product ? 0 : purchaseCost(item.product.purchasePrice, item.product.vatRate) * item.qty),
       0,
     );
     const shippingCost = getShippingCost(order.shippingMethod, settings, order.shippingCountry, order.paymentMethod);

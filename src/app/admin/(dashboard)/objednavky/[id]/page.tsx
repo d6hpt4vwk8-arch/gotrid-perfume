@@ -4,6 +4,7 @@ import { prisma } from "@/lib/prisma";
 import { formatPrice, formatEurAmount } from "@/lib/format";
 import { getSettings } from "@/lib/settings.server";
 import { SHIPPING_LABELS, PAYMENT_LABELS, getShippingCost } from "@/lib/shipping";
+import { purchaseCost } from "@/lib/cost-of-goods";
 import { ShippingIcon } from "@/components/shipping-icons";
 import { ORDER_STATUS_LABELS } from "@/lib/orders/status-labels";
 import { updateOrderStatus } from "@/lib/admin/actions/orders";
@@ -29,13 +30,14 @@ export default async function AdminOrderDetailPage({
   const awaitingPayment = order.paymentMethod === "CARD" && order.status === "NEW";
 
   const settings = await getSettings();
-  // Cost of goods uses each product's *current* purchasePrice — OrderItem
+  // Cost of goods (VAT included while we are not a VAT payer, see cost-of-goods.ts) uses each product's *current* purchasePrice — OrderItem
   // doesn't snapshot it at sale time, so this is only exact when that price
   // hasn't changed since. A gift item and one with no matched product (a
   // deleted/renamed SKU) both cost us nothing to source here — as good as
   // this can do without a real historical cost record.
   const costOfGoods = order.items.reduce(
-    (sum, item) => sum + (item.isGift || !item.product ? 0 : Number(item.product.purchasePrice) * item.qty),
+    (sum, item) =>
+      sum + (item.isGift || !item.product ? 0 : purchaseCost(item.product.purchasePrice, item.product.vatRate) * item.qty),
     0,
   );
   const shippingCost = getShippingCost(order.shippingMethod, settings, order.shippingCountry, order.paymentMethod);
@@ -252,7 +254,7 @@ export default async function AdminOrderDetailPage({
             <span>{formatPrice(order.total)}</span>
           </div>
           <div className="flex justify-between text-accent-2">
-            <span>Náklady na zboží</span>
+            <span>Náklady na zboží (nákup s DPH)</span>
             <span>−{formatPrice(costOfGoods)}</span>
           </div>
           <div className="flex justify-between text-accent-2">
