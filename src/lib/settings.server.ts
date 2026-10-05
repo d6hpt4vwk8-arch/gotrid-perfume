@@ -8,6 +8,8 @@ export interface ShopSettings {
   // What the carrier actually bills us — for the net-profit figure on the
   // order detail page, distinct from shippingPrices (what the customer pays).
   shippingCosts: Record<ShippingMethod, number>;
+  // Per-method cost of a parcel to Slovensko; a method missing here (or null) falls back to shippingCosts.
+  shippingCostsSk: Partial<Record<ShippingMethod, number | null>>;
   // Null until the owner sets a real cross-border price in admin settings —
   // callers should fall back to shippingPrices.ZASILKOVNA until then.
   shippingPriceZasilkovnaSk: number | null;
@@ -56,6 +58,11 @@ export const getSettings = unstable_cache(
         GLS_MISTO: Number(row.shippingCostGlsMisto),
         ZASILKOVNA_HD: Number(row.shippingCostZasilkovnaHd),
         OSOBNI_ODBER: 0,
+      },
+      shippingCostsSk: {
+        ZASILKOVNA: row.shippingCostZasilkovnaSk === null ? null : Number(row.shippingCostZasilkovnaSk),
+        GLS: row.shippingCostGlsSk === null ? null : Number(row.shippingCostGlsSk),
+        GLS_MISTO: row.shippingCostGlsMistoSk === null ? null : Number(row.shippingCostGlsMistoSk),
       },
       shippingPriceZasilkovnaSk:
         row.shippingPriceZasilkovnaSk === null ? null : Number(row.shippingPriceZasilkovnaSk),

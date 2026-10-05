@@ -844,6 +844,11 @@ model Settings {
   shippingCostGls        Decimal @default(99) @db.Decimal(10, 2)
   shippingCostGlsMisto   Decimal @default(54.45) @db.Decimal(10, 2)
   shippingCostZasilkovnaHd Decimal @default(145) @db.Decimal(10, 2)
+  // What the carrier bills for a parcel to Slovensko — cross-border costs differ
+  // from the CZ ones above. Nullable: unset falls back to the CZ cost.
+  shippingCostZasilkovnaSk Decimal? @db.Decimal(10, 2)
+  shippingCostGlsSk        Decimal? @db.Decimal(10, 2)
+  shippingCostGlsMistoSk   Decimal? @db.Decimal(10, 2)
 
   // "Come back and order again" email campaign — days after a customer's
   // (only) order before we email them. Every email gets the same shared

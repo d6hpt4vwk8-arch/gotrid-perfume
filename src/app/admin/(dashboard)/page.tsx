@@ -1,3 +1,4 @@
+import { getShippingCost } from "@/lib/shipping";
 import Link from "next/link";
 import { prisma } from "@/lib/prisma";
 import { formatPrice } from "@/lib/format";
@@ -45,6 +46,7 @@ export default async function AdminDashboardPage() {
       select: {
         total: true,
         shippingMethod: true,
+        shippingCountry: true,
         items: { select: { qty: true, isGift: true, product: { select: { purchasePrice: true } } } },
       },
     }),
@@ -70,7 +72,7 @@ export default async function AdminDashboardPage() {
         itemSum + (item.isGift || !item.product ? 0 : Number(item.product.purchasePrice) * item.qty),
       0,
     );
-    const shippingCost = settings.shippingCosts[order.shippingMethod];
+    const shippingCost = getShippingCost(order.shippingMethod, settings, order.shippingCountry);
     return sum + Number(order.total) - costOfGoods - shippingCost;
   }, 0);
   const avgOrderValue30d = revenue._count > 0 ? Number(revenue._sum.total ?? 0) / revenue._count : 0;

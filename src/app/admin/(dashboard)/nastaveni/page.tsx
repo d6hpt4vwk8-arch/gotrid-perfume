@@ -193,6 +193,39 @@ export default async function AdminSettingsPage() {
             className="rounded-sm border border-line px-3 py-2"
           />
         </label>
+        <div className="mt-2 text-xs font-semibold uppercase text-accent-2">
+          Náklady na zásilky na Slovensko (prázdné = použije se náklad pro ČR)
+        </div>
+        <label className="flex flex-col gap-1 text-sm">
+          Zásilkovna — Slovensko (Kč)
+          <input
+            name="shippingCostZasilkovnaSk"
+            type="number"
+            step="0.01"
+            defaultValue={settings.shippingCostsSk.ZASILKOVNA ?? ""}
+            className="rounded-sm border border-line px-3 py-2"
+          />
+        </label>
+        <label className="flex flex-col gap-1 text-sm">
+          GLS kurýr — Slovensko (Kč)
+          <input
+            name="shippingCostGlsSk"
+            type="number"
+            step="0.01"
+            defaultValue={settings.shippingCostsSk.GLS ?? ""}
+            className="rounded-sm border border-line px-3 py-2"
+          />
+        </label>
+        <label className="flex flex-col gap-1 text-sm">
+          GLS výdejní místo — Slovensko (Kč)
+          <input
+            name="shippingCostGlsMistoSk"
+            type="number"
+            step="0.01"
+            defaultValue={settings.shippingCostsSk.GLS_MISTO ?? ""}
+            className="rounded-sm border border-line px-3 py-2"
+          />
+        </label>
 
         <div className="mt-2 border-t border-line pt-4 text-xs font-semibold uppercase text-accent-2">
           E-mail „druhá objednávka“

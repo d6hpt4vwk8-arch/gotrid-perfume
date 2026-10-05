@@ -48,6 +48,22 @@ export function getShippingPrice(
   return settings.shippingPrices[method];
 }
 
+/**
+ * What the carrier actually bills us for this parcel (net-profit figures) —
+ * the Slovak cost when one is set for that method, otherwise the CZ cost.
+ */
+export function getShippingCost(
+  method: ShippingMethod,
+  settings: ShopSettings,
+  country: string = "CZ",
+): number {
+  if (country === "SK") {
+    const sk = settings.shippingCostsSk[method];
+    if (sk !== null && sk !== undefined) return sk;
+  }
+  return settings.shippingCosts[method];
+}
+
 // Above the free-shipping threshold we don't offer COD — a bank
 // transfer/card is expected for higher-value orders, avoiding the
 // no-show/non-collection risk of a large COD parcel.

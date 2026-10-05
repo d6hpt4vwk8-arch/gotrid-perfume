@@ -3,7 +3,7 @@ import { notFound } from "next/navigation";
 import { prisma } from "@/lib/prisma";
 import { formatPrice, formatEurAmount } from "@/lib/format";
 import { getSettings } from "@/lib/settings.server";
-import { SHIPPING_LABELS, PAYMENT_LABELS } from "@/lib/shipping";
+import { SHIPPING_LABELS, PAYMENT_LABELS, getShippingCost } from "@/lib/shipping";
 import { ShippingIcon } from "@/components/shipping-icons";
 import { ORDER_STATUS_LABELS } from "@/lib/orders/status-labels";
 import { updateOrderStatus } from "@/lib/admin/actions/orders";
@@ -38,7 +38,7 @@ export default async function AdminOrderDetailPage({
     (sum, item) => sum + (item.isGift || !item.product ? 0 : Number(item.product.purchasePrice) * item.qty),
     0,
   );
-  const shippingCost = settings.shippingCosts[order.shippingMethod];
+  const shippingCost = getShippingCost(order.shippingMethod, settings, order.shippingCountry);
   const netProfit = Number(order.total) - costOfGoods - shippingCost;
 
   return (

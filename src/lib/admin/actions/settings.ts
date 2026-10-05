@@ -47,6 +47,27 @@ const settingsSchema = z.object({
   shippingCostBalikovna: z.coerce.number().min(0).max(10_000),
   shippingCostGls: z.coerce.number().min(0).max(10_000),
   shippingCostGlsMisto: z.coerce.number().min(0).max(10_000),
+  shippingCostZasilkovnaSk: z
+    .string()
+    .optional()
+    .transform((v) => (v === undefined || v.trim() === "" ? null : Number(v)))
+    .refine((v) => v === null || (Number.isFinite(v) && v >= 0 && v <= 10_000), {
+      message: "Neplatný náklad Zásilkovna pro Slovensko.",
+    }),
+  shippingCostGlsSk: z
+    .string()
+    .optional()
+    .transform((v) => (v === undefined || v.trim() === "" ? null : Number(v)))
+    .refine((v) => v === null || (Number.isFinite(v) && v >= 0 && v <= 10_000), {
+      message: "Neplatný náklad GLS pro Slovensko.",
+    }),
+  shippingCostGlsMistoSk: z
+    .string()
+    .optional()
+    .transform((v) => (v === undefined || v.trim() === "" ? null : Number(v)))
+    .refine((v) => v === null || (Number.isFinite(v) && v >= 0 && v <= 10_000), {
+      message: "Neplatný náklad GLS výdejní místo pro Slovensko.",
+    }),
   secondOrderDelayDays: z.coerce.number().int().min(1).max(365),
   secondOrderValidDays: z.coerce.number().int().min(1).max(365),
   secondOrderDiscountPercent: z.coerce.number().int().min(1).max(90),
