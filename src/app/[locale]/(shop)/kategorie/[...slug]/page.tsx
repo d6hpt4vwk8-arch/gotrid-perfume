@@ -25,8 +25,52 @@ import { attachColorSwatches } from "@/lib/color-swatches.server";
 import { CategoryFilters } from "@/components/category-filters";
 import { Pagination } from "@/components/pagination";
 import { getSettings } from "@/lib/settings.server";
+import type { Metadata } from "next";
+import { jsonLdScript } from "@/lib/json-ld";
+import { breadcrumbJsonLd, htmlToPlainText, truncateAtWord } from "@/lib/seo";
 
 const PAGE_SIZE = 24;
+
+// Everything except page/sort is a filter combination — thousands of near-duplicate
+// URLs for the same listing, so those are kept out of the index and point back
+// to the clean category URL. Plain pagination (?page=N) stays indexable.
+const NON_FILTER_PARAMS = new Set(["page", "sort"]);
+
+export async function generateMetadata({
+  params,
+  searchParams,
+}: {
+  params: Promise<{ slug: string[] }>;
+  searchParams: Promise<Record<string, string | string[] | undefined>>;
+}): Promise<Metadata> {
+  const { slug } = await params;
+  const query = await searchParams;
+  const fullSlug = slug.join("/");
+  const category = await findCategoryByFullSlug(fullSlug);
+  if (!category) return {};
+
+  const categoryIds = await getDescendantCategoryIds(category.id);
+  const productCount = await prisma.product.count({
+    where: { visible: true, stock: { gt: 0 }, categories: { some: { categoryId: { in: categoryIds } } } },
+  });
+
+  const intro = htmlToPlainText(category.description);
+  const description = truncateAtWord(
+    intro ||
+      `${category.name} – originální značkové zboží skladem${productCount > 0 ? ` (${productCount} produktů)` : ""}. Doprava od 59 Kč, vrácení do 14 dnů. Gotrid Perfume.`,
+  );
+
+  const isFiltered = Object.keys(query).some((k) => !NON_FILTER_PARAMS.has(k) && query[k] !== undefined);
+  const pageNumber = Math.max(1, Number(Array.isArray(query.page) ? query.page[0] : query.page) || 1);
+  const basePath = `/kategorie/${fullSlug}`;
+
+  return {
+    title: `${category.name} – originální a skladem | Gotrid Perfume`,
+    description,
+    alternates: { canonical: !isFiltered && pageNumber > 1 ? `${basePath}?page=${pageNumber}` : basePath },
+    ...(isFiltered ? { robots: { index: false, follow: true } } : {}),
+  };
+}
 
 export default async function CategoryPage({
   params,
@@ -102,6 +146,14 @@ export default async function CategoryPage({
 
   return (
     <main className="mx-auto flex max-w-6xl flex-1 flex-col gap-6 px-4 py-10">
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{
+          __html: jsonLdScript(
+            breadcrumbJsonLd(categoryBreadcrumb.map((c) => ({ name: c.name, path: `/kategorie/${c.fullSlug}` }))),
+          ),
+        }}
+      />
       <Breadcrumbs
         items={categoryBreadcrumb.map((c, i) => ({
           name: c.name,

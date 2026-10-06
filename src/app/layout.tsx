@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
+import { SEO_URL } from "@/lib/site";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -18,6 +19,8 @@ const geistMono = Geist_Mono({
 export const dynamic = "force-dynamic";
 
 export const metadata: Metadata = {
+  // Resolves relative canonical/Open Graph URLs against the public (www) host.
+  metadataBase: new URL(SEO_URL),
   title: "Gotrid Perfume — originální značková parfumerie",
   description:
     "Originální brandová parfumerie, kosmetika a péče za poctivou cenu, bez maloobchodní přirážky.",

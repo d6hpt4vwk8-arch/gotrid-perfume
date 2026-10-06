@@ -7,6 +7,14 @@ import { HomeHero } from "@/components/home-hero";
 import { PerfumeAdviceBlock } from "@/components/perfume-advice-block";
 import { getHeurekaShopReviews } from "@/lib/heureka-reviews";
 import { getSettings } from "@/lib/settings.server";
+import type { Metadata } from "next";
+import { jsonLdScript } from "@/lib/json-ld";
+import { absoluteUrl } from "@/lib/seo";
+import { CONTACT, currentSeller } from "@/lib/business-identity";
+
+export const metadata: Metadata = {
+  alternates: { canonical: "/" },
+};
 
 // K-beauty brands carried in the catalog — used to curate the homepage's
 // "Korejská kosmetika" section (no dedicated category exists for this yet).
@@ -22,6 +30,7 @@ const KOREAN_COSMETICS_BRANDS = [
 ];
 
 export default async function HomePage() {
+  const seller = currentSeller();
   const [categories, saleProducts, koreanCosmetics, arabicPerfumes, latestReviews, settings] =
     await Promise.all([
       getCategoryNavTree(),
@@ -72,6 +81,42 @@ export default async function HomePage() {
     // pushing the whole homepage ~120px wider than the screen on a phone
     // and silently clipping the right edge of every section.
     <main className="mx-auto flex w-full max-w-6xl flex-1 flex-col gap-12 px-4 py-10">
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{
+          __html: jsonLdScript([
+            {
+              "@context": "https://schema.org",
+              "@type": "Organization",
+              name: "Gotrid Perfume",
+              legalName: seller.legalName,
+              url: absoluteUrl("/"),
+              logo: absoluteUrl("/logo.svg"),
+              email: CONTACT.email,
+              telephone: CONTACT.phone,
+              identifier: { "@type": "PropertyValue", propertyID: "IČO", value: seller.ico },
+              address: {
+                "@type": "PostalAddress",
+                streetAddress: seller.street,
+                addressLocality: seller.city,
+                addressCountry: "CZ",
+              },
+            },
+            {
+              "@context": "https://schema.org",
+              "@type": "WebSite",
+              name: "Gotrid Perfume",
+              url: absoluteUrl("/"),
+              inLanguage: "cs",
+              potentialAction: {
+                "@type": "SearchAction",
+                target: `${absoluteUrl("/hledat")}?q={search_term_string}`,
+                "query-input": "required name=search_term_string",
+              },
+            },
+          ]),
+        }}
+      />
       <HomeHero />
 
       <section>

@@ -11,6 +11,7 @@ import { ProductViewTracker } from "@/components/product-view-tracker";
 import { HeurekaProductView } from "@/components/heureka-product-view";
 import { sanitizeDescription } from "@/lib/sanitize-description";
 import { jsonLdScript } from "@/lib/json-ld";
+import { breadcrumbJsonLd, htmlToPlainText, truncateAtWord } from "@/lib/seo";
 import { ProductCard } from "@/components/product-card";
 import { WishlistButton } from "@/components/wishlist-button";
 import { StockAlertForm } from "@/components/stock-alert-form";
@@ -92,9 +93,16 @@ export async function generateMetadata({
   const { slug } = await params;
   const product = await getProduct(slug);
   if (!product) return {};
+  // Descriptions are stored as HTML (and ~70 % of products have none): strip the
+  // markup, and fall back to plain facts so the snippet is never empty or "<p>…".
+  const text = htmlToPlainText(product.description);
+  const brandName = product.brand?.name;
+  const price = Math.round(Number(product.price));
+  const facts = `${product.name}${brandName && !product.name.toLowerCase().includes(brandName.toLowerCase()) ? ` (${brandName})` : ""} za ${price} Kč. ${product.stock > 0 ? "Skladem, " : ""}doprava od 59 Kč, vrácení do 14 dnů. Originální zboží, Gotrid Perfume.`;
   return {
     title: `${product.name} | Gotrid Perfume`,
-    description: product.description?.slice(0, 160),
+    description: truncateAtWord(text.length >= 60 ? text : `${facts}${text ? ` ${text}` : ""}`),
+    alternates: { canonical: `/produkt/${product.slug}` },
   };
 }
 
@@ -150,7 +158,7 @@ export default async function ProductPage({
     "@type": "Product",
     name: product.name,
     image: product.images.map((i) => i.url),
-    description: product.description ?? undefined,
+    description: htmlToPlainText(product.description) || undefined,
     sku: product.code,
     gtin13: product.ean ?? undefined,
     brand: product.brand ? { "@type": "Brand", name: product.brand.name } : undefined,
@@ -177,6 +185,17 @@ export default async function ProductPage({
       <script
         type="application/ld+json"
         dangerouslySetInnerHTML={{ __html: jsonLdScript(jsonLd) }}
+      />
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{
+          __html: jsonLdScript(
+            breadcrumbJsonLd([
+              ...categoryBreadcrumb.map((c) => ({ name: c.name, path: `/kategorie/${c.fullSlug}` })),
+              { name: product.name, path: `/produkt/${product.slug}` },
+            ]),
+          ),
+        }}
       />
       <ProductViewTracker
         product={{ id: product.id, code: product.code, name: product.name, price: Number(product.price) }}

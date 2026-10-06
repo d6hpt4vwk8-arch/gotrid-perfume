@@ -1,5 +1,5 @@
 import type { MetadataRoute } from "next";
-import { SITE_URL } from "@/lib/site";
+import { SEO_URL } from "@/lib/site";
 
 // TZ §7.5: feeds must stay crawlable for Heureka/Zboží/Meta bots — only
 // non-SEO functional pages (admin API, cart, checkout) are disallowed.
@@ -22,6 +22,6 @@ export default function robots(): MetadataRoute.Robots {
         "/obnovit-heslo",
       ],
     },
-    sitemap: `${SITE_URL}/sitemap.xml`,
+    sitemap: `${SEO_URL}/sitemap.xml`,
   };
 }
