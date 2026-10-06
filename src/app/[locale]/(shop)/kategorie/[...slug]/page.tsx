@@ -23,6 +23,8 @@ import {
 import { ProductGridLoadMore } from "@/components/product-grid-load-more";
 import { attachColorSwatches } from "@/lib/color-swatches.server";
 import { CategoryFilters } from "@/components/category-filters";
+import { CategoryBanner } from "@/components/category-banner";
+import { getCategoryBannerTiles } from "@/lib/category-banner.server";
 import { Pagination } from "@/components/pagination";
 import { getSettings } from "@/lib/settings.server";
 import type { Metadata } from "next";
@@ -125,6 +127,14 @@ export default async function CategoryPage({
       getSettings(),
     ]);
 
+  const bannerTiles = category.children.length > 0 ? await getCategoryBannerTiles(category.children) : [];
+  const showBanner = bannerTiles.length >= 2;
+  const bannerTotal = showBanner
+    ? await prisma.product.count({
+        where: { visible: true, stock: { gt: 0 }, AND: [baseWhere, primaryVariantWhere] },
+      })
+    : 0;
+
   const [products, topProducts] = await Promise.all([
     attachColorSwatches(rawProducts),
     attachColorSwatches(rawTopProducts),
@@ -161,7 +171,11 @@ export default async function CategoryPage({
         }))}
       />
 
-      <h1 className="text-2xl font-bold text-ink">{category.name}</h1>
+      {showBanner ? (
+        <CategoryBanner name={category.name} total={bannerTotal} tiles={bannerTiles} />
+      ) : (
+        <h1 className="text-2xl font-bold text-ink">{category.name}</h1>
+      )}
 
       {category.description && (
         <section className="flex flex-col gap-6 border-b border-line pb-6 sm:flex-row sm:items-center">
@@ -177,7 +191,7 @@ export default async function CategoryPage({
         </section>
       )}
 
-      {category.children.length > 0 && (
+      {category.children.length > 0 && !showBanner && (
         <div className="flex flex-wrap gap-2">
           {category.children.map((child) => (
             <Link
