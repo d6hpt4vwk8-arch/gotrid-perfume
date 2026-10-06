@@ -11,6 +11,11 @@
   --color-accent: #3a3632;
   --color-accent-2: #8a857e;
   --color-ok: #4b6b4f;
+  /* Soft tonal backgrounds for editorial blocks (hero arches, banners). */
+  --color-sand: #f4eee5;
+  --color-blush: #f2ddd6;
+  --color-sage: #dde6dc;
+  --color-gold: #b48a4a;
 }
 
 @theme inline {
@@ -22,6 +27,11 @@
   --color-accent: var(--color-accent);
   --color-accent-2: var(--color-accent-2);
   --color-ok: var(--color-ok);
+  --color-sand: var(--color-sand);
+  --color-blush: var(--color-blush);
+  --color-sage: var(--color-sage);
+  --color-gold: var(--color-gold);
+  --font-display: var(--font-display), Georgia, serif;
   --font-sans: var(--font-geist-sans);
   --font-mono: var(--font-geist-mono);
 }

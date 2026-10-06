@@ -72,7 +72,7 @@ export function HeroSlider({ slides }: { slides: ReactNode[] }) {
             type="button"
             onClick={() => goTo(index - 1)}
             aria-label="Předchozí"
-            className="absolute top-1/2 left-2 flex h-9 w-9 -translate-y-1/2 items-center justify-center rounded-full bg-black/30 text-white backdrop-blur transition hover:bg-black/50 sm:left-4"
+            className="absolute top-1/2 left-2 hidden h-9 w-9 -translate-y-1/2 items-center justify-center rounded-full bg-black/30 text-white backdrop-blur transition hover:bg-black/50 sm:left-4 sm:flex"
           >
             ‹
           </button>
@@ -80,11 +80,12 @@ export function HeroSlider({ slides }: { slides: ReactNode[] }) {
             type="button"
             onClick={() => goTo(index + 1)}
             aria-label="Další"
-            className="absolute top-1/2 right-2 flex h-9 w-9 -translate-y-1/2 items-center justify-center rounded-full bg-black/30 text-white backdrop-blur transition hover:bg-black/50 sm:right-4"
+            className="absolute top-1/2 right-2 hidden h-9 w-9 -translate-y-1/2 items-center justify-center rounded-full bg-black/30 text-white backdrop-blur transition hover:bg-black/50 sm:right-4 sm:flex"
           >
             ›
           </button>
-          <div className="absolute bottom-3 left-1/2 flex -translate-x-1/2 gap-1.5">
+          {/* Pill behind the dots so they stay visible on both the light and the dark slides. */}
+          <div className="absolute bottom-3 left-1/2 flex -translate-x-1/2 gap-1.5 rounded-full bg-black/25 px-2.5 py-1.5 backdrop-blur">
             {slides.map((_, i) => (
               <button
                 key={i}
