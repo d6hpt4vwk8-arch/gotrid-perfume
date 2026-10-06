@@ -1,3 +1,4 @@
+import Image from "next/image";
 import Link from "next/link";
 import { prisma } from "@/lib/prisma";
 import { getCategoryNavTree } from "@/lib/categories.server";
@@ -15,6 +16,20 @@ import { CONTACT, currentSeller } from "@/lib/business-identity";
 export const metadata: Metadata = {
   alternates: { canonical: "/" },
 };
+
+// Top-level categories that already have an icon in public/categories/.
+const CATEGORY_ICON_SLUGS = new Set([
+  "nisove-parfemy",
+  "parfemy",
+  "kosmetika",
+  "zuby",
+  "aroma-difuzery",
+  "vonne-svicky",
+  "vune-do-auta",
+  "domacnost",
+  "pece-o-zdravi",
+  "vyprodej",
+]);
 
 // K-beauty brands carried in the catalog — used to curate the homepage's
 // "Korejská kosmetika" section (no dedicated category exists for this yet).
@@ -121,16 +136,35 @@ export default async function HomePage() {
 
       <section>
         <h2 className="mb-4 text-lg font-semibold">Kategorie</h2>
-        <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 md:grid-cols-4">
+        {/* One 3D icon per top-level category (public/categories/<fullSlug>.jpg); a category without
+            an icon yet falls back to a plain text tile. */}
+        <div className="grid grid-cols-2 gap-x-4 gap-y-5 sm:grid-cols-5">
           {categories
             .filter((c) => !c.hidden)
             .map((category) => (
               <Link
                 key={category.id}
                 href={`/kategorie/${category.fullSlug}`}
-                className="rounded-lg border border-neutral-200 px-4 py-6 text-center text-sm font-medium hover:border-neutral-400"
+                className="group flex flex-col items-center gap-2 text-center"
               >
-                {category.name}
+                {CATEGORY_ICON_SLUGS.has(category.fullSlug) ? (
+                  <span className="relative block aspect-square w-full overflow-hidden rounded-[18%] bg-ink transition duration-300 group-hover:-translate-y-0.5 group-hover:shadow-lg">
+                    <Image
+                      src={`/categories/${category.fullSlug}.jpg`}
+                      alt=""
+                      fill
+                      sizes="(min-width: 768px) 18vw, 30vw"
+                      className="object-cover transition-transform duration-300 group-hover:scale-105"
+                    />
+                  </span>
+                ) : (
+                  <span className="flex aspect-square w-full items-center justify-center rounded-[18%] border border-line text-xs text-accent-2">
+                    {category.name}
+                  </span>
+                )}
+                <span className="text-xs font-medium text-ink group-hover:underline sm:text-sm">
+                  {category.name}
+                </span>
               </Link>
             ))}
         </div>
