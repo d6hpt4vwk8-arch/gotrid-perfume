@@ -122,64 +122,76 @@ export async function HomeHero() {
   // Second slide only exists while a GIFT-type coupon is actually active —
   // see benefits-bar.tsx for the other place this same promo gets announced.
   if (giftCoupon) {
-    const gifts = giftOptions.slice(0, 3);
+    const gifts = giftOptions.slice(0, 4);
+    const moreGifts = giftOptions.length - gifts.length;
     slides.push(
       <section
         key="gift"
-        className="relative flex h-full items-center overflow-hidden rounded-sm bg-ink px-14 py-12 text-white sm:px-20 sm:py-14"
+        className="relative flex h-full flex-col overflow-hidden rounded-sm bg-ink text-white lg:min-h-[560px] lg:flex-row lg:items-center"
       >
-        <div className="flex w-full flex-col gap-10 lg:flex-row lg:items-center lg:gap-14">
-          <div className="flex flex-col items-start gap-5 lg:w-[45%]">
-            <span className="rounded-full border border-white/25 bg-white/10 px-3 py-1.5 text-[10px] tracking-widest uppercase sm:text-[11px]">
-              Dárek zdarma
-            </span>
-            <h2 className="text-3xl leading-[1.15] font-bold sm:text-4xl lg:text-[2.6rem]">
-              {giftCoupon.minOrderValue
-                ? `Nákup nad ${price(Number(giftCoupon.minOrderValue))}? Dárek zdarma!`
-                : "Vyberte si dárek zdarma!"}
-            </h2>
-            <p className="max-w-md text-sm leading-relaxed text-white/70">
-              Zadejte kód v košíku nebo na pokladně a vyberte si jeden z dárků z naší nabídky —
-              zdarma k vaší objednávce.
-            </p>
-            <div className="flex flex-wrap items-center gap-3 pt-1">
-              <CopyCodeButton code={giftCoupon.code} />
-              <Link
-                href="/kosik"
-                className="rounded-sm border border-white/30 px-5 py-3 text-center text-sm font-semibold text-white transition hover:border-white/60 hover:bg-white/10"
-              >
-                Do košíku
-              </Link>
-            </div>
-          </div>
+        {/* Same dark 3D look as the main slide — the artwork was generated from the real gift
+            products (Freeman masks and dry shampoo, Humble floss and toothbrushes); the full live
+            list of gifts is shown as text on the left. */}
+        <div className="absolute inset-y-0 right-0 hidden w-[92%] lg:block">
+          <Image
+            src="/hero/hero-gifts.jpg"
+            alt=""
+            fill
+            sizes="100vw"
+            className="object-cover object-right"
+          />
+          <div className="absolute inset-y-0 left-0 w-1/4 bg-gradient-to-r from-ink to-transparent" />
+        </div>
+        <div className="relative aspect-[16/10] w-full lg:hidden">
+          <Image
+            src="/hero/hero-gifts.jpg"
+            alt="Dárky zdarma k objednávce"
+            fill
+            sizes="100vw"
+            className="object-cover object-[78%_50%]"
+          />
+          <div className="absolute inset-x-0 bottom-0 h-1/3 bg-gradient-to-t from-ink to-transparent" />
+        </div>
 
+        <div className="relative z-10 flex flex-col items-start gap-5 px-6 pt-2 pb-14 sm:px-14 lg:w-[50%] lg:px-14 lg:py-14">
+          <span className="rounded-full border border-white/25 bg-white/10 px-3 py-1.5 text-[10px] tracking-widest uppercase sm:text-[11px]">
+            Dárek zdarma
+          </span>
+          <h2 className="text-3xl leading-[1.12] font-bold sm:text-4xl lg:text-[2.7rem]">
+            {giftCoupon.minOrderValue
+              ? `Nákup nad ${price(Number(giftCoupon.minOrderValue))}? Dárek zdarma!`
+              : "Vyberte si dárek zdarma!"}
+          </h2>
+          <p className="max-w-md text-sm leading-relaxed text-white/70">
+            Zadejte kód v košíku nebo na pokladně a vyberte si jeden z dárků z naší nabídky —
+            zdarma k vaší objednávce.
+          </p>
+          <div className="flex flex-wrap items-center gap-3 pt-1">
+            <CopyCodeButton code={giftCoupon.code} />
+            <Link
+              href="/kosik"
+              className="rounded-sm border border-white/30 px-5 py-3 text-center text-sm font-semibold text-white transition hover:border-white/60 hover:bg-white/10"
+            >
+              Do košíku
+            </Link>
+          </div>
           {gifts.length > 0 && (
-            <div className="grid grid-cols-3 gap-3 sm:gap-4 lg:flex-1">
-              {gifts.map((gift) => (
-                <div key={gift.productId} className="flex flex-col overflow-hidden rounded-sm bg-white/95">
-                  <div className="relative aspect-square w-full">
-                    {gift.image ? (
-                      <Image
-                        src={gift.image}
-                        alt={gift.name}
-                        fill
-                        sizes="(min-width: 1024px) 18vw, 30vw"
-                        className="object-contain p-3"
-                      />
-                    ) : (
-                      <div className="flex h-full items-center justify-center text-xs text-accent-2">
-                        Bez obrázku
-                      </div>
-                    )}
-                  </div>
-                  <div className="flex flex-col gap-1 border-t border-line/70 px-3 py-2.5">
-                    <span className="line-clamp-2 text-[11px] leading-snug font-semibold text-ink sm:text-xs">
-                      {gift.name}
+            <div className="flex w-full max-w-md flex-col gap-2 border-t border-white/15 pt-4 text-xs text-white/60">
+              <span className="font-semibold tracking-wider text-white/80 uppercase">Na výběr</span>
+              <ul className="flex flex-col gap-2">
+                {gifts.map((gift) => (
+                  <li key={gift.productId} className="flex items-center gap-3">
+                    <span className="relative h-10 w-10 shrink-0 overflow-hidden rounded-sm bg-white">
+                      {gift.image && (
+                        <Image src={gift.image} alt="" fill sizes="40px" className="object-contain p-1" />
+                      )}
                     </span>
-                    <span className="text-sm font-bold text-ok">Zdarma</span>
-                  </div>
-                </div>
-              ))}
+                    <span className="line-clamp-1 flex-1 text-white/85">{gift.name}</span>
+                    <span className="font-semibold text-white">Zdarma</span>
+                  </li>
+                ))}
+              </ul>
+              {moreGifts > 0 && <span>… a dalších {moreGifts} dárků k výběru v košíku</span>}
             </div>
           )}
         </div>
