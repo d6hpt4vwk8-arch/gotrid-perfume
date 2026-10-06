@@ -177,7 +177,7 @@ export async function HomeHero() {
           </div>
           {gifts.length > 0 && (
             <div className="flex w-full max-w-md flex-col gap-2 border-t border-white/15 pt-4 text-xs text-white/60">
-              <span className="font-semibold tracking-wider text-white/80 uppercase">Na výběr</span>
+              <span className="font-semibold tracking-wider text-white/80 uppercase">Na výběr zdarma</span>
               <ul className="flex flex-col gap-2">
                 {gifts.map((gift) => (
                   <li key={gift.productId} className="flex items-center gap-3">
@@ -187,7 +187,6 @@ export async function HomeHero() {
                       )}
                     </span>
                     <span className="line-clamp-1 flex-1 text-white/85">{gift.name}</span>
-                    <span className="font-semibold text-white">Zdarma</span>
                   </li>
                 ))}
               </ul>
