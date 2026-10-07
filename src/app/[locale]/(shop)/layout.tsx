@@ -8,6 +8,7 @@ import { AttributionTracker } from "@/components/attribution-tracker";
 import { SklikPixel } from "@/components/sklik-pixel";
 import { GlamiPixel } from "@/components/glami-pixel";
 import { Clarity } from "@/components/clarity";
+import { HeurekaCertificateWidget } from "@/components/heureka-certificate-widget";
 import { BenefitsBar } from "@/components/benefits-bar";
 import { NewsletterSignup } from "@/components/newsletter-signup";
 import { getSettings } from "@/lib/settings.server";
@@ -82,6 +83,7 @@ export default async function ShopLayout({ children }: { children: React.ReactNo
         <SklikPixel />
         <GlamiPixel />
         <Clarity />
+        <HeurekaCertificateWidget />
         <BenefitsBar />
         <SiteHeader />
         {children}

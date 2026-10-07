@@ -79,3 +79,12 @@ body {
     transform: scale(1);
   }
 }
+
+/* Heureka's slide-out certificate tab (heureka-certificate-widget.tsx) sits on
+   the left edge and would cover page content on phones — the footer badge
+   already shows the certificate there. */
+@media (max-width: 767px) {
+  #heurekaTableft {
+    display: none !important;
+  }
+}
