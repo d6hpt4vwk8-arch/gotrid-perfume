@@ -2,7 +2,6 @@
 
 import { useEffect } from "react";
 import { usePathname } from "next/navigation";
-import { useConsent } from "@/lib/consent-context";
 
 // Public certificate id from sluzby.heureka.cz → Ověřeno zákazníky (not the
 // secret review-export key, which must never ship to the browser).
@@ -32,19 +31,18 @@ function loadWidget() {
 }
 
 /**
- * Heureka's slide-out "Ověřeno zákazníky" certificate tab. It's a third-party
- * script, so it follows the same gate as Clarity/Meta Pixel (analytics
- * consent) and stays off the order pages. The static badge in the footer
- * needs no consent and shows for everyone.
+ * Heureka's slide-out "Ověřeno zákazníky" certificate tab. Loaded for every
+ * visitor, without waiting for cookie consent (owner's call, 2026-10-07): it
+ * is a trust badge, not a tracker, and a badge that only shows to people who
+ * clicked "accept" looks broken to everyone else. Stays off the order pages.
  */
 export function HeurekaCertificateWidget() {
-  const { consent } = useConsent();
   const pathname = usePathname();
   const isOrderPage = pathname?.startsWith("/objednavka") || pathname?.startsWith("/pokladna");
 
   useEffect(() => {
-    if (consent?.analytics && !isOrderPage) loadWidget();
-  }, [consent?.analytics, isOrderPage]);
+    if (!isOrderPage) loadWidget();
+  }, [isOrderPage]);
 
   return null;
 }
