@@ -138,6 +138,11 @@ export async function createParcel(
   input: CreateParcelInput,
 ): Promise<{ parcelId: number; parcelNumber: string; labelPdf: Buffer }> {
   const { Street, HouseNumber } = splitStreetAndNumber(input.address.street);
+  // GLS rejects "[13] Invalid data in 'Delivery Zip Code'" for a PSČ typed as
+  // "750 01" (every parcel that went through had it as plain digits) and is
+  // just as picky about stray whitespace in the city — customers type both.
+  const city = input.address.city.trim();
+  const zipCode = input.address.postalCode.replace(/\s+/g, "");
   const codAmount = input.codAmount;
   // COD is only ever offered for Česko at checkout (CZK); a Slovak COD parcel
   // would need EUR and separate GLS terms — refuse rather than label it wrong.
@@ -165,8 +170,8 @@ export async function createParcel(
           Name: input.pickupPoint?.name ?? `${input.recipient.firstName} ${input.recipient.surname}`,
           Street,
           HouseNumber,
-          City: input.address.city,
-          ZipCode: input.address.postalCode,
+          City: city,
+          ZipCode: zipCode,
           CountryIsoCode: input.address.country,
           ContactName: `${input.recipient.firstName} ${input.recipient.surname}`,
           ContactPhone: input.recipient.phone,

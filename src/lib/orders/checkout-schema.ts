@@ -30,9 +30,9 @@ export const checkoutSchema = z
     // GLS_MISTO (see Order.pickupPointName in schema.prisma), optional here
     // so ZASILKOVNA/BALIKOVNA checkouts (which don't send it) still pass.
     pickupPointName: z.string().max(200).optional(),
-    shippingStreet: z.string().max(200).optional(),
-    shippingCity: z.string().max(100).optional(),
-    shippingPostalCode: z.string().max(20).optional(),
+    shippingStreet: z.string().trim().max(200).optional(),
+    shippingCity: z.string().trim().max(100).optional(),
+    shippingPostalCode: z.string().trim().max(20).optional(),
     marketingConsent: z.boolean().optional().default(false),
     newsletterOptIn: z.boolean().optional().default(false),
     couponCode: z.string().trim().max(50).optional(),
