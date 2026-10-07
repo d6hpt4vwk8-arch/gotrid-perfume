@@ -69,6 +69,23 @@ export async function SiteFooter() {
             <li>Zboží nakupujeme přímo od evropských distributorů</li>
             <li>14 dní na vrácení zboží</li>
           </ul>
+          {/* Heureka's own badge, served from their CDN — it disappears on its
+              own if the shop ever drops below the certificate threshold. */}
+          <a
+            href="https://obchody.heureka.cz/gotridperfume-cz/recenze/"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="mt-4 inline-block"
+          >
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img
+              src="https://im9.cz/cb/98437-4.svg"
+              alt="Ověřeno zákazníky – Heureka"
+              width={96}
+              height={96}
+              loading="lazy"
+            />
+          </a>
         </div>
         <div>
           <h3 className="text-sm font-semibold text-white">Informace</h3>
