@@ -380,15 +380,11 @@ export default async function ProductPage({
               {product.stock > 0 ? `Skladem (${product.stock} ks)` : "Vyprodáno"}
             </span>
 
-            {/* Units we physically hold ship at normal speed no matter where the
-                supplier-fed stock sits — the warning only applies without them. */}
-            {product.stock > 0 && product.slowerDelivery && product.ownStock <= 0 && (
-              <p className="pl-6 text-sm text-amber-700">
-                Tento produkt máme na jiném skladu — doručení proto trvá déle než u zbytku
-                nabídky, klidně i týden. Pokud vám to nevadí, klidně objednávejte.
-              </p>
-            )}
-            {product.stock > 0 && (!product.slowerDelivery || product.ownStock > 0) && (
+            {/* The old "máme na jiném skladu, doručení trvá déle" warning was removed
+                (owner's call, 2026-10-08): it cost conversions and real supplier
+                orders have not shown slower delivery. Product.slowerDelivery is
+                still maintained by the SP Venture sync, just no longer shown. */}
+            {product.stock > 0 && (
               <p className="pl-6 text-sm text-accent-2">
                 Ihned k odeslání od{" "}
                 <span className="font-medium text-ink">{price(cheapestShippingPrice)}</span>
