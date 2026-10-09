@@ -6,6 +6,7 @@ import type { Prisma } from "@prisma/client";
 import { useCurrency } from "@/lib/currency-context";
 import { AddToCartButton } from "@/components/add-to-cart-button";
 import { WishlistButton } from "@/components/wishlist-button";
+import { BestsellerPill, EthicsPills, isBestseller } from "@/components/product-badges";
 
 export interface ProductCardData {
   id: string;
@@ -16,6 +17,10 @@ export interface ProductCardData {
   compareAtPrice: Prisma.Decimal | number | null;
   stock: number;
   isDefective: boolean;
+  /** Units ever sold — drives the Bestseller pill. */
+  salesCount?: number;
+  isVegan?: boolean;
+  isCrueltyFree?: boolean;
   brand: { name: string } | null;
   images: { url: string }[];
   /** In-stock colours of this product's colour-variant group — set only when there are 2+. */
@@ -35,6 +40,10 @@ export function ProductCard({
   const discountPercent = product.compareAtPrice
     ? Math.round((1 - Number(product.price) / Number(product.compareAtPrice)) * 100)
     : null;
+  // Names like "Brand Product – what it is in Czech – 50 ml" (GVS cosmetics): bold title,
+  // then the explanation as a quieter second line (Kosco-style).
+  const [title, ...nameRest] = product.name.split(" – ");
+  const subtitle = nameRest.join(" · ");
   const isFreeShipping =
     freeShippingThreshold !== undefined && Number(product.price) >= freeShippingThreshold;
 
@@ -52,6 +61,7 @@ export function ProductCard({
               -{discountPercent}%
             </span>
           )}
+          {isBestseller(product.salesCount) && <BestsellerPill />}
           {isFreeShipping && (
             <span className="rounded-sm bg-ok px-1.5 py-1 text-xs font-bold text-white">
               Doprava zdarma
@@ -68,6 +78,7 @@ export function ProductCard({
           }}
           className="absolute right-2 top-2 z-10 h-8 w-8 bg-white/90 shadow-sm hover:bg-white"
         />
+        <EthicsPills isVegan={product.isVegan} isCrueltyFree={product.isCrueltyFree} className="absolute bottom-2 left-2 z-10" />
         {image ? (
           <Image
             src={image.url}
@@ -88,9 +99,10 @@ export function ProductCard({
             {product.brand.name}
           </span>
         )}
-        <span className="line-clamp-3 text-sm font-semibold text-ink group-hover:underline">
-          {product.name}
+        <span className="line-clamp-2 text-sm font-semibold text-ink group-hover:underline">
+          {title}
         </span>
+        {subtitle && <span className="line-clamp-2 text-xs leading-snug text-accent-2">{subtitle}</span>}
         {product.colorSwatches && product.colorSwatches.length > 1 && (
           <div
             className="flex items-center gap-1.5"

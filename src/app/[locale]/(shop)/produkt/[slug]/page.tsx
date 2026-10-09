@@ -29,6 +29,7 @@ import { ProductGallery } from "@/components/product-gallery";
 import { primaryVariantWhere } from "@/lib/product-filters";
 import { ScentNotesPyramid } from "@/components/scent-notes-pyramid";
 import { ProductTrustStrip } from "@/components/product-trust-strip";
+import { BestsellerPill, EthicsPills, isBestseller } from "@/components/product-badges";
 
 async function getProduct(slug: string) {
   return prisma.product.findUnique({
@@ -251,6 +252,13 @@ export default async function ProductPage({
             <span className="w-fit rounded-sm bg-amber-600 px-1.5 py-1 text-xs font-bold text-white">
               Poškozený obal
             </span>
+          )}
+
+          {(isBestseller(product.salesCount) || product.isVegan || product.isCrueltyFree) && (
+            <div className="flex flex-wrap items-center gap-1.5">
+              {isBestseller(product.salesCount) && <BestsellerPill />}
+              <EthicsPills isVegan={product.isVegan} isCrueltyFree={product.isCrueltyFree} />
+            </div>
           )}
 
           <div className="flex items-baseline gap-3">

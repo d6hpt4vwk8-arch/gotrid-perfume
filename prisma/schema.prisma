@@ -142,6 +142,12 @@ model Product {
   // indistinguishable from full-price stock at checkout.
   isDefective Boolean @default(false)
 
+  // Shown as green pills on the product card / page. Only set when the brand or
+  // retailer states it about the PRODUCT itself (e.g. "Vegan certified"), not for a
+  // single vegan ingredient. Cosmetics only for now (GVS Korean cosmetics).
+  isVegan       Boolean @default(false)
+  isCrueltyFree Boolean @default(false)
+
   // Set by the SP Venture sync (spventure-stock.ts) when a code's stock had
   // to be confirmed via the supplier's public site search rather than found
   // in their own product/avail feed — in practice this means the item isn't

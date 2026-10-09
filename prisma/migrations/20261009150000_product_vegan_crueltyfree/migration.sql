@@ -1,0 +1,3 @@
+-- AlterTable
+ALTER TABLE "Product" ADD COLUMN "isCrueltyFree" BOOLEAN NOT NULL DEFAULT false,
+ADD COLUMN "isVegan" BOOLEAN NOT NULL DEFAULT false;
