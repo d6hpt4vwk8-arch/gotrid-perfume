@@ -165,7 +165,8 @@ export async function loginTamda(email: string, password: string): Promise<Tamda
 
 async function loadUploadForm(session: TamdaSession): Promise<{ action: string; securityHash: string }> {
   const { html } = await request(session, `${BASE}/index.php?dispatch=sb_order_from_excel.upload`);
-  if (!isLoggedIn(html)) throw new Error("Tamda session is not logged in (upload page)");
+  // The upload form only exists for logged-in customers, so finding it is
+  // the login check (the page has no reliable "logout" marker to look for).
   const at = html.indexOf('name="csv_file"');
   const formStart = at >= 0 ? html.lastIndexOf("<form", at) : -1;
   if (at < 0 || formStart < 0) throw new Error("Tamda CSV upload form not found — page layout changed?");
@@ -218,8 +219,9 @@ export async function checkTamdaEans(
     body.set("security_hash", securityHash);
     body.set("csv_file", new File([`EAN,Quantity\n${batch.map((e) => `${e},1`).join("\n")}\n`], "stock-check.csv", { type: "text/csv" }));
     const { html } = await request(session, action, { method: "POST", body });
-    if (!isLoggedIn(html)) throw new Error("Tamda session expired during the stock check");
-    for (const [ean, row] of parseResultRows(html)) result.set(ean, row);
+    const rows = parseResultRows(html);
+    if (rows.size === 0) throw new Error("Tamda returned no result rows (session expired or page layout changed)");
+    for (const [ean, row] of rows) result.set(ean, row);
     onProgress?.(Math.min(i + BATCH_SIZE, unique.length), unique.length);
     if (i + BATCH_SIZE < unique.length) await new Promise((r) => setTimeout(r, PAUSE_BETWEEN_BATCHES_MS));
   }
