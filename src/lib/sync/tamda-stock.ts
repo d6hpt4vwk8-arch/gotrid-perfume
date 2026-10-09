@@ -176,16 +176,17 @@ async function loadUploadForm(session: TamdaSession): Promise<{ action: string; 
   const formStart = at >= 0 ? html.lastIndexOf("<form", at) : -1;
   if (at < 0 || formStart < 0) throw new Error("Tamda CSV upload form not found — not logged in, or the page layout changed");
   const formTag = html.slice(formStart, html.indexOf(">", formStart) + 1);
-  // A <form> without an action posts to the page's own URL (that is what the
-  // browser showed: index.php?dispatch=sb_order_from_excel.upload).
+  // The form posts to ...dispatch=sb_order_from_excel.parse (not back to the
+  // upload page). Its hidden security_hash input is rendered EMPTY in the
+  // served HTML — the browser fills it in client-side — so whatever the page
+  // carries (empty or not) is what we send; if Tamda starts enforcing it the
+  // upload below fails with "no result rows" rather than writing bad data.
   const rawAction = /action="([^"]*)"/.exec(formTag)?.[1];
   const action = rawAction ? new URL(decodeEntities(rawAction), BASE).toString() : pageUrl;
-  // CS-Cart's CSRF token: a hidden input, or only injected by JS — accept either spelling.
   const hash =
-    /name="security_hash"[^>]*value="([^"]+)"/.exec(html)?.[1] ??
-    /value="([^"]+)"[^>]*name="security_hash"/.exec(html)?.[1] ??
-    /security_hash['"]?\s*[:=]\s*['"]([0-9a-f]{16,})['"]/i.exec(html)?.[1];
-  if (!hash) throw new Error("Tamda CSV upload form: security_hash not found in the page");
+    /name="security_hash"[^>]*value="([^"]*)"/.exec(html)?.[1] ??
+    /value="([^"]*)"[^>]*name="security_hash"/.exec(html)?.[1] ??
+    "";
   return { action, securityHash: hash };
 }
 
