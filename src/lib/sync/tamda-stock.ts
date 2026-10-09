@@ -164,17 +164,29 @@ export async function loginTamda(email: string, password: string): Promise<Tamda
 // --- CSV availability check ---------------------------------------------------
 
 async function loadUploadForm(session: TamdaSession): Promise<{ action: string; securityHash: string }> {
-  const { html } = await request(session, `${BASE}/index.php?dispatch=sb_order_from_excel.upload`);
+  const pageUrl = `${BASE}/index.php?dispatch=sb_order_from_excel.upload`;
+  const { html } = await request(session, pageUrl);
+  if (process.env.TAMDA_DEBUG_FILE) {
+    const { writeFileSync } = await import("node:fs");
+    writeFileSync(process.env.TAMDA_DEBUG_FILE, html);
+  }
   // The upload form only exists for logged-in customers, so finding it is
   // the login check (the page has no reliable "logout" marker to look for).
   const at = html.indexOf('name="csv_file"');
   const formStart = at >= 0 ? html.lastIndexOf("<form", at) : -1;
-  if (at < 0 || formStart < 0) throw new Error("Tamda CSV upload form not found — page layout changed?");
+  if (at < 0 || formStart < 0) throw new Error("Tamda CSV upload form not found — not logged in, or the page layout changed");
   const formTag = html.slice(formStart, html.indexOf(">", formStart) + 1);
-  const action = /action="([^"]+)"/.exec(formTag)?.[1];
-  const hash = /name="security_hash"[^>]*value="([^"]+)"/.exec(html)?.[1] ?? /value="([^"]+)"[^>]*name="security_hash"/.exec(html)?.[1];
-  if (!action || !hash) throw new Error("Tamda CSV upload form is missing action or security_hash");
-  return { action: new URL(decodeEntities(action), BASE).toString(), securityHash: hash };
+  // A <form> without an action posts to the page's own URL (that is what the
+  // browser showed: index.php?dispatch=sb_order_from_excel.upload).
+  const rawAction = /action="([^"]*)"/.exec(formTag)?.[1];
+  const action = rawAction ? new URL(decodeEntities(rawAction), BASE).toString() : pageUrl;
+  // CS-Cart's CSRF token: a hidden input, or only injected by JS — accept either spelling.
+  const hash =
+    /name="security_hash"[^>]*value="([^"]+)"/.exec(html)?.[1] ??
+    /value="([^"]+)"[^>]*name="security_hash"/.exec(html)?.[1] ??
+    /security_hash['"]?\s*[:=]\s*['"]([0-9a-f]{16,})['"]/i.exec(html)?.[1];
+  if (!hash) throw new Error("Tamda CSV upload form: security_hash not found in the page");
+  return { action, securityHash: hash };
 }
 
 export function parseResultRows(html: string): Map<string, TamdaStockRow> {
