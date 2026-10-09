@@ -1,5 +1,6 @@
 import type { Prisma } from "@prisma/client";
 import { prisma } from "@/lib/prisma";
+import { INGREDIENT_LABELS, PRODUCT_TYPE_LABELS } from "@/lib/cosmetics-taxonomy";
 
 export interface TagFacet {
   slug: string;
@@ -10,6 +11,13 @@ export interface TagFacet {
 export interface CosmeticsFacets {
   skinTypes: TagFacet[];
   concerns: TagFacet[];
+  /** "Druh produktu" — Product.productType */
+  productTypes: TagFacet[];
+  /** "Složka" — Product.keyIngredients */
+  ingredients: TagFacet[];
+  /** Counts for the Vegan / Cruelty-free quick toggles (0 hides the toggle). */
+  vegan: number;
+  crueltyFree: number;
 }
 
 /**
@@ -54,8 +62,35 @@ export async function getCosmeticsFacets(
     }),
   );
 
+  const typeGroups = await prisma.product.groupBy({
+    by: ["productType"],
+    where: { visible: true, productType: { not: null }, AND: [baseWhere] },
+    _count: { _all: true },
+  });
+  const productTypes = Object.entries(PRODUCT_TYPE_LABELS)
+    .map(([slug, name]) => ({ slug, name, count: typeGroups.find((g) => g.productType === slug)?._count._all ?? 0 }))
+    .filter((f) => f.count > 0);
+
+  const ingredients: TagFacet[] = [];
+  for (const [slug, name] of Object.entries(INGREDIENT_LABELS)) {
+    const count = await prisma.product.count({
+      where: { visible: true, AND: [baseWhere, { keyIngredients: { has: slug } }] },
+    });
+    if (count > 0) ingredients.push({ slug, name, count });
+  }
+  ingredients.sort((a, b) => b.count - a.count);
+
+  const [vegan, crueltyFree] = await Promise.all([
+    prisma.product.count({ where: { visible: true, isVegan: true, AND: [baseWhere] } }),
+    prisma.product.count({ where: { visible: true, isCrueltyFree: true, AND: [baseWhere] } }),
+  ]);
+
   return {
     skinTypes: skinTypes.filter((f) => f.count > 0),
     concerns: concerns.filter((f) => f.count > 0),
+    productTypes,
+    ingredients,
+    vegan,
+    crueltyFree,
   };
 }

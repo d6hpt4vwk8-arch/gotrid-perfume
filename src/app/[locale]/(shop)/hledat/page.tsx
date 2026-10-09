@@ -109,6 +109,10 @@ export default async function SearchPage({
   filters.genderSlugs.forEach((g) => paginationQuery.append("gender", g));
   filters.concentrationSlugs.forEach((c) => paginationQuery.append("concentration", c));
   filters.occasionSlugs.forEach((o) => paginationQuery.append("occasion", o));
+  filters.kindSlugs.forEach((k) => paginationQuery.append("kind", k));
+  filters.ingredientSlugs.forEach((i) => paginationQuery.append("ingredient", i));
+  if (filters.veganOnly) paginationQuery.set("vegan", "1");
+  if (filters.crueltyFreeOnly) paginationQuery.set("cf", "1");
   filters.skinTypeSlugs.forEach((s) => paginationQuery.append("skinType", s));
   filters.concernSlugs.forEach((c) => paginationQuery.append("concern", c));
   if (filters.priceMin !== null) paginationQuery.set("priceMin", String(filters.priceMin));

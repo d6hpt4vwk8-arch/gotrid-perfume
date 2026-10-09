@@ -63,6 +63,8 @@ export function CategoryFilters({
   const selectedOccasions = searchParams.getAll("occasion");
   const selectedSkinTypes = searchParams.getAll("skinType");
   const selectedConcerns = searchParams.getAll("concern");
+  const selectedKinds = searchParams.getAll("kind");
+  const selectedIngredients = searchParams.getAll("ingredient");
   const [priceMin, setPriceMin] = useState(searchParams.get("priceMin") ?? "");
   const [priceMax, setPriceMax] = useState(searchParams.get("priceMax") ?? "");
   const [brandQuery, setBrandQuery] = useState("");
@@ -152,6 +154,14 @@ export function CategoryFilters({
         label: cosmetics.concerns.find((c) => c.slug === v)?.name ?? v,
       }),
     );
+    selectedKinds.forEach((v) =>
+      chips.push({ key: "kind", value: v, label: cosmetics.productTypes.find((k) => k.slug === v)?.name ?? v }),
+    );
+    selectedIngredients.forEach((v) =>
+      chips.push({ key: "ingredient", value: v, label: cosmetics.ingredients.find((i) => i.slug === v)?.name ?? v }),
+    );
+    if (searchParams.get("vegan") === "1") chips.push({ key: "vegan", value: "1", label: "Vegan" });
+    if (searchParams.get("cf") === "1") chips.push({ key: "cf", value: "1", label: "Cruelty-free" });
     if (searchParams.get("sale") === "1") chips.push({ key: "sale", value: "1", label: "Ve slevě" });
     return chips;
   }, [
@@ -162,6 +172,8 @@ export function CategoryFilters({
     selectedOccasions,
     selectedSkinTypes,
     selectedConcerns,
+    selectedKinds,
+    selectedIngredients,
     searchParams,
     brands,
     scentFamilies,
@@ -171,7 +183,7 @@ export function CategoryFilters({
 
   function removeChip(key: string, value: string) {
     updateParams((params) => {
-      if (key === "sale") {
+      if (key === "sale" || key === "vegan" || key === "cf") {
         params.delete(key);
         return;
       }
@@ -393,16 +405,16 @@ export function CategoryFilters({
         </FilterSection>
       )}
 
-      {cosmetics.skinTypes.length > 0 && (
-        <FilterSection title="Typ pleti">
+      {cosmetics.productTypes.length > 0 && (
+        <FilterSection title="Druh produktu">
           <ul className="flex flex-col gap-1.5">
-            {cosmetics.skinTypes.map((option) => (
+            {cosmetics.productTypes.map((option) => (
               <li key={option.slug}>
                 <label className="flex items-center gap-2 text-sm text-ink">
                   <input
                     type="checkbox"
-                    checked={selectedSkinTypes.includes(option.slug)}
-                    onChange={() => toggleMulti("skinType", selectedSkinTypes, option.slug)}
+                    checked={selectedKinds.includes(option.slug)}
+                    onChange={() => toggleMulti("kind", selectedKinds, option.slug)}
                     className="accent-accent"
                   />
                   {option.name}
@@ -431,6 +443,83 @@ export function CategoryFilters({
                 </label>
               </li>
             ))}
+          </ul>
+        </FilterSection>
+      )}
+
+      {cosmetics.skinTypes.length > 0 && (
+        <FilterSection title="Typ pleti">
+          <ul className="flex flex-col gap-1.5">
+            {cosmetics.skinTypes.map((option) => (
+              <li key={option.slug}>
+                <label className="flex items-center gap-2 text-sm text-ink">
+                  <input
+                    type="checkbox"
+                    checked={selectedSkinTypes.includes(option.slug)}
+                    onChange={() => toggleMulti("skinType", selectedSkinTypes, option.slug)}
+                    className="accent-accent"
+                  />
+                  {option.name}
+                  <span className="text-xs text-accent-2">({option.count})</span>
+                </label>
+              </li>
+            ))}
+          </ul>
+        </FilterSection>
+      )}
+
+      {cosmetics.ingredients.length > 0 && (
+        <FilterSection title="Složka">
+          <ul className="flex flex-col gap-1.5">
+            {cosmetics.ingredients.map((option) => (
+              <li key={option.slug}>
+                <label className="flex items-center gap-2 text-sm text-ink">
+                  <input
+                    type="checkbox"
+                    checked={selectedIngredients.includes(option.slug)}
+                    onChange={() => toggleMulti("ingredient", selectedIngredients, option.slug)}
+                    className="accent-accent"
+                  />
+                  {option.name}
+                  <span className="text-xs text-accent-2">({option.count})</span>
+                </label>
+              </li>
+            ))}
+          </ul>
+        </FilterSection>
+      )}
+
+      {(cosmetics.vegan > 0 || cosmetics.crueltyFree > 0) && (
+        <FilterSection title="Vlastnosti">
+          <ul className="flex flex-col gap-1.5">
+            {cosmetics.vegan > 0 && (
+              <li>
+                <label className="flex items-center gap-2 text-sm text-ink">
+                  <input
+                    type="checkbox"
+                    checked={searchParams.get("vegan") === "1"}
+                    onChange={() => toggleBoolean("vegan")}
+                    className="accent-accent"
+                  />
+                  Vegan
+                  <span className="text-xs text-accent-2">({cosmetics.vegan})</span>
+                </label>
+              </li>
+            )}
+            {cosmetics.crueltyFree > 0 && (
+              <li>
+                <label className="flex items-center gap-2 text-sm text-ink">
+                  <input
+                    type="checkbox"
+                    checked={searchParams.get("cf") === "1"}
+                    onChange={() => toggleBoolean("cf")}
+                    className="accent-accent"
+                  />
+                  Cruelty-free
+                  <span className="text-xs text-accent-2">({cosmetics.crueltyFree})</span>
+                </label>
+              </li>
+            )}
           </ul>
         </FilterSection>
       )}

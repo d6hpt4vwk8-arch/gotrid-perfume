@@ -156,6 +156,12 @@ model Product {
   concentration String?
   occasions     String[] @default([])
 
+  // Cosmetics filters (2026-10-10), set by scripts/backfill-cosmetics-filters.ts from the product name/description:
+  // `productType` = "Druh produktu" (cisteni | tonika | sera | kremy | oci | masky | slunce | peeling | vlasy | makeup | sady),
+  // `keyIngredients` = "Složka" tags (centella, propolis, niacinamid, …).
+  productType    String?
+  keyIngredients String[] @default([])
+
   // Set by the SP Venture sync (spventure-stock.ts) when a code's stock had
   // to be confirmed via the supplier's public site search rather than found
   // in their own product/avail feed — in practice this means the item isn't

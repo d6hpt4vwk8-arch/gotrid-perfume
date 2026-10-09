@@ -15,6 +15,10 @@ export interface CategoryFilterParams {
   gender?: string | string[];
   concentration?: string | string[];
   occasion?: string | string[];
+  kind?: string | string[];
+  ingredient?: string | string[];
+  vegan?: string;
+  cf?: string;
   skinType?: string | string[];
   concern?: string | string[];
   priceMin?: string;
@@ -30,6 +34,10 @@ export interface ParsedFilters {
   genderSlugs: string[];
   concentrationSlugs: string[];
   occasionSlugs: string[];
+  kindSlugs: string[];
+  ingredientSlugs: string[];
+  veganOnly: boolean;
+  crueltyFreeOnly: boolean;
   skinTypeSlugs: string[];
   concernSlugs: string[];
   priceMin: number | null;
@@ -59,6 +67,10 @@ export function parseFilterParams(params: CategoryFilterParams): ParsedFilters {
     genderSlugs: toArray(params.gender),
     concentrationSlugs: toArray(params.concentration).map((c) => LEGACY_CONCENTRATION[c] ?? c),
     occasionSlugs: toArray(params.occasion),
+    kindSlugs: toArray(params.kind),
+    ingredientSlugs: toArray(params.ingredient),
+    veganOnly: params.vegan === "1",
+    crueltyFreeOnly: params.cf === "1",
     skinTypeSlugs: toArray(params.skinType),
     concernSlugs: toArray(params.concern),
     priceMin: priceMin !== null && Number.isFinite(priceMin) ? priceMin : null,
@@ -134,6 +146,17 @@ export function buildProductWhere(
   if (filters.concentrationSlugs.length > 0) {
     and.push({ concentration: { in: filters.concentrationSlugs } });
   }
+
+  if (filters.kindSlugs.length > 0) {
+    and.push({ productType: { in: filters.kindSlugs } });
+  }
+
+  if (filters.ingredientSlugs.length > 0) {
+    and.push({ keyIngredients: { hasSome: filters.ingredientSlugs } });
+  }
+
+  if (filters.veganOnly) and.push({ isVegan: true });
+  if (filters.crueltyFreeOnly) and.push({ isCrueltyFree: true });
 
   if (filters.occasionSlugs.length > 0) {
     and.push({ occasions: { hasSome: filters.occasionSlugs } });
