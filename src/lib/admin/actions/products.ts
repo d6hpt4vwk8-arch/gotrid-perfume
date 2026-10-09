@@ -208,9 +208,15 @@ export async function updateOwnStock(id: string, ownStock: number) {
 
   const before = await prisma.product.findUniqueOrThrow({
     where: { id },
-    select: { ownStock: true, name: true },
+    select: { ownStock: true, stock: true, name: true },
   });
-  await prisma.product.update({ where: { id }, data: { ownStock: parsed.data } });
+  // Availability on the storefront is gated on `stock` (supplier-fed) alone,
+  // so own units must lift it too — otherwise a product the supplier has run
+  // out of would still read "Vyprodáno" with our shelf full of it.
+  await prisma.product.update({
+    where: { id },
+    data: { ownStock: parsed.data, ...(parsed.data > before.stock ? { stock: parsed.data } : {}) },
+  });
 
   await logAdminActivity({
     action: "product.own_stock_change",

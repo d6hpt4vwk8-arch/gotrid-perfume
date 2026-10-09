@@ -177,10 +177,14 @@ export async function syncSpVentureStock(dryRun = false): Promise<SpVentureSyncR
   for (const product of products) {
     const itemCode = product.code.slice(CODE_PREFIX.length);
     const feedEntry = feed.get(itemCode);
-    const feedValue = feedEntry?.stock ?? siteStock.get(itemCode);
+    const supplierValue = feedEntry?.stock ?? siteStock.get(itemCode);
     // Feed didn't list it and the site lookup was inconclusive — leave the
     // current number alone instead of guessing.
-    if (feedValue === undefined) continue;
+    if (supplierValue === undefined) continue;
+    // Goods we hold ourselves stay sellable whatever the supplier says (owner's
+    // rule, 2026-10-09): the storefront gates availability on `stock` alone,
+    // so the supplier number is never allowed to push it below our own units.
+    const feedValue = Math.max(supplierValue, product.ownStock);
 
     // Found in SP Venture's own feed = sitting in their main warehouse and
     // priced accurately right now; found only via the public site search =
@@ -197,8 +201,15 @@ export async function syncSpVentureStock(dryRun = false): Promise<SpVentureSyncR
     // of being sold out at SP Venture by the time we go buy it, so it's not
     // worth advertising. Hide at stock 1, restore automatically once it's
     // restocked above that (2026-09-04, per owner request).
+    // Own units are real in-hand stock, not a drop-ship gamble — never auto-hide those.
     const desiredVisible =
-      feedValue === 1 ? false : feedValue > 1 && product.stock <= 1 ? true : product.visible;
+      product.ownStock > 0
+        ? product.visible
+        : feedValue === 1
+          ? false
+          : feedValue > 1 && product.stock <= 1
+            ? true
+            : product.visible;
 
     // The feed's PRICE is the only place we ever learn SP Venture's current
     // wholesale price after initial import — this sync previously touched

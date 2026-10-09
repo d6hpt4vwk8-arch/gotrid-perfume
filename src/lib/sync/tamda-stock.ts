@@ -295,13 +295,17 @@ export async function syncTamdaStock(session: TamdaSession, opts: TamdaSyncOptio
       result.priceUp.push({ code: product.code, name: product.name, ourCost: Math.round(ourCostInclVat * 100) / 100, tamda: answer.price });
     }
 
-    if (answer.stock === product.stock) continue;
+    // Goods we hold ourselves stay sellable whatever Tamda says (owner's rule,
+    // 2026-10-09): the storefront gates availability on `stock` alone, so the
+    // supplier number is never allowed to push it below our own units.
+    const target = Math.max(answer.stock, product.ownStock);
+    if (target === product.stock) continue;
     const reason = answer.status === "notfound" ? "notfound" : answer.stock === 0 ? "zero" : "stock";
-    result.updated.push({ code: product.code, name: product.name, from: product.stock, to: answer.stock, reason });
+    result.updated.push({ code: product.code, name: product.name, from: product.stock, to: target, reason });
     if (opts.dryRun) continue;
 
-    const updated = await prisma.product.update({ where: { id: product.id }, data: { stock: answer.stock } });
-    if (product.stock <= 0 && answer.stock > 0) {
+    const updated = await prisma.product.update({ where: { id: product.id }, data: { stock: target } });
+    if (product.stock <= 0 && target > 0) {
       void notifyStockAlerts(updated).catch((err) => console.error(`[tamda-sync] stock-alert notify failed for ${product.code}`, err));
     }
   }
