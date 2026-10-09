@@ -1,5 +1,7 @@
 import Image from "next/image";
 import Link from "next/link";
+import { existsSync } from "node:fs";
+import path from "node:path";
 import { notFound } from "next/navigation";
 import { prisma } from "@/lib/prisma";
 import { findCategoryByFullSlug, getCategoryBreadcrumb } from "@/lib/categories.server";
@@ -24,7 +26,6 @@ import { ProductGridLoadMore } from "@/components/product-grid-load-more";
 import { attachColorSwatches } from "@/lib/color-swatches.server";
 import { CategoryFilters } from "@/components/category-filters";
 import { CategoryBanner } from "@/components/category-banner";
-import { CategoryQuickTiles } from "@/components/category-quick-tiles";
 import { WhatsappAdviceButton } from "@/components/whatsapp-advice-button";
 import { CATEGORY_CONTENT } from "@/lib/category-content";
 import { getCategoryBannerTiles } from "@/lib/category-banner.server";
@@ -108,10 +109,7 @@ export default async function CategoryPage({
   ]);
   const filters = parseFilterParams(rawParams);
   const baseWhere = { categories: { some: { categoryId: { in: categoryIds } } } };
-  const perfumeCategoryIds = await resolvePerfumeFilterCategoryIds(
-    filters.genderSlugs,
-    filters.concentrationSlugs,
-  );
+  const perfumeCategoryIds = await resolvePerfumeFilterCategoryIds(filters.genderSlugs);
   const where = buildProductWhere(baseWhere, filters, perfumeCategoryIds);
 
   const [rawProducts, total, brands, scentFacets, structureFacets, cosmeticsFacets, rawTopProducts, settings] =
@@ -156,12 +154,17 @@ export default async function CategoryPage({
 
   const totalPages = Math.ceil(total / PAGE_SIZE);
   const content = CATEGORY_CONTENT[fullSlug];
+  const heroImage =
+    content?.banner && !category.description && existsSync(path.join(process.cwd(), "public", content.banner.image))
+      ? content.banner
+      : null;
 
   const paginationQuery = new URLSearchParams();
   filters.brandSlugs.forEach((b) => paginationQuery.append("brand", b));
   filters.scentSlugs.forEach((s) => paginationQuery.append("scent", s));
   filters.genderSlugs.forEach((g) => paginationQuery.append("gender", g));
   filters.concentrationSlugs.forEach((c) => paginationQuery.append("concentration", c));
+  filters.occasionSlugs.forEach((o) => paginationQuery.append("occasion", o));
   filters.skinTypeSlugs.forEach((s) => paginationQuery.append("skinType", s));
   filters.concernSlugs.forEach((c) => paginationQuery.append("concern", c));
   if (filters.priceMin !== null) paginationQuery.set("priceMin", String(filters.priceMin));
@@ -186,7 +189,20 @@ export default async function CategoryPage({
         }))}
       />
 
-      {showBanner ? (
+      {heroImage ? (
+        <section className="relative isolate overflow-hidden rounded-sm bg-ink text-white">
+          <Image src={heroImage.image} alt={heroImage.alt} fill priority sizes="(min-width: 1152px) 1152px, 100vw" className="-z-10 object-cover object-right" />
+          <div className="absolute inset-0 -z-10 bg-gradient-to-r from-black/90 via-black/60 to-black/10 sm:via-black/45" />
+          <div className="flex min-h-56 max-w-2xl flex-col justify-center gap-3 px-6 py-10 sm:px-10 sm:py-12">
+            <h1 className="text-3xl font-bold sm:text-4xl">{category.name}</h1>
+            {content?.intro?.map((paragraph) => (
+              <p key={paragraph} className="text-sm leading-relaxed text-white/85">
+                {paragraph}
+              </p>
+            ))}
+          </div>
+        </section>
+      ) : showBanner ? (
         <CategoryBanner name={category.name} total={bannerTotal} tiles={bannerTiles} />
       ) : (
         <h1 className="text-2xl font-bold text-ink">{category.name}</h1>
@@ -206,7 +222,7 @@ export default async function CategoryPage({
         </section>
       )}
 
-      {!category.description && content?.intro && (
+      {!heroImage && !category.description && content?.intro && (
         <section className="flex flex-col gap-3 border-b border-line pb-6 text-sm leading-relaxed text-ink/80">
           {content.intro.map((paragraph) => (
             <p key={paragraph}>{paragraph}</p>
@@ -235,15 +251,6 @@ export default async function CategoryPage({
         >
           Nevíte, který parfém vybrat? Poradíme →
         </Link>
-      )}
-
-      {content?.quickTiles && (
-        <CategoryQuickTiles
-          basePath={`/kategorie/${fullSlug}`}
-          scentFamilies={scentFacets}
-          brands={brands}
-          structure={structureFacets}
-        />
       )}
 
       <div className="flex flex-col gap-6 sm:flex-row">
@@ -297,6 +304,14 @@ export default async function CategoryPage({
                   <span className="text-ink transition group-open:rotate-180">⌄</span>
                 </summary>
                 <p className="mt-2 max-w-3xl text-sm leading-relaxed text-ink/80">{item.a}</p>
+                {item.list && (
+                  <ul className="mt-2 max-w-3xl list-disc pl-5 text-sm leading-relaxed text-ink/80">
+                    {item.list.map((line) => (
+                      <li key={line}>{line}</li>
+                    ))}
+                  </ul>
+                )}
+                {item.note && <p className="mt-2 max-w-3xl text-sm leading-relaxed text-ink/80">{item.note}</p>}
                 {item.link && (
                   <Link href={item.link.href} className="mt-2 inline-block text-sm font-semibold text-ink underline">
                     {item.link.label}

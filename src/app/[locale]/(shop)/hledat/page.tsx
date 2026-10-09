@@ -41,10 +41,7 @@ export default async function SearchPage({
   }
 
   const filters = parseFilterParams(rawParams);
-  const perfumeCategoryIds = await resolvePerfumeFilterCategoryIds(
-    filters.genderSlugs,
-    filters.concentrationSlugs,
-  );
+  const perfumeCategoryIds = await resolvePerfumeFilterCategoryIds(filters.genderSlugs);
 
   // Three tiers, same fallback order as /api/search: exact name/EAN/brand
   // match, then the description, then fuzzy name matching (pg_trgm) for a
@@ -111,6 +108,7 @@ export default async function SearchPage({
   filters.scentSlugs.forEach((s) => paginationQuery.append("scent", s));
   filters.genderSlugs.forEach((g) => paginationQuery.append("gender", g));
   filters.concentrationSlugs.forEach((c) => paginationQuery.append("concentration", c));
+  filters.occasionSlugs.forEach((o) => paginationQuery.append("occasion", o));
   filters.skinTypeSlugs.forEach((s) => paginationQuery.append("skinType", s));
   filters.concernSlugs.forEach((c) => paginationQuery.append("concern", c));
   if (filters.priceMin !== null) paginationQuery.set("priceMin", String(filters.priceMin));

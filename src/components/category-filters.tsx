@@ -60,6 +60,7 @@ export function CategoryFilters({
   const selectedScents = searchParams.getAll("scent");
   const selectedGenders = searchParams.getAll("gender");
   const selectedConcentrations = searchParams.getAll("concentration");
+  const selectedOccasions = searchParams.getAll("occasion");
   const selectedSkinTypes = searchParams.getAll("skinType");
   const selectedConcerns = searchParams.getAll("concern");
   const [priceMin, setPriceMin] = useState(searchParams.get("priceMin") ?? "");
@@ -130,6 +131,13 @@ export function CategoryFilters({
         label: structure.concentrationOptions.find((c) => c.slug === v)?.name ?? v,
       }),
     );
+    selectedOccasions.forEach((v) =>
+      chips.push({
+        key: "occasion",
+        value: v,
+        label: structure.occasionOptions.find((o) => o.slug === v)?.name ?? v,
+      }),
+    );
     selectedSkinTypes.forEach((v) =>
       chips.push({
         key: "skinType",
@@ -151,6 +159,7 @@ export function CategoryFilters({
     selectedScents,
     selectedGenders,
     selectedConcentrations,
+    selectedOccasions,
     selectedSkinTypes,
     selectedConcerns,
     searchParams,
@@ -356,6 +365,27 @@ export function CategoryFilters({
                   />
                   {family.name}
                   <span className="text-xs text-accent-2">({family.count})</span>
+                </label>
+              </li>
+            ))}
+          </ul>
+        </FilterSection>
+      )}
+
+      {structure.occasionOptions.length > 0 && (
+        <FilterSection title="Příležitost">
+          <ul className="flex flex-col gap-1.5">
+            {structure.occasionOptions.map((option) => (
+              <li key={option.slug}>
+                <label className="flex items-center gap-2 text-sm text-ink">
+                  <input
+                    type="checkbox"
+                    checked={selectedOccasions.includes(option.slug)}
+                    onChange={() => toggleMulti("occasion", selectedOccasions, option.slug)}
+                    className="accent-accent"
+                  />
+                  {option.name}
+                  <span className="text-xs text-accent-2">({option.count})</span>
                 </label>
               </li>
             ))}

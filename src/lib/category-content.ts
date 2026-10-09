@@ -5,6 +5,10 @@
 export interface CategoryFaqItem {
   q: string;
   a: string;
+  /** Optional bullet list rendered under the answer text. */
+  list?: string[];
+  /** Optional closing line after the list. */
+  note?: string;
   /** Optional follow-up link rendered after the answer. */
   link?: { href: string; label: string };
 }
@@ -12,8 +16,8 @@ export interface CategoryFaqItem {
 export interface CategoryContent {
   /** Plain paragraphs shown above the grid when the category has no DB description. */
   intro?: string[];
-  /** Quick-filter tiles (scent family / brands / gender) built from the page's live facets. */
-  quickTiles?: boolean;
+  /** Hero banner (image under /public) behind the title + intro; ignored until the file exists. */
+  banner?: { image: string; alt: string };
   faqTitle?: string;
   faq?: CategoryFaqItem[];
   whatsappMessage?: string;
@@ -25,7 +29,7 @@ export const CATEGORY_CONTENT: Record<string, CategoryContent> = {
       "Arabské parfémy jsou vůně z Blízkého východu, které staví na oudu, ambře, pižmu, vanilce a koření. Bývají hřejivější, sladší a výraznější než klasické evropské vůně a mnohé z nich sluší ženám i mužům.",
       "U nás najdete Lattafa, Armaf, Al Haramain, Afnan a další známé domy. Filtrem „Pro koho“ si vyberete dámské, pánské nebo unisex vůně, filtrem „Charakter vůně“ třeba orientální, dřevitou nebo gurmánskou.",
     ],
-    quickTiles: true,
+    banner: { image: "/uploads/categories/arabske-parfemy.webp", alt: "Arabské parfémy – ozdobné flakony, oud a růže" },
     faqTitle: "Časté otázky k arabským parfémům",
     whatsappMessage: "Dobrý den, potřeboval/a bych poradit s výběrem arabského parfému.",
     faq: [
@@ -39,7 +43,14 @@ export const CATEGORY_CONTENT: Record<string, CategoryContent> = {
       },
       {
         q: "Jak dlouho arabský parfém vydrží?",
-        a: "Orientačně od několika hodin po celý den. Záleží na koncentraci, typu pokožky, počasí i způsobu aplikace. Extrakty a oleje bývají trvanlivější než toaletní vody. Nejlépe se vůně drží na hydratované pokožce a na pulzních bodech.",
+        a: "Orientačně podle typu (u každého konkrétního parfému se doba liší podle pokožky, počasí a složení):",
+        list: [
+          "Toaletní voda (EDT): přibližně 3–5 hodin",
+          "Parfémovaná voda (EDP): přibližně 5–8 hodin",
+          "Parfémový extrakt (extrait): přibližně 8–12 hodin i déle",
+          "Parfémový olej: přibližně 8–12 hodin, vůně ale zůstává blíž k pokožce",
+        ],
+        note: "Vůně se nejlépe drží na čisté, hydratované pokožce a na pulzních bodech (krk, zápěstí, záhyby loktů).",
       },
       {
         q: "Jak parfém aplikovat a uchovávat?",

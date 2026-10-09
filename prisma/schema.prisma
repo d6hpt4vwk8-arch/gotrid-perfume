@@ -148,6 +148,14 @@ model Product {
   isVegan       Boolean @default(false)
   isCrueltyFree Boolean @default(false)
 
+  // Perfume filters (2026-10-09). `concentration` is the exact type shown in the "Typ" filter
+  // (toaletni-voda | parfemovana-voda | parfemovy-extrakt | parfemovy-olej | kolinska-voda | parfem),
+  // parsed from the product name; `occasions` is a rule-based tag set derived from the scent
+  // families (see scripts/backfill-perfume-filters.ts) for the "Příležitost" filter. Both are
+  // recomputed by that script, nothing is typed by hand.
+  concentration String?
+  occasions     String[] @default([])
+
   // Set by the SP Venture sync (spventure-stock.ts) when a code's stock had
   // to be confirmed via the supplier's public site search rather than found
   // in their own product/avail feed — in practice this means the item isn't

@@ -1,5 +1,12 @@
 import type { Prisma } from "@prisma/client";
 
+// Old "Typ" URLs used category leaf slugs (kept working, see perfume-structure-facets.server.ts).
+const LEGACY_CONCENTRATION: Record<string, string> = {
+  "parfemovane-vody": "parfemovana-voda",
+  "toaletni-vody": "toaletni-voda",
+  "parfemovane-oleje": "parfemovy-olej",
+};
+
 export type SortOption = "newest" | "price-asc" | "price-desc" | "bestsellers";
 
 export interface CategoryFilterParams {
@@ -7,6 +14,7 @@ export interface CategoryFilterParams {
   scent?: string | string[];
   gender?: string | string[];
   concentration?: string | string[];
+  occasion?: string | string[];
   skinType?: string | string[];
   concern?: string | string[];
   priceMin?: string;
@@ -21,6 +29,7 @@ export interface ParsedFilters {
   scentSlugs: string[];
   genderSlugs: string[];
   concentrationSlugs: string[];
+  occasionSlugs: string[];
   skinTypeSlugs: string[];
   concernSlugs: string[];
   priceMin: number | null;
@@ -48,7 +57,8 @@ export function parseFilterParams(params: CategoryFilterParams): ParsedFilters {
     brandSlugs: toArray(params.brand),
     scentSlugs: toArray(params.scent),
     genderSlugs: toArray(params.gender),
-    concentrationSlugs: toArray(params.concentration),
+    concentrationSlugs: toArray(params.concentration).map((c) => LEGACY_CONCENTRATION[c] ?? c),
+    occasionSlugs: toArray(params.occasion),
     skinTypeSlugs: toArray(params.skinType),
     concernSlugs: toArray(params.concern),
     priceMin: priceMin !== null && Number.isFinite(priceMin) ? priceMin : null,
@@ -65,9 +75,9 @@ export function parseFilterParams(params: CategoryFilterParams): ParsedFilters {
  * selections. Kept generic over the scope so the same filter pipeline works
  * for both `/kategorie/[...slug]` and `/hledat`.
  *
- * `perfumeCategoryIds` is the resolved gender/concentration leaf-category
- * scope from `resolvePerfumeFilterCategoryIds` (null when neither filter is
- * active) — passed in rather than derived here since resolving it requires a
+ * `perfumeCategoryIds` is the resolved gender leaf-category
+ * scope from `resolvePerfumeFilterCategoryIds` (null when the filter is
+ * not active) — passed in rather than derived here since resolving it requires a
  * DB round trip.
  */
 /**
@@ -119,6 +129,14 @@ export function buildProductWhere(
 
   if (filters.concernSlugs.length > 0) {
     and.push({ concerns: { some: { concern: { slug: { in: filters.concernSlugs } } } } });
+  }
+
+  if (filters.concentrationSlugs.length > 0) {
+    and.push({ concentration: { in: filters.concentrationSlugs } });
+  }
+
+  if (filters.occasionSlugs.length > 0) {
+    and.push({ occasions: { hasSome: filters.occasionSlugs } });
   }
 
   if (perfumeCategoryIds) {

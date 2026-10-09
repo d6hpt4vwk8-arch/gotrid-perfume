@@ -11,10 +11,36 @@ export interface StructureFacetOption {
 export interface PerfumeStructureFacets {
   genderOptions: StructureFacetOption[];
   concentrationOptions: StructureFacetOption[];
+  occasionOptions: StructureFacetOption[];
 }
 
+/** Perfume type shown in the "Typ" filter (Product.concentration), ordered light → concentrated. */
+export const CONCENTRATION_LABELS: Record<string, string> = {
+  "toaletni-voda": "Toaletní voda",
+  "parfemovana-voda": "Parfémovaná voda",
+  "parfemovy-extrakt": "Parfémový extrakt",
+  "parfemovy-olej": "Parfémový olej",
+  "kolinska-voda": "Kolínská voda",
+  parfem: "Parfém",
+};
+
+/** Old "Typ" URLs used category leaf slugs — keep them working. */
+export const LEGACY_CONCENTRATION_SLUGS: Record<string, string> = {
+  "parfemovane-vody": "parfemovana-voda",
+  "toaletni-vody": "toaletni-voda",
+  "parfemovane-oleje": "parfemovy-olej",
+};
+
+/** "Příležitost" (Product.occasions, rule-based from scent families — see scripts/backfill-perfume-filters.ts). */
+export const OCCASION_LABELS: Record<string, string> = {
+  "kazdy-den": "Na každý den",
+  "do-prace": "Do práce",
+  vecer: "Na večer a rande",
+  leto: "Na léto",
+  zima: "Na zimu",
+};
+
 const GENDER_SLUGS = new Set(["damske-parfemy", "panske-parfemy", "unisex-parfemy"]);
-const CONCENTRATION_SLUGS = new Set(["parfemovane-vody", "toaletni-vody", "parfemovane-oleje"]);
 
 /**
  * "Pro koho" (gender) and "Typ" (concentration) facets, derived from the
@@ -48,70 +74,39 @@ export async function getPerfumeStructureFacets(
     if (count > 0) genderOptions.push({ slug: cat.slug, name: cat.name, count });
   }
 
-  const concentrationCats = await prisma.category.findMany({
-    where: { slug: { in: Array.from(CONCENTRATION_SLUGS) } },
-    select: { id: true, slug: true, name: true },
+  const grouped = await prisma.product.groupBy({
+    by: ["concentration"],
+    where: { visible: true, concentration: { not: null }, AND: [baseWhere] },
+    _count: { _all: true },
   });
-  const bySlug = new Map<string, { name: string; ids: string[] }>();
-  for (const cat of concentrationCats) {
-    const entry = bySlug.get(cat.slug) ?? { name: cat.name, ids: [] };
-    entry.ids.push(cat.id);
-    bySlug.set(cat.slug, entry);
-  }
+  const concentrationOptions: StructureFacetOption[] = Object.entries(CONCENTRATION_LABELS)
+    .map(([slug, name]) => ({ slug, name, count: grouped.find((g) => g.concentration === slug)?._count._all ?? 0 }))
+    .filter((o) => o.count > 0);
 
-  const concentrationOptions: StructureFacetOption[] = [];
-  for (const [slug, { name, ids }] of bySlug) {
+  const occasionOptions: StructureFacetOption[] = [];
+  for (const [slug, name] of Object.entries(OCCASION_LABELS)) {
     const count = await prisma.product.count({
-      where: {
-        visible: true,
-        AND: [baseWhere, { categories: { some: { categoryId: { in: ids } } } }],
-      },
+      where: { visible: true, AND: [baseWhere, { occasions: { has: slug } }] },
     });
-    if (count > 0) concentrationOptions.push({ slug, name, count });
+    if (count > 0) occasionOptions.push({ slug, name, count });
   }
 
-  return { genderOptions, concentrationOptions };
+  return { genderOptions, concentrationOptions, occasionOptions };
 }
 
 /**
- * Resolves selected "Pro koho"/"Typ" filter slugs to the concrete leaf
- * category ids they represent, for use as an additional scope in
- * buildProductWhere. Gender slugs are parent categories (a product is tagged
- * on a leaf beneath them, e.g. "parfemovane-vody" under "damske-parfemy"), so
- * they're expanded to their full descendant set; concentration slugs are
- * already leaf-level but appear once per gender branch, so they resolve to
- * several ids. Selecting both intersects the two sets (OR within a facet,
- * AND across facets). Returns null when neither filter is active.
+ * Resolves selected "Pro koho" (gender) filter slugs to the concrete leaf category ids they represent,
+ * for use as an additional scope in buildProductWhere. Gender slugs are parent categories (a product is
+ * tagged on a leaf beneath them, e.g. "parfemovane-vody" under "damske-parfemy"), so they are expanded to
+ * their full descendant set. Returns null when the filter is not active. ("Typ" no longer goes through
+ * categories — it reads Product.concentration directly.)
  */
-export async function resolvePerfumeFilterCategoryIds(
-  genderSlugs: string[],
-  concentrationSlugs: string[],
-): Promise<string[] | null> {
-  if (genderSlugs.length === 0 && concentrationSlugs.length === 0) return null;
-
-  let genderIds: Set<string> | null = null;
-  if (genderSlugs.length > 0) {
-    const genderCats = await prisma.category.findMany({
-      where: { slug: { in: genderSlugs } },
-      select: { id: true },
-    });
-    const descendantLists = await Promise.all(
-      genderCats.map((c) => getDescendantCategoryIds(c.id)),
-    );
-    genderIds = new Set(descendantLists.flat());
-  }
-
-  let concentrationIds: Set<string> | null = null;
-  if (concentrationSlugs.length > 0) {
-    const concentrationCats = await prisma.category.findMany({
-      where: { slug: { in: concentrationSlugs } },
-      select: { id: true },
-    });
-    concentrationIds = new Set(concentrationCats.map((c) => c.id));
-  }
-
-  if (genderIds && concentrationIds) {
-    return Array.from(genderIds).filter((id) => concentrationIds!.has(id));
-  }
-  return Array.from(genderIds ?? concentrationIds ?? []);
+export async function resolvePerfumeFilterCategoryIds(genderSlugs: string[]): Promise<string[] | null> {
+  if (genderSlugs.length === 0) return null;
+  const genderCats = await prisma.category.findMany({
+    where: { slug: { in: genderSlugs } },
+    select: { id: true },
+  });
+  const descendantLists = await Promise.all(genderCats.map((c) => getDescendantCategoryIds(c.id)));
+  return Array.from(new Set(descendantLists.flat()));
 }

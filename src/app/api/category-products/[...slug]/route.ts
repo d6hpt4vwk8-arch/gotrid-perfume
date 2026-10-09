@@ -35,6 +35,7 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ slug
     scent: sp.getAll("scent"),
     gender: sp.getAll("gender"),
     concentration: sp.getAll("concentration"),
+    occasion: sp.getAll("occasion"),
     skinType: sp.getAll("skinType"),
     concern: sp.getAll("concern"),
     priceMin: sp.get("priceMin") ?? undefined,
@@ -44,10 +45,7 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ slug
     page: sp.get("page") ?? undefined,
   });
   const categoryIds = await getDescendantCategoryIds(category.id);
-  const perfumeCategoryIds = await resolvePerfumeFilterCategoryIds(
-    filters.genderSlugs,
-    filters.concentrationSlugs,
-  );
+  const perfumeCategoryIds = await resolvePerfumeFilterCategoryIds(filters.genderSlugs);
   const baseWhere = { categories: { some: { categoryId: { in: categoryIds } } } };
   const where = buildProductWhere(baseWhere, filters, perfumeCategoryIds);
 
