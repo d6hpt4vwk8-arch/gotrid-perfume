@@ -126,6 +126,16 @@ export async function loginTamda(email: string, password: string): Promise<Tamda
   });
   if (isLoggedIn(html)) return session;
 
+  // The redirect after a successful login can land on a full-page-cached
+  // (x-fpc: HIT) guest copy of /login.html, so that page proves nothing —
+  // judge by a page that only exists for logged-in customers.
+  try {
+    const probe = await request(session, `${BASE}/index.php?dispatch=sb_order_from_excel.upload`);
+    if (probe.html.includes('name="csv_file"')) return session;
+  } catch {
+    // not logged in -> the failure handling below explains why
+  }
+
   // Why it failed: after a rejected login Tamda redirects to /login.html, a
   // full-page-cached copy (x-fpc: HIT) that never carries the error box, so
   // the message has to be read off the next UNcached page. /forgot-password.html
