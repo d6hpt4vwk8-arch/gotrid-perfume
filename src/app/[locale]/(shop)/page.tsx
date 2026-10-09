@@ -12,6 +12,7 @@ import type { Metadata } from "next";
 import { jsonLdScript } from "@/lib/json-ld";
 import { absoluteUrl } from "@/lib/seo";
 import { CONTACT, currentSeller } from "@/lib/business-identity";
+import { BRAND_PROFILE_URLS } from "@/components/social-links";
 
 export const metadata: Metadata = {
   alternates: { canonical: "/" },
@@ -109,6 +110,7 @@ export default async function HomePage() {
               logo: absoluteUrl("/logo.svg"),
               email: CONTACT.email,
               telephone: CONTACT.phone,
+              sameAs: BRAND_PROFILE_URLS,
               identifier: { "@type": "PropertyValue", propertyID: "IČO", value: seller.ico },
               address: {
                 "@type": "PostalAddress",

@@ -70,7 +70,9 @@ export async function generateMetadata({
     title: `${category.name} – originální a skladem | Gotrid Perfume`,
     description,
     alternates: { canonical: !isFiltered && pageNumber > 1 ? `${basePath}?page=${pageNumber}` : basePath },
-    ...(isFiltered ? { robots: { index: false, follow: true } } : {}),
+    // Filtered views and empty categories (e.g. a hidden branch whose products were
+    // all switched off) stay out of the index.
+    ...(isFiltered || productCount === 0 ? { robots: { index: false, follow: true } } : {}),
   };
 }
 
@@ -87,6 +89,15 @@ export default async function CategoryPage({
 
   const category = await findCategoryByFullSlug(fullSlug);
   if (!category) notFound();
+  if (category.hidden) {
+    // A hidden category with nothing live in it (e.g. Niche after its products were
+    // switched off) is a dead end — 404 it instead of serving an empty listing.
+    const liveIds = await getDescendantCategoryIds(category.id);
+    const liveCount = await prisma.product.count({
+      where: { visible: true, stock: { gt: 0 }, categories: { some: { categoryId: { in: liveIds } } } },
+    });
+    if (liveCount === 0) notFound();
+  }
 
   const [categoryIds, categoryBreadcrumb] = await Promise.all([
     getDescendantCategoryIds(category.id),

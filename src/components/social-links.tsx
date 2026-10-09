@@ -1,3 +1,10 @@
+// Brand profiles for Organization JSON-LD `sameAs` (the personal LinkedIn link below is deliberately left out).
+export const BRAND_PROFILE_URLS = [
+  "https://www.instagram.com/gotrid_perfume/",
+  "https://www.facebook.com/Gotrid.perfume/",
+  "https://www.tiktok.com/@gotrid_perfume",
+];
+
 const LINKS = [
   {
     href: "https://www.instagram.com/gotrid_perfume/",

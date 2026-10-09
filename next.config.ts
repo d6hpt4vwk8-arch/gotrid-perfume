@@ -53,11 +53,24 @@ const nextConfig: NextConfig = {
     // TZ §8.1: preserve old Shoptet URLs where possible — product slugs are
     // reused as-is (see scripts/import-real-catalog.ts), so the only gap is
     // the old flat "/slug/" vs the new "/produkt/slug" path.
-    return productRedirects.map((r) => ({
+    const legacyProducts = productRedirects.map((r) => ({
       source: r.source,
       destination: r.destination,
       permanent: true,
     }));
+    // Category pages used to live at "/<fullSlug>" (e.g. /kosmetika/telo,
+    // /aroma-difuzery, /nisove-parfemy) before the "/kategorie/" prefix — Google
+    // still has those URLs indexed and they 404'd. Only the top-level roots are
+    // matched, so a product slug can never be swallowed by this rule.
+    const legacyCategories = [
+      {
+        source:
+          "/:root(parfemy|kosmetika|zuby|aroma-difuzery|vonne-svicky|vune-do-auta|domacnost|pece-o-zdravi|vyprodej|nisove-parfemy)/:path*",
+        destination: "/kategorie/:root/:path*",
+        permanent: true,
+      },
+    ];
+    return [...legacyProducts, ...legacyCategories];
   },
 };
 
