@@ -192,8 +192,8 @@ export default async function CategoryPage({
       {heroImage ? (
         <section className="relative isolate overflow-hidden rounded-sm bg-ink text-white">
           <Image src={heroImage.image} alt={heroImage.alt} fill priority sizes="(min-width: 1152px) 1152px, 100vw" className="-z-10 object-cover object-right" />
-          <div className="absolute inset-0 -z-10 bg-gradient-to-r from-black/90 via-black/60 to-black/10 sm:via-black/45" />
-          <div className="flex min-h-56 max-w-2xl flex-col justify-center gap-3 px-6 py-10 sm:px-10 sm:py-12">
+          <div className="absolute inset-0 -z-10 bg-gradient-to-b from-black/85 via-black/70 to-black/50 sm:bg-gradient-to-r sm:from-black/90 sm:via-black/55 sm:to-black/0" />
+          <div className="flex min-h-56 flex-col justify-center gap-3 px-6 py-10 sm:max-w-[54%] sm:px-10 sm:py-12 lg:max-w-xl">
             <h1 className="text-3xl font-bold sm:text-4xl">{category.name}</h1>
             {content?.intro?.map((paragraph) => (
               <p key={paragraph} className="text-sm leading-relaxed text-white/85">
