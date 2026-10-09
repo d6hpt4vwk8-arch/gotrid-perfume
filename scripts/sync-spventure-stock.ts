@@ -6,10 +6,11 @@
 import { syncSpVentureStock } from "../src/lib/sync/spventure-stock";
 
 const DRY_RUN = process.argv.includes("--dry-run");
+const MODE = process.argv.includes("--hourly") ? "hourly" : "full";
 
 async function main() {
   console.log(`Fetching SP Venture feed and comparing against our catalog${DRY_RUN ? " (dry run)" : ""}...`);
-  const result = await syncSpVentureStock(DRY_RUN);
+  const result = await syncSpVentureStock(DRY_RUN, MODE);
 
   console.log(`\nChecked ${result.checked} SP Venture-sourced products.`);
 

@@ -54,6 +54,7 @@ async function main() {
   console.log(`\nChecked ${result.checked}, unanswered ${result.unanswered}.`);
   if (result.aborted) {
     console.log(`ABORTED: ${result.aborted}`);
+    process.exitCode = 1; // make the scheduled GitHub job fail (and e-mail the owner)
     return;
   }
 

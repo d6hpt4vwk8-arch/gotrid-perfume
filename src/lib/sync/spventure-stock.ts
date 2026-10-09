@@ -150,7 +150,18 @@ export interface SpVentureSyncResult {
   priceRaised: { code: string; name: string; from: number; to: number; cost: number }[];
 }
 
-export async function syncSpVentureStock(dryRun = false): Promise<SpVentureSyncResult> {
+/**
+ * "full" (daily, 06:00): every feed-missing code is confirmed on the site.
+ * "hourly" (GitHub Actions, see .github/workflows): the feed refresh is the
+ * whole point — only codes that were in the feed at the previous run (stock > 0
+ * and not flagged slowerDelivery, which the sync sets for feed-missing codes)
+ * and have just dropped out get a site lookup; the ~1/3 of products that live
+ * outside the feed anyway are left for the daily pass instead of being re-looked-up
+ * 24 times a day.
+ */
+export type SpVentureSyncMode = "full" | "hourly";
+
+export async function syncSpVentureStock(dryRun = false, mode: SpVentureSyncMode = "full"): Promise<SpVentureSyncResult> {
   const res = await fetch(FEED_URL);
   if (!res.ok) throw new Error(`SP Venture feed fetch failed: ${res.status}`);
   const xml = await res.text();
@@ -163,6 +174,7 @@ export async function syncSpVentureStock(dryRun = false): Promise<SpVentureSyncR
   // Anything the feed omits gets confirmed against the site before we touch
   // it (see the header note) — the feed's silence is not evidence of zero.
   const missingCodes = products
+    .filter((p) => mode === "full" || (!p.slowerDelivery && p.stock > 0))
     .map((p) => p.code.slice(CODE_PREFIX.length))
     .filter((code) => !feed.has(code));
   const siteStock = await lookupMissingCodes(missingCodes);

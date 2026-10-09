@@ -1,0 +1,28 @@
+# Hourly SP Venture stock refresh. Vercel Hobby crons only run once a day (the
+# 06:00 full pass in vercel.json stays), so GitHub Actions calls the same
+# protected endpoint every hour in "hourly" mode: feed refresh plus a site
+# lookup only for products that just dropped out of the feed.
+#
+# Needs one repository secret: CRON_SECRET (same value as the Vercel env var).
+name: SP Venture stock (hourly)
+
+on:
+  schedule:
+    - cron: "17 * * * *"
+  workflow_dispatch:
+
+jobs:
+  sync:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - name: Call the hourly sync endpoint
+        env:
+          CRON_SECRET: ${{ secrets.CRON_SECRET }}
+        run: |
+          set -euo pipefail
+          test -n "$CRON_SECRET" || { echo "CRON_SECRET secret is not set"; exit 1; }
+          curl --fail --silent --show-error --max-time 330 \
+            -H "Authorization: Bearer $CRON_SECRET" \
+            "https://www.gotridperfume.cz/api/cron/sync-spventure-stock?mode=hourly"
+          echo

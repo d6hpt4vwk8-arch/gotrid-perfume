@@ -19,6 +19,14 @@ export async function GET(req: NextRequest) {
     return NextResponse.json({ error: "Neautorizováno." }, { status: 401 });
   }
 
-  const result = await syncSpVentureStock();
-  return NextResponse.json(result);
+  // ?mode=hourly is what the GitHub Actions hourly job sends (Vercel Hobby
+  // crons are daily-only); the 06:00 Vercel cron stays the full pass.
+  const mode = req.nextUrl.searchParams.get("mode") === "hourly" ? "hourly" : "full";
+  const result = await syncSpVentureStock(false, mode);
+  // The hourly caller only needs the counts, not hundreds of rows.
+  return NextResponse.json(
+    mode === "hourly"
+      ? { mode, checked: result.checked, updated: result.updated.length, priceRaised: result.priceRaised.length, unresolved: result.unresolved }
+      : result,
+  );
 }
