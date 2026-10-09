@@ -7,6 +7,8 @@
 // measured corner colour to land on a pure white background like the rest of the
 // catalog (the packaging colours shift by less than 3 %).
 //
+// A fix may carry a `crop` (applied after the background is measured on the full image).
+//
 // Usage: npx tsx scripts/upgrade-gvs-images-hq2.ts --dry-run | (no flag = apply)
 import { randomBytes } from "node:crypto";
 import { mkdir } from "node:fs/promises";
@@ -15,9 +17,11 @@ import sharp from "sharp";
 import { prisma } from "../src/lib/prisma";
 
 const DRY_RUN = process.argv.includes("--dry-run");
+const FORCE = process.argv.includes("--force");
+const ONLY = process.argv.find((a) => a.startsWith("--only="))?.slice(7).split(",");
 const MIN_LONG_SIDE = 1000;
 
-const FIXES: { code: string; imageUrl: string; note: string }[] = [
+const FIXES: { code: string; imageUrl: string; crop?: { left: number; top: number; width: number; height: number }; note: string }[] = [
   { code: "GVS-251981", imageUrl: "https://cdn.shopify.com/s/files/1/0271/8603/6809/files/Dr._Althea_Marine_Anti-Blemish_Mask.png?v=1755333881", note: "kosmosbeauty.com (K-beauty retailer, Shopify): Dr. Althea Marine Anti-Blemish Sheet Mask" },
   { code: "GVS-253473", imageUrl: "https://cdn.shopify.com/s/files/1/0271/8603/6809/files/Dr._Althea_Skin_Relief_Essence_30ml.png?v=1755340983", note: "kosmosbeauty.com (K-beauty retailer, Shopify): Dr. Althea Skin Relief Facial Essence 30ml" },
   { code: "GVS-253480", imageUrl: "https://cdn.shopify.com/s/files/1/0271/8603/6809/files/Dr._Althea_Natural_Radiance_Antioxidant_Essence_30ml.png?v=1755341107", note: "kosmosbeauty.com (K-beauty retailer, Shopify): Dr. Althea Natural Radiance Facial Essence 30ml" },
@@ -33,6 +37,13 @@ const FIXES: { code: string; imageUrl: string; note: string }[] = [
   { code: "GVS-12081", imageUrl: "https://cdn.shopify.com/s/files/1/0271/8603/6809/files/CP-1_Esthetic_House_Bright_Complex_Intense_Nourishing_Shampoo_500ml.png?v=1768562703", note: "kosmosbeauty.com (K-beauty retailer, Shopify): CP-1 Esthetic House Bright Complex Intense Nourishing Shampoo 500ml" },
   { code: "GVS-12098", imageUrl: "https://cdn.shopify.com/s/files/1/0271/8603/6809/files/CP-1_Esthetic_House_Bright_Complex_Intense_Nourishing_Conditioner_500ml.png?v=1768560146", note: "kosmosbeauty.com (K-beauty retailer, Shopify): CP-1 Esthetic House Bright Complex Intense Nourishing Conditioner 500ml" },
   { code: "GVS-12111", imageUrl: "https://cdn.shopify.com/s/files/1/0271/8603/6809/files/CP-1_Esthetic_House_Bright_Complex_Intense_Nourishing_Conditioner_100ml.png?v=1768561026", note: "kosmosbeauty.com (K-beauty retailer, Shopify): CP-1 Esthetic House Bright Complex Intense Nourishing Conditioner 100ml" },
+  // --- third batch: Free Moment (FREEMOMENT) products, from Shopify retailers. The two shampoos only exist
+  // as one two-variant image (2048 px, itself an upscale of ~1000 px), so each flavour is cropped out of it.
+  { code: "GVS-254968", imageUrl: "https://cdn.shopify.com/s/files/1/1323/4713/files/Free-Moment-Refresh-Moment-Perfume-Treatment-01-JEJU-CAMELLIA-Nudie-Glow-Australia.jpg?v=1749618136", crop: undefined, note: "nudieglow.com: Refresh Moment Perfume Treatment 01 Jeju Camellia (1024)" },
+  { code: "GVS-254975", imageUrl: "https://cdn.shopify.com/s/files/1/1323/4713/files/Free-Moment-Refresh-Moment-Perfume-Treatment-_02-FIG-FOG-Nudie-Glow-Australia.jpg?v=1749618371", crop: undefined, note: "nudieglow.com: Refresh Moment Perfume Treatment 02 Fig Fog (1024)" },
+  { code: "GVS-254944", imageUrl: "https://cdn.shopify.com/s/files/1/0031/7610/4006/files/Free_Moment_Refresh_Moment_Perfume_Shampoo.png?v=1786987157", crop: { left: 36, top: 740, width: 1020, height: 982 }, note: "olivekollection.com: Refresh Moment Perfume Shampoo, 01 Jeju Camellia half of the 2048 two-variant shot" },
+  { code: "GVS-254951", imageUrl: "https://cdn.shopify.com/s/files/1/0031/7610/4006/files/Free_Moment_Refresh_Moment_Perfume_Shampoo.png?v=1786987157", crop: { left: 1008, top: 740, width: 1020, height: 982 }, note: "olivekollection.com: Refresh Moment Perfume Shampoo, 02 Fig Fog half of the 2048 two-variant shot" },
+  { code: "GVS-254494", imageUrl: "https://cdn.shopify.com/s/files/1/0806/6102/1007/files/FREEMOMENTGreenCalmingSerumMist_100ml.jpg?v=1751974078", crop: undefined, note: "saranghae.ch: Free Moment Green Calming Serum Mist 100ml (1080)" },
 ];
 
 /** Median colour of the four 30x30 corners = the photo's flat background. */
@@ -55,6 +66,7 @@ async function cornerBackground(buf: Buffer): Promise<[number, number, number]> 
 async function main() {
   let applied = 0;
   for (const fix of FIXES) {
+    if (ONLY && !ONLY.includes(fix.code)) continue;
     const product = await prisma.product.findUnique({ where: { code: fix.code }, include: { images: true } });
     if (!product) {
       console.log(`  [skip] product not found: ${fix.code}`);
@@ -64,6 +76,13 @@ async function main() {
       console.log(`  ${fix.code} <- ${fix.note}`);
       continue;
     }
+    // Idempotent re-runs: leave products whose current photo is already high-res.
+    const currentUrl = product.images[0]?.url;
+    const currentSide = currentUrl ? (await sharp(path.join(process.cwd(), "public", currentUrl)).metadata().catch(() => null))?.width ?? 0 : 0;
+    if (currentSide >= MIN_LONG_SIDE && !FORCE) {
+      console.log(`  [skip] ${fix.code}: already ${currentSide}px`);
+      continue;
+    }
     const res = await fetch(fix.imageUrl, { signal: AbortSignal.timeout(30_000) });
     if (!res.ok) {
       console.log(`  [error] ${fix.code}: HTTP ${res.status}`);
@@ -71,7 +90,7 @@ async function main() {
     }
     const buf = Buffer.from(await res.arrayBuffer());
     const meta = await sharp(buf).metadata();
-    const side = Math.max(meta.width ?? 0, meta.height ?? 0);
+    const side = fix.crop ? Math.max(fix.crop.width, fix.crop.height) : Math.max(meta.width ?? 0, meta.height ?? 0);
     if (side < MIN_LONG_SIDE) {
       console.log(`  [kept old] ${fix.code}: source only ${side}px`);
       continue;
@@ -79,6 +98,7 @@ async function main() {
     const [r, g, b] = await cornerBackground(buf);
     const out = await sharp(buf)
       .removeAlpha()
+      .extract(fix.crop ?? { left: 0, top: 0, width: meta.width ?? 0, height: meta.height ?? 0 })
       .linear([255 / Math.max(r, 1), 255 / Math.max(g, 1), 255 / Math.max(b, 1)], [0, 0, 0])
       .jpeg({ quality: 95, chromaSubsampling: "4:4:4" })
       .toBuffer();
