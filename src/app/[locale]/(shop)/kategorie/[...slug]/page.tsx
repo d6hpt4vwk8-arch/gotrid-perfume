@@ -24,6 +24,9 @@ import { ProductGridLoadMore } from "@/components/product-grid-load-more";
 import { attachColorSwatches } from "@/lib/color-swatches.server";
 import { CategoryFilters } from "@/components/category-filters";
 import { CategoryBanner } from "@/components/category-banner";
+import { CategoryQuickTiles } from "@/components/category-quick-tiles";
+import { WhatsappAdviceButton } from "@/components/whatsapp-advice-button";
+import { CATEGORY_CONTENT } from "@/lib/category-content";
 import { getCategoryBannerTiles } from "@/lib/category-banner.server";
 import { Pagination } from "@/components/pagination";
 import { getSettings } from "@/lib/settings.server";
@@ -152,6 +155,7 @@ export default async function CategoryPage({
   ]);
 
   const totalPages = Math.ceil(total / PAGE_SIZE);
+  const content = CATEGORY_CONTENT[fullSlug];
 
   const paginationQuery = new URLSearchParams();
   filters.brandSlugs.forEach((b) => paginationQuery.append("brand", b));
@@ -202,6 +206,14 @@ export default async function CategoryPage({
         </section>
       )}
 
+      {!category.description && content?.intro && (
+        <section className="flex flex-col gap-3 border-b border-line pb-6 text-sm leading-relaxed text-ink/80">
+          {content.intro.map((paragraph) => (
+            <p key={paragraph}>{paragraph}</p>
+          ))}
+        </section>
+      )}
+
       {category.children.length > 0 && !showBanner && (
         <div className="flex flex-wrap gap-2">
           {category.children.map((child) => (
@@ -223,6 +235,15 @@ export default async function CategoryPage({
         >
           Nevíte, který parfém vybrat? Poradíme →
         </Link>
+      )}
+
+      {content?.quickTiles && (
+        <CategoryQuickTiles
+          basePath={`/kategorie/${fullSlug}`}
+          scentFamilies={scentFacets}
+          brands={brands}
+          structure={structureFacets}
+        />
       )}
 
       <div className="flex flex-col gap-6 sm:flex-row">
@@ -264,6 +285,34 @@ export default async function CategoryPage({
           />
         </div>
       </div>
+
+      {content?.faq && content.faq.length > 0 && (
+        <section className="mt-6 flex flex-col gap-4 border-t border-line pt-8">
+          <h2 className="text-lg font-bold text-ink">{content.faqTitle ?? "Časté otázky"}</h2>
+          <div className="flex flex-col divide-y divide-line border-y border-line">
+            {content.faq.map((item) => (
+              <details key={item.q} className="group py-3">
+                <summary className="flex cursor-pointer list-none items-center justify-between gap-4 text-sm font-semibold text-ink">
+                  {item.q}
+                  <span className="text-ink transition group-open:rotate-180">⌄</span>
+                </summary>
+                <p className="mt-2 max-w-3xl text-sm leading-relaxed text-ink/80">{item.a}</p>
+                {item.link && (
+                  <Link href={item.link.href} className="mt-2 inline-block text-sm font-semibold text-ink underline">
+                    {item.link.label}
+                  </Link>
+                )}
+              </details>
+            ))}
+          </div>
+          {content.whatsappMessage && (
+            <div className="flex flex-col gap-2">
+              <p className="text-sm text-ink/80">Nevybrali jste? Poradíme osobně.</p>
+              <WhatsappAdviceButton message={content.whatsappMessage} label="Poradit na WhatsAppu" />
+            </div>
+          )}
+        </section>
+      )}
     </main>
   );
 }
