@@ -153,7 +153,7 @@ export default async function CategoryPage({
 
   const totalPages = Math.ceil(total / PAGE_SIZE);
   const content = CATEGORY_CONTENT[fullSlug];
-  const showHero = content?.hero === "arabic" && !category.description && !!content.intro;
+  const showHero = !!content?.hero && !category.description && !!content.intro;
 
   const paginationQuery = new URLSearchParams();
   filters.brandSlugs.forEach((b) => paginationQuery.append("brand", b));
@@ -189,8 +189,8 @@ export default async function CategoryPage({
         <CategoryHero
           title={category.name}
           paragraphs={content!.intro!}
-          image="/uploads/categories/arabske-parfemy.webp"
-          alt="Arabské parfémy: Lattafa, Afnan, French Avenue na podiích s lucernami a oudem"
+          image={content!.hero!.image}
+          alt={content!.hero!.alt}
         />
       ) : showBanner ? (
         <CategoryBanner name={category.name} total={bannerTotal} tiles={bannerTiles} />
