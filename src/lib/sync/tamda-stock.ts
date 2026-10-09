@@ -32,6 +32,15 @@ const BATCH_SIZE = 100;
 const PAUSE_BETWEEN_BATCHES_MS = 1000;
 const USER_AGENT = "GotridPerfume-stock-check/1.0 (+https://www.gotridperfume.cz)";
 
+// Same markup the Tamda import uses (scripts/import-tamda.ts: Tamda price incl.
+// VAT × 1.3). Doubles as the sell-price FLOOR, exactly like the SP Venture
+// sync: when Tamda's price has risen since import (79 of 400+ checked
+// products were >5 % above our recorded cost on 2026-10-09) the sell price is
+// lifted back to this level. It only ever raises, never discounts.
+const MARKUP = 1.3;
+const FLOOR_TOLERANCE = 0.97;
+const VAT_FACTOR = 1.21;
+
 // If this share of the checked products comes back unavailable, the page
 // layout or the session is more likely broken than Tamda being sold out of
 // everything — refuse to write instead of zeroing the catalog.
@@ -248,8 +257,12 @@ export interface TamdaSyncResult {
   /** Tamda didn't answer for these (parse gap) — left untouched. */
   unanswered: number;
   updated: { code: string; name: string; from: number; to: number; reason: "notfound" | "zero" | "stock" }[];
-  /** Tamda's price is >5 % above our purchase price incl. VAT — reported only, never written. */
+  /** Tamda's price is >5 % above our recorded cost incl. VAT (before this run updated it). */
   priceUp: { code: string; name: string; ourCost: number; tamda: number }[];
+  /** Sell prices lifted to the cost floor (Tamda price incl. VAT × 1.3). */
+  priceRaised: { code: string; name: string; from: number; to: number; tamda: number; sold: number }[];
+  /** Products whose recorded purchase price was refreshed from Tamda's current price. */
+  purchaseUpdated: number;
   aborted?: string;
 }
 
@@ -258,22 +271,31 @@ export interface TamdaSyncOptions {
   /** Only check the N best-selling TDE- products (salesCount desc). Default: all. */
   top?: number;
   onProgress?: (done: number, total: number) => void;
+  /** Reuse answers from an earlier check instead of asking Tamda again (no login needed). */
+  answers?: Map<string, TamdaStockRow>;
+  /** Called with the fresh answers so the caller can save them. */
+  onAnswers?: (answers: Map<string, TamdaStockRow>) => void;
 }
 
-export async function syncTamdaStock(session: TamdaSession, opts: TamdaSyncOptions = {}): Promise<TamdaSyncResult> {
+export async function syncTamdaStock(session: TamdaSession | null, opts: TamdaSyncOptions = {}): Promise<TamdaSyncResult> {
   const products = await prisma.product.findMany({
     where: { code: { startsWith: CODE_PREFIX }, ean: { not: null } },
     orderBy: [{ salesCount: "desc" }, { code: "asc" }],
     ...(opts.top ? { take: opts.top } : {}),
   });
 
-  const answers = await checkTamdaEans(
-    session,
-    products.map((p) => p.ean!),
-    opts.onProgress,
-  );
+  let answers = opts.answers;
+  if (!answers) {
+    if (!session) throw new Error("syncTamdaStock needs a session or saved answers");
+    answers = await checkTamdaEans(
+      session,
+      products.map((p) => p.ean!),
+      opts.onProgress,
+    );
+    opts.onAnswers?.(answers);
+  }
 
-  const result: TamdaSyncResult = { checked: products.length, unanswered: 0, updated: [], priceUp: [] };
+  const result: TamdaSyncResult = { checked: products.length, unanswered: 0, updated: [], priceUp: [], priceRaised: [], purchaseUpdated: 0 };
 
   const answered = products.filter((p) => answers.has(p.ean!));
   result.unanswered = products.length - answered.length;
@@ -290,33 +312,56 @@ export async function syncTamdaStock(session: TamdaSession, opts: TamdaSyncOptio
   for (const product of answered) {
     const answer = answers.get(product.ean!)!;
 
-    const ourCostInclVat = Number(product.purchasePrice) * 1.21;
+    const ourCostInclVat = Number(product.purchasePrice) * VAT_FACTOR;
     if (answer.price !== null && ourCostInclVat > 0 && answer.price > ourCostInclVat * 1.05) {
       result.priceUp.push({ code: product.code, name: product.name, ourCost: Math.round(ourCostInclVat * 100) / 100, tamda: answer.price });
     }
+
+    // Price side (only when Tamda actually quoted a price): refresh the
+    // recorded cost, and lift the sell price to the floor if it fell behind.
+    // Units we hold ourselves (ownStock) were bought at their own cost and are
+    // priced by hand — leave their sell price alone.
+    const newPurchase = answer.price !== null && answer.price > 0 ? Math.round((answer.price / VAT_FACTOR) * 100) / 100 : null;
+    const purchaseChanged = newPurchase !== null && Math.abs(newPurchase - Number(product.purchasePrice)) > Number(product.purchasePrice) * 0.01;
+    const floorPrice = answer.price !== null && answer.price > 0 ? Math.round(answer.price * MARKUP) : 0;
+    const sellTooLow = floorPrice > 0 && product.ownStock === 0 && Number(product.price) < floorPrice * FLOOR_TOLERANCE;
+    const dropCompareAt = sellTooLow && product.compareAtPrice !== null && Number(product.compareAtPrice) <= floorPrice;
+    if (sellTooLow) {
+      result.priceRaised.push({ code: product.code, name: product.name, from: Number(product.price), to: floorPrice, tamda: answer.price!, sold: product.salesCount });
+    }
+    if (purchaseChanged) result.purchaseUpdated++;
 
     // Goods we hold ourselves stay sellable whatever Tamda says (owner's rule,
     // 2026-10-09): the storefront gates availability on `stock` alone, so the
     // supplier number is never allowed to push it below our own units.
     const target = Math.max(answer.stock, product.ownStock);
-    if (target === product.stock) continue;
-    const reason = answer.status === "notfound" ? "notfound" : answer.stock === 0 ? "zero" : "stock";
-    result.updated.push({ code: product.code, name: product.name, from: product.stock, to: target, reason });
-    if (opts.dryRun) continue;
+    const stockChanged = target !== product.stock;
+    if (stockChanged) {
+      const reason = answer.status === "notfound" ? "notfound" : answer.stock === 0 ? "zero" : "stock";
+      result.updated.push({ code: product.code, name: product.name, from: product.stock, to: target, reason });
+    }
+    if (opts.dryRun || (!stockChanged && !purchaseChanged && !sellTooLow)) continue;
 
-    const updated = await prisma.product.update({ where: { id: product.id }, data: { stock: target } });
+    const updated = await prisma.product.update({
+      where: { id: product.id },
+      data: {
+        ...(stockChanged ? { stock: target } : {}),
+        ...(purchaseChanged ? { purchasePrice: newPurchase! } : {}),
+        ...(sellTooLow ? { price: floorPrice, ...(dropCompareAt ? { compareAtPrice: null } : {}) } : {}),
+      },
+    });
     // No back-in-stock mails for products we have hidden on purpose.
-    if (product.stock <= 0 && target > 0 && updated.visible) {
+    if (stockChanged && product.stock <= 0 && target > 0 && updated.visible) {
       void notifyStockAlerts(updated).catch((err) => console.error(`[tamda-sync] stock-alert notify failed for ${product.code}`, err));
     }
   }
 
-  if (!opts.dryRun && result.updated.length > 0) {
+  if (!opts.dryRun && (result.updated.length > 0 || result.priceRaised.length > 0 || result.purchaseUpdated > 0)) {
     const toZero = result.updated.filter((u) => u.to === 0).length;
     await logAdminActivity({
       action: "product.tamda_sync",
       entityType: "Product",
-      detail: `Tamda stock check: ${result.checked} checked, ${result.updated.length} updated (${toZero} now at 0), ${result.priceUp.length} with Tamda price >5 % above our cost`,
+      detail: `Tamda stock check: ${result.checked} checked, ${result.updated.length} stock updated (${toZero} now at 0), ${result.purchaseUpdated} purchase prices refreshed, ${result.priceRaised.length} sell prices raised to cost × 1.3`,
     });
   }
   return result;
