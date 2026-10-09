@@ -21,6 +21,12 @@ async function main() {
   } else {
     console.log("\nNo stock changes.");
   }
+
+  if (result.priceRaised.length > 0) {
+    console.log(`\nSell price ${DRY_RUN ? "would be raised" : "raised"} to the cost floor (${result.priceRaised.length}):`);
+    for (const r of result.priceRaised.sort((a, b) => a.from / a.cost - b.from / b.cost))
+      console.log(`  ${r.code} ${r.name.slice(0, 45)}: ${r.from} -> ${r.to} (cost incl. VAT ${r.cost})`);
+  }
 }
 
 main()
