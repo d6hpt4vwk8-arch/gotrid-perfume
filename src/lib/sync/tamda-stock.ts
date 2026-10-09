@@ -126,12 +126,29 @@ export async function loginTamda(email: string, password: string): Promise<Tamda
   });
   if (isLoggedIn(html)) return session;
 
-  // Surface whatever Tamda said (notification box / captcha mention) without
-  // ever echoing the credentials.
-  const notice = /class="[^"]*(?:notification|alert)[^"]*"[^>]*>([\s\S]{0,400}?)<\/div>/i.exec(html);
-  const hint = notice ? textOf(notice[1]).slice(0, 200) : "";
-  const captcha = /g-recaptcha-response|recaptcha/i.test(html) ? " (page mentions reCAPTCHA — likely blocks scripted logins)" : "";
-  throw new Error(`Tamda login failed${hint ? `: ${hint}` : ""}${captcha}`);
+  // Why it failed: after a rejected login Tamda redirects to /login.html, a
+  // full-page-cached copy (x-fpc: HIT) that never carries the error box, so
+  // the message has to be read off the next UNcached page. /forgot-password.html
+  // is one (verified 2026-10-09 with a fake account: "Lỗi — Tên người dùng và
+  // mật khẩu bạn đã nhập không hợp lệ", i.e. wrong user/password; that rules
+  // out reCAPTCHA being demanded for fake logins). Never echo the credentials.
+  const secrets = [password, email].filter(Boolean);
+  const redact = (t: string) => secrets.reduce((acc, sec) => acc.split(sec).join("***"), t);
+  let hint = "no error message found";
+  try {
+    const { html: next } = await request(session, `${BASE}/forgot-password.html`);
+    const notices = [...next.matchAll(/class="[^"]*cm-notification-content[^"]*"[^>]*>([\s\S]{0,600}?)<\/div>/gi)]
+      .map((m) => textOf(m[1]).replace(/^×\s*/, ""))
+      .filter(Boolean);
+    if (notices.length) hint = notices.join(" | ").slice(0, 300);
+    if (process.env.TAMDA_DEBUG_FILE) {
+      const { writeFileSync } = await import("node:fs");
+      writeFileSync(process.env.TAMDA_DEBUG_FILE, redact(next));
+    }
+  } catch {
+    // fall through with the generic hint
+  }
+  throw new Error(`Tamda login failed: ${redact(hint)}`);
 }
 
 // --- CSV availability check ---------------------------------------------------
