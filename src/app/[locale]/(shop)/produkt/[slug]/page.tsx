@@ -426,7 +426,7 @@ export default async function ProductPage({
 
           {product.description && (
             <div
-              className="prose prose-neutral mt-4 max-w-none text-sm"
+              className="prose prose-neutral mt-4 max-w-none text-sm leading-relaxed [&_li]:mb-1 [&_p]:mb-3 [&_strong]:font-semibold [&_ul]:mb-3 [&_ul]:list-disc [&_ul]:pl-5"
               dangerouslySetInnerHTML={{ __html: sanitizeDescription(product.description) }}
             />
           )}
