@@ -14,6 +14,8 @@ import { prisma } from "../src/lib/prisma";
 
 const APPLY = process.argv.includes("--apply");
 const REVERT = process.argv.find((a) => a.startsWith("--revert="))?.split("=")[1];
+const CANDS = process.argv.find((a) => a.startsWith("--cands="))?.split("=")[1] ?? "ops/gallery-cache/k-candidates.json";
+const PICKS = process.argv.find((a) => a.startsWith("--picks="))?.split("=")[1] ?? "ops/gallery-cache/k-picks.txt";
 
 async function main() {
   if (REVERT) {
@@ -22,9 +24,9 @@ async function main() {
     console.log("removed", r.count);
     return;
   }
-  const cands: any[] = JSON.parse(readFileSync("ops/gallery-cache/k-candidates.json", "utf8"));
+  const cands: any[] = JSON.parse(readFileSync(CANDS, "utf8"));
   const byCode = new Map(cands.map((c) => [c.code.replace(/^SPV-/, ""), c]));
-  const picks = readFileSync("ops/gallery-cache/k-picks.txt", "utf8").split("\n").filter(Boolean).map((l) => l.split(":"));
+  const picks = readFileSync(PICKS, "utf8").split("\n").filter(Boolean).map((l) => l.split(":"));
   const created: string[] = [];
   let photos = 0, products = 0;
   for (const [short, idxs] of picks) {
