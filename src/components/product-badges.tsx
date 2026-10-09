@@ -59,7 +59,7 @@ export function EthicsPills({
       {isCrueltyFree && (
         <span className={pill} title="Cruelty-free: produkt ani jeho složky nebyly testovány na zvířatech">
           <HeartIcon />
-          Bez testů na zvířatech
+          Cruelty-free
         </span>
       )}
     </div>
