@@ -16,8 +16,8 @@ export interface CategoryFaqItem {
 export interface CategoryContent {
   /** Plain paragraphs shown above the grid when the category has no DB description. */
   intro?: string[];
-  /** Hero banner (image under /public) behind the title + intro; ignored until the file exists. */
-  banner?: { image: string; alt: string };
+  /** Show the category hero (title + intro over a shelf of real product photos). */
+  hero?: "arabic";
   faqTitle?: string;
   faq?: CategoryFaqItem[];
   whatsappMessage?: string;
@@ -29,7 +29,7 @@ export const CATEGORY_CONTENT: Record<string, CategoryContent> = {
       "Arabské parfémy jsou vůně z Blízkého východu, které staví na oudu, ambře, pižmu, vanilce a koření. Bývají hřejivější, sladší a výraznější než klasické evropské vůně a mnohé z nich sluší ženám i mužům.",
       "U nás najdete Lattafa, Armaf, Al Haramain, Afnan a další známé domy. Filtrem „Pro koho“ si vyberete dámské, pánské nebo unisex vůně, filtrem „Charakter vůně“ třeba orientální, dřevitou nebo gurmánskou.",
     ],
-    banner: { image: "/uploads/categories/arabske-parfemy.webp", alt: "Arabské parfémy – ozdobné flakony, oud a růže" },
+    hero: "arabic",
     faqTitle: "Časté otázky k arabským parfémům",
     whatsappMessage: "Dobrý den, potřeboval/a bych poradit s výběrem arabského parfému.",
     faq: [

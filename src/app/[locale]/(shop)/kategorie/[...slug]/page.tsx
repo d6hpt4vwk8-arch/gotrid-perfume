@@ -1,7 +1,5 @@
 import Image from "next/image";
 import Link from "next/link";
-import { existsSync } from "node:fs";
-import path from "node:path";
 import { notFound } from "next/navigation";
 import { prisma } from "@/lib/prisma";
 import { findCategoryByFullSlug, getCategoryBreadcrumb } from "@/lib/categories.server";
@@ -28,6 +26,7 @@ import { CategoryFilters } from "@/components/category-filters";
 import { CategoryBanner } from "@/components/category-banner";
 import { WhatsappAdviceButton } from "@/components/whatsapp-advice-button";
 import { CATEGORY_CONTENT } from "@/lib/category-content";
+import { CategoryHero } from "@/components/category-hero";
 import { getCategoryBannerTiles } from "@/lib/category-banner.server";
 import { Pagination } from "@/components/pagination";
 import { getSettings } from "@/lib/settings.server";
@@ -154,10 +153,7 @@ export default async function CategoryPage({
 
   const totalPages = Math.ceil(total / PAGE_SIZE);
   const content = CATEGORY_CONTENT[fullSlug];
-  const heroImage =
-    content?.banner && !category.description && existsSync(path.join(process.cwd(), "public", content.banner.image))
-      ? content.banner
-      : null;
+  const showHero = content?.hero === "arabic" && !category.description && !!content.intro;
 
   const paginationQuery = new URLSearchParams();
   filters.brandSlugs.forEach((b) => paginationQuery.append("brand", b));
@@ -189,19 +185,13 @@ export default async function CategoryPage({
         }))}
       />
 
-      {heroImage ? (
-        <section className="relative isolate overflow-hidden rounded-sm bg-ink text-white">
-          <Image src={heroImage.image} alt={heroImage.alt} fill priority sizes="(min-width: 1152px) 1152px, 100vw" className="-z-10 object-cover object-right" />
-          <div className="absolute inset-0 -z-10 bg-gradient-to-b from-black/85 via-black/70 to-black/50 sm:bg-gradient-to-r sm:from-black/90 sm:via-black/55 sm:to-black/0" />
-          <div className="flex min-h-56 flex-col justify-center gap-3 px-6 py-10 sm:max-w-[54%] sm:px-10 sm:py-12 lg:max-w-xl">
-            <h1 className="text-3xl font-bold sm:text-4xl">{category.name}</h1>
-            {content?.intro?.map((paragraph) => (
-              <p key={paragraph} className="text-sm leading-relaxed text-white/85">
-                {paragraph}
-              </p>
-            ))}
-          </div>
-        </section>
+      {showHero ? (
+        <CategoryHero
+          title={category.name}
+          paragraphs={content!.intro!}
+          image="/uploads/categories/arabske-parfemy.webp"
+          alt="Arabské parfémy: Lattafa, Afnan, French Avenue na podiích s lucernami a oudem"
+        />
       ) : showBanner ? (
         <CategoryBanner name={category.name} total={bannerTotal} tiles={bannerTiles} />
       ) : (
@@ -222,7 +212,7 @@ export default async function CategoryPage({
         </section>
       )}
 
-      {!heroImage && !category.description && content?.intro && (
+      {!showHero && !category.description && content?.intro && (
         <section className="flex flex-col gap-3 border-b border-line pb-6 text-sm leading-relaxed text-ink/80">
           {content.intro.map((paragraph) => (
             <p key={paragraph}>{paragraph}</p>
