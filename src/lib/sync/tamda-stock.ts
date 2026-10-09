@@ -305,7 +305,8 @@ export async function syncTamdaStock(session: TamdaSession, opts: TamdaSyncOptio
     if (opts.dryRun) continue;
 
     const updated = await prisma.product.update({ where: { id: product.id }, data: { stock: target } });
-    if (product.stock <= 0 && target > 0) {
+    // No back-in-stock mails for products we have hidden on purpose.
+    if (product.stock <= 0 && target > 0 && updated.visible) {
       void notifyStockAlerts(updated).catch((err) => console.error(`[tamda-sync] stock-alert notify failed for ${product.code}`, err));
     }
   }
