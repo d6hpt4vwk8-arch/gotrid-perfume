@@ -94,6 +94,16 @@ const PLAN: { code: string; urls: string[] }[] = [
   { code: "GVS-7119623", urls: ["https://cdn.shopify.com/s/files/1/0659/1234/0722/files/28.png?v=1751506372", "https://cdn.shopify.com/s/files/1/0659/1234/0722/files/29.png?v=1751506372", "https://cdn.shopify.com/s/files/1/0659/1234/0722/files/31.png?v=1751506372"] },
   { code: "GVS-7251943", urls: ["https://cdn.shopify.com/s/files/1/0271/8603/6809/files/2025-08-16T122515.863.png?v=1755336339", "https://cdn.shopify.com/s/files/1/0271/8603/6809/files/2025-08-16T114548.125_ee8bfc3a-9fa4-41cb-88ff-a2eee29c80af.png?v=1755336339"] },
   { code: "GVS-9177655", urls: ["https://cdn.shopify.com/s/files/1/0659/1234/0722/files/13.png?v=1725527120", "https://cdn.shopify.com/s/files/1/0659/1234/0722/files/11.png?v=1725527120", "https://cdn.shopify.com/s/files/1/0659/1234/0722/files/12.png?v=1725527108"] },
+  // --- second pass: Kosmos photos for Dr. Althea lines whose own store only had infographics, + Polatam pads
+  { code: "GVS-251745", urls: ["https://cdn.shopify.com/s/files/1/0271/8603/6809/files/2025-08-13T121424.224.png?v=1755076639", "https://cdn.shopify.com/s/files/1/0271/8603/6809/products/bb166dc5-9acb-4c03-bb10-5a4047c1e648.__CR0_0_300_300_PT0_SX300_V1.jpg?v=1755076639"] },
+  { code: "GVS-251745-DEFECT", urls: ["https://cdn.shopify.com/s/files/1/0271/8603/6809/files/2025-08-13T121424.224.png?v=1755076639", "https://cdn.shopify.com/s/files/1/0271/8603/6809/products/bb166dc5-9acb-4c03-bb10-5a4047c1e648.__CR0_0_300_300_PT0_SX300_V1.jpg?v=1755076639"] },
+  { code: "GVS-255033", urls: ["https://cdn.shopify.com/s/files/1/0806/6102/1007/files/Dr.Althea-15_CalamineSpotPowder_15ml_2.png?v=1732708658"] },
+  { code: "GVS-255071", urls: ["https://cdn.shopify.com/s/files/1/0271/8603/6809/files/2025-07-10T135320.483.png?v=1752144938", "https://cdn.shopify.com/s/files/1/0271/8603/6809/files/2025-07-10T135355.228.png?v=1752144938"] },
+  { code: "GVS-256184", urls: ["https://cdn.shopify.com/s/files/1/0271/8603/6809/files/2026-04-15T123647.445.png?v=1776245843", "https://cdn.shopify.com/s/files/1/0271/8603/6809/files/2026-04-15T123659.122.png?v=1776245843"] },
+  { code: "GVS-256191", urls: ["https://cdn.shopify.com/s/files/1/0271/8603/6809/files/2026-08-26T142354.490.png?v=1787743464", "https://cdn.shopify.com/s/files/1/0271/8603/6809/files/2026-08-26T142404.920.png?v=1787743465"] },
+  { code: "GVS-256412", urls: ["https://cdn.shopify.com/s/files/1/0271/8603/6809/files/2026-07-07T174141.216.png?v=1783435324", "https://cdn.shopify.com/s/files/1/0271/8603/6809/files/2026-07-07T174153.132.png?v=1783435323"] },
+  { code: "GVS-256658", urls: ["https://cdn.shopify.com/s/files/1/0271/8603/6809/files/2026-08-26T141650.556.png?v=1787743034", "https://cdn.shopify.com/s/files/1/0271/8603/6809/files/2026-08-26T141703.354.png?v=1787743033"] },
+  { code: "GVS-3005922", urls: ["https://co.nice-cdn.com/upload/image/product/large/default/85038_9847a9ba.1024x1024.png", "https://co.nice-cdn.com/upload/image/product/large/default/85041_cd913f80.1024x1024.png", "https://co.nice-cdn.com/upload/image/product/large/default/85044_29730949.1024x1024.png"] },
 ];
 
 async function main() {
