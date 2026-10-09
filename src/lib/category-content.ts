@@ -78,7 +78,7 @@ export const CATEGORY_CONTENT: Record<string, CategoryContent> = {
     ],
     hero: {
       image: "/uploads/categories/korejska-kosmetika.webp",
-      alt: "Korejská kosmetika: Beauty of Joseon, Some By Mi, Cosrx, SKIN1004, Dr. Althea na podiích s listy čajovníku a kapkami vody",
+      alt: "Korejská kosmetika: Dr. Althea, Esthetic House a VVBETTER na travertinových a celadonových podstavcích u měsíční vázy",
     },
     faqTitle: "Časté otázky ke korejské kosmetice",
     whatsappMessage: "Dobrý den, potřeboval/a bych poradit s výběrem korejské kosmetiky.",
