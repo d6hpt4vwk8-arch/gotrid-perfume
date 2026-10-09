@@ -1,0 +1,53 @@
+# Tamda Express has no feed or API; this logs in with the shop's own account,
+# asks the "Objednávka z CSV" page for the real stock and price of every TDE-
+# product by EAN, and writes stock, purchase price and the cost-floor sell
+# price to the database (see src/lib/sync/tamda-stock.ts).
+#
+# Repository secrets (Settings -> Secrets and variables -> Actions):
+#   DATABASE_URL    production Postgres connection string (same as Vercel)
+#   TAMDA_EMAIL     Tamda account e-mail
+#   TAMDA_PASSWORD  Tamda account password
+#
+# A failed run (login rejected, Tamda layout changed, sanity abort) makes the
+# job fail, which GitHub e-mails to the repository owner.
+name: Tamda stock check
+
+on:
+  schedule:
+    - cron: "30 1 * * *" # full pass, ~03:30 Prague time
+    - cron: "30 11 * * *" # best sellers only, ~13:30 Prague time
+  workflow_dispatch:
+    inputs:
+      top:
+        description: "Only the N best sellers (empty = all products)"
+        required: false
+        default: ""
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    timeout-minutes: 90
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+      - name: Check Tamda and update products
+        env:
+          DATABASE_URL: ${{ secrets.DATABASE_URL }}
+          TAMDA_EMAIL: ${{ secrets.TAMDA_EMAIL }}
+          TAMDA_PASSWORD: ${{ secrets.TAMDA_PASSWORD }}
+          SCHEDULE: ${{ github.event.schedule }}
+          TOP_INPUT: ${{ github.event.inputs.top }}
+        run: |
+          set -euo pipefail
+          TOP=""
+          if [ "$SCHEDULE" = "30 11 * * *" ]; then TOP=600; fi
+          if [ -n "$TOP_INPUT" ]; then TOP="$TOP_INPUT"; fi
+          if [ -n "$TOP" ]; then
+            npx tsx scripts/sync-tamda-stock.ts --top "$TOP"
+          else
+            npx tsx scripts/sync-tamda-stock.ts
+          fi
