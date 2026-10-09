@@ -16,6 +16,24 @@ export function BestsellerPill({ className = "" }: { className?: string }) {
   );
 }
 
+/** Thin line icons in the site's quiet style (no emoji). */
+function LeafIcon() {
+  return (
+    <svg viewBox="0 0 16 16" aria-hidden className="h-3 w-3 shrink-0" fill="none" stroke="currentColor" strokeWidth="1.3" strokeLinecap="round" strokeLinejoin="round">
+      <path d="M3 13c0-6 3.5-9.5 10-10 0 6.5-3.5 10-10 10Z" />
+      <path d="M3 13c2.5-3 4.5-5 7-6.5" />
+    </svg>
+  );
+}
+
+function HeartIcon() {
+  return (
+    <svg viewBox="0 0 16 16" aria-hidden className="h-3 w-3 shrink-0" fill="none" stroke="currentColor" strokeWidth="1.3" strokeLinecap="round" strokeLinejoin="round">
+      <path d="M8 13.5S2.5 10 2.5 6.2A2.9 2.9 0 0 1 8 4.9a2.9 2.9 0 0 1 5.5 1.3C13.5 10 8 13.5 8 13.5Z" />
+    </svg>
+  );
+}
+
 export function EthicsPills({
   isVegan,
   isCrueltyFree,
@@ -26,17 +44,22 @@ export function EthicsPills({
   className?: string;
 }) {
   if (!isVegan && !isCrueltyFree) return null;
-  const pill = "inline-flex items-center gap-1 rounded-full bg-white/95 px-2 py-0.5 text-[11px] font-medium text-ink shadow-sm ring-1 ring-line";
+  // Same voice as the brand label above a product name: tiny, uppercase, tracked,
+  // square corners, hairline border — in the site's green for "good for you / nature".
+  const pill =
+    "inline-flex items-center gap-1 rounded-sm border border-ok/40 bg-white/95 px-1.5 py-0.5 text-[10px] font-medium tracking-wide text-ok uppercase";
   return (
-    <div className={`flex flex-wrap items-center gap-1.5 ${className}`}>
+    <div className={`flex flex-wrap items-center gap-1 ${className}`}>
       {isVegan && (
         <span className={pill}>
-          <span aria-hidden>🌱</span>Vegan
+          <LeafIcon />
+          Vegan
         </span>
       )}
       {isCrueltyFree && (
-        <span className={pill}>
-          <span aria-hidden>🐰</span>Cruelty-free
+        <span className={pill} title="Cruelty-free: produkt ani jeho složky nebyly testovány na zvířatech">
+          <HeartIcon />
+          Bez testů na zvířatech
         </span>
       )}
     </div>
