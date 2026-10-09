@@ -48,7 +48,7 @@ export function ProductGridLoadMore({
 
   return (
     <div className="flex flex-col gap-6">
-      <div className="grid grid-cols-2 gap-x-4 gap-y-8 sm:grid-cols-3 lg:grid-cols-4">
+      <div className="grid grid-cols-2 gap-x-4 gap-y-8 sm:grid-cols-3 2xl:grid-cols-4">
         {products.map((product) => (
           <ProductCard key={product.slug} product={product} freeShippingThreshold={freeShippingThreshold} />
         ))}

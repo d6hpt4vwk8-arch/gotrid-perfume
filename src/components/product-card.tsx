@@ -73,7 +73,7 @@ export function ProductCard({
             src={image.url}
             alt={product.name}
             fill
-            sizes="(min-width: 768px) 25vw, 50vw"
+            sizes="(min-width: 1536px) 22vw, (min-width: 1024px) 30vw, (min-width: 768px) 33vw, 50vw"
             className="object-cover transition-transform duration-300 group-hover:scale-105"
           />
         ) : (
@@ -88,7 +88,7 @@ export function ProductCard({
             {product.brand.name}
           </span>
         )}
-        <span className="line-clamp-2 text-sm font-semibold text-ink group-hover:underline">
+        <span className="line-clamp-3 text-sm font-semibold text-ink group-hover:underline">
           {product.name}
         </span>
         {product.colorSwatches && product.colorSwatches.length > 1 && (
