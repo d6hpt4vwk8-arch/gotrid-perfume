@@ -83,10 +83,18 @@ export async function updateOrderStatus(id: string, formData: FormData) {
       const sign = isReversed ? 1 : -1;
       for (const item of order.items) {
         if (!item.productId) continue;
+        // `stock` of supplier-synced products (SPV-/PWH- codes) is the
+        // supplier's own number, rewritten by the daily sync. Crediting the
+        // cancelled qty back would invent a unit the supplier may no longer
+        // have (2026-10-10: a cancelled order for a sold-out SPV perfume put
+        // it back on the shop as "Skladem (1 ks)"). Only our own units are
+        // restored there; the sync reports the supplier's real number.
+        const product = await prisma.product.findUnique({ where: { id: item.productId }, select: { code: true } });
+        const supplierSynced = !!product && (product.code.startsWith("SPV-") || product.code.startsWith("PWH-"));
         await prisma.product.update({
           where: { id: item.productId },
           data: {
-            stock: { increment: sign * item.qty },
+            stock: { increment: sign * (supplierSynced ? item.ownStockTaken : item.qty) },
             ownStock: { increment: sign * item.ownStockTaken },
           },
         });
