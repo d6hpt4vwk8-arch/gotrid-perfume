@@ -4,7 +4,7 @@ import { PAYMENT_LABELS, SHIPPING_LABELS } from "@/lib/shipping";
 import { SITE_URL } from "@/lib/site";
 import { czAccountFromIban } from "@/lib/payments/bank-account";
 import { getPopularProductsExcluding } from "@/lib/marketing/recommend-products";
-import { emailBenefits, emailButton, emailInstagramCard, emailProductGrid, renderEmailLayout } from "./layout";
+import { emailBenefits, emailButton, emailSocialCard, emailProductGrid, renderEmailLayout } from "./layout";
 import { buildOrderConfirmationAttachments } from "./order-attachments";
 import { EMAIL_FROM, OWNER_EMAIL, getResendClient, isEmailConfigured } from "./resend";
 
@@ -73,7 +73,7 @@ export async function renderCustomerOrderConfirmationHtml(order: OrderWithItems)
       ${emailButton(`${SITE_URL}/api/orders/${order.number}/access?token=${order.accessToken}`, "Zobrazit stav objednávky")}
       ${benefits}
       ${emailProductGrid("Mohlo by se vám také líbit", crossSell)}
-      ${emailInstagramCard()}
+      ${emailSocialCard()}
       <p style="font-size:12px;color:#8a857e;">V příloze najdete <a href="${SITE_URL}/obchodni-podminky" style="color:#8a857e;">obchodní podmínky</a> včetně <a href="${SITE_URL}/podminky-vraceni-zbozi" style="color:#8a857e;">podmínek vrácení zboží</a> a formulář pro odstoupení od smlouvy${order.paymentMethod === "BANK_TRANSFER" ? ", u plateb převodem také platební údaje s QR kódem" : ""}.</p>
     `;
   return renderEmailLayout(inner, { preheader: `Objednávka ${order.number} byla přijata.` });

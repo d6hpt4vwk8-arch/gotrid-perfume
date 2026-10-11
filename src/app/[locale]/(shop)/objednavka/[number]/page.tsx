@@ -12,7 +12,7 @@ import { PAYMENT_LABELS, PICKUP_ADDRESS, SHIPPING_LABELS } from "@/lib/shipping"
 import { ShippingIcon } from "@/components/shipping-icons";
 import { ORDER_STATUS_LABELS, canDownloadInvoice } from "@/lib/orders/status-labels";
 import { generateQrPlatbaDataUrl } from "@/lib/payments/qr-platba";
-import { INSTAGRAM_HANDLE, INSTAGRAM_URL } from "@/lib/site";
+import { FACEBOOK_URL, INSTAGRAM_HANDLE, INSTAGRAM_URL, TIKTOK_URL } from "@/lib/site";
 import { getCurrentCustomerId } from "@/lib/customer/get-current-customer";
 import {
   ADMIN_COOKIE_NAME,
@@ -199,16 +199,19 @@ export default async function OrderConfirmationPage({
       )}
 
       <div className="flex flex-col gap-1 border border-line p-4 text-sm">
-        <span className="font-semibold text-ink">Sledujte nás na Instagramu</span>
+        <span className="font-semibold text-ink">Sledujte nás</span>
         <span className="text-ink/70">Tipy na vůně a péči, novinky a ukázky našich produktů.</span>
-        <a
-          href={INSTAGRAM_URL}
-          target="_blank"
-          rel="noopener noreferrer"
-          className="mt-1 w-fit font-medium text-ink underline"
-        >
-          @{INSTAGRAM_HANDLE} →
-        </a>
+        <span className="mt-1 flex flex-wrap gap-x-5 gap-y-1 font-medium text-ink">
+          {[
+            [INSTAGRAM_URL, `Instagram @${INSTAGRAM_HANDLE}`],
+            [FACEBOOK_URL, "Facebook"],
+            [TIKTOK_URL, "TikTok"],
+          ].map(([href, label]) => (
+            <a key={href} href={href} target="_blank" rel="noopener noreferrer" className="underline">
+              {label} →
+            </a>
+          ))}
+        </span>
       </div>
 
       <Link href="/" className="text-sm text-accent-2 hover:text-accent hover:underline">

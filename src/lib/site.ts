@@ -13,3 +13,5 @@ export const SEO_URL = SITE_URL.replace(/^(https?:\/\/)(gotridperfume\.cz)(?=\/|
 
 export const INSTAGRAM_HANDLE = "gotrid_perfume";
 export const INSTAGRAM_URL = `https://www.instagram.com/${INSTAGRAM_HANDLE}/`;
+export const FACEBOOK_URL = "https://www.facebook.com/Gotrid.perfume/";
+export const TIKTOK_URL = "https://www.tiktok.com/@gotrid_perfume";
