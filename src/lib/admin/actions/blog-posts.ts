@@ -7,6 +7,7 @@ import { prisma } from "@/lib/prisma";
 import { slugify } from "@/lib/slug";
 import { logAdminActivity } from "@/lib/admin/activity-log";
 import { requireAdmin } from "@/lib/admin/require-admin";
+import { blogTextToHtml } from "@/lib/blog-markdown";
 
 const emptyToUndefined = (v: unknown) => (v === "" ? undefined : v);
 
@@ -19,20 +20,6 @@ const blogPostSchema = z.object({
   content: z.string().trim().min(1, "Obsah je povinný.").max(50_000),
   published: z.coerce.boolean().default(false),
 });
-
-// Authors write plain text in the textarea (blank line = new paragraph) —
-// escape it and wrap each block in <p>, then sanitizeDescription() at render
-// time is the real security boundary (same as product descriptions).
-function textToParagraphHtml(text: string): string {
-  const escape = (s: string) =>
-    s.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
-  return text
-    .split(/\n\s*\n/)
-    .map((block) => block.trim())
-    .filter(Boolean)
-    .map((block) => `<p>${escape(block).replace(/\n/g, "<br>")}</p>`)
-    .join("\n");
-}
 
 function parseBlogPostForm(formData: FormData) {
   const raw = Object.fromEntries(formData);
@@ -57,7 +44,7 @@ export async function createBlogPost(formData: FormData) {
       category: data.category,
       coverImage: data.coverImage,
       content: data.content,
-      contentHtml: textToParagraphHtml(data.content),
+      contentHtml: blogTextToHtml(data.content),
       published: data.published,
     },
   });
@@ -88,7 +75,7 @@ export async function updateBlogPost(id: string, formData: FormData) {
       category: data.category,
       coverImage: data.coverImage,
       content: data.content,
-      contentHtml: textToParagraphHtml(data.content),
+      contentHtml: blogTextToHtml(data.content),
       published: data.published,
     },
   });

@@ -46,7 +46,10 @@ export default async function BlogPostPage({
           <Image src={post.coverImage} alt={post.title} fill sizes="768px" className="object-cover" />
         </div>
       )}
-      <div dangerouslySetInnerHTML={{ __html: sanitizeDescription(post.contentHtml) }} />
+      <div
+        className="[&_a]:underline [&_h3]:mt-4 [&_h3]:text-sm [&_h3]:font-bold [&_h3]:text-ink [&_li]:mb-1 [&_ul]:mb-3 [&_ul]:list-disc [&_ul]:pl-5"
+        dangerouslySetInnerHTML={{ __html: sanitizeDescription(post.contentHtml) }}
+      />
 
       <div className="not-prose mt-2">
         <WhatsappAdviceButton
