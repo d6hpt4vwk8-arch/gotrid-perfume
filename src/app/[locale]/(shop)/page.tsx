@@ -16,6 +16,9 @@ import { BRAND_PROFILE_URLS } from "@/components/social-links";
 
 export const metadata: Metadata = {
   alternates: { canonical: "/" },
+  // Seznam Webmaster ownership check for https://www.gotridperfume.cz (account
+  // info@gotridperfume.cz, 2026-10-11). Must stay on the homepage's <head>.
+  other: { "seznam-wmt": "Y4eAroD0xsuK0otZXiQh94Hso5ArylCI" },
 };
 
 // Top-level categories that already have an icon in public/categories/.

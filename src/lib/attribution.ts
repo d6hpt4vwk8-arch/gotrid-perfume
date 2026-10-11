@@ -15,6 +15,7 @@ const KNOWN_SOURCES: Record<string, string> = {
   "google.cz": "Google (organické)",
   "google.sk": "Google (organické)",
   "seznam.cz": "Seznam.cz (organické)",
+  "search.seznam.cz": "Seznam.cz (organické)",
   "facebook.com": "Facebook",
   "m.facebook.com": "Facebook",
   "l.facebook.com": "Facebook",
