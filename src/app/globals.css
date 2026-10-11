@@ -88,3 +88,114 @@ body {
     display: none !important;
   }
 }
+
+/* Magazine article body (magazin/[slug]/page.tsx). The HTML comes from
+   blog-markdown.ts, so only plain tags are styled; h2 get an automatic
+   running number via a CSS counter. */
+.article-body {
+  counter-reset: article-h2;
+  font-size: 1.0625rem;
+  line-height: 1.75;
+  color: color-mix(in srgb, var(--color-ink) 88%, transparent);
+}
+.article-body > :first-child {
+  margin-top: 0;
+}
+.article-body p {
+  margin: 0 0 1.35rem;
+}
+.article-body h2 {
+  counter-increment: article-h2;
+  margin: 3.5rem 0 1.25rem;
+  padding-top: 1.75rem;
+  border-top: 1px solid var(--color-line);
+  font-size: 1.625rem;
+  line-height: 1.2;
+  font-weight: 500;
+  letter-spacing: -0.015em;
+  color: var(--color-ink);
+}
+.article-body h2::before {
+  content: "№ " counter(article-h2, decimal-leading-zero);
+  display: block;
+  margin-bottom: 0.75rem;
+  font-family: var(--font-geist-mono), monospace;
+  font-size: 0.6875rem;
+  font-weight: 400;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: var(--color-accent-2);
+}
+.article-body h3 {
+  margin: 2.25rem 0 0.75rem;
+  font-size: 1.125rem;
+  line-height: 1.35;
+  font-weight: 600;
+  color: var(--color-ink);
+}
+.article-body strong {
+  font-weight: 600;
+  color: var(--color-ink);
+}
+.article-body a {
+  color: var(--color-ink);
+  text-decoration: underline;
+  text-decoration-color: color-mix(in srgb, var(--color-accent-2) 60%, transparent);
+  text-underline-offset: 4px;
+  transition: text-decoration-color 0.15s;
+}
+.article-body a:hover {
+  text-decoration-color: var(--color-ink);
+}
+.article-body ul,
+.article-body ol {
+  margin: 1.75rem 0 2rem;
+  padding: 0;
+  list-style: none;
+  border-top: 1px solid var(--color-line);
+}
+.article-body ol {
+  counter-reset: article-ol;
+}
+.article-body li {
+  position: relative;
+  margin: 0;
+  padding: 0.9rem 0 0.9rem;
+  border-bottom: 1px solid var(--color-line);
+}
+.article-body ol > li {
+  counter-increment: article-ol;
+  padding-left: 2.5rem;
+}
+.article-body ol > li::before {
+  content: counter(article-ol, decimal-leading-zero);
+  position: absolute;
+  left: 0;
+  top: 1.15rem;
+  font-family: var(--font-geist-mono), monospace;
+  font-size: 0.6875rem;
+  letter-spacing: 0.1em;
+  color: var(--color-accent-2);
+}
+/* Product / category links inside lists get an arrow, like a catalogue row. */
+.article-body li > a:first-child {
+  font-weight: 600;
+  text-decoration: none;
+}
+.article-body li > a:first-child::after {
+  content: " →";
+  color: var(--color-accent-2);
+  transition: margin-left 0.15s;
+}
+.article-body li > a:first-child:hover::after {
+  margin-left: 0.25rem;
+  color: var(--color-ink);
+}
+.article-body blockquote {
+  margin: 2.25rem 0;
+  padding-left: 1.5rem;
+  border-left: 2px solid var(--color-ink);
+  font-size: 1.1875rem;
+  font-style: italic;
+  color: var(--color-accent);
+}

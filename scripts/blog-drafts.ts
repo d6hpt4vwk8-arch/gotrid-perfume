@@ -18,7 +18,7 @@ const articles = [
       "Sladké, ovocné, oudové nebo pižmové? Přehled hlavních vůňových světů arabských parfémů, konkrétní tipy od Lattafy, Armafu nebo Swiss Arabian a rady, kolik střiků a kdy je nosit.",
     content: `Arabské parfémy mají mezi vůněmi zvláštní místo. Bývají sytější, déle drží na kůži a často stojí kolem pěti set korun za 100 ml, takže si můžete dovolit zkoušet. Zároveň je jejich výběr méně intuitivní než u klasických značek: v nabídce najdete všechno od lízátkově sladkých vůní po temný oud, a podle názvu to poznáte jen zřídka. Tenhle průvodce vás provede čtyřmi hlavními vůňovými světy, ukáže u každého pár tipů z našeho sortimentu a na konci poradí, jak parfém nosit, aby voněl dobře a nepřehlušil místnost.
 
-## 1. Gurmánské vůně: dezert ve flakonu
+## Gurmánské vůně: dezert ve flakonu
 
 Sladké, krémové a „k snědku“. Hodí se na podzim a v zimě, na večer nebo když chcete vonět útulně. Pokud nikdy nenosíte sladké vůně, začněte opatrně: tyhle jsou výrazné.
 
@@ -26,7 +26,7 @@ Sladké, krémové a „k snědku“. Hodí se na podzim a v zimě, na večer ne
 - [Armaf Odyssey Dubai Chocolat](${P("armaf-odyssey-dubai-chocolat-edp-u-100ml-spv-0230610")}) (cca 500 Kč): krémový, ořechový čokoládový dezert. Hravá a hodně sladká.
 - [Paris Corner Khair Pistachio](${P("paris-corner-khair-pistachio-edp-u-100ml-spv-0227922")}) (cca 345 Kč): pistáciový krém zjemněný konvalinkami a pivoňkami, takže je trochu lehčí.
 
-## 2. Ovocné a květinové vůně: lehčí volba na každý den
+## Ovocné a květinové vůně: lehčí volba na každý den
 
 Svěžejší, méně náročné a na kůži přátelské. Dobře fungují na jaro a léto a pro každého, kdo má raději vůni, která „nekřičí“.
 
@@ -34,7 +34,7 @@ Svěžejší, méně náročné a na kůži přátelské. Dobře fungují na jar
 - [Armaf Island Breeze](${P("armaf-island-breeze-edp-u-100ml-spv-0245874")}) (cca 580 Kč): broskev a lesní plody, uprostřed růže, dole bílé pižmo. Letní a bezstarostná.
 - [Lattafa Victoria](${P("lattafa-victoria-edp-u-100ml-spv-0233243")}) (cca 530 Kč): začíná jako citronový koláč s pěnou, pak jemné květy a vanilka. Příjemná i za chladnějších dnů.
 
-## 3. Oud a dřevité vůně: to „arabské“ v pravém slova smyslu
+## Oud a dřevité vůně: to „arabské“ v pravém slova smyslu
 
 Oud je pryskyřičné dřevo s hlubokou, trochu kouřovou vůní. Tady začněte s vůní, která oud kombinuje s něčím, co znáte (růže, koření), ne s čistým oudem. Nosí se spíš večer, na podzim a v zimě.
 
@@ -42,7 +42,7 @@ Oud je pryskyřičné dřevo s hlubokou, trochu kouřovou vůní. Tady začněte
 - [Lattafa Bade'e Al Oud Oud For Glory](${P("lattafa-bade-e-al-oud-oud-for-glory-eau-de-parfum-100-ml-unisex-pwh-132553")}) (cca 515 Kč): šafrán, levandule, muškátový oříšek a oud s pačuli. Hluboká a kořeněná.
 - [Swiss Arabian Shaghaf Oud Aswad](${P("swiss-arabian-shaghaf-oud-aswad-edp-u-75ml-spv-0228857")}) (75 ml, cca 600 Kč): oud s růží, jasmínem a zemitým pačuli.
 
-## 4. Pižmo a koření: čisté a hřejivé
+## Pižmo a koření: čisté a hřejivé
 
 Pižmo působí jemně a „po čistotě“, koření zahřeje a hodí se do chladných měsíců.
 
@@ -70,7 +70,7 @@ Nejmenší riziko je vzít si sadu malých flakonků. Například [Lattafa Yara 
       "Desetikroková korejská rutina nemusí znamenat deset produktů. Ukážeme vám pět kroků, které dávají smysl, a u každého konkrétní tipy z našeho sortimentu. Celá základní sada vyjde kolem 1 300 Kč.",
     content: `O korejské péči o pleť se často mluví jako o desetikrokové rutině a lidé se leknou, že si musí koupit deset produktů. Není to pravda. Smyslem není nanést co nejvíc věcí, ale vrstvit je od nejlehčích po nejbohatší a jemně pleť čistit. Základ se vejde do pěti kroků a přesně takovou rutinu vám tu sestavíme.
 
-## 1. Čištění: odličte a pak vyčistěte
+## Čištění: odličte a pak vyčistěte
 
 Korejci čistí pleť dvakrát: nejdřív olejem nebo balzámem rozpustí make-up, SPF a mastnotu, potom jemnou pěnou smyjí zbytky. Večer jsou oba kroky ideální, ráno obvykle stačí pěna.
 
@@ -78,28 +78,28 @@ Korejci čistí pleť dvakrát: nejdřív olejem nebo balzámem rozpustí make-u
 - [Dr. Althea Pore Refresh Grinding Cleansing Balm](${P("dr-althea-pore-refresh-grinding-cleansing-balm-gvs-255620")}) (cca 380 Kč): čisticí balzám s zeleným čajem.
 - [VVBETTER Soothing Cleansing Foam](${P("vvbetter-soothing-cleansing-foam-120-ml-gvs-1482509")}) (cca 180 Kč): jemná pěna na druhý krok.
 
-## 2. Tonikum nebo esence: příprava pleti
+## Tonikum nebo esence: příprava pleti
 
 Tonikum pleť zklidní, nasákne ji vodou a připraví na další krok. Esence je o něco bohatší. Aplikujte ji dlaněmi, nejlépe jemným poklepáním.
 
 - [Dr. Althea Natural Radiance Essence](${P("dr-althea-natural-radiance-essence-gvs-253480")}) (cca 260 Kč): rozjasňující esence.
 - [Dr. Althea Anastatica Skin Conditioning Toner](${P("dr-althea-anastatica-skin-conditioning-toner-250ml-spv-0247766")}) (250 ml, cca 300 Kč): tonikum na každý den.
 
-## 3. Sérum: účinná látka na míru
+## Sérum: účinná látka na míru
 
 Tady si vyberete, co chcete řešit. Hydratace? Rozjasnění? Retinol je silnější a patří spíš na večer.
 
 - [Dr. Althea Aqua Marine Deep Serum](${P("dr-althea-aqua-marine-deep-serum-gvs-256191")}) (cca 310 Kč): hydratační sérum s kyselinou hyaluronovou.
 - [Dr. Althea Vitamin C Boosting Serum](${P("dr-althea-vitamin-c-boosting-serum-gvs-255385")}) (cca 430 Kč): rozjasňující sérum s vitamínem C a niacinamidem.
 
-## 4. Krém: uzamkněte vlhkost
+## Krém: uzamkněte vlhkost
 
 Krém uzavře předchozí vrstvy a pleť ochrání. Na mastnější pleť stačí lehký gelový krém, na suchou bohatší.
 
 - [Dr. Althea Aqua Marine Watery Cream](${P("dr-althea-aqua-marine-watery-cream-50ml-spv-0243469")}) (50 ml, cca 250 Kč): lehký hydratační krém.
 - [VVBETTER Teca Lifting Moisture Cream](${P("vvbetter-teca-lifting-moisture-cream-50-ml-gvs-2554853")}) (cca 530 Kč): bohatší zpevňující krém s niacinamidem, hyaluronem a peptidy.
 
-## 5. SPF: krok, který nesmíte vynechat
+## SPF: krok, který nesmíte vynechat
 
 Opalovací krém se používá každý den, ne jen v létě. Kosmetika v péči o pleť nic nezmůže, pokud pleť ráno nechráníte.
 
