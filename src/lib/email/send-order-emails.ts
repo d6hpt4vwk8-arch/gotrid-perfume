@@ -5,6 +5,7 @@ import { SITE_URL } from "@/lib/site";
 import { czAccountFromIban } from "@/lib/payments/bank-account";
 import { getPopularProductsExcluding } from "@/lib/marketing/recommend-products";
 import { emailBenefits, emailButton, emailInstagramCard, emailProductGrid, renderEmailLayout } from "./layout";
+import { buildOrderConfirmationAttachments } from "./order-attachments";
 import { EMAIL_FROM, OWNER_EMAIL, getResendClient, isEmailConfigured } from "./resend";
 
 type OrderWithItems = Order & { items: OrderItem[] };
@@ -73,7 +74,7 @@ export async function renderCustomerOrderConfirmationHtml(order: OrderWithItems)
       ${benefits}
       ${emailProductGrid("Mohlo by se vám také líbit", crossSell)}
       ${emailInstagramCard()}
-      <p style="font-size:12px;color:#8a857e;">Objednávkou souhlasíte s <a href="${SITE_URL}/obchodni-podminky" style="color:#8a857e;">obchodními podmínkami</a>. Informace o vrácení zboží a odstoupení od smlouvy najdete v <a href="${SITE_URL}/podminky-vraceni-zbozi" style="color:#8a857e;">podmínkách vrácení</a>.</p>
+      <p style="font-size:12px;color:#8a857e;">V příloze najdete <a href="${SITE_URL}/obchodni-podminky" style="color:#8a857e;">obchodní podmínky</a> včetně <a href="${SITE_URL}/podminky-vraceni-zbozi" style="color:#8a857e;">podmínek vrácení zboží</a> a formulář pro odstoupení od smlouvy${order.paymentMethod === "BANK_TRANSFER" ? ", u plateb převodem také platební údaje s QR kódem" : ""}.</p>
     `;
   return renderEmailLayout(inner, { preheader: `Objednávka ${order.number} byla přijata.` });
 }
@@ -90,6 +91,7 @@ export async function sendCustomerOrderConfirmation(order: OrderWithItems) {
     to: order.email,
     subject: `Potvrzení objednávky ${order.number} — Gotrid Perfume`,
     html: await renderCustomerOrderConfirmationHtml(order),
+    attachments: await buildOrderConfirmationAttachments(order),
   });
   // The Resend SDK returns { data, error } instead of throwing on API-level
   // failures (e.g. unverified sending domain) — surface it so the caller's
