@@ -49,7 +49,9 @@ export default async function BlogPostPage({
 }) {
   const { slug } = await params;
   const post = await getPost(slug);
-  if (!post || !post.published) notFound();
+  // Drafts are viewable only on the local dev server, so articles can be
+  // reviewed before publishing; production still 404s on unpublished posts.
+  if (!post || (!post.published && process.env.NODE_ENV !== "development")) notFound();
 
   const related = await prisma.blogPost.findMany({
     where: { published: true, slug: { not: post.slug } },
