@@ -134,7 +134,7 @@ export default async function BlogPostPage({
               fill
               priority
               sizes="(min-width: 1152px) 1152px, 100vw"
-              className="object-cover"
+              className="object-cover object-[72%_center]"
             />
           </div>
         )}
