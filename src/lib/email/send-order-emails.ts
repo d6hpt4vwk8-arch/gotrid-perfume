@@ -2,8 +2,9 @@ import type { Order, OrderItem } from "@prisma/client";
 import { formatPrice } from "@/lib/format";
 import { PAYMENT_LABELS, SHIPPING_LABELS } from "@/lib/shipping";
 import { SITE_URL } from "@/lib/site";
+import { czAccountFromIban } from "@/lib/payments/bank-account";
 import { getPopularProductsExcluding } from "@/lib/marketing/recommend-products";
-import { emailBenefits, emailButton, emailProductGrid, renderEmailLayout } from "./layout";
+import { emailBenefits, emailButton, emailInstagramCard, emailProductGrid, renderEmailLayout } from "./layout";
 import { EMAIL_FROM, OWNER_EMAIL, getResendClient, isEmailConfigured } from "./resend";
 
 type OrderWithItems = Order & { items: OrderItem[] };
@@ -22,6 +23,37 @@ function itemsTableHtml(items: OrderItem[]): string {
   return `<table cellpadding="0" cellspacing="0" style="width:100%;margin:8px 0 24px">${rows}</table>`;
 }
 
+// Bank-transfer orders are only paid once the customer acts, so the e-mail
+// must carry everything the order page shows: QR code plus the manual details.
+function bankTransferBlockHtml(order: Order): string {
+  const iban = process.env.BANK_IBAN;
+  if (order.paymentMethod !== "BANK_TRANSFER" || !iban) return "";
+  const account = czAccountFromIban(iban);
+  const vs = order.number.replace(/\D/g, "");
+  const row = (label: string, value: string) =>
+    `<tr><td style="padding:4px 12px 4px 0;font-size:13px;color:#8a857e;">${label}</td><td style="padding:4px 0;font-size:14px;font-weight:600;">${value}</td></tr>`;
+  return `
+      <table role="presentation" cellpadding="0" cellspacing="0" style="width:100%;margin:0 0 24px;border:1px solid #e2e0dc;">
+        <tr>
+          <td style="padding:20px 24px;">
+            <p style="margin:0 0 12px;font-size:14px;font-weight:700;">Platba převodem</p>
+            <table role="presentation" cellpadding="0" cellspacing="0"><tr>
+              <td style="padding-right:20px;vertical-align:top;"><img src="${SITE_URL}/api/orders/${order.number}/qr?token=${order.accessToken}" alt="QR platba" width="140" height="140" style="display:block;"></td>
+              <td style="vertical-align:top;">
+                <table role="presentation" cellpadding="0" cellspacing="0">
+                  ${account ? row("Číslo účtu", account) : ""}
+                  ${row("IBAN", iban.replace(/\s/g, ""))}
+                  ${row("Částka", formatPrice(order.total))}
+                  ${row("Variabilní symbol", vs)}
+                </table>
+              </td>
+            </tr></table>
+            <p style="margin:12px 0 0;font-size:13px;color:#8a857e;">Naskenujte QR kód v bankovní aplikaci, nebo zadejte platbu ručně. Zásilku odešleme po připsání platby.</p>
+          </td>
+        </tr>
+      </table>`;
+}
+
 export async function renderCustomerOrderConfirmationHtml(order: OrderWithItems): Promise<string> {
   const orderedProductIds = order.items.map((i) => i.productId).filter((id): id is string => id !== null);
   const [benefits, crossSell] = await Promise.all([
@@ -35,10 +67,13 @@ export async function renderCustomerOrderConfirmationHtml(order: OrderWithItems)
       <p style="margin-bottom:4px">Doprava: ${SHIPPING_LABELS[order.shippingMethod]} — ${formatPrice(order.shippingPrice)}</p>
       <p style="margin-bottom:4px">Platba: ${PAYMENT_LABELS[order.paymentMethod]}${Number(order.codSurcharge) > 0 ? ` (příplatek ${formatPrice(order.codSurcharge)})` : ""}</p>
       <p style="font-size:17px;font-weight:700;margin-bottom:24px">Celkem: ${formatPrice(order.total)}</p>
+      ${bankTransferBlockHtml(order)}
       <p>O odeslání zásilky vás budeme informovat samostatným e-mailem.</p>
       ${emailButton(`${SITE_URL}/api/orders/${order.number}/access?token=${order.accessToken}`, "Zobrazit stav objednávky")}
       ${benefits}
       ${emailProductGrid("Mohlo by se vám také líbit", crossSell)}
+      ${emailInstagramCard()}
+      <p style="font-size:12px;color:#8a857e;">Objednávkou souhlasíte s <a href="${SITE_URL}/obchodni-podminky" style="color:#8a857e;">obchodními podmínkami</a>. Informace o vrácení zboží a odstoupení od smlouvy najdete v <a href="${SITE_URL}/podminky-vraceni-zbozi" style="color:#8a857e;">podmínkách vrácení</a>.</p>
     `;
   return renderEmailLayout(inner, { preheader: `Objednávka ${order.number} byla přijata.` });
 }

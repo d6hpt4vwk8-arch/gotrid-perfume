@@ -1,5 +1,5 @@
 import { CONTACT, currentSeller, sellerLine } from "@/lib/business-identity";
-import { SITE_URL } from "@/lib/site";
+import { INSTAGRAM_HANDLE, INSTAGRAM_URL, SITE_URL } from "@/lib/site";
 import { formatPrice } from "@/lib/format";
 import { getSettings } from "@/lib/settings.server";
 import type { RecommendedProduct } from "@/lib/marketing/recommend-products";
@@ -81,6 +81,21 @@ export function emailHelpCard(): string {
           <p style="margin:0;font-size:13px;color:${MUTED};">
             ${CONTACT.phone} · <a href="mailto:${CONTACT.email}" style="color:${INK};">${CONTACT.email}</a><br>${CONTACT.supportHours}
           </p>
+        </td>
+      </tr>
+    </table>`;
+}
+
+// "Follow us" card — Instagram is the one social channel we actively want
+// new customers to join, so it gets its own block instead of a footer link.
+export function emailInstagramCard(): string {
+  return `
+    <table role="presentation" cellpadding="0" cellspacing="0" style="width:100%;margin:0 0 24px;">
+      <tr>
+        <td style="background:${PAGE_BG};border-radius:6px;padding:20px 24px;">
+          <p style="margin:0 0 6px;font-size:14px;font-weight:700;color:${INK};">Sledujte nás na Instagramu</p>
+          <p style="margin:0 0 12px;font-size:13px;color:${MUTED};">Tipy na vůně a péči, novinky a ukázky našich produktů.</p>
+          <a href="${INSTAGRAM_URL}" style="font-size:14px;font-weight:600;color:${INK};">@${INSTAGRAM_HANDLE} →</a>
         </td>
       </tr>
     </table>`;
