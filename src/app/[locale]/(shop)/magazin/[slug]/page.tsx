@@ -5,6 +5,8 @@ import type { Metadata } from "next";
 import { prisma } from "@/lib/prisma";
 import { sanitizeDescription } from "@/lib/sanitize-description";
 import { WhatsappAdviceButton } from "@/components/whatsapp-advice-button";
+import { ProductCard } from "@/components/product-card";
+import { splitArticleHtml } from "@/lib/blog-markdown";
 
 const WHATSAPP_MESSAGE_BY_CATEGORY: Record<string, string> = {
   parfemy: "Dobrý den, chtěl(a) bych poradit s výběrem parfému.",
@@ -39,7 +41,8 @@ const CATEGORY_LABELS: Record<string, string> = {
 const DATE_FORMAT = new Intl.DateTimeFormat("cs-CZ", { day: "numeric", month: "long", year: "numeric" });
 
 function readingMinutes(text: string) {
-  return Math.max(1, Math.round(text.split(/\s+/).length / 200));
+  // Product cards add scanning time the word count doesn't capture.
+  return Math.max(2, Math.round(text.split(/\s+/).length / 200));
 }
 
 export default async function BlogPostPage({
@@ -52,6 +55,25 @@ export default async function BlogPostPage({
   // Drafts are viewable only on the local dev server, so articles can be
   // reviewed before publishing; production still 404s on unpublished posts.
   if (!post || (!post.published && process.env.NODE_ENV !== "development")) notFound();
+
+  const parts = splitArticleHtml(sanitizeDescription(post.contentHtml));
+  const slugs = [...new Set(parts.flatMap((p) => ("products" in p ? p.products.map((x) => x.slug) : [])))];
+  const found = slugs.length
+    ? await prisma.product.findMany({
+        where: { slug: { in: slugs }, visible: true },
+        select: {
+          id: true, code: true, slug: true, name: true, price: true, compareAtPrice: true, stock: true,
+          isDefective: true, salesCount: true, isVegan: true, isCrueltyFree: true,
+          brand: { select: { name: true } },
+          images: { orderBy: { sortOrder: "asc" }, take: 1, select: { url: true } },
+        },
+      })
+    : [];
+  // Plain numbers: ProductCard is a client component and can't take Decimals.
+  const bySlug = new Map(
+    found.map((p) => [p.slug, { ...p, price: Number(p.price), compareAtPrice: p.compareAtPrice ? Number(p.compareAtPrice) : null }]),
+  );
+  const collage = slugs.map((sl) => bySlug.get(sl)).filter((p) => p?.images[0]).slice(0, 4);
 
   const related = await prisma.blogPost.findMany({
     where: { published: true, slug: { not: post.slug } },
@@ -94,6 +116,16 @@ export default async function BlogPostPage({
           </p>
         </header>
 
+        {!post.coverImage && collage.length >= 3 && (
+          <div className="mt-10 grid grid-cols-3 gap-px bg-line md:mt-14 md:grid-cols-4">
+            {collage.map((p, i) => (
+              <div key={p!.slug} className={`relative aspect-square bg-line/60 ${i === 3 ? "hidden md:block" : ""}`}>
+                <Image src={p!.images[0].url} alt={p!.name} fill sizes="(min-width: 768px) 288px, 33vw" className="object-cover" />
+              </div>
+            ))}
+          </div>
+        )}
+
         {post.coverImage && (
           <div className="relative mt-10 aspect-[16/9] w-full overflow-hidden bg-line/60 md:mt-14 md:aspect-[21/9]">
             <Image
@@ -107,10 +139,30 @@ export default async function BlogPostPage({
           </div>
         )}
 
-        <div
-          className="article-body mx-auto mt-10 max-w-[680px] md:mt-14"
-          dangerouslySetInnerHTML={{ __html: sanitizeDescription(post.contentHtml) }}
-        />
+        <div className="article-flow mx-auto mt-10 max-w-[680px] md:mt-14">
+          {parts.map((part, i) =>
+            "html" in part ? (
+              <div
+                key={i}
+                className="article-body"
+                dangerouslySetInnerHTML={{ __html: part.html }}
+              />
+            ) : (
+              <div key={i} className="my-8 grid grid-cols-2 gap-x-4 gap-y-8 md:grid-cols-3">
+                {part.products.map((m) => {
+                  const product = bySlug.get(m.slug);
+                  if (!product) return null;
+                  return (
+                    <div key={m.slug} className="flex flex-col gap-2">
+                      <ProductCard product={product} />
+                      {m.note && <p className="text-xs leading-snug text-accent">{m.note}</p>}
+                    </div>
+                  );
+                })}
+              </div>
+            ),
+          )}
+        </div>
 
         <aside className="mx-auto mt-14 flex max-w-3xl flex-col items-start gap-5 bg-ink px-6 py-9 text-white md:mt-20 md:px-10 md:py-12">
           <p className="font-mono text-[11px] tracking-[0.18em] text-white/60 uppercase">Poradíme osobně</p>

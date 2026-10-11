@@ -1,13 +1,11 @@
 // Creates or updates the first magazine articles as DRAFTS (published=false) —
 // they stay invisible on the site and in the sitemap until switched on in the
 // admin (Magazín → Publikovat). Content uses the light markers from
-// src/lib/blog-markdown.ts. Prices in the text are rounded ("cca") and should
-// be re-checked on the day of publishing.
+// src/lib/blog-markdown.ts; [[produkt: slug | note]] lines render as live
+// product cards (price from the DB), so no prices are typed into the text.
 //   npx tsx scripts/blog-drafts.ts
 import { prisma } from "../src/lib/prisma";
 import { blogTextToHtml } from "../src/lib/blog-markdown";
-
-const P = (slug: string) => `/produkt/${slug}`;
 
 const articles = [
   {
@@ -16,51 +14,59 @@ const articles = [
     category: "parfemy" as const,
     excerpt:
       "Sladké, ovocné, oudové nebo pižmové? Přehled hlavních vůňových světů arabských parfémů, konkrétní tipy od Lattafy, Armafu nebo Swiss Arabian a rady, kolik střiků a kdy je nosit.",
-    content: `Arabské parfémy mají mezi vůněmi zvláštní místo. Bývají sytější, déle drží na kůži a často stojí kolem pěti set korun za 100 ml, takže si můžete dovolit zkoušet. Zároveň je jejich výběr méně intuitivní než u klasických značek: v nabídce najdete všechno od lízátkově sladkých vůní po temný oud, a podle názvu to poznáte jen zřídka. Tenhle průvodce vás provede čtyřmi hlavními vůňovými světy, ukáže u každého pár tipů z našeho sortimentu a na konci poradí, jak parfém nosit, aby voněl dobře a nepřehlušil místnost.
+    content: `Arabské parfémy jsou sytější, drží dlouho a 100 ml stojí kolem 500 Kč. Stačí vědět, který vůňový svět vám sedí.
 
-## Gurmánské vůně: dezert ve flakonu
+> **Rychlý přehled**
+>
+> - **Gurmánské:** sladké a krémové, na podzim a v zimě
+> - **Ovocné a květinové:** lehčí, na každý den a na jaro
+> - **Oud:** dřevité a kouřové, na večer
+> - **Pižmo a koření:** čisté a hřejivé
 
-Sladké, krémové a „k snědku“. Hodí se na podzim a v zimě, na večer nebo když chcete vonět útulně. Pokud nikdy nenosíte sladké vůně, začněte opatrně: tyhle jsou výrazné.
+## Gurmánské: dezert ve flakonu
 
-- [Lattafa Eclaire Pistache](${P("lattafa-eclaire-pistache-edp-u-100ml-spv-0239469")}) (cca 510 Kč): pražená pistácie, šlehaná smetana, kokos, kakao a mléčná vanilka. Unisex a hladká.
-- [Armaf Odyssey Dubai Chocolat](${P("armaf-odyssey-dubai-chocolat-edp-u-100ml-spv-0230610")}) (cca 500 Kč): krémový, ořechový čokoládový dezert. Hravá a hodně sladká.
-- [Paris Corner Khair Pistachio](${P("paris-corner-khair-pistachio-edp-u-100ml-spv-0227922")}) (cca 345 Kč): pistáciový krém zjemněný konvalinkami a pivoňkami, takže je trochu lehčí.
+Sladké a krémové. Na večer, když chcete vonět útulně.
 
-## Ovocné a květinové vůně: lehčí volba na každý den
+[[produkt: lattafa-eclaire-pistache-edp-u-100ml-spv-0239469 | Pistácie, smetana, kokos a vanilka]]
+[[produkt: armaf-odyssey-dubai-chocolat-edp-u-100ml-spv-0230610 | Krémová čokoláda s ořechy]]
+[[produkt: paris-corner-khair-pistachio-edp-u-100ml-spv-0227922 | Pistáciový krém, lehčí díky květům]]
 
-Svěžejší, méně náročné a na kůži přátelské. Dobře fungují na jaro a léto a pro každého, kdo má raději vůni, která „nekřičí“.
+## Ovocné a květinové: lehčí volba na každý den
 
-- [Lattafa Yara Candy](${P("lattafa-yara-candy-edp-w-100ml-spv-0229527")}) (cca 450 Kč): zelená mandarinka, černý rybíz, jahody, gardénie a vanilka. Dámská, cukrová a hravá.
-- [Armaf Island Breeze](${P("armaf-island-breeze-edp-u-100ml-spv-0245874")}) (cca 580 Kč): broskev a lesní plody, uprostřed růže, dole bílé pižmo. Letní a bezstarostná.
-- [Lattafa Victoria](${P("lattafa-victoria-edp-u-100ml-spv-0233243")}) (cca 530 Kč): začíná jako citronový koláč s pěnou, pak jemné květy a vanilka. Příjemná i za chladnějších dnů.
+Svěží a na kůži přátelské. Nekřičí.
 
-## Oud a dřevité vůně: to „arabské“ v pravém slova smyslu
+[[produkt: lattafa-yara-candy-edp-w-100ml-spv-0229527 | Mandarinka, jahody, vanilka]]
+[[produkt: armaf-island-breeze-edp-u-100ml-spv-0245874 | Broskev, růže, bílé pižmo]]
+[[produkt: lattafa-victoria-edp-u-100ml-spv-0233243 | Citronový koláč a jemné květy]]
 
-Oud je pryskyřičné dřevo s hlubokou, trochu kouřovou vůní. Tady začněte s vůní, která oud kombinuje s něčím, co znáte (růže, koření), ne s čistým oudem. Nosí se spíš večer, na podzim a v zimě.
+## Oud a dřevité: to pravé arabské
 
-- [Lattafa Safwaan L'Autre Oud](${P("lattafa-safwaan-l-autre-oud-edp-u-100ml-spv-0222910")}) (cca 440 Kč): odvážný oud zjemněný čerstvou růží, s šafránem a ambrou.
-- [Lattafa Bade'e Al Oud Oud For Glory](${P("lattafa-bade-e-al-oud-oud-for-glory-eau-de-parfum-100-ml-unisex-pwh-132553")}) (cca 515 Kč): šafrán, levandule, muškátový oříšek a oud s pačuli. Hluboká a kořeněná.
-- [Swiss Arabian Shaghaf Oud Aswad](${P("swiss-arabian-shaghaf-oud-aswad-edp-u-75ml-spv-0228857")}) (75 ml, cca 600 Kč): oud s růží, jasmínem a zemitým pačuli.
+Oud je pryskyřičné dřevo s kouřovou vůní. Začněte vůní, kde je spojený s růží nebo kořením.
+
+[[produkt: lattafa-safwaan-l-autre-oud-edp-u-100ml-spv-0222910 | Oud zjemněný růží a šafránem]]
+[[produkt: lattafa-bade-e-al-oud-oud-for-glory-eau-de-parfum-100-ml-unisex-pwh-132553 | Šafrán, levandule a hluboký oud]]
+[[produkt: swiss-arabian-shaghaf-oud-aswad-edp-u-75ml-spv-0228857 | Oud s jasmínem a pačuli (75 ml)]]
 
 ## Pižmo a koření: čisté a hřejivé
 
-Pižmo působí jemně a „po čistotě“, koření zahřeje a hodí se do chladných měsíců.
-
-- [Paris Corner Musk Collection Tranquil Night](${P("paris-corner-musk-collection-tranquil-night-edp-u-100ml-spv-0231970")}) (cca 465 Kč): citrusy a ovoce na pižmovém základu, vhodné na každý den.
-- [Maison Asrar Masterpiece](${P("maison-asrar-masterpiece-edp-u-100ml-spv-0237098")}) (cca 500 Kč): jablko, kardamom, skořice a vanilka. Svěže kořeněná.
-- [Gulf Orchid Sweet Heaven Tobacco](${P("gulf-orchid-sweet-heaven-tobacco-edp-u-100ml-spv-0239749")}) (cca 580 Kč): koření, mandarinka a tabák pro ty, kdo chtějí odvážnou klasiku.
+[[produkt: paris-corner-musk-collection-tranquil-night-edp-u-100ml-spv-0231970 | Citrusy na pižmu, na každý den]]
+[[produkt: maison-asrar-masterpiece-edp-u-100ml-spv-0237098 | Jablko, kardamom a skořice]]
+[[produkt: gulf-orchid-sweet-heaven-tobacco-edp-u-100ml-spv-0239749 | Koření a tabák pro odvážné]]
 
 ## Jak arabský parfém nosit
 
-- **Méně je víc.** Arabské parfémy bývají koncentrované. Začněte dvěma až třemi střiky a podle potřeby přidejte.
-- **Na kůži, ne na oblečení.** Na zápěstí, na krk nebo za ucho. Parfém si na kůži „rozvoní“ a pak lépe drží.
-- **Neroztírejte.** Tření zápěstí o sebe vůni rychleji zkrátí.
-- **Počítejte s ročním obdobím.** Gurmánské a oudové vůně sednou na podzim a v zimě, ovocné a svěží na jaro a léto.
-- **Stejná vůně voní na každém jinak.** Proto dávejte vůním pár hodin, než si o nich uděláte názor.
+- **2–3 střiky stačí.** Vůně bývají koncentrované.
+- **Na kůži, ne na oblečení.** Zápěstí, krk, za ucho.
+- **Neroztírejte.** Vůně pak rychleji zmizí.
+- **Dejte jí pár hodin.** Na každém voní trochu jinak.
 
-## Jak začít, když nevíte
+## Nevíte, kde začít?
 
-Nejmenší riziko je vzít si sadu malých flakonků. Například [Lattafa Yara Collection SET](${P("lattafa-yara-collection-set-w-edp-4x5ml-spv-0248775")}) obsahuje čtyři vůně po 5 ml (cca 390 Kč) a ukáže vám, co vám sedí. Pokud nechcete zkoušet, napište nám, co už voníte nebo jaká vůně se vám líbí, a doporučíme konkrétní parfém z nabídky. Celý sortiment najdete v kategorii [Arabské parfémy](/kategorie/parfemy/arabske-parfemy).`,
+Vezměte sadu čtyř malých flakonků a uvidíte, co vám sedí.
+
+[[produkt: lattafa-yara-collection-set-w-edp-4x5ml-spv-0248775 | 4 vůně po 5 ml]]
+
+Nebo nám napište, co už voníte, a doporučíme. Celý sortiment najdete v kategorii [Arabské parfémy](/kategorie/parfemy/arabske-parfemy).`,
   },
   {
     slug: "korejska-pece-o-plet-v-5-krocich",
@@ -68,57 +74,63 @@ Nejmenší riziko je vzít si sadu malých flakonků. Například [Lattafa Yara 
     category: "kosmetika" as const,
     excerpt:
       "Desetikroková korejská rutina nemusí znamenat deset produktů. Ukážeme vám pět kroků, které dávají smysl, a u každého konkrétní tipy z našeho sortimentu. Celá základní sada vyjde kolem 1 300 Kč.",
-    content: `O korejské péči o pleť se často mluví jako o desetikrokové rutině a lidé se leknou, že si musí koupit deset produktů. Není to pravda. Smyslem není nanést co nejvíc věcí, ale vrstvit je od nejlehčích po nejbohatší a jemně pleť čistit. Základ se vejde do pěti kroků a přesně takovou rutinu vám tu sestavíme.
+    content: `Korejská péče o pleť neznamená deset produktů. Stačí pět kroků od nejlehčího po nejbohatší.
+
+> **Rychlý přehled**
+>
+> - **Základní sada:** pěna, esence, sérum, krém a SPF
+> - **Cena:** kolem 1 300 Kč celkem
+> - **Večer:** přidejte odličovací olej
+> - **Pravidlo:** nové věci zavádějte po jednom
 
 ## Čištění: odličte a pak vyčistěte
 
-Korejci čistí pleť dvakrát: nejdřív olejem nebo balzámem rozpustí make-up, SPF a mastnotu, potom jemnou pěnou smyjí zbytky. Večer jsou oba kroky ideální, ráno obvykle stačí pěna.
+Večer olej nebo balzám, potom jemná pěna. Ráno obvykle stačí pěna.
 
-- [VVBETTER Gentle Deep Cleansing Oil](${P("vvbetter-gentle-deep-cleansing-oil-200-ml-gvs-5904305")}) (cca 330 Kč): jemný odličovací olej s centellou a niacinamidem.
-- [Dr. Althea Pore Refresh Grinding Cleansing Balm](${P("dr-althea-pore-refresh-grinding-cleansing-balm-gvs-255620")}) (cca 380 Kč): čisticí balzám s zeleným čajem.
-- [VVBETTER Soothing Cleansing Foam](${P("vvbetter-soothing-cleansing-foam-120-ml-gvs-1482509")}) (cca 180 Kč): jemná pěna na druhý krok.
+[[produkt: vvbetter-gentle-deep-cleansing-oil-200-ml-gvs-5904305 | Odličovací olej s centellou]]
+[[produkt: dr-althea-pore-refresh-grinding-cleansing-balm-gvs-255620 | Čisticí balzám se zeleným čajem]]
+[[produkt: vvbetter-soothing-cleansing-foam-120-ml-gvs-1482509 | Jemná pěna na druhý krok]]
 
 ## Tonikum nebo esence: příprava pleti
 
-Tonikum pleť zklidní, nasákne ji vodou a připraví na další krok. Esence je o něco bohatší. Aplikujte ji dlaněmi, nejlépe jemným poklepáním.
+Zklidní pleť a připraví ji na další vrstvy.
 
-- [Dr. Althea Natural Radiance Essence](${P("dr-althea-natural-radiance-essence-gvs-253480")}) (cca 260 Kč): rozjasňující esence.
-- [Dr. Althea Anastatica Skin Conditioning Toner](${P("dr-althea-anastatica-skin-conditioning-toner-250ml-spv-0247766")}) (250 ml, cca 300 Kč): tonikum na každý den.
+[[produkt: dr-althea-natural-radiance-essence-gvs-253480 | Rozjasňující esence]]
+[[produkt: dr-althea-anastatica-skin-conditioning-toner-250ml-spv-0247766 | Tonikum na každý den (250 ml)]]
 
 ## Sérum: účinná látka na míru
 
-Tady si vyberete, co chcete řešit. Hydratace? Rozjasnění? Retinol je silnější a patří spíš na večer.
+Vyberte, co chcete řešit. Retinol patří spíš na večer.
 
-- [Dr. Althea Aqua Marine Deep Serum](${P("dr-althea-aqua-marine-deep-serum-gvs-256191")}) (cca 310 Kč): hydratační sérum s kyselinou hyaluronovou.
-- [Dr. Althea Vitamin C Boosting Serum](${P("dr-althea-vitamin-c-boosting-serum-gvs-255385")}) (cca 430 Kč): rozjasňující sérum s vitamínem C a niacinamidem.
+[[produkt: dr-althea-aqua-marine-deep-serum-gvs-256191 | Hydratace s kyselinou hyaluronovou]]
+[[produkt: dr-althea-vitamin-c-boosting-serum-gvs-255385 | Rozjasnění: vitamín C a niacinamid]]
 
 ## Krém: uzamkněte vlhkost
 
-Krém uzavře předchozí vrstvy a pleť ochrání. Na mastnější pleť stačí lehký gelový krém, na suchou bohatší.
+Na mastnější pleť lehký gel, na suchou bohatší krém.
 
-- [Dr. Althea Aqua Marine Watery Cream](${P("dr-althea-aqua-marine-watery-cream-50ml-spv-0243469")}) (50 ml, cca 250 Kč): lehký hydratační krém.
-- [VVBETTER Teca Lifting Moisture Cream](${P("vvbetter-teca-lifting-moisture-cream-50-ml-gvs-2554853")}) (cca 530 Kč): bohatší zpevňující krém s niacinamidem, hyaluronem a peptidy.
+[[produkt: dr-althea-aqua-marine-watery-cream-50ml-spv-0243469 | Lehký hydratační krém]]
+[[produkt: vvbetter-teca-lifting-moisture-cream-50-ml-gvs-2554853 | Zpevňující krém s peptidy]]
 
-## SPF: krok, který nesmíte vynechat
+## SPF: krok, který nevynechávejte
 
-Opalovací krém se používá každý den, ne jen v létě. Kosmetika v péči o pleť nic nezmůže, pokud pleť ráno nechráníte.
+Každý den, ne jen v létě. Bez něj ostatní péče nemá smysl.
 
-- [Dr. Althea Green Tea Fresh Sunscreen SPF50+](${P("dr-althea-green-tea-fresh-sunscreen-spf50-pa-45ml-spv-0247767")}) (cca 300 Kč): lehký krém se zeleným čajem.
-- [VVBETTER Daily Airfit Sunscreen SPF50+](${P("vvbetter-daily-airfit-sunscreen-spf-50-gvs-5903568")}) (cca 440 Kč): denní opalovací krém na obličej.
+[[produkt: dr-althea-green-tea-fresh-sunscreen-spf50-pa-45ml-spv-0247767 | Lehký krém se zeleným čajem]]
+[[produkt: vvbetter-daily-airfit-sunscreen-spf-50-gvs-5903568 | Denní SPF50+ na obličej]]
 
-## Kolik to stojí
+## Bonus: exfoliace jednou týdně
 
-Základní sada (pěna, esence, sérum, krém a SPF) vyjde u nás kolem 1 300 Kč. Přidáte-li večer odličovací olej, je to něco přes 1 600 Kč. Hodně levně můžete rutinu doplnit **plátýnkovými maskami** (u nás od cca 70 Kč za kus) nebo jednou týdně **exfoliační tonikum**, například [Cosrx AHA7 Whitehead Power Liquid](${P("cosrx-aha7-whitehead-power-liquid-100ml-spv-0226436")}) (cca 340 Kč).
+[[produkt: cosrx-aha7-whitehead-power-liquid-100ml-spv-0226436 | Exfoliační tonikum s AHA]]
 
 ## Pár pravidel, aby rutina fungovala
 
-- **Nezačínejte všechno najednou.** Nové produkty zavádějte po jednom, s odstupem několika dní.
-- **Aplikujte od nejlehčího po nejbohatší.** Tonikum, sérum, krém a nakonec SPF.
-- **Ráno ne všechno.** Večer stačí čištění, sérum a krém, ráno je důležité SPF.
-- **Zkoušejte na malém místě.** Zejména u kyselin a retinolu.
-- **Buďte trpěliví.** Změny pleti trvají týdny, ne dny.
+- **Nové produkty po jednom.** S odstupem pár dní.
+- **Od nejlehčího po nejbohatší.** Tonikum, sérum, krém, SPF.
+- **Večer méně, ráno SPF.**
+- **Buďte trpěliví.** Pleť se mění týdny, ne dny.
 
-Pokud nevíte, co vybrat podle svého typu pleti, napište nám a poradíme. Celý výběr najdete v kategorii [Korejská kosmetika](/kategorie/kosmetika/korejska-kosmetika).`,
+Nevíte, co vybrat pro svůj typ pleti? Napište nám. Celý výběr najdete v kategorii [Korejská kosmetika](/kategorie/kosmetika/korejska-kosmetika).`,
   },
   {
     slug: "podzimni-vune-do-bytu",
@@ -126,48 +138,48 @@ Pokud nevíte, co vybrat podle svého typu pleti, napište nám a poradíme. Cel
     category: "obecne" as const,
     excerpt:
       "Jak provonět byt na podzim: osvěžovač do zásuvky, difuzér s tyčinkami, svíčka, nebo sprej? Přehled podzimních vůní (dýně, jablko se skořicí, vanilka, cedr) a konkrétní tipy z našeho sortimentu od 25 Kč.",
-    content: `Podzim voní po dýni, skořici, jablkách, vanilce a dřevě. Dobrá zpráva je, že takovou vůni do bytu dostanete už za pár desítek korun. Špatná: formátů je několik a každý se hodí na něco jiného. Tady je přehled, co vybrat podle toho, jak vůni chcete používat.
+    content: `Podzim voní po dýni, skořici, jablkách, vanilce a dřevě. Vůni do bytu dostanete už za pár desítek korun, jen vyberte správný formát.
 
-## Který formát se hodí k čemu
-
-- **Elektrický osvěžovač (náplň do zásuvky):** vůně se uvolňuje rovnoměrně a týdny. Hodí se do obývacího pokoje nebo předsíně. Potřebujete přístroj, náplně pak vyměňujete.
-- **Aroma difuzér s tyčinkami:** bez elektřiny a bez plamene, stačí postavit. Vůně je jemnější a stálá.
-- **Svíčka:** vytváří atmosféru, vůni dá hlavně při hoření. Nikdy ji nenechávejte hořet bez dozoru.
-- **Sprej:** rychlé osvěžení po vaření nebo vyvětrání. Vůně vydrží krátce, ale stojí kolem 30 Kč.
+> **Rychlý přehled**
+>
+> - **Zásuvka:** stálá vůně na týdny
+> - **Difuzér s tyčinkami:** bez elektřiny, jemná vůně
+> - **Svíčka:** atmosféra, vůně při hoření
+> - **Sprej:** rychlé osvěžení za cca 30 Kč
 
 ## Dýně a podzimní koření
 
-Nejtypičtější vůně podzimu. Vyhovují těm, kdo mají rádi teplou, mírně sladkou atmosféru.
+Nejtypičtější vůně podzimu: teplá a mírně sladká.
 
-- [Air Wick náplň dýně a podzimní pepř](${P("air-wick-nahradni-napln-dyne-a-podzimni-pepr-19ml-tde-556418")}) (19 ml, cca 97 Kč): náplň do elektrického přístroje Air Wick. Patří k našim nejprodávanějším podzimním vůním.
-- [Bartek Pumpkin Season](${P("bartek-svicky-pumpkin-season-115g-tde-401151")}) (svíčka 115 g, cca 70 Kč): malá dýňová svíčka na drobný dárek nebo na stůl.
-- [Yankee Candle Pumpkin Cinnamon Swirl](${P("yankee-candle-pumpkin-cinnamon-swirl-signature-candle-368g-spv-0235866")}) (368 g, cca 505 Kč): vanilka, hnědý cukr, pražené ořechy a hřejivé koření.
+[[produkt: air-wick-nahradni-napln-dyne-a-podzimni-pepr-19ml-tde-556418 | Náplň do přístroje Air Wick, bestseller]]
+[[produkt: bartek-svicky-pumpkin-season-115g-tde-401151 | Malá dýňová svíčka]]
+[[produkt: yankee-candle-pumpkin-cinnamon-swirl-signature-candle-368g-spv-0235866 | Vanilka, hnědý cukr, koření]]
 
 ## Jablko se skořicí
 
-Vůně pečeného jablka, která v bytě vždy pomůže.
+Vůně pečeného jablka. Nejlevnější vstup do podzimu.
 
-- [Air Breeze náplň jablko a skořice](${P("air-breeze-nahradni-napln-250ml-aapple-cinnamon-tde-379120")}) (250 ml, cca 37 Kč): nejlevnější způsob, jak podzimní vůni vyzkoušet.
-- [Bispol difuzér apple cinnamon](${P("bispol-diffuser-apple-cinnamon-45ml-tde-352034")}) (45 ml, cca 62 Kč): difuzér s tyčinkami do menší místnosti.
-- [Fresh Air osvěžovač apple & cinnamon](${P("fresh-air-osvezovac-apple-cinnamon-300ml-tde-355616")}) (300 ml, cca 28 Kč): sprej na rychlé osvěžení.
-- [Yankee Candle Sparkling Cinnamon](${P("yankee-candle-sparkling-cinnamon-signature-svicka-stredni-368-g-spv-0221049")}) (368 g, cca 505 Kč): svíčka se skořicí a hřebíčkem.
+[[produkt: air-breeze-nahradni-napln-250ml-aapple-cinnamon-tde-379120 | Náplň 250 ml]]
+[[produkt: bispol-diffuser-apple-cinnamon-45ml-tde-352034 | Difuzér s tyčinkami]]
+[[produkt: fresh-air-osvezovac-apple-cinnamon-300ml-tde-355616 | Sprej na rychlé osvěžení]]
+[[produkt: yankee-candle-sparkling-cinnamon-signature-svicka-stredni-368-g-spv-0221049 | Svíčka se skořicí a hřebíčkem]]
 
 ## Vanilka a dřevo
 
-Teplejší a klidnější volby, které se hodí i mimo podzim.
+Klidnější vůně, které se hodí i mimo podzim.
 
-- [Air Wick náplň vanilka a santalové dřevo](${P("air-wick-freshmatic-napln-vanilka-a-santalove-drevo-250ml-tde-405189")}) (250 ml, cca 86 Kč): vanilka s dřevitým základem.
-- [Air Wick náplň eukalyptus a cedrové dřevo](${P("air-wick-nahradni-napln-eukalyptus-a-cedrove-drevo-19ml-tde-556419")}) (19 ml, cca 80 Kč): svěžejší, s cedrem, pro ty, komu je sladké málo.
-- [WoodWick Vanilla Bean](${P("woodwick-vanilla-bean-scented-candle-with-wooden-wick-453-6-g-spv-ww0478")}) (svíčka s dřevěným knotem, cca 630 Kč): vanilka a praskání dřevěného knotu.
+[[produkt: air-wick-freshmatic-napln-vanilka-a-santalove-drevo-250ml-tde-405189 | Vanilka se santalem]]
+[[produkt: air-wick-nahradni-napln-eukalyptus-a-cedrove-drevo-19ml-tde-556419 | Svěžejší, s cedrem]]
+[[produkt: woodwick-vanilla-bean-scented-candle-with-wooden-wick-453-6-g-spv-ww0478 | Svíčka s praskajícím knotem]]
 
-## Tipy, aby vůně dobře fungovala
+## Tipy, aby vůně fungovala
 
-- **Neumisťujte vůni do průvanu a těsně k oknu.** Rychle by zmizela.
-- **Jedna vůně v jedné místnosti.** Míchání několika vůní působí těžce.
-- **Větrejte.** I nejlepší vůně potřebuje čerstvý vzduch, jinak se po pár dnech „okouká“.
-- **Dárek pro hosty:** malá svíčka nebo difuzér do šedesáti korun je milý dárek k pozvání.
+- **Ne do průvanu.** Rychle by zmizela.
+- **Jedna vůně v místnosti.** Míchání působí těžce.
+- **Větrejte.** Jinak se vůně „okouká“.
+- **Dárek:** malá svíčka nebo difuzér do 60 Kč.
 
-Celý výběr najdete v kategoriích [Osvěžovače vzduchu](/kategorie/domacnost/osvezovace-vzduchu), [Aroma difuzéry](/kategorie/aroma-difuzery) a [Vonné svíčky](/kategorie/vonne-svicky).`,
+Celý výběr: [Osvěžovače vzduchu](/kategorie/domacnost/osvezovace-vzduchu), [Aroma difuzéry](/kategorie/aroma-difuzery) a [Vonné svíčky](/kategorie/vonne-svicky).`,
   },
 ];
 

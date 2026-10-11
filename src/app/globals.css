@@ -92,8 +92,10 @@ body {
 /* Magazine article body (magazin/[slug]/page.tsx). The HTML comes from
    blog-markdown.ts, so only plain tags are styled; h2 get an automatic
    running number via a CSS counter. */
-.article-body {
+.article-flow {
   counter-reset: article-h2;
+}
+.article-body {
   font-size: 1.0625rem;
   line-height: 1.75;
   color: color-mix(in srgb, var(--color-ink) 88%, transparent);
@@ -192,10 +194,28 @@ body {
   color: var(--color-ink);
 }
 .article-body blockquote {
-  margin: 2.25rem 0;
-  padding-left: 1.5rem;
+  margin: 2rem 0;
+  padding: 1.25rem 1.5rem;
+  background: color-mix(in srgb, var(--color-line) 40%, transparent);
   border-left: 2px solid var(--color-ink);
-  font-size: 1.1875rem;
-  font-style: italic;
-  color: var(--color-accent);
+  font-size: 1rem;
+  line-height: 1.6;
+  color: var(--color-ink);
+}
+.article-body blockquote > :last-child {
+  margin-bottom: 0;
+}
+.article-body blockquote ul {
+  margin: 0.5rem 0 0;
+  border-top: 0;
+}
+.article-body blockquote li {
+  padding: 0.35rem 0 0.35rem 1.25rem;
+  border-bottom: 0;
+}
+.article-body blockquote li::before {
+  content: "—";
+  position: absolute;
+  left: 0;
+  color: var(--color-accent-2);
 }
