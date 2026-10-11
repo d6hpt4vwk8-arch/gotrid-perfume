@@ -6,6 +6,7 @@ import { syncPacketaDeliveryStatus } from "@/lib/orders/sync-packeta-delivery";
 import { syncGlsDeliveryStatus } from "@/lib/orders/sync-gls-delivery";
 import { checkZasilkovnaVolumeMilestone } from "@/lib/marketing/zasilkovna-volume-check.server";
 import { expireInactiveLoyaltyPoints } from "@/lib/loyalty";
+import { refreshInstagramToken } from "@/lib/instagram";
 
 // Triggered by Vercel Cron (see vercel.json) — same auth pattern as
 // src/app/api/cron/sync-spventure-stock/route.ts. Bundles the daily
@@ -48,6 +49,7 @@ export async function GET(req: NextRequest) {
     zasilkovnaVolume,
     loyaltyExpiry,
     couponCleanup,
+    instagramToken,
   ] = await Promise.all([
     runSecondOrderCampaign(),
     runReviewRequestCampaign(),
@@ -57,6 +59,7 @@ export async function GET(req: NextRequest) {
     checkZasilkovnaVolumeMilestone(),
     expireInactiveLoyaltyPoints(),
     cleanupExpiredSecondOrderCoupons(),
+    refreshInstagramToken(),
   ]);
 
   return NextResponse.json({
@@ -68,5 +71,6 @@ export async function GET(req: NextRequest) {
     zasilkovnaVolume,
     loyaltyExpiry,
     couponCleanup,
+    instagramToken,
   });
 }

@@ -918,6 +918,16 @@ model Settings {
   // repricing-worth threshold, so the cron job never nags about it again.
   zasilkovnaVolumeAlertSentAt DateTime?
 
+  // Instagram feed token kept alive by the daily cron (src/lib/instagram.ts):
+  // the long-lived token lasts 60 days and can only be refreshed while still
+  // valid, so the refreshed copy lives here. `instagramTokenSeed` is the tail
+  // of the env token it was derived from — when the owner pastes a fresh token
+  // into INSTAGRAM_ACCESS_TOKEN the tail changes and the env value wins again.
+  instagramAccessToken      String?
+  instagramTokenSeed        String?
+  instagramTokenRefreshedAt DateTime?
+  instagramRefreshAlertAt   DateTime?
+
   updatedAt DateTime @updatedAt
 }
 
