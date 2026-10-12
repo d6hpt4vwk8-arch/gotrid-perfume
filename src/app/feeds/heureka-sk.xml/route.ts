@@ -4,6 +4,8 @@ import { isPaidAdsEligible } from "@/lib/feeds/paid-ads-eligibility";
 import { isConditionFlagged } from "@/lib/feeds/condition-flagged";
 import { cdata, escapeXml, isValidEan } from "@/lib/feeds/xml";
 import { czkToEur } from "@/lib/format";
+import { categoryBreadcrumbSk, paramNameSk, paramValueSk } from "@/lib/sk-terms";
+import { stripHtml } from "@/lib/feeds/xml";
 import { SITE_URL } from "@/lib/site";
 import { getSettings } from "@/lib/settings.server";
 
@@ -13,10 +15,11 @@ import { getSettings } from "@/lib/settings.server";
 // checkout-form.tsx for the same conversion at checkout), and only
 // Zásilkovna as a delivery method since that's the only carrier with a real
 // Slovak network today (checkout-schema.ts enforces this at order time too).
-// Product names/descriptions are still Czech — no Slovak translation exists
-// yet (see src/i18n/routing.ts's Phase 0/1 comment); Czech and Slovak are
-// close enough that Heureka.sk accepts this in practice, but retranslating
-// is real future work, not done here.
+// Heureka.sk requires the feed itself to be in Slovak (their registration
+// help), so only products with a Slovak name AND description
+// (Product.nameSk/descriptionSk, filled by scripts/sk-import.ts) are listed;
+// the feed grows as translations are added. Category breadcrumbs and PARAMs
+// are translated term by term via src/lib/sk-terms.ts.
 export const dynamic = "force-dynamic";
 
 export async function GET() {
@@ -32,6 +35,7 @@ export async function GET() {
   const products = allProducts.filter(
     (p) =>
       p.stock > 0 &&
+      Boolean(p.nameSk && p.descriptionSk) &&
       !p.excludeFromHeureka &&
       !isConditionFlagged(p.name, p.isDefective) &&
       isPaidAdsEligible(p.code, p.brandName),
@@ -43,14 +47,15 @@ export async function GET() {
       const images = p.images.map((img) => `${SITE_URL}${img}`);
       const [mainImage, ...altImages] = images;
       const deliveryDate = p.stock > 0 ? "0" : "7";
-      const productName = p.heurekaName ?? p.name;
+      const productName = p.nameSk!;
+      const description = stripHtml(p.descriptionSk!).slice(0, 5000);
       const priceEur = czkToEur(p.price, rate);
       const priceBeforeEur = p.compareAtPrice !== null ? czkToEur(p.compareAtPrice, rate) : null;
 
       return `  <SHOPITEM>
     <ITEM_ID>${escapeXml(p.code)}</ITEM_ID>
     <PRODUCTNAME>${escapeXml(productName)}</PRODUCTNAME>
-    <DESCRIPTION>${cdata(p.description)}</DESCRIPTION>
+    <DESCRIPTION>${cdata(description)}</DESCRIPTION>
     <URL>${escapeXml(url)}</URL>
     ${mainImage ? `<IMGURL>${escapeXml(mainImage)}</IMGURL>` : ""}
 ${altImages.map((img) => `    <IMGURL_ALTERNATIVE>${escapeXml(img)}</IMGURL_ALTERNATIVE>`).join("\n")}
@@ -58,7 +63,7 @@ ${altImages.map((img) => `    <IMGURL_ALTERNATIVE>${escapeXml(img)}</IMGURL_ALTE
     ${priceBeforeEur !== null ? `<PRICE_BEFORE>${priceBeforeEur.toFixed(2)}</PRICE_BEFORE>` : ""}
     ${p.brandName ? `<MANUFACTURER>${escapeXml(p.brandName)}</MANUFACTURER>` : ""}
     ${p.ean && isValidEan(p.ean) ? `<EAN>${escapeXml(p.ean)}</EAN>` : ""}
-    ${p.categoryBreadcrumb ? `<CATEGORYTEXT>${escapeXml(p.categoryBreadcrumb)}</CATEGORYTEXT>` : ""}
+    ${p.categoryBreadcrumb ? `<CATEGORYTEXT>${escapeXml(categoryBreadcrumbSk(p.categoryBreadcrumb))}</CATEGORYTEXT>` : ""}
     <DELIVERY_DATE>${deliveryDate}</DELIVERY_DATE>
     <DELIVERY>
       <DELIVERY_ID>ZASILKOVNA</DELIVERY_ID>
@@ -68,7 +73,7 @@ ${altImages.map((img) => `    <IMGURL_ALTERNATIVE>${escapeXml(img)}</IMGURL_ALTE
 ${p.params
   .map(
     (param) =>
-      `    <PARAM><PARAM_NAME>${escapeXml(param.name)}</PARAM_NAME><VAL>${escapeXml(param.value)}</VAL></PARAM>`,
+      `    <PARAM><PARAM_NAME>${escapeXml(paramNameSk(param.name))}</PARAM_NAME><VAL>${escapeXml(paramValueSk(param.value))}</VAL></PARAM>`,
   )
   .join("\n")}
   </SHOPITEM>`;

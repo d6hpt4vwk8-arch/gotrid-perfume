@@ -122,6 +122,12 @@ model Product {
   categories ProductCategory[]
 
   stock   Int     @default(0)
+  // Slovak copy for the Heureka.sk feed (and later a Slovak storefront) — the
+  // feed only lists products that have both set, see feeds/heureka-sk.xml.
+  // descriptionSk keeps the same HTML structure as description.
+  nameSk        String?
+  descriptionSk String? @db.Text
+
   visible Boolean @default(true)
 
   // Units physically held at our own location, separate from `stock` above

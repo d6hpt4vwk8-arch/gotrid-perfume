@@ -24,6 +24,9 @@ export interface FeedProduct {
   isDefective: boolean;
   /** Heureka-only PRODUCTNAME override — see Product.heurekaName in schema.prisma. Null for the ~85% of the catalog whose regular name already matches Heureka's own catalog title. */
   heurekaName: string | null;
+  /** Slovak copy for the Heureka.sk feed (Product.nameSk/descriptionSk); null until translated. */
+  nameSk: string | null;
+  descriptionSk: string | null;
   /** True if any of the product's categories sits under the Parfémy tree. */
   isPerfume: boolean;
   /** True if the product is (also) filed under Výprodej — see google-exclusions.ts. */
@@ -150,6 +153,8 @@ export async function getFeedProducts(): Promise<FeedProduct[]> {
       : null,
     excludeFromHeureka: p.excludeFromHeureka,
     heurekaName: p.heurekaName,
+    nameSk: p.nameSk,
+    descriptionSk: p.descriptionSk,
     isDefective: p.isDefective,
     isPerfume: p.categories.some((c) => c.category.fullSlug.startsWith("parfemy")),
     isOnClearance: p.categories.some((c) => c.category.fullSlug === "vyprodej"),
