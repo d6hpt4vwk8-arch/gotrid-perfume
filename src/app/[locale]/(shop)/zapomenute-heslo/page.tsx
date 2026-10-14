@@ -1,9 +1,11 @@
 "use client";
 
-import Link from "next/link";
+import { useTr } from "@/i18n/use-tr";
+import { Link } from "@/i18n/navigation";
 import { useState } from "react";
 
 export default function ForgotPasswordPage() {
+  const tr = useTr();
   const [email, setEmail] = useState("");
   const [error, setError] = useState<string | null>(null);
   const [message, setMessage] = useState<string | null>(null);
@@ -22,34 +24,34 @@ export default function ForgotPasswordPage() {
       });
       const data = await res.json();
       if (!res.ok) {
-        setError(data.error ?? "Něco se nepodařilo, zkuste to prosím znovu.");
+        setError(tr(data.error ?? "Něco se nepodařilo, zkuste to prosím znovu."));
         setSubmitting(false);
         return;
       }
-      setMessage(data.message);
+      setMessage(tr(data.message));
     } catch {
-      setError("Něco se nepodařilo, zkuste to prosím znovu.");
+      setError(tr("Něco se nepodařilo, zkuste to prosím znovu."));
       setSubmitting(false);
     }
   }
 
   return (
     <main className="mx-auto flex max-w-sm flex-1 flex-col justify-center gap-4 px-4 py-20">
-      <h1 className="text-2xl font-bold text-ink">Zapomenuté heslo</h1>
+      <h1 className="text-2xl font-bold text-ink">{tr("Zapomenuté heslo")}</h1>
 
       {message ? (
         <p className="text-sm text-ok">{message}</p>
       ) : (
         <>
           <p className="text-sm text-accent-2">
-            Zadejte e-mail, na který jsme vám poslali odkaz pro nastavení nového hesla.
+            {tr("Zadejte e-mail, na který jsme vám poslali odkaz pro nastavení nového hesla.")}
           </p>
           <form onSubmit={handleSubmit} className="flex flex-col gap-3">
             <input
               required
               type="email"
               autoFocus
-              placeholder="E-mail"
+              placeholder={tr("E-mail")}
               value={email}
               onChange={(e) => setEmail(e.target.value)}
               className="rounded-sm border border-line px-3 py-2 text-sm text-ink"
@@ -60,14 +62,14 @@ export default function ForgotPasswordPage() {
               disabled={submitting}
               className="rounded-sm bg-ink px-4 py-2 text-sm font-semibold text-white hover:bg-accent disabled:cursor-not-allowed disabled:bg-line disabled:text-accent-2"
             >
-              {submitting ? "Odesílám…" : "Odeslat odkaz"}
+              {submitting ? tr("Odesílám…") : tr("Odeslat odkaz")}
             </button>
           </form>
         </>
       )}
 
       <Link href="/prihlaseni" className="text-sm text-accent-2 hover:text-accent hover:underline">
-        Zpět na přihlášení
+        {tr("Zpět na přihlášení")}
       </Link>
     </main>
   );

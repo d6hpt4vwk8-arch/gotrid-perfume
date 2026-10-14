@@ -1,12 +1,14 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import Link from "next/link";
+import { Link } from "@/i18n/navigation";
 import { useWishlist } from "@/lib/wishlist-context";
+import { useTr } from "@/i18n/use-tr";
 import { ProductCard, type ProductCardData } from "@/components/product-card";
 
 export default function WishlistPage() {
   const { items } = useWishlist();
+  const tr = useTr();
   const [products, setProducts] = useState<ProductCardData[] | null>(null);
 
   useEffect(() => {
@@ -24,8 +26,8 @@ export default function WishlistPage() {
   if (products === null) {
     return (
       <main className="mx-auto flex max-w-6xl flex-1 flex-col px-4 py-10">
-        <h1 className="mb-6 text-2xl font-bold text-ink">Oblíbené produkty</h1>
-        <p className="text-accent-2">Načítání…</p>
+        <h1 className="mb-6 text-2xl font-bold text-ink">{tr("Oblíbené produkty")}</h1>
+        <p className="text-accent-2">{tr("Načítání…")}</p>
       </main>
     );
   }
@@ -33,15 +35,15 @@ export default function WishlistPage() {
   if (products.length === 0) {
     return (
       <main className="mx-auto flex max-w-3xl flex-1 flex-col items-center gap-4 px-4 py-20 text-center">
-        <h1 className="text-2xl font-bold text-ink">Nemáte žádné oblíbené produkty</h1>
+        <h1 className="text-2xl font-bold text-ink">{tr("Nemáte žádné oblíbené produkty")}</h1>
         <p className="text-accent-2">
-          Klikněte na srdíčko u produktu a uložíte si ho sem na později.
+          {tr("Klikněte na srdíčko u produktu a uložíte si ho sem na později.")}
         </p>
         <Link
           href="/"
           className="rounded-sm bg-ink px-5 py-2.5 text-sm font-semibold text-white hover:bg-accent"
         >
-          Zpět na výběr produktů
+          {tr("Zpět na výběr produktů")}
         </Link>
       </main>
     );
@@ -49,7 +51,7 @@ export default function WishlistPage() {
 
   return (
     <main className="mx-auto flex max-w-6xl flex-1 flex-col px-4 py-10">
-      <h1 className="mb-6 text-2xl font-bold text-ink">Oblíbené produkty</h1>
+      <h1 className="mb-6 text-2xl font-bold text-ink">{tr("Oblíbené produkty")}</h1>
       <div className="grid grid-cols-2 gap-x-4 gap-y-8 sm:grid-cols-3 md:grid-cols-4">
         {products.map((product) => (
           <ProductCard key={product.slug} product={product} />

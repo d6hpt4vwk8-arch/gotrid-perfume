@@ -1,5 +1,5 @@
 import Image from "next/image";
-import Link from "next/link";
+import { Link } from "@/i18n/navigation";
 import { InstagramFeed } from "@/components/instagram-feed";
 import { SocialLinks } from "@/components/social-links";
 import { ShippingIcon } from "@/components/shipping-icons";
@@ -7,6 +7,8 @@ import { PaymentIcons } from "@/components/payment-icons";
 import { prisma } from "@/lib/prisma";
 import { currentSeller, sellerLine, CONTACT } from "@/lib/business-identity";
 import type { ShippingMethod } from "@prisma/client";
+import { getCurrentLocale, getTr } from "@/i18n/tr.server";
+import { SK_ONLY_WHERE } from "@/lib/sk-visibility";
 
 const TOP_BRANDS_COUNT = 14;
 
@@ -26,6 +28,8 @@ const INFO_LINKS = [
 
 export async function SiteFooter() {
   const seller = currentSeller();
+  const [tr, locale] = await Promise.all([getTr(), getCurrentLocale()]);
+  const isSk = locale === "sk";
   // Highlight the brands with the most in-stock products — a fair proxy for
   // "what we actually carry a lot of" without needing a curated pick list.
   // Full A-Z list lives at /znacky.
@@ -33,7 +37,7 @@ export async function SiteFooter() {
     select: {
       name: true,
       slug: true,
-      _count: { select: { products: { where: { visible: true, stock: { gt: 0 } } } } },
+      _count: { select: { products: { where: { visible: true, stock: { gt: 0 }, ...(isSk ? SK_ONLY_WHERE : {}) } } } },
     },
   });
   const topBrands = topBrandsRaw
@@ -64,13 +68,14 @@ export async function SiteFooter() {
           </div>
         </div>
         <div>
-          <h3 className="text-sm font-semibold text-white">Nákup s jistotou</h3>
+          <h3 className="text-sm font-semibold text-white">{tr("Nákup s jistotou")}</h3>
           <ul className="mt-2 flex flex-col gap-1.5 text-sm text-white/65">
-            <li>Zboží nakupujeme přímo od evropských distributorů</li>
-            <li>14 dní na vrácení zboží</li>
+            <li>{tr("Zboží nakupujeme přímo od evropských distributorů")}</li>
+            <li>{tr("14 dní na vrácení zboží")}</li>
           </ul>
           {/* Heureka's own badge, served from their CDN — it disappears on its
               own if the shop ever drops below the certificate threshold. */}
+          {!isSk && (
           <a
             href="https://obchody.heureka.cz/gotridperfume-cz/recenze/"
             target="_blank"
@@ -86,21 +91,22 @@ export async function SiteFooter() {
               loading="lazy"
             />
           </a>
+          )}
         </div>
         <div>
-          <h3 className="text-sm font-semibold text-white">Informace</h3>
+          <h3 className="text-sm font-semibold text-white">{tr("Informace")}</h3>
           <ul className="mt-2 flex flex-col gap-1.5 text-sm text-white/65">
-            {INFO_LINKS.map((link) => (
+            {INFO_LINKS.filter((l) => !isSk || l.href !== "/magazin").map((link) => (
               <li key={link.href}>
                 <Link href={link.href} className="hover:text-white hover:underline">
-                  {link.label}
+                  {tr(link.label)}
                 </Link>
               </li>
             ))}
           </ul>
         </div>
         <div>
-          <h3 className="text-sm font-semibold text-white">Kontakt</h3>
+          <h3 className="text-sm font-semibold text-white">{tr("Kontakt")}</h3>
           <p className="mt-2 text-sm text-white/65">
             {sellerLine(seller)}
             <br />
@@ -108,7 +114,7 @@ export async function SiteFooter() {
             {seller.commercialRegister && (
               <>
                 <br />
-                {seller.commercialRegister}
+                {tr(seller.commercialRegister)}
               </>
             )}
             <br />
@@ -120,7 +126,7 @@ export async function SiteFooter() {
           </p>
         </div>
         <div>
-          <h3 className="text-sm font-semibold text-white">Sledujte nás</h3>
+          <h3 className="text-sm font-semibold text-white">{tr("Sledujte nás")}</h3>
           <div className="mt-2">
             <SocialLinks />
           </div>
@@ -130,7 +136,7 @@ export async function SiteFooter() {
       {topBrands.length > 0 && (
         <div className="border-t border-white/10 px-4 py-8">
           <div className="mx-auto flex max-w-6xl flex-col gap-3">
-            <h3 className="text-sm font-semibold text-white">Značky</h3>
+            <h3 className="text-sm font-semibold text-white">{tr("Značky")}</h3>
             <div className="flex flex-wrap gap-2">
               {topBrands.map((brand) => (
                 <Link
@@ -145,7 +151,7 @@ export async function SiteFooter() {
                 href="/znacky"
                 className="rounded-full border border-white/40 px-3.5 py-1.5 text-xs font-medium text-white hover:bg-white hover:text-ink"
               >
-                Zobrazit všechny značky →
+                {tr("Zobrazit všechny značky →")}
               </Link>
             </div>
           </div>

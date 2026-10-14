@@ -1,12 +1,15 @@
 "use client";
 
-import Link from "next/link";
+import { useTr, useIsSk } from "@/i18n/use-tr";
+import { Link } from "@/i18n/navigation";
 import { useState } from "react";
-import { useRouter } from "next/navigation";
+import { useRouter } from "@/i18n/navigation";
 import { OAuthLoginButton } from "@/components/oauth-login-button";
 import { SeznamIcon, FacebookIcon } from "@/components/oauth-icons";
 
 export default function RegisterPage() {
+  const tr = useTr();
+  const isSk = useIsSk();
   const router = useRouter();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -37,49 +40,49 @@ export default function RegisterPage() {
       });
       const data = await res.json();
       if (!res.ok) {
-        setError(data.error ?? "Registraci se nepodařilo dokončit.");
+        setError(tr(data.error ?? "Registraci se nepodařilo dokončit."));
         setSubmitting(false);
         return;
       }
       router.push("/muj-ucet");
       router.refresh();
     } catch {
-      setError("Registraci se nepodařilo dokončit, zkuste to prosím znovu.");
+      setError(tr("Registraci se nepodařilo dokončit, zkuste to prosím znovu."));
       setSubmitting(false);
     }
   }
 
   return (
     <main className="mx-auto flex max-w-sm flex-1 flex-col justify-center gap-4 px-4 py-20">
-      <h1 className="text-2xl font-bold text-ink">Vytvořit účet</h1>
+      <h1 className="text-2xl font-bold text-ink">{tr("Vytvořit účet")}</h1>
       <p className="text-sm text-accent-2">
-        Nakupovat můžete i bez registrace jako host.{" "}
+        {tr("Nakupovat můžete i bez registrace jako host.")}{" "}
         <Link href="/prihlaseni" className="text-ink underline hover:text-accent">
-          Už máte účet? Přihlaste se
+          {tr("Už máte účet? Přihlaste se")}
         </Link>
         .
       </p>
       <div className="flex flex-col gap-2">
-        <OAuthLoginButton href="/api/auth/seznam" icon={<SeznamIcon className="h-5 w-5" />} label="Pokračovat přes Seznam" />
-        <OAuthLoginButton href="/api/auth/facebook" icon={<FacebookIcon className="h-5 w-5" />} label="Pokračovat přes Facebook" />
+        {!isSk && <OAuthLoginButton href="/api/auth/seznam" icon={<SeznamIcon className="h-5 w-5" />} label={tr("Pokračovat přes Seznam")} />}
+        <OAuthLoginButton href="/api/auth/facebook" icon={<FacebookIcon className="h-5 w-5" />} label={tr("Pokračovat přes Facebook")} />
       </div>
       <div className="flex items-center gap-3 text-xs text-accent-2">
         <span className="h-px flex-1 bg-line" />
-        nebo e-mailem
+        {tr("nebo e-mailem")}
         <span className="h-px flex-1 bg-line" />
       </div>
       <form onSubmit={handleSubmit} className="flex flex-col gap-3">
         <div className="flex gap-3">
           <input
             required
-            placeholder="Jméno"
+            placeholder={tr("Jméno")}
             value={firstName}
             onChange={(e) => setFirstName(e.target.value)}
             className="w-full rounded-sm border border-line px-3 py-2 text-sm text-ink"
           />
           <input
             required
-            placeholder="Příjmení"
+            placeholder={tr("Příjmení")}
             value={lastName}
             onChange={(e) => setLastName(e.target.value)}
             className="w-full rounded-sm border border-line px-3 py-2 text-sm text-ink"
@@ -88,14 +91,14 @@ export default function RegisterPage() {
         <input
           required
           type="email"
-          placeholder="E-mail"
+          placeholder={tr("E-mail")}
           value={email}
           onChange={(e) => setEmail(e.target.value)}
           className="rounded-sm border border-line px-3 py-2 text-sm text-ink"
         />
         <input
           type="tel"
-          placeholder="Telefon (nepovinné)"
+          placeholder={tr("Telefon (nepovinné)")}
           value={phone}
           onChange={(e) => setPhone(e.target.value)}
           className="rounded-sm border border-line px-3 py-2 text-sm text-ink"
@@ -103,7 +106,7 @@ export default function RegisterPage() {
         <input
           required
           type="password"
-          placeholder="Heslo (alespoň 8 znaků)"
+          placeholder={tr("Heslo (alespoň 8 znaků)")}
           value={password}
           onChange={(e) => setPassword(e.target.value)}
           className="rounded-sm border border-line px-3 py-2 text-sm text-ink"
@@ -115,7 +118,7 @@ export default function RegisterPage() {
             onChange={(e) => setMarketingOptIn(e.target.checked)}
             className="mt-0.5"
           />
-          Chci dostávat novinky a slevy e-mailem.
+          {tr("Chci dostávat novinky a slevy e-mailem.")}
         </label>
         {error && <p className="text-sm text-red-600">{error}</p>}
         <button
@@ -123,7 +126,7 @@ export default function RegisterPage() {
           disabled={submitting}
           className="rounded-sm bg-ink px-4 py-2 text-sm font-semibold text-white hover:bg-accent disabled:cursor-not-allowed disabled:bg-line disabled:text-accent-2"
         >
-          {submitting ? "Vytvářím účet…" : "Vytvořit účet"}
+          {submitting ? tr("Vytvářím účet…") : tr("Vytvořit účet")}
         </button>
       </form>
     </main>

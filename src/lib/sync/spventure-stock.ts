@@ -30,6 +30,7 @@
 import { prisma } from "@/lib/prisma";
 import { logAdminActivity } from "@/lib/admin/activity-log";
 import { notifyStockAlerts } from "@/lib/stock-alerts";
+import { createSupplierLogRecorder, pruneSupplierLog } from "@/lib/sync/supplier-stock-log";
 
 // ?cy=czk pinned explicitly (SP Venture's own feed-customization docs, ISO
 // 4217) rather than relying on whatever their default happens to be — we
@@ -179,6 +180,8 @@ export async function syncSpVentureStock(dryRun = false, mode: SpVentureSyncMode
     .filter((code) => !feed.has(code));
   const siteStock = await lookupMissingCodes(missingCodes);
 
+  const stockLog = await createSupplierLogRecorder();
+
   const result: SpVentureSyncResult = {
     checked: products.length,
     updated: [],
@@ -244,6 +247,8 @@ export async function syncSpVentureStock(dryRun = false, mode: SpVentureSyncMode
     // nonsensical strike-through — drop it when we raise the price past it.
     const dropCompareAt = sellPriceTooLow && product.compareAtPrice !== null && Number(product.compareAtPrice) <= floorPrice;
 
+    stockLog.record(product.id, supplierValue, wholesale);
+
     const stockChanged = feedValue !== product.stock;
     const visibilityChanged = desiredVisible !== product.visible;
     const slowerDeliveryChanged = slowerDelivery !== product.slowerDelivery;
@@ -279,6 +284,13 @@ export async function syncSpVentureStock(dryRun = false, mode: SpVentureSyncMode
         );
       }
     }
+  }
+
+  // History is written even for products whose own row needed no update (the
+  // `continue` above), so it is flushed here rather than inside the loop.
+  if (!dryRun) {
+    await stockLog.flush();
+    if (mode === "full") await pruneSupplierLog();
   }
 
   if (!dryRun && result.priceRaised.length > 0) {

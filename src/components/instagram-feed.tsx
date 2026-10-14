@@ -1,4 +1,5 @@
 import { getRecentInstagramPosts } from "@/lib/instagram";
+import { getTr } from "@/i18n/tr.server";
 
 const INSTAGRAM_URL = "https://www.instagram.com/gotrid_perfume/";
 
@@ -9,7 +10,7 @@ const INSTAGRAM_URL = "https://www.instagram.com/gotrid_perfume/";
  * SocialLinks, so there's nothing to fall back to here.
  */
 export async function InstagramFeed() {
-  const posts = await getRecentInstagramPosts(6);
+  const [posts, tr] = await Promise.all([getRecentInstagramPosts(6), getTr()]);
   if (posts.length === 0) return null;
 
   return (
@@ -21,7 +22,7 @@ export async function InstagramFeed() {
           rel="noopener noreferrer"
           className="text-sm font-semibold text-white hover:text-white/80"
         >
-          Poslední z Instagramu
+          {tr("Poslední z Instagramu")}
         </a>
         <div className="mt-3 grid grid-cols-3 gap-2 sm:grid-cols-6">
           {posts.map((post) => (
@@ -38,7 +39,7 @@ export async function InstagramFeed() {
               {/* eslint-disable-next-line @next/next/no-img-element */}
               <img
                 src={post.mediaUrl}
-                alt={post.caption?.slice(0, 80) || "Instagram příspěvek Gotrid Perfume"}
+                alt={post.caption?.slice(0, 80) || tr("Instagram příspěvek Gotrid Perfume")}
                 className="h-full w-full object-cover transition hover:opacity-80"
               />
             </a>

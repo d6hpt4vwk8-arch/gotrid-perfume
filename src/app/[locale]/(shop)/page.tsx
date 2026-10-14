@@ -1,5 +1,5 @@
 import Image from "next/image";
-import Link from "next/link";
+import { Link } from "@/i18n/navigation";
 import { prisma } from "@/lib/prisma";
 import { getCategoryNavTree } from "@/lib/categories.server";
 import { primaryVariantWhere } from "@/lib/product-filters";
@@ -10,12 +10,19 @@ import { getHeurekaShopReviews } from "@/lib/heureka-reviews";
 import { getSettings } from "@/lib/settings.server";
 import type { Metadata } from "next";
 import { jsonLdScript } from "@/lib/json-ld";
-import { absoluteUrl } from "@/lib/seo";
+import { absoluteUrl, localeAlternates } from "@/lib/seo";
+import { getCurrentLocale, getTr } from "@/i18n/tr.server";
+import { translateCategoryTree } from "@/lib/sk-terms";
+import { skScope } from "@/lib/sk-visibility";
 import { CONTACT, currentSeller } from "@/lib/business-identity";
 import { BRAND_PROFILE_URLS } from "@/components/social-links";
 
-export const metadata: Metadata = {
-  alternates: { canonical: "/" },
+export async function generateMetadata({ params }: { params: Promise<{ locale: string }> }): Promise<Metadata> {
+  const { locale } = await params;
+  return { ...baseMetadata, alternates: localeAlternates(locale, "/") };
+}
+
+const baseMetadata: Metadata = {
   // Seznam Webmaster ownership check for https://www.gotridperfume.cz (account
   // info@gotridperfume.cz, 2026-10-11). Must stay on the homepage's <head>.
   other: { "seznam-wmt": "Y4eAroD0xsuK0otZXiQh94Hso5ArylCI" },
@@ -50,17 +57,19 @@ const KOREAN_COSMETICS_BRANDS = [
 
 export default async function HomePage() {
   const seller = currentSeller();
-  const [categories, saleProducts, koreanCosmetics, arabicPerfumes, latestReviews, settings] =
+  const [tr, locale] = await Promise.all([getTr(), getCurrentLocale()]);
+  const isSk = locale === "sk";
+  const [rawCategories, saleProducts, koreanCosmetics, arabicPerfumes, latestReviews, settings] =
     await Promise.all([
       getCategoryNavTree(),
       prisma.product.findMany({
-        where: { visible: true, ...primaryVariantWhere, compareAtPrice: { not: null }, stock: { gt: 0 } },
+        where: skScope({ visible: true, ...primaryVariantWhere, compareAtPrice: { not: null }, stock: { gt: 0 } }, isSk),
         orderBy: [{ ownStock: "desc" }, { priority: "desc" }, { createdAt: "desc" }],
         take: 12,
         include: { brand: true, images: { orderBy: { sortOrder: "asc" }, take: 1 } },
       }),
       prisma.product.findMany({
-        where: {
+        where: skScope({
           visible: true,
           ...primaryVariantWhere,
           brand: { name: { in: KOREAN_COSMETICS_BRANDS } },
@@ -69,18 +78,18 @@ export default async function HomePage() {
           // damaged-packaging batch belongs only in Výprodej (see
           // isDefective in schema.prisma), not showcased here.
           isDefective: false,
-        },
+        }, isSk),
         orderBy: [{ ownStock: "desc" }, { priority: "desc" }, { createdAt: "desc" }],
         take: 12,
         include: { brand: true, images: { orderBy: { sortOrder: "asc" }, take: 1 } },
       }),
       prisma.product.findMany({
-        where: {
+        where: skScope({
           visible: true,
           ...primaryVariantWhere,
           categories: { some: { category: { fullSlug: "parfemy/arabske-parfemy" } } },
           stock: { gt: 0 },
-        },
+        }, isSk),
         orderBy: [{ ownStock: "desc" }, { priority: "desc" }, { createdAt: "desc" }],
         take: 12,
         include: { brand: true, images: { orderBy: { sortOrder: "asc" }, take: 1 } },
@@ -88,6 +97,7 @@ export default async function HomePage() {
       getHeurekaShopReviews(6),
       getSettings(),
     ]);
+  const categories = isSk ? translateCategoryTree(rawCategories) : rawCategories;
 
   return (
     // w-full matters here, not decorative: <body> is flex-col, so <main>
@@ -127,7 +137,7 @@ export default async function HomePage() {
               "@type": "WebSite",
               name: "Gotrid Perfume",
               url: absoluteUrl("/"),
-              inLanguage: "cs",
+              inLanguage: locale,
               potentialAction: {
                 "@type": "SearchAction",
                 target: `${absoluteUrl("/hledat")}?q={search_term_string}`,
@@ -140,7 +150,7 @@ export default async function HomePage() {
       <HomeHero />
 
       <section>
-        <h2 className="mb-4 text-lg font-semibold">Kategorie</h2>
+        <h2 className="mb-4 text-lg font-semibold">{tr("Kategorie")}</h2>
         {/* One 3D icon per top-level category (public/categories/<fullSlug>.jpg); a category without
             an icon yet falls back to a plain text tile. */}
         <div className="grid grid-cols-2 gap-x-4 gap-y-5 sm:grid-cols-5">
@@ -179,7 +189,7 @@ export default async function HomePage() {
 
       {koreanCosmetics.length > 0 && (
         <section>
-          <h2 className="mb-4 text-lg font-semibold">Korejská kosmetika</h2>
+          <h2 className="mb-4 text-lg font-semibold">{tr("Korejská kosmetika")}</h2>
           <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 md:grid-cols-4">
             {koreanCosmetics.map((product) => (
               <ProductCard key={product.slug} product={product} freeShippingThreshold={settings.freeShippingThreshold} />
@@ -190,7 +200,7 @@ export default async function HomePage() {
 
       {arabicPerfumes.length > 0 && (
         <section>
-          <h2 className="mb-4 text-lg font-semibold">Arabské parfémy</h2>
+          <h2 className="mb-4 text-lg font-semibold">{tr("Arabské parfémy")}</h2>
           <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 md:grid-cols-4">
             {arabicPerfumes.map((product) => (
               <ProductCard key={product.slug} product={product} freeShippingThreshold={settings.freeShippingThreshold} />
@@ -201,7 +211,7 @@ export default async function HomePage() {
 
       {saleProducts.length > 0 && (
         <section>
-          <h2 className="mb-4 text-lg font-semibold">Výprodej</h2>
+          <h2 className="mb-4 text-lg font-semibold">{tr("Výprodej")}</h2>
           <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 md:grid-cols-4">
             {saleProducts.map((product) => (
               <ProductCard key={product.slug} product={product} freeShippingThreshold={settings.freeShippingThreshold} />
@@ -210,9 +220,9 @@ export default async function HomePage() {
         </section>
       )}
 
-      {latestReviews.length > 0 && (
+      {!isSk && latestReviews.length > 0 && (
         <section>
-          <h2 className="mb-4 text-lg font-semibold">Poslední recenze</h2>
+          <h2 className="mb-4 text-lg font-semibold">{tr("Poslední recenze")}</h2>
           <div className="grid gap-4 sm:grid-cols-2 md:grid-cols-3">
             {latestReviews.map((review) => (
               <div
@@ -224,7 +234,7 @@ export default async function HomePage() {
                   {"☆".repeat(5 - review.rating)}
                 </span>
                 <p className="text-neutral-600 line-clamp-3">{review.text}</p>
-                <span className="text-xs text-neutral-400">Ověřeno zákazníky — Heureka.cz</span>
+                <span className="text-xs text-neutral-400">{tr("Ověřeno zákazníky — Heureka.cz")}</span>
               </div>
             ))}
           </div>

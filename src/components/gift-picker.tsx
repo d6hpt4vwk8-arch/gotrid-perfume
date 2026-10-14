@@ -1,5 +1,6 @@
 "use client";
 
+import { useTr, useIsSk } from "@/i18n/use-tr";
 import Image from "next/image";
 import { useEffect, useState } from "react";
 import { useCart } from "@/lib/cart-context";
@@ -8,6 +9,7 @@ import { useCurrency } from "@/lib/currency-context";
 interface GiftOption {
   productId: string;
   name: string;
+  nameSk?: string | null;
   image: string | null;
   value: number;
 }
@@ -22,6 +24,8 @@ interface GiftOption {
 export function GiftPicker({ unlocked }: { unlocked: boolean }) {
   const { giftProductId, setGiftProductId } = useCart();
   const { price } = useCurrency();
+  const tr = useTr();
+  const isSk = useIsSk();
   const [gifts, setGifts] = useState<GiftOption[]>([]);
   const [loaded, setLoaded] = useState(false);
 
@@ -54,7 +58,7 @@ export function GiftPicker({ unlocked }: { unlocked: boolean }) {
   return (
     <div className="flex flex-col gap-2 rounded-sm border border-ok/40 bg-ok/5 p-3">
       <span className="text-sm font-semibold text-ink">
-        Dárek zdarma — vyberte si jeden
+        {tr("Dárek zdarma — vyberte si jeden")}
       </span>
       <div className="flex flex-col gap-1.5">
         {gifts.map((gift) => (
@@ -76,8 +80,8 @@ export function GiftPicker({ unlocked }: { unlocked: boolean }) {
                 <Image src={gift.image} alt="" fill sizes="40px" className="object-cover" />
               </span>
             )}
-            <span className="flex-1 text-sm text-ink">{gift.name}</span>
-            <span className="text-xs text-accent-2">v hodnotě {price(gift.value)}</span>
+            <span className="flex-1 text-sm text-ink">{isSk && gift.nameSk ? gift.nameSk : gift.name}</span>
+            <span className="text-xs text-accent-2">{tr("v hodnotě")} {price(gift.value)}</span>
           </label>
         ))}
       </div>
@@ -87,7 +91,7 @@ export function GiftPicker({ unlocked }: { unlocked: boolean }) {
           onClick={() => setGiftProductId(null)}
           className="w-fit text-xs text-accent-2 underline hover:text-accent"
         >
-          Dárek nechci
+          {tr("Dárek nechci")}
         </button>
       )}
     </div>

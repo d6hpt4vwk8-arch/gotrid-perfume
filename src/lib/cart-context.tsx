@@ -10,7 +10,8 @@ import {
   useState,
   type ReactNode,
 } from "react";
-import { formatPrice } from "@/lib/format";
+import { useCurrency } from "@/lib/currency-context";
+import { useTr } from "@/i18n/use-tr";
 
 export interface CartItem {
   productId: string;
@@ -69,6 +70,8 @@ export function CartProvider({
   children: ReactNode;
   freeShippingThreshold: number;
 }) {
+  const tr = useTr();
+  const { price: formatAmount } = useCurrency();
   const [items, setItems] = useState<CartItem[]>([]);
   const [couponCode, setCouponCode] = useState<string | null>(null);
   const [giftProductId, setGiftProductId] = useState<string | null>(null);
@@ -129,14 +132,14 @@ export function CartProvider({
       // threshold, never actually saying the item was added.
       const message =
         remaining > 0
-          ? `Přidáno do košíku! Ještě ${formatPrice(remaining)} do dopravy zdarma`
-          : "Přidáno do košíku! Máte nárok na dopravu zdarma 🎉";
+          ? tr("Přidáno do košíku! Ještě {price} do dopravy zdarma", { price: formatAmount(remaining) })
+          : tr("Přidáno do košíku! Máte nárok na dopravu zdarma 🎉");
 
       if (toastTimeoutRef.current) clearTimeout(toastTimeoutRef.current);
       setToast(message);
       toastTimeoutRef.current = setTimeout(() => setToast(null), 3500);
     },
-    [freeShippingThreshold],
+    [freeShippingThreshold, tr, formatAmount],
   );
 
   const removeItem = useCallback((productId: string) => {

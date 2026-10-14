@@ -9,6 +9,7 @@ import { renderSecondOrderEmailHtml } from "@/lib/email/send-second-order-email"
 import { renderPasswordResetEmailHtml } from "@/lib/email/send-password-reset-email";
 import { renderStockAlertEmailHtml } from "@/lib/email/send-stock-alert-email";
 import { renderReviewRequestEmailHtml } from "@/lib/email/send-review-request-email";
+import { renderShippedEmailHtml } from "@/lib/email/send-shipped-email";
 import { isConditionFlagged } from "@/lib/feeds/condition-flagged";
 import type { CartItem } from "@/lib/cart-context";
 
@@ -17,7 +18,24 @@ import type { CartItem } from "@/lib/cart-context";
 // send. Protected by src/middleware.ts's blanket /api/admin/* auth check.
 export const dynamic = "force-dynamic";
 
-export async function GET(_req: NextRequest, { params }: { params: Promise<{ type: string }> }) {
+// ?country=sk previews the Slovak version (EUR amounts, Slovak texts); add
+// ?payment=bank to force the bank-transfer block (EUR account + PAY by square).
+function applyPreviewOptions<T extends { shippingCountry: string; paymentMethod: string; total: unknown; chargedCurrency: string | null; chargedAmount: unknown }>(
+  order: T,
+  req: NextRequest,
+): T {
+  const sk = req.nextUrl.searchParams.get("country") === "sk";
+  const bank = req.nextUrl.searchParams.get("payment") === "bank";
+  return {
+    ...order,
+    ...(sk
+      ? { shippingCountry: "SK", chargedCurrency: "EUR", chargedAmount: Math.round((Number(order.total) / 24.5) * 100) / 100 }
+      : {}),
+    ...(bank ? { paymentMethod: "BANK_TRANSFER" } : {}),
+  };
+}
+
+export async function GET(req: NextRequest, { params }: { params: Promise<{ type: string }> }) {
   const { type } = await params;
 
   if (type === "order-confirmation") {
@@ -28,7 +46,17 @@ export async function GET(_req: NextRequest, { params }: { params: Promise<{ typ
     if (!order) {
       return NextResponse.json({ error: "Zatím žádná objednávka k náhledu." }, { status: 404 });
     }
-    return new NextResponse(await renderCustomerOrderConfirmationHtml(order), {
+    return new NextResponse(await renderCustomerOrderConfirmationHtml(applyPreviewOptions(order, req) as typeof order), {
+      headers: { "Content-Type": "text/html; charset=utf-8" },
+    });
+  }
+
+  if (type === "shipped") {
+    const order = await prisma.order.findFirst({ orderBy: { createdAt: "desc" } });
+    if (!order) {
+      return NextResponse.json({ error: "Zatím žádná objednávka k náhledu." }, { status: 404 });
+    }
+    return new NextResponse(await renderShippedEmailHtml(applyPreviewOptions(order, req) as typeof order), {
       headers: { "Content-Type": "text/html; charset=utf-8" },
     });
   }
@@ -65,6 +93,7 @@ export async function GET(_req: NextRequest, { params }: { params: Promise<{ typ
     const products = candidates.filter((p) => !isConditionFlagged(p.name, p.isDefective)).slice(0, 3);
     const settings = await prisma.settings.upsert({ where: { id: "singleton" }, update: {}, create: { id: "singleton" } });
     const html = await renderSecondOrderEmailHtml({
+      locale: req.nextUrl.searchParams.get("country") === "sk" ? "sk" : "cs",
       email: "nahled@example.com",
       firstName: "Zákazníku",
       couponCode: `${settings.secondOrderCouponPrefix}${settings.secondOrderDiscountPercent}`,
@@ -74,6 +103,7 @@ export async function GET(_req: NextRequest, { params }: { params: Promise<{ typ
       products: products.map((p) => ({
         id: p.id,
         name: p.name,
+        nameSk: p.nameSk,
         slug: p.slug,
         price: Number(p.price),
         imageUrl: p.images[0]?.url ?? null,
@@ -121,6 +151,7 @@ export async function GET(_req: NextRequest, { params }: { params: Promise<{ typ
       orderBy: { createdAt: "desc" },
     });
     const html = await renderReviewRequestEmailHtml({
+      locale: req.nextUrl.searchParams.get("country") === "sk" ? "sk" : "cs",
       email: "nahled@example.com",
       firstName: order?.firstName ?? "Zákazníku",
     });

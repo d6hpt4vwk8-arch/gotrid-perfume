@@ -14,6 +14,8 @@ const NAV_ITEMS = [
   { href: "/admin/zakaznici", label: "Zákazníci" },
   { href: "/admin/recenze", label: "Recenze" },
   { href: "/admin/hlidac-skladu", label: "Hlídání skladem" },
+  { href: "/admin/sledovani-spv", label: "Sledování dodavatelů" },
+  { href: "/admin/oblibene", label: "Oblíbené" },
   { href: "/admin/slevove-kody", label: "Slevové kódy" },
   { href: "/admin/newsletter", label: "Newsletter" },
   { href: "/admin/email-marketing", label: "E-mail marketing" },

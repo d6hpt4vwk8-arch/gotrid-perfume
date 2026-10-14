@@ -1,13 +1,17 @@
 "use client";
 
-import Link from "next/link";
+import { useTr, useIsSk } from "@/i18n/use-tr";
+import { Link } from "@/i18n/navigation";
 import { Suspense, useState } from "react";
-import { useRouter, useSearchParams } from "next/navigation";
+import { useSearchParams } from "next/navigation";
+import { useRouter } from "@/i18n/navigation";
 import { getSafeRedirectPath } from "@/lib/safe-redirect";
 import { OAuthLoginButton } from "@/components/oauth-login-button";
 import { SeznamIcon, FacebookIcon } from "@/components/oauth-icons";
 
 function LoginForm() {
+  const tr = useTr();
+  const isSk = useIsSk();
   const router = useRouter();
   const searchParams = useSearchParams();
   const [email, setEmail] = useState("");
@@ -32,36 +36,36 @@ function LoginForm() {
       });
       const data = await res.json();
       if (!res.ok) {
-        setError(data.error ?? "Přihlášení se nezdařilo.");
+        setError(tr(data.error ?? "Přihlášení se nezdařilo."));
         setSubmitting(false);
         return;
       }
       router.push(getSafeRedirectPath(searchParams.get("next"), "/muj-ucet"));
       router.refresh();
     } catch {
-      setError("Přihlášení se nezdařilo, zkuste to prosím znovu.");
+      setError(tr("Přihlášení se nezdařilo, zkuste to prosím znovu."));
       setSubmitting(false);
     }
   }
 
   return (
     <main className="mx-auto flex max-w-sm flex-1 flex-col justify-center gap-4 px-4 py-20">
-      <h1 className="text-2xl font-bold text-ink">Přihlášení</h1>
+      <h1 className="text-2xl font-bold text-ink">{tr("Přihlášení")}</h1>
       <p className="text-sm text-accent-2">
-        Nemáte účet?{" "}
+        {tr("Nemáte účet?")}{" "}
         <Link href="/registrace" className="text-ink underline hover:text-accent">
-          Zaregistrujte se
+          {tr("Zaregistrujte se")}
         </Link>
         .
       </p>
-      {oauthError && <p className="text-sm text-red-600">{oauthError}</p>}
+      {oauthError && <p className="text-sm text-red-600">{tr(oauthError)}</p>}
       <div className="flex flex-col gap-2">
-        <OAuthLoginButton href={seznamHref} icon={<SeznamIcon className="h-5 w-5" />} label="Přihlásit se přes Seznam" />
-        <OAuthLoginButton href={facebookHref} icon={<FacebookIcon className="h-5 w-5" />} label="Přihlásit se přes Facebook" />
+        {!isSk && <OAuthLoginButton href={seznamHref} icon={<SeznamIcon className="h-5 w-5" />} label={tr("Přihlásit se přes Seznam")} />}
+        <OAuthLoginButton href={facebookHref} icon={<FacebookIcon className="h-5 w-5" />} label={tr("Přihlásit se přes Facebook")} />
       </div>
       <div className="flex items-center gap-3 text-xs text-accent-2">
         <span className="h-px flex-1 bg-line" />
-        nebo e-mailem
+        {tr("nebo e-mailem")}
         <span className="h-px flex-1 bg-line" />
       </div>
       <form onSubmit={handleSubmit} className="flex flex-col gap-3">
@@ -69,7 +73,7 @@ function LoginForm() {
           required
           type="email"
           autoFocus
-          placeholder="E-mail"
+          placeholder={tr("E-mail")}
           value={email}
           onChange={(e) => setEmail(e.target.value)}
           className="rounded-sm border border-line px-3 py-2 text-sm text-ink"
@@ -77,7 +81,7 @@ function LoginForm() {
         <input
           required
           type="password"
-          placeholder="Heslo"
+          placeholder={tr("Heslo")}
           value={password}
           onChange={(e) => setPassword(e.target.value)}
           className="rounded-sm border border-line px-3 py-2 text-sm text-ink"
@@ -88,11 +92,11 @@ function LoginForm() {
           disabled={submitting}
           className="rounded-sm bg-ink px-4 py-2 text-sm font-semibold text-white hover:bg-accent disabled:cursor-not-allowed disabled:bg-line disabled:text-accent-2"
         >
-          {submitting ? "Přihlašuji…" : "Přihlásit se"}
+          {submitting ? tr("Přihlašuji…") : tr("Přihlásit se")}
         </button>
       </form>
       <Link href="/zapomenute-heslo" className="text-sm text-accent-2 hover:text-accent hover:underline">
-        Zapomenuté heslo?
+        {tr("Zapomenuté heslo?")}
       </Link>
     </main>
   );

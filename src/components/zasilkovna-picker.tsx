@@ -1,5 +1,6 @@
 "use client";
 
+import { useTr } from "@/i18n/use-tr";
 import { useEffect, useState } from "react";
 
 interface PacketaPoint {
@@ -53,13 +54,14 @@ export function ZasilkovnaPicker({
   onSelect: (point: { id: string; name: string }) => void;
   country?: "cz" | "sk";
 }) {
+  const tr = useTr();
   const [manualId, setManualId] = useState("");
   const [manualName, setManualName] = useState("");
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
-    if (apiKey) loadWidgetScript().catch((err) => setError(err.message));
-  }, []);
+    if (apiKey) loadWidgetScript().catch((err) => setError(tr(err.message)));
+  }, [tr]);
 
   if (!apiKey) {
     // Fallback until the owner supplies a Packeta API key (TZ §12.4) — keeps
@@ -67,8 +69,7 @@ export function ZasilkovnaPicker({
     return (
       <div className="flex flex-col gap-2 rounded-md border border-amber-300 bg-amber-50 p-3 text-sm">
         <p className="text-amber-800">
-          Widget Zásilkovny zatím není nakonfigurován. Zadejte prosím výdejní místo ručně (název a
-          ID najdete na{" "}
+          {tr("Widget Zásilkovny zatím není nakonfigurován. Zadejte prosím výdejní místo ručně (název a ID najdete na")}{" "}
           <a
             href="https://www.zasilkovna.cz/pobocky"
             target="_blank"
@@ -82,13 +83,13 @@ export function ZasilkovnaPicker({
         <input
           value={manualName}
           onChange={(e) => setManualName(e.target.value)}
-          placeholder="Název výdejního místa"
+          placeholder={tr("Název výdejního místa")}
           className="rounded border border-neutral-300 px-2 py-1"
         />
         <input
           value={manualId}
           onChange={(e) => setManualId(e.target.value)}
-          placeholder="ID výdejního místa"
+          placeholder={tr("ID výdejního místa")}
           className="rounded border border-neutral-300 px-2 py-1"
         />
         <button
@@ -97,10 +98,10 @@ export function ZasilkovnaPicker({
           onClick={() => onSelect({ id: manualId, name: manualName })}
           className="rounded-sm bg-ink px-3 py-1.5 text-white hover:bg-accent disabled:bg-line disabled:text-accent-2"
         >
-          Potvrdit výdejní místo
+          {tr("Potvrdit výdejní místo")}
         </button>
         {selectedPointName && (
-          <p className="text-ink/80">Vybráno: {selectedPointName}</p>
+          <p className="text-ink/80">{tr("Vybráno")}: {selectedPointName}</p>
         )}
       </div>
     );
@@ -121,15 +122,15 @@ export function ZasilkovnaPicker({
               { country, language: country === "sk" ? "sk" : "cs" },
             );
           } catch (err) {
-            setError(err instanceof Error ? err.message : "Chyba widgetu.");
+            setError(tr(err instanceof Error ? err.message : "Chyba widgetu."));
           }
         }}
         className="rounded-sm border border-line px-4 py-2 text-sm font-medium text-ink hover:border-accent hover:text-accent"
       >
-        {selectedPointName ? "Změnit výdejní místo" : "Vybrat výdejní místo"}
+        {selectedPointName ? tr("Změnit výdejní místo") : tr("Vybrat výdejní místo")}
       </button>
       {selectedPointName && (
-        <p className="text-sm text-ink/80">Vybráno: {selectedPointName}</p>
+        <p className="text-sm text-ink/80">{tr("Vybráno")}: {selectedPointName}</p>
       )}
       {error && <p className="text-sm text-red-600">{error}</p>}
     </div>

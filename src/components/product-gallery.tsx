@@ -1,5 +1,6 @@
 "use client";
 
+import { useTr } from "@/i18n/use-tr";
 import { useRef, useState } from "react";
 import Image from "next/image";
 
@@ -12,13 +13,14 @@ const SWIPE_THRESHOLD_PX = 40;
 
 export function ProductGallery({ images, alt }: { images: GalleryImage[]; alt: string }) {
   const [index, setIndex] = useState(0);
+  const tr = useTr();
   const touchStartX = useRef<number | null>(null);
 
   if (images.length === 0) {
     return (
       <div className="relative aspect-square w-full overflow-hidden bg-line/60">
         <div className="flex h-full items-center justify-center text-sm text-accent-2">
-          Bez obrázku
+          {tr("Bez obrázku")}
         </div>
       </div>
     );
@@ -61,7 +63,7 @@ export function ProductGallery({ images, alt }: { images: GalleryImage[]; alt: s
           <>
             <button
               type="button"
-              aria-label="Předchozí obrázek"
+              aria-label={tr("Předchozí obrázek")}
               onClick={() => goTo(index - 1)}
               className="absolute left-2 top-1/2 flex h-8 w-8 -translate-y-1/2 items-center justify-center rounded-full bg-white/85 text-lg text-ink hover:bg-white"
             >
@@ -69,7 +71,7 @@ export function ProductGallery({ images, alt }: { images: GalleryImage[]; alt: s
             </button>
             <button
               type="button"
-              aria-label="Další obrázek"
+              aria-label={tr("Další obrázek")}
               onClick={() => goTo(index + 1)}
               className="absolute right-2 top-1/2 flex h-8 w-8 -translate-y-1/2 items-center justify-center rounded-full bg-white/85 text-lg text-ink hover:bg-white"
             >
@@ -93,7 +95,7 @@ export function ProductGallery({ images, alt }: { images: GalleryImage[]; alt: s
             <button
               key={image.id}
               type="button"
-              aria-label={`Zobrazit obrázek ${i + 1}`}
+              aria-label={tr("Zobrazit obrázek {n}", { n: i + 1 })}
               onClick={() => goTo(i)}
               className={`relative aspect-square overflow-hidden bg-line/60 ${
                 i === index ? "ring-2 ring-ink" : "opacity-70 hover:opacity-100"

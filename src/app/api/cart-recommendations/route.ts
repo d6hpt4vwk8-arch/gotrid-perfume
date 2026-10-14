@@ -8,7 +8,7 @@ export async function GET(req: NextRequest) {
   const ids = req.nextUrl.searchParams.get("ids");
   const cartProductIds = ids ? ids.split(",").filter(Boolean) : [];
 
-  const products = await getFrequentlyBoughtTogetherForCart(cartProductIds);
+  const products = await getFrequentlyBoughtTogetherForCart(cartProductIds, 3, req.nextUrl.searchParams.get("lang") === "sk");
 
   return NextResponse.json({
     products: products.map((p) => ({
@@ -16,6 +16,7 @@ export async function GET(req: NextRequest) {
       code: p.code,
       slug: p.slug,
       name: p.name,
+      nameSk: p.nameSk,
       price: p.price.toString(),
       compareAtPrice: p.compareAtPrice?.toString() ?? null,
       stock: p.stock,

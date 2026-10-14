@@ -1,8 +1,10 @@
 "use client";
 
+import { useTr } from "@/i18n/use-tr";
 import { useState } from "react";
 
 export function NewsletterSignup() {
+  const tr = useTr();
   const [email, setEmail] = useState("");
   const [status, setStatus] = useState<"idle" | "submitting" | "done" | "error">("idle");
   const [error, setError] = useState<string | null>(null);
@@ -25,15 +27,15 @@ export function NewsletterSignup() {
             <path strokeLinecap="round" strokeLinejoin="round" d="m4 7 8 6 8-6" />
           </svg>
           <div>
-            <h2 className="text-lg font-bold text-ink">Nenechte si ujít novinky</h2>
+            <h2 className="text-lg font-bold text-ink">{tr("Nenechte si ujít novinky")}</h2>
             <p className="text-sm text-ink/70">
-              Přihlaste se k odběru a jako první se dozvíte o novinkách a slevách.
+              {tr("Přihlaste se k odběru a jako první se dozvíte o novinkách a slevách.")}
             </p>
           </div>
         </div>
 
         {status === "done" ? (
-          <p className="text-sm font-medium text-ok">Děkujeme, jste přihlášeni k odběru!</p>
+          <p className="text-sm font-medium text-ok">{tr("Děkujeme, jste přihlášeni k odběru!")}</p>
         ) : (
           <form
             onSubmit={async (e) => {
@@ -48,13 +50,13 @@ export function NewsletterSignup() {
                 });
                 const data = await res.json();
                 if (!res.ok) {
-                  setError(data.error ?? "Nepodařilo se přihlásit k odběru.");
+                  setError(tr(data.error ?? "Nepodařilo se přihlásit k odběru."));
                   setStatus("error");
                   return;
                 }
                 setStatus("done");
               } catch {
-                setError("Nepodařilo se přihlásit k odběru.");
+                setError(tr("Nepodařilo se přihlásit k odběru."));
                 setStatus("error");
               }
             }}
@@ -63,7 +65,7 @@ export function NewsletterSignup() {
             <input
               required
               type="email"
-              placeholder="Váš e-mail"
+              placeholder={tr("Váš e-mail")}
               value={email}
               onChange={(e) => setEmail(e.target.value)}
               className="flex-1 rounded-sm border border-line bg-white px-3 py-2.5 text-sm text-ink"
@@ -73,7 +75,7 @@ export function NewsletterSignup() {
               disabled={status === "submitting"}
               className="shrink-0 rounded-sm bg-ink px-5 py-2.5 text-sm font-semibold text-white transition hover:bg-accent disabled:cursor-not-allowed disabled:opacity-60"
             >
-              {status === "submitting" ? "Odesílám…" : "Odebírat zpravodaj"}
+              {status === "submitting" ? tr("Odesílám…") : tr("Odebírat zpravodaj")}
             </button>
           </form>
         )}

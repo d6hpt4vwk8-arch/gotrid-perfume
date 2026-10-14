@@ -1,18 +1,21 @@
 "use client";
 
 import Image from "next/image";
-import Link from "next/link";
+import { Link } from "@/i18n/navigation";
 import type { Prisma } from "@prisma/client";
 import { useCurrency } from "@/lib/currency-context";
 import { AddToCartButton } from "@/components/add-to-cart-button";
 import { WishlistButton } from "@/components/wishlist-button";
 import { BestsellerPill, EthicsPills, isBestseller } from "@/components/product-badges";
+import { useTr, useIsSk } from "@/i18n/use-tr";
 
 export interface ProductCardData {
   id: string;
   code: string;
   slug: string;
   name: string;
+  /** Slovak name (Product.nameSk) — shown instead of `name` on the /sk storefront when set. */
+  nameSk?: string | null;
   price: Prisma.Decimal | number;
   compareAtPrice: Prisma.Decimal | number | null;
   stock: number;
@@ -36,13 +39,16 @@ export function ProductCard({
   freeShippingThreshold?: number;
 }) {
   const { price } = useCurrency();
+  const tr = useTr();
+  const isSk = useIsSk();
+  const displayName = isSk && product.nameSk ? product.nameSk : product.name;
   const image = product.images[0];
   const discountPercent = product.compareAtPrice
     ? Math.round((1 - Number(product.price) / Number(product.compareAtPrice)) * 100)
     : null;
   // Names like "Brand Product – what it is in Czech – 50 ml" (GVS cosmetics): bold title,
   // then the explanation as a quieter second line (Kosco-style).
-  const [title, ...nameRest] = product.name.split(" – ");
+  const [title, ...nameRest] = displayName.split(" – ");
   const subtitle = nameRest.join(" · ");
   const isFreeShipping =
     freeShippingThreshold !== undefined && Number(product.price) >= freeShippingThreshold;
@@ -53,7 +59,7 @@ export function ProductCard({
         <div className="absolute left-2 top-2 z-10 flex flex-col items-start gap-1">
           {product.isDefective && (
             <span className="rounded-sm bg-amber-600 px-1.5 py-1 text-xs font-bold text-white">
-              Poškozený obal
+              {tr("Poškozený obal")}
             </span>
           )}
           {discountPercent && discountPercent > 0 && (
@@ -64,7 +70,7 @@ export function ProductCard({
           {isBestseller(product.salesCount) && <BestsellerPill />}
           {isFreeShipping && (
             <span className="rounded-sm bg-ok px-1.5 py-1 text-xs font-bold text-white">
-              Doprava zdarma
+              {tr("Doprava zdarma")}
             </span>
           )}
         </div>
@@ -72,24 +78,29 @@ export function ProductCard({
           product={{
             productId: product.id,
             slug: product.slug,
-            name: product.name,
+            name: displayName,
             price: Number(product.price),
             image: image?.url ?? null,
           }}
           className="absolute right-2 top-2 z-10 h-8 w-8 bg-white/90 shadow-sm hover:bg-white"
         />
-        <EthicsPills isVegan={product.isVegan} isCrueltyFree={product.isCrueltyFree} className="absolute bottom-2 left-2 z-10" />
+        <EthicsPills
+          isVegan={product.isVegan}
+          isCrueltyFree={product.isCrueltyFree}
+          crueltyFreeTitle={tr("Cruelty-free: produkt ani jeho složky nebyly testovány na zvířatech")}
+          className="absolute bottom-2 left-2 z-10"
+        />
         {image ? (
           <Image
             src={image.url}
-            alt={product.name}
+            alt={displayName}
             fill
             sizes="(min-width: 1536px) 22vw, (min-width: 1024px) 30vw, (min-width: 768px) 33vw, 50vw"
             className="object-cover transition-transform duration-300 group-hover:scale-105"
           />
         ) : (
           <div className="flex h-full items-center justify-center text-xs text-accent-2">
-            Bez obrázku
+            {tr("Bez obrázku")}
           </div>
         )}
       </div>
@@ -106,7 +117,7 @@ export function ProductCard({
         {product.colorSwatches && product.colorSwatches.length > 1 && (
           <div
             className="flex items-center gap-1.5"
-            title={`Dostupné barvy: ${product.colorSwatches.map((c) => c.label).join(", ")}`}
+            title={`${tr("Dostupné barvy")}: ${product.colorSwatches.map((c) => c.label).join(", ")}`}
           >
             {product.colorSwatches.map((c) => (
               <span
@@ -115,7 +126,7 @@ export function ProductCard({
                 style={{ backgroundColor: c.color }}
               />
             ))}
-            <span className="text-[11px] text-accent-2">{product.colorSwatches.length} {product.colorSwatches.length < 5 ? "barvy" : "barev"}</span>
+            <span className="text-[11px] text-accent-2">{product.colorSwatches.length} {product.colorSwatches.length < 5 ? tr("barvy") : tr("barev")}</span>
           </div>
         )}
         <div className="flex items-baseline gap-2">
@@ -130,7 +141,7 @@ export function ProductCard({
           <span
             className={`h-1.5 w-1.5 rounded-full ${product.stock > 0 ? "bg-ok" : "bg-accent-2"}`}
           />
-          {product.stock > 0 ? "Skladem" : "Vyprodáno"}
+          {product.stock > 0 ? tr("Skladem") : tr("Vyprodáno")}
         </span>
         <div className="mt-auto pt-2">
           <AddToCartButton
@@ -138,7 +149,7 @@ export function ProductCard({
               productId: product.id,
               code: product.code,
               slug: product.slug,
-              name: product.name,
+              name: displayName,
               price: Number(product.price),
               image: image?.url ?? null,
               stock: product.stock,

@@ -2,6 +2,7 @@ import path from "node:path";
 import { Document, Page, Text, View, StyleSheet, Font } from "@react-pdf/renderer";
 import { currentSeller, CONTACT } from "@/lib/business-identity";
 import { PICKUP_ADDRESS } from "@/lib/shipping";
+import type { Tr } from "@/i18n/tr";
 
 // Same font-registration approach as faktura.tsx — base-14 PDF fonts drop
 // Czech diacritics, and public/ is what Vercel's serverless file tracing
@@ -29,7 +30,7 @@ const styles = StyleSheet.create({
   bodyText: { marginBottom: 10 },
 });
 
-export function OdstoupeniDocument() {
+export function OdstoupeniDocument({ tr = (k) => k }: { tr?: Tr }) {
   // Current seller, not a per-order one: the form is a blank template and the
   // 14-day withdrawal window means it's always a recent purchase. The address
   // is the warehouse (PICKUP_ADDRESS) — goods can't be returned to a
@@ -39,53 +40,52 @@ export function OdstoupeniDocument() {
   return (
     <Document>
       <Page size="A4" style={styles.page}>
-        <Text style={styles.title}>Formulář pro odstoupení od smlouvy</Text>
+        <Text style={styles.title}>{tr("Formulář pro odstoupení od smlouvy")}</Text>
         <Text style={styles.subtitle}>
-          Vyplňte tento formulář a pošlete jej zpět pouze v případě, že chcete odstoupit od
-          smlouvy.
+          {tr("Vyplňte tento formulář a pošlete jej zpět pouze v případě, že chcete odstoupit od smlouvy.")}
         </Text>
 
         <View style={styles.section}>
-          <Text style={styles.label}>Adresát</Text>
+          <Text style={styles.label}>{tr("Adresát")}</Text>
           <Text>{seller.legalName}</Text>
-          <Text>{PICKUP_ADDRESS}, Česká republika</Text>
-          <Text>Email: {CONTACT.email}</Text>
+          <Text>{PICKUP_ADDRESS}, {tr("Česká republika")}</Text>
+          <Text>E-mail: {CONTACT.email}</Text>
         </View>
 
         <Text style={styles.bodyText}>
-          Oznamuji, že tímto odstupuji od smlouvy o nákupu tohoto zboží:
+          {tr("Oznamuji, že tímto odstupuji od smlouvy o nákupu tohoto zboží:")}
         </Text>
 
         <View style={styles.field}>
-          <Text style={styles.fieldLabel}>Číslo objednávky</Text>
+          <Text style={styles.fieldLabel}>{tr("Číslo objednávky")}</Text>
           <View style={styles.fieldLine} />
         </View>
         <View style={styles.field}>
-          <Text style={styles.fieldLabel}>Datum objednání</Text>
+          <Text style={styles.fieldLabel}>{tr("Datum objednání")}</Text>
           <View style={styles.fieldLine} />
         </View>
         <View style={styles.field}>
-          <Text style={styles.fieldLabel}>Datum obdržení</Text>
+          <Text style={styles.fieldLabel}>{tr("Datum obdržení")}</Text>
           <View style={styles.fieldLine} />
         </View>
         <View style={styles.field}>
-          <Text style={styles.fieldLabel}>Jméno a příjmení</Text>
+          <Text style={styles.fieldLabel}>{tr("Jméno a příjmení")}</Text>
           <View style={styles.fieldLine} />
         </View>
         <View style={styles.field}>
-          <Text style={styles.fieldLabel}>Adresa</Text>
+          <Text style={styles.fieldLabel}>{tr("Adresa")}</Text>
           <View style={styles.fieldLine} />
         </View>
         <View style={{ ...styles.field, marginTop: 20 }}>
-          <Text style={styles.fieldLabel}>Podpis</Text>
+          <Text style={styles.fieldLabel}>{tr("Podpis")}</Text>
           <View style={styles.fieldLine} />
         </View>
         <Text style={{ fontSize: 8, color: "#888" }}>
-          (pouze pokud je tento formulář zasílán v listinné podobě)
+          {tr("(pouze pokud je tento formulář zasílán v listinné podobě)")}
         </Text>
 
         <View style={{ ...styles.field, marginTop: 12 }}>
-          <Text style={styles.fieldLabel}>Datum</Text>
+          <Text style={styles.fieldLabel}>{tr("Datum")}</Text>
           <View style={styles.fieldLine} />
         </View>
       </Page>

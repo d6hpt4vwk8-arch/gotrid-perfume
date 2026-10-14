@@ -1,5 +1,6 @@
 import { prisma } from "@/lib/prisma";
 import { primaryVariantWhere } from "@/lib/product-filters";
+import { skScope } from "@/lib/sk-visibility";
 
 // Matches the first fragrance-format word in a product name (EDP/EDT/
 // deodorant/miniature/set/…) — everything before it is the "line name"
@@ -31,19 +32,20 @@ export function computeLineKey(name: string): string | null {
 export async function getSameLineProducts(
   product: { id: string; name: string; brandId: string | null },
   limit = 4,
+  skOnly = false,
 ) {
   if (!product.brandId) return [];
   const lineKey = computeLineKey(product.name);
   if (!lineKey) return [];
 
   const brandProducts = await prisma.product.findMany({
-    where: {
+    where: skScope({
       brandId: product.brandId,
       id: { not: product.id },
       visible: true,
       stock: { gt: 0 },
       ...primaryVariantWhere,
-    },
+    }, skOnly),
     include: { brand: true, images: { orderBy: { sortOrder: "asc" }, take: 1 } },
   });
 

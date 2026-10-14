@@ -1,10 +1,12 @@
-import Link from "next/link";
+import { Link } from "@/i18n/navigation";
+import { getTr } from "@/i18n/tr.server";
 
-export function Breadcrumbs({ items }: { items: { name: string; href?: string }[] }) {
+export async function Breadcrumbs({ items }: { items: { name: string; href?: string }[] }) {
+  const tr = await getTr();
   return (
-    <nav aria-label="Drobečková navigace" className="flex flex-wrap items-center gap-1.5 text-xs text-accent-2">
+    <nav aria-label={tr("Drobečková navigace")} className="flex flex-wrap items-center gap-1.5 text-xs text-accent-2">
       <Link href="/" className="hover:text-ink hover:underline">
-        Domů
+        {tr("Domů")}
       </Link>
       {items.map((item, i) => (
         <span key={i} className="flex items-center gap-1.5">

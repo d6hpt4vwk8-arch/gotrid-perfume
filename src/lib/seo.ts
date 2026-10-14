@@ -36,15 +36,36 @@ export function absoluteUrl(path: string): string {
   return `${SEO_URL}${path === "/" ? "" : path}`;
 }
 
-export function breadcrumbJsonLd(items: { name: string; path: string }[]) {
+export function breadcrumbJsonLd(
+  items: { name: string; path: string }[],
+  labels: { home: string; homePath: string } = { home: "Domů", homePath: "/" },
+) {
   return {
     "@context": "https://schema.org",
     "@type": "BreadcrumbList",
-    itemListElement: [{ name: "Domů", path: "/" }, ...items].map((item, i) => ({
+    itemListElement: [{ name: labels.home, path: labels.homePath }, ...items].map((item, i) => ({
       "@type": "ListItem",
       position: i + 1,
       name: item.name,
       item: absoluteUrl(item.path),
     })),
+  };
+}
+
+/** Locale-prefixed path: "/produkt/x" → "/sk/produkt/x" on the Slovak storefront. */
+export function localePath(locale: string, path: string): string {
+  if (locale !== "sk") return path;
+  return path === "/" ? "/sk" : `/sk${path}`;
+}
+
+/** canonical + hreflang alternates for a storefront page (path without locale prefix). */
+export function localeAlternates(locale: string, path: string) {
+  return {
+    canonical: localePath(locale, path),
+    languages: {
+      cs: path,
+      sk: localePath("sk", path),
+      "x-default": path,
+    },
   };
 }

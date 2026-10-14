@@ -20,6 +20,8 @@ import { ProductCard } from "@/components/product-card";
 import { CategoryFilters } from "@/components/category-filters";
 import { Pagination } from "@/components/pagination";
 import { getSettings } from "@/lib/settings.server";
+import { getCurrentLocale, getTr } from "@/i18n/tr.server";
+import { skScope } from "@/lib/sk-visibility";
 
 const PAGE_SIZE = 24;
 
@@ -29,13 +31,16 @@ export default async function SearchPage({
   searchParams: Promise<CategoryFilterParams & { q?: string }>;
 }) {
   const rawParams = await searchParams;
+  const tr = await getTr();
+  const isSk = (await getCurrentLocale()) === "sk";
+  const withSk = (w: Prisma.ProductWhereInput) => skScope(w, isSk);
   const query = (rawParams.q ?? "").trim();
 
   if (query.length < 2) {
     return (
       <main className="mx-auto flex max-w-6xl flex-1 flex-col gap-6 px-4 py-10">
-        <h1 className="text-2xl font-bold text-ink">Výsledky hledání</h1>
-        <p className="text-sm text-accent-2">Zadejte alespoň 2 znaky.</p>
+        <h1 className="text-2xl font-bold text-ink">{tr("Výsledky hledání")}</h1>
+        <p className="text-sm text-accent-2">{tr("Zadejte alespoň 2 znaky.")}</p>
       </main>
     );
   }
@@ -52,9 +57,9 @@ export default async function SearchPage({
   let searchWhere: Prisma.ProductWhereInput = buildExactSearchWhere(query);
   let usedFallback: "description" | "fuzzy" | null = null;
 
-  if ((await prisma.product.count({ where: buildProductWhere(searchWhere, filters, perfumeCategoryIds) })) === 0) {
+  if ((await prisma.product.count({ where: buildProductWhere(withSk(searchWhere), filters, perfumeCategoryIds) })) === 0) {
     const descriptionWhere = buildDescriptionSearchWhere(query);
-    if ((await prisma.product.count({ where: buildProductWhere(descriptionWhere, filters, perfumeCategoryIds) })) > 0) {
+    if ((await prisma.product.count({ where: buildProductWhere(withSk(descriptionWhere), filters, perfumeCategoryIds) })) > 0) {
       searchWhere = descriptionWhere;
       usedFallback = "description";
     } else {
@@ -66,7 +71,7 @@ export default async function SearchPage({
     }
   }
 
-  const where = buildProductWhere(searchWhere, filters, perfumeCategoryIds);
+  const where = buildProductWhere(withSk(searchWhere), filters, perfumeCategoryIds);
 
   const [rawProducts, total, brands, scentFacets, structureFacets, cosmeticsFacets, settings] =
     await Promise.all([
@@ -78,10 +83,10 @@ export default async function SearchPage({
         include: { brand: true, images: { orderBy: { sortOrder: "asc" }, take: 1 } },
       }),
       prisma.product.count({ where }),
-      getAvailableBrands(searchWhere),
-      getScentFamilyFacets(searchWhere),
-      getPerfumeStructureFacets(searchWhere),
-      getCosmeticsFacets(searchWhere),
+      getAvailableBrands(withSk(searchWhere)),
+      getScentFamilyFacets(withSk(searchWhere)),
+      getPerfumeStructureFacets(withSk(searchWhere)),
+      getCosmeticsFacets(withSk(searchWhere)),
       getSettings(),
     ]);
   const products = await attachColorSwatches(rawProducts);
@@ -122,15 +127,15 @@ export default async function SearchPage({
 
   return (
     <main className="mx-auto flex max-w-6xl flex-1 flex-col gap-6 px-4 py-10">
-      <h1 className="text-2xl font-bold text-ink">Výsledky hledání: „{query}“</h1>
+      <h1 className="text-2xl font-bold text-ink">{tr("Výsledky hledání")}: „{query}“</h1>
       {usedFallback === "description" && (
         <p className="-mt-4 text-sm text-accent-2">
-          Přesně tento výraz jsme v názvu nenašli — zobrazujeme produkty, které ho zmiňují v popisu.
+          {tr("Přesně tento výraz jsme v názvu nenašli — zobrazujeme produkty, které ho zmiňují v popisu.")}
         </p>
       )}
       {usedFallback === "fuzzy" && (
         <p className="-mt-4 text-sm text-accent-2">
-          Přesnou shodu jsme nenašli — zobrazujeme nejpodobnější produkty (třeba jste se překlepli).
+          {tr("Přesnou shodu jsme nenašli — zobrazujeme nejpodobnější produkty (třeba jste se překlepli).")}
         </p>
       )}
 
@@ -145,7 +150,7 @@ export default async function SearchPage({
         <div className="flex flex-1 flex-col gap-6">
           {products.length === 0 ? (
             <p className="text-sm text-accent-2">
-              Nic jsme nenašli. Zkuste jiný výraz nebo upravte filtry.
+              {tr("Nic jsme nenašli. Zkuste jiný výraz nebo upravte filtry.")}
             </p>
           ) : (
             <div className="grid grid-cols-2 gap-x-4 gap-y-8 sm:grid-cols-3 lg:grid-cols-4">

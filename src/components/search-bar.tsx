@@ -1,14 +1,16 @@
 "use client";
 
 import Image from "next/image";
-import Link from "next/link";
-import { useRouter } from "next/navigation";
+import { Link } from "@/i18n/navigation";
+import { useRouter } from "@/i18n/navigation";
 import { useEffect, useRef, useState } from "react";
 import { useCurrency } from "@/lib/currency-context";
+import { useTr, useIsSk } from "@/i18n/use-tr";
 
 interface SearchResult {
   slug: string;
   name: string;
+  nameSk?: string | null;
   brand: string | null;
   price: number;
   image: string | null;
@@ -16,6 +18,8 @@ interface SearchResult {
 
 export function SearchBar({ dark = false }: { dark?: boolean }) {
   const { price } = useCurrency();
+  const tr = useTr();
+  const isSk = useIsSk();
   const [query, setQuery] = useState("");
   const [results, setResults] = useState<SearchResult[]>([]);
   const [open, setOpen] = useState(false);
@@ -32,7 +36,7 @@ export function SearchBar({ dark = false }: { dark?: boolean }) {
     const controller = new AbortController();
     const timeout = setTimeout(async () => {
       try {
-        const res = await fetch(`/api/search?q=${encodeURIComponent(trimmed)}`, {
+        const res = await fetch(`/api/search?q=${encodeURIComponent(trimmed)}${isSk ? "&lang=sk" : ""}`, {
           signal: controller.signal,
         });
         const data = await res.json();
@@ -47,7 +51,7 @@ export function SearchBar({ dark = false }: { dark?: boolean }) {
       clearTimeout(timeout);
       controller.abort();
     };
-  }, [query]);
+  }, [query, isSk]);
 
   useEffect(() => {
     function handleClickOutside(e: MouseEvent) {
@@ -73,7 +77,7 @@ export function SearchBar({ dark = false }: { dark?: boolean }) {
           value={query}
           onChange={(e) => setQuery(e.target.value)}
           onFocus={() => results.length > 0 && setOpen(true)}
-          placeholder="Hledat produkty, značky…"
+          placeholder={tr("Hledat produkty, značky…")}
           className={
             dark
               ? "w-full rounded-sm border border-white/15 bg-white/10 px-3 py-1.5 text-sm text-white placeholder-white/50 focus:border-white/40 focus:outline-none"
@@ -94,11 +98,11 @@ export function SearchBar({ dark = false }: { dark?: boolean }) {
                 >
                   <span className="relative h-10 w-10 shrink-0 overflow-hidden rounded bg-neutral-100">
                     {r.image && (
-                      <Image src={r.image} alt={r.name} fill sizes="40px" className="object-cover" />
+                      <Image src={r.image} alt={isSk && r.nameSk ? r.nameSk : r.name} fill sizes="40px" className="object-cover" />
                     )}
                   </span>
                   <span className="flex flex-1 flex-col">
-                    <span className="line-clamp-1">{r.name}</span>
+                    <span className="line-clamp-1">{isSk && r.nameSk ? r.nameSk : r.name}</span>
                     {r.brand && <span className="text-xs text-neutral-400">{r.brand}</span>}
                   </span>
                   <span className="font-medium">{price(r.price)}</span>
@@ -111,7 +115,7 @@ export function SearchBar({ dark = false }: { dark?: boolean }) {
             onClick={() => setOpen(false)}
             className="block border-t border-neutral-100 px-3 py-2 text-center text-sm font-medium text-neutral-700 hover:bg-neutral-50"
           >
-            Zobrazit všechny výsledky
+            {tr("Zobrazit všechny výsledky")}
           </Link>
         </div>
       )}

@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { ProductCard, type ProductCardData } from "@/components/product-card";
+import { useTr } from "@/i18n/use-tr";
 
 /**
  * Renders the initial server-fetched page of products, then appends
@@ -23,6 +24,7 @@ export function ProductGridLoadMore({
   fetchUrl: string;
   freeShippingThreshold?: number;
 }) {
+  const tr = useTr();
   const [products, setProducts] = useState(initialProducts);
   const [nextPage, setNextPage] = useState(currentPage + 1);
   const [loading, setLoading] = useState(false);
@@ -40,7 +42,7 @@ export function ProductGridLoadMore({
       setProducts((prev) => [...prev, ...data.products]);
       setNextPage((p) => p + 1);
     } catch {
-      setError("Načtení dalších produktů se nezdařilo, zkuste to prosím znovu.");
+      setError(tr("Načtení dalších produktů se nezdařilo, zkuste to prosím znovu."));
     } finally {
       setLoading(false);
     }
@@ -62,7 +64,7 @@ export function ProductGridLoadMore({
             disabled={loading}
             className="w-fit rounded-sm border border-line px-6 py-2.5 text-sm font-medium text-ink hover:border-accent disabled:cursor-not-allowed disabled:opacity-50"
           >
-            {loading ? "Načítám…" : "Zobrazit další produkty"}
+            {loading ? tr("Načítám…") : tr("Zobrazit další produkty")}
           </button>
           {error && <p className="text-sm text-red-600">{error}</p>}
         </div>

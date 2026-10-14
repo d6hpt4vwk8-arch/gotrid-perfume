@@ -1,8 +1,9 @@
 "use client";
 
 import Image from "next/image";
-import Link from "next/link";
-import { usePathname, useRouter, useSearchParams } from "next/navigation";
+import { Link } from "@/i18n/navigation";
+import { useSearchParams } from "next/navigation";
+import { usePathname, useRouter } from "@/i18n/navigation";
 import { useMemo, useState, type ReactNode } from "react";
 import type { BrandFacet } from "@/lib/category-brands.server";
 import type { ScentFamilyFacet } from "@/lib/category-scent-facets.server";
@@ -10,6 +11,7 @@ import type { PerfumeStructureFacets } from "@/lib/perfume-structure-facets.serv
 import type { CosmeticsFacets } from "@/lib/category-cosmetics-facets.server";
 import { useCurrency } from "@/lib/currency-context";
 import type { ProductCardData } from "@/components/product-card";
+import { useTr, useIsSk } from "@/i18n/use-tr";
 
 const SORT_LABELS: Record<string, string> = {
   newest: "Doporučené",
@@ -17,6 +19,13 @@ const SORT_LABELS: Record<string, string> = {
   "price-asc": "Cena od nejnižší",
   "price-desc": "Cena od nejvyšší",
 };
+
+// The price filter is stored in the URL in CZK (that is what the server
+// filters on); EUR shoppers type and see euros, converted at the shop rate.
+const czkToDisplay = (czk: string, eur: boolean, rate: number) =>
+  czk && eur ? String(Math.round(Number(czk) / rate)) : czk;
+const displayToCzk = (value: string, eur: boolean, rate: number) =>
+  value && eur ? String(Math.round(Number(value) * rate)) : value;
 
 function FilterSection({
   title,
@@ -54,7 +63,10 @@ export function CategoryFilters({
   const router = useRouter();
   const pathname = usePathname();
   const searchParams = useSearchParams();
-  const { price } = useCurrency();
+  const { price, currency, czkToEurRate } = useCurrency();
+  const tr = useTr();
+  const isSk = useIsSk();
+  const eur = currency === "EUR";
 
   const selectedBrands = searchParams.getAll("brand");
   const selectedScents = searchParams.getAll("scent");
@@ -65,8 +77,8 @@ export function CategoryFilters({
   const selectedConcerns = searchParams.getAll("concern");
   const selectedKinds = searchParams.getAll("kind");
   const selectedIngredients = searchParams.getAll("ingredient");
-  const [priceMin, setPriceMin] = useState(searchParams.get("priceMin") ?? "");
-  const [priceMax, setPriceMax] = useState(searchParams.get("priceMax") ?? "");
+  const [priceMin, setPriceMin] = useState(() => czkToDisplay(searchParams.get("priceMin") ?? "", eur, czkToEurRate));
+  const [priceMax, setPriceMax] = useState(() => czkToDisplay(searchParams.get("priceMax") ?? "", eur, czkToEurRate));
   const [brandQuery, setBrandQuery] = useState("");
   const [showAllBrands, setShowAllBrands] = useState(false);
   const [mobileOpen, setMobileOpen] = useState(false);
@@ -96,9 +108,9 @@ export function CategoryFilters({
 
   function applyPriceRange() {
     updateParams((params) => {
-      if (priceMin) params.set("priceMin", priceMin);
+      if (priceMin) params.set("priceMin", displayToCzk(priceMin, eur, czkToEurRate));
       else params.delete("priceMin");
-      if (priceMax) params.set("priceMax", priceMax);
+      if (priceMax) params.set("priceMax", displayToCzk(priceMax, eur, czkToEurRate));
       else params.delete("priceMax");
     });
   }
@@ -116,53 +128,53 @@ export function CategoryFilters({
       chips.push({
         key: "scent",
         value: v,
-        label: scentFamilies.find((s) => s.slug === v)?.name ?? v,
+        label: tr(scentFamilies.find((s) => s.slug === v)?.name ?? v),
       }),
     );
     selectedGenders.forEach((v) =>
       chips.push({
         key: "gender",
         value: v,
-        label: structure.genderOptions.find((g) => g.slug === v)?.name ?? v,
+        label: tr(structure.genderOptions.find((g) => g.slug === v)?.name ?? v),
       }),
     );
     selectedConcentrations.forEach((v) =>
       chips.push({
         key: "concentration",
         value: v,
-        label: structure.concentrationOptions.find((c) => c.slug === v)?.name ?? v,
+        label: tr(structure.concentrationOptions.find((c) => c.slug === v)?.name ?? v),
       }),
     );
     selectedOccasions.forEach((v) =>
       chips.push({
         key: "occasion",
         value: v,
-        label: structure.occasionOptions.find((o) => o.slug === v)?.name ?? v,
+        label: tr(structure.occasionOptions.find((o) => o.slug === v)?.name ?? v),
       }),
     );
     selectedSkinTypes.forEach((v) =>
       chips.push({
         key: "skinType",
         value: v,
-        label: cosmetics.skinTypes.find((s) => s.slug === v)?.name ?? v,
+        label: tr(cosmetics.skinTypes.find((s) => s.slug === v)?.name ?? v),
       }),
     );
     selectedConcerns.forEach((v) =>
       chips.push({
         key: "concern",
         value: v,
-        label: cosmetics.concerns.find((c) => c.slug === v)?.name ?? v,
+        label: tr(cosmetics.concerns.find((c) => c.slug === v)?.name ?? v),
       }),
     );
     selectedKinds.forEach((v) =>
-      chips.push({ key: "kind", value: v, label: cosmetics.productTypes.find((k) => k.slug === v)?.name ?? v }),
+      chips.push({ key: "kind", value: v, label: tr(cosmetics.productTypes.find((k) => k.slug === v)?.name ?? v) }),
     );
     selectedIngredients.forEach((v) =>
-      chips.push({ key: "ingredient", value: v, label: cosmetics.ingredients.find((i) => i.slug === v)?.name ?? v }),
+      chips.push({ key: "ingredient", value: v, label: tr(cosmetics.ingredients.find((i) => i.slug === v)?.name ?? v) }),
     );
     if (searchParams.get("vegan") === "1") chips.push({ key: "vegan", value: "1", label: "Vegan" });
     if (searchParams.get("cf") === "1") chips.push({ key: "cf", value: "1", label: "Cruelty-free" });
-    if (searchParams.get("sale") === "1") chips.push({ key: "sale", value: "1", label: "Ve slevě" });
+    if (searchParams.get("sale") === "1") chips.push({ key: "sale", value: "1", label: tr("Ve slevě") });
     return chips;
   }, [
     selectedBrands,
@@ -179,6 +191,7 @@ export function CategoryFilters({
     scentFamilies,
     structure,
     cosmetics,
+    tr,
   ]);
 
   function removeChip(key: string, value: string) {
@@ -208,7 +221,7 @@ export function CategoryFilters({
         onClick={() => setMobileOpen((open) => !open)}
         className="flex items-center justify-between rounded-sm border border-line px-4 py-2.5 text-sm font-semibold text-ink sm:hidden"
       >
-        <span>Filtrovat{activeChips.length > 0 && ` (${activeChips.length})`}</span>
+        <span>{tr("Filtrovat")}{activeChips.length > 0 && ` (${activeChips.length})`}</span>
         <span className={`text-accent-2 transition ${mobileOpen ? "rotate-180" : ""}`}>⌄</span>
       </button>
 
@@ -216,7 +229,7 @@ export function CategoryFilters({
       {topProducts.length > 0 && (
         <div className="flex flex-col gap-2 border-b border-line pb-4">
           <span className="text-[11px] font-semibold tracking-wide text-accent-2 uppercase">
-            Top prodejů
+            {tr("Top prodejů")}
           </span>
           <ul className="flex flex-col gap-2">
             {topProducts.map((product) => {
@@ -229,11 +242,11 @@ export function CategoryFilters({
                   >
                     <span className="relative h-12 w-12 shrink-0 overflow-hidden bg-line/60">
                       {image ? (
-                        <Image src={image.url} alt={product.name} fill sizes="48px" className="object-cover" />
+                        <Image src={image.url} alt={isSk && product.nameSk ? product.nameSk : product.name} fill sizes="48px" className="object-cover" />
                       ) : null}
                     </span>
                     <span className="flex flex-col gap-0.5 overflow-hidden">
-                      <span className="line-clamp-2 text-ink group-hover:underline">{product.name}</span>
+                      <span className="line-clamp-2 text-ink group-hover:underline">{isSk && product.nameSk ? product.nameSk : product.name}</span>
                       <span className="font-semibold text-accent">{price(product.price)}</span>
                     </span>
                   </Link>
@@ -246,7 +259,7 @@ export function CategoryFilters({
 
       <div>
         <label className="text-[11px] font-semibold tracking-wide text-accent-2 uppercase">
-          Řazení
+          {tr("Řazení")}
         </label>
         <select
           value={searchParams.get("sort") ?? "newest"}
@@ -255,7 +268,7 @@ export function CategoryFilters({
         >
           {Object.entries(SORT_LABELS).map(([value, label]) => (
             <option key={value} value={value}>
-              {label}
+              {tr(label)}
             </option>
           ))}
         </select>
@@ -281,7 +294,7 @@ export function CategoryFilters({
             onClick={clearAll}
             className="w-fit text-xs text-accent-2 underline hover:text-accent"
           >
-            Vymazat vše
+            {tr("Vymazat vše")}
           </button>
         </div>
       )}
@@ -294,11 +307,11 @@ export function CategoryFilters({
             onChange={() => toggleBoolean("sale")}
             className="accent-accent"
           />
-          Ve slevě
+          {tr("Ve slevě")}
         </label>
       </div>
 
-      <FilterSection title="Cena (Kč)">
+      <FilterSection title={eur ? tr("Cena (€)") : tr("Cena (Kč)")}>
         <div className="flex items-center gap-2">
           <input
             type="number"
@@ -306,7 +319,7 @@ export function CategoryFilters({
             value={priceMin}
             onChange={(e) => setPriceMin(e.target.value)}
             onBlur={applyPriceRange}
-            placeholder="od"
+            placeholder={tr("od")}
             className="w-full rounded-sm border border-line px-2 py-1 text-sm text-ink"
           />
           <input
@@ -315,14 +328,14 @@ export function CategoryFilters({
             value={priceMax}
             onChange={(e) => setPriceMax(e.target.value)}
             onBlur={applyPriceRange}
-            placeholder="do"
+            placeholder={tr("do")}
             className="w-full rounded-sm border border-line px-2 py-1 text-sm text-ink"
           />
         </div>
       </FilterSection>
 
       {structure.genderOptions.length > 0 && (
-        <FilterSection title="Pro koho">
+        <FilterSection title={tr("Pro koho")}>
           <ul className="flex flex-col gap-1.5">
             {structure.genderOptions.map((option) => (
               <li key={option.slug}>
@@ -333,7 +346,7 @@ export function CategoryFilters({
                     onChange={() => toggleMulti("gender", selectedGenders, option.slug)}
                     className="accent-accent"
                   />
-                  {option.name}
+                  {tr(option.name)}
                   <span className="text-xs text-accent-2">({option.count})</span>
                 </label>
               </li>
@@ -343,7 +356,7 @@ export function CategoryFilters({
       )}
 
       {structure.concentrationOptions.length > 0 && (
-        <FilterSection title="Typ">
+        <FilterSection title={tr("Typ")}>
           <ul className="flex flex-col gap-1.5">
             {structure.concentrationOptions.map((option) => (
               <li key={option.slug}>
@@ -354,7 +367,7 @@ export function CategoryFilters({
                     onChange={() => toggleMulti("concentration", selectedConcentrations, option.slug)}
                     className="accent-accent"
                   />
-                  {option.name}
+                  {tr(option.name)}
                   <span className="text-xs text-accent-2">({option.count})</span>
                 </label>
               </li>
@@ -364,7 +377,7 @@ export function CategoryFilters({
       )}
 
       {scentFamilies.length > 0 && (
-        <FilterSection title="Charakter vůně">
+        <FilterSection title={tr("Charakter vůně")}>
           <ul className="flex flex-col gap-1.5">
             {scentFamilies.map((family) => (
               <li key={family.slug}>
@@ -375,7 +388,7 @@ export function CategoryFilters({
                     onChange={() => toggleMulti("scent", selectedScents, family.slug)}
                     className="accent-accent"
                   />
-                  {family.name}
+                  {tr(family.name)}
                   <span className="text-xs text-accent-2">({family.count})</span>
                 </label>
               </li>
@@ -385,7 +398,7 @@ export function CategoryFilters({
       )}
 
       {structure.occasionOptions.length > 0 && (
-        <FilterSection title="Příležitost">
+        <FilterSection title={tr("Příležitost")}>
           <ul className="flex flex-col gap-1.5">
             {structure.occasionOptions.map((option) => (
               <li key={option.slug}>
@@ -396,7 +409,7 @@ export function CategoryFilters({
                     onChange={() => toggleMulti("occasion", selectedOccasions, option.slug)}
                     className="accent-accent"
                   />
-                  {option.name}
+                  {tr(option.name)}
                   <span className="text-xs text-accent-2">({option.count})</span>
                 </label>
               </li>
@@ -406,7 +419,7 @@ export function CategoryFilters({
       )}
 
       {cosmetics.productTypes.length > 0 && (
-        <FilterSection title="Druh produktu">
+        <FilterSection title={tr("Druh produktu")}>
           <ul className="flex flex-col gap-1.5">
             {cosmetics.productTypes.map((option) => (
               <li key={option.slug}>
@@ -417,7 +430,7 @@ export function CategoryFilters({
                     onChange={() => toggleMulti("kind", selectedKinds, option.slug)}
                     className="accent-accent"
                   />
-                  {option.name}
+                  {tr(option.name)}
                   <span className="text-xs text-accent-2">({option.count})</span>
                 </label>
               </li>
@@ -427,7 +440,7 @@ export function CategoryFilters({
       )}
 
       {cosmetics.concerns.length > 0 && (
-        <FilterSection title="Účel">
+        <FilterSection title={tr("Účel")}>
           <ul className="flex flex-col gap-1.5">
             {cosmetics.concerns.map((option) => (
               <li key={option.slug}>
@@ -438,7 +451,7 @@ export function CategoryFilters({
                     onChange={() => toggleMulti("concern", selectedConcerns, option.slug)}
                     className="accent-accent"
                   />
-                  {option.name}
+                  {tr(option.name)}
                   <span className="text-xs text-accent-2">({option.count})</span>
                 </label>
               </li>
@@ -448,7 +461,7 @@ export function CategoryFilters({
       )}
 
       {cosmetics.skinTypes.length > 0 && (
-        <FilterSection title="Typ pleti">
+        <FilterSection title={tr("Typ pleti")}>
           <ul className="flex flex-col gap-1.5">
             {cosmetics.skinTypes.map((option) => (
               <li key={option.slug}>
@@ -459,7 +472,7 @@ export function CategoryFilters({
                     onChange={() => toggleMulti("skinType", selectedSkinTypes, option.slug)}
                     className="accent-accent"
                   />
-                  {option.name}
+                  {tr(option.name)}
                   <span className="text-xs text-accent-2">({option.count})</span>
                 </label>
               </li>
@@ -469,7 +482,7 @@ export function CategoryFilters({
       )}
 
       {cosmetics.ingredients.length > 0 && (
-        <FilterSection title="Složka">
+        <FilterSection title={tr("Složka")}>
           <ul className="flex flex-col gap-1.5">
             {cosmetics.ingredients.map((option) => (
               <li key={option.slug}>
@@ -480,7 +493,7 @@ export function CategoryFilters({
                     onChange={() => toggleMulti("ingredient", selectedIngredients, option.slug)}
                     className="accent-accent"
                   />
-                  {option.name}
+                  {tr(option.name)}
                   <span className="text-xs text-accent-2">({option.count})</span>
                 </label>
               </li>
@@ -490,7 +503,7 @@ export function CategoryFilters({
       )}
 
       {(cosmetics.vegan > 0 || cosmetics.crueltyFree > 0) && (
-        <FilterSection title="Vlastnosti">
+        <FilterSection title={tr("Vlastnosti")}>
           <ul className="flex flex-col gap-1.5">
             {cosmetics.vegan > 0 && (
               <li>
@@ -525,13 +538,13 @@ export function CategoryFilters({
       )}
 
       {brands.length > 0 && (
-        <FilterSection title="Značka">
+        <FilterSection title={tr("Značka")}>
           <div className="flex flex-col gap-2">
             {brands.length > 8 && (
               <input
                 value={brandQuery}
                 onChange={(e) => setBrandQuery(e.target.value)}
-                placeholder="Hledat značku…"
+                placeholder={tr("Hledat značku…")}
                 className="rounded-sm border border-line px-2 py-1 text-sm text-ink"
               />
             )}
@@ -557,7 +570,7 @@ export function CategoryFilters({
                 onClick={() => setShowAllBrands(true)}
                 className="w-fit text-xs text-accent-2 underline hover:text-accent"
               >
-                Zobrazit všechny ({visibleBrands.length})
+                {tr("Zobrazit všechny")} ({visibleBrands.length})
               </button>
             )}
           </div>

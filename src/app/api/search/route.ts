@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { isRateLimited, recordRateLimitHit, getClientIp } from "@/lib/rate-limit";
+import { skScope } from "@/lib/sk-visibility";
 import { buildDescriptionSearchWhere, buildExactSearchWhere, findFuzzyProductIds } from "@/lib/product-search";
 
 // Fires on every keystroke from the client — unlike the other public routes
@@ -23,18 +24,19 @@ export async function GET(req: NextRequest) {
   if (q.length < 2) return NextResponse.json({ results: [] });
 
   await recordRateLimitHit(`search:${ip}`);
+  const isSk = req.nextUrl.searchParams.get("lang") === "sk";
 
   // Three tiers so a typo ("Latafa" for "Lattafa") or a word that's only in
   // the description doesn't come back empty — see product-search.ts.
   let products = await prisma.product.findMany({
-    where: { visible: true, ...buildExactSearchWhere(q) },
+    where: skScope({ visible: true, ...buildExactSearchWhere(q) }, isSk),
     take: RESULT_LIMIT,
     include: PRODUCT_INCLUDE,
   });
 
   if (products.length === 0) {
     products = await prisma.product.findMany({
-      where: { visible: true, ...buildDescriptionSearchWhere(q) },
+      where: skScope({ visible: true, ...buildDescriptionSearchWhere(q) }, isSk),
       take: RESULT_LIMIT,
       include: PRODUCT_INCLUDE,
     });
@@ -44,7 +46,7 @@ export async function GET(req: NextRequest) {
     const fuzzyIds = await findFuzzyProductIds(q, RESULT_LIMIT);
     if (fuzzyIds.length > 0) {
       const fuzzyProducts = await prisma.product.findMany({
-        where: { id: { in: fuzzyIds }, visible: true },
+        where: skScope({ id: { in: fuzzyIds }, visible: true }, isSk),
         include: PRODUCT_INCLUDE,
       });
       const byId = new Map(fuzzyProducts.map((p) => [p.id, p]));
@@ -56,6 +58,7 @@ export async function GET(req: NextRequest) {
     results: products.map((p) => ({
       slug: p.slug,
       name: p.name,
+      nameSk: p.nameSk,
       brand: p.brand?.name ?? null,
       price: Number(p.price),
       image: p.images[0]?.url ?? null,

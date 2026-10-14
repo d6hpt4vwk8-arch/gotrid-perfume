@@ -1,9 +1,11 @@
 "use client";
 
-import { useRouter } from "next/navigation";
+import { useTr } from "@/i18n/use-tr";
+import { useRouter } from "@/i18n/navigation";
 
 export function CustomerLogoutButton() {
   const router = useRouter();
+  const tr = useTr();
 
   return (
     <button
@@ -15,7 +17,7 @@ export function CustomerLogoutButton() {
       }}
       className="text-sm text-accent-2 underline hover:text-accent"
     >
-      Odhlásit se
+      {tr("Odhlásit se")}
     </button>
   );
 }

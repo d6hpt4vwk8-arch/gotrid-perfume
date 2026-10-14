@@ -111,7 +111,7 @@ export async function POST(req: NextRequest) {
       // Routes through the access-exchange endpoint so the token becomes an
       // HttpOnly cookie instead of landing in Stripe's own redirect/logs.
       successUrl: `${origin}/api/orders/${order.number}/access?token=${order.accessToken}`,
-      cancelUrl: `${origin}/kosik`,
+      cancelUrl: `${origin}${isSk ? "/sk" : ""}/kosik`,
     });
     if (isSk) {
       // createOrder() defaulted chargedCurrency/chargedAmount to CZK/total —

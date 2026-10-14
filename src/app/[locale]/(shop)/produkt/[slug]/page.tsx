@@ -1,17 +1,19 @@
-import Link from "next/link";
-import { headers } from "next/headers";
+import { Link } from "@/i18n/navigation";
 import { notFound } from "next/navigation";
 import type { Metadata } from "next";
 import type { Prisma } from "@prisma/client";
 import { prisma } from "@/lib/prisma";
 import { formatPriceIn } from "@/lib/format";
-import { readCurrencyCookie } from "@/lib/currency-cookie";
+import { currencyForLocale } from "@/lib/currency";
+import { getCurrentLocale, getTr } from "@/i18n/tr.server";
+import { categoryNameSk } from "@/lib/sk-terms";
+import { skScope } from "@/lib/sk-visibility";
 import { AddToCartButton } from "@/components/add-to-cart-button";
 import { ProductViewTracker } from "@/components/product-view-tracker";
 import { HeurekaProductView } from "@/components/heureka-product-view";
 import { sanitizeDescription } from "@/lib/sanitize-description";
 import { jsonLdScript } from "@/lib/json-ld";
-import { breadcrumbJsonLd, htmlToPlainText, truncateAtWord } from "@/lib/seo";
+import { breadcrumbJsonLd, htmlToPlainText, localeAlternates, localePath, truncateAtWord } from "@/lib/seo";
 import { ProductCard } from "@/components/product-card";
 import { WishlistButton } from "@/components/wishlist-button";
 import { StockAlertForm } from "@/components/stock-alert-form";
@@ -70,16 +72,16 @@ async function getSizeVariants(variantGroupKey: string | null) {
   );
 }
 
-async function getRelatedProducts(productId: string, categoryIds: string[]) {
+async function getRelatedProducts(productId: string, categoryIds: string[], isSk: boolean) {
   if (categoryIds.length === 0) return [];
   return prisma.product.findMany({
-    where: {
+    where: skScope({
       id: { not: productId },
       visible: true,
       categories: { some: { categoryId: { in: categoryIds } } },
       ...primaryVariantWhere,
       stock: { gt: 0 },
-    },
+    }, isSk),
     include: { brand: true, images: { orderBy: { sortOrder: "asc" }, take: 1 } },
     orderBy: [{ ownStock: "desc" }, { priority: "desc" }, { createdAt: "desc" }],
     take: 8,
@@ -89,21 +91,33 @@ async function getRelatedProducts(productId: string, categoryIds: string[]) {
 export async function generateMetadata({
   params,
 }: {
-  params: Promise<{ slug: string }>;
+  params: Promise<{ slug: string; locale: string }>;
 }): Promise<Metadata> {
-  const { slug } = await params;
+  const { slug, locale } = await params;
+  const isSk = locale === "sk";
+  const tr = await getTr();
   const product = await getProduct(slug);
   if (!product) return {};
+  const displayName = isSk && product.nameSk ? product.nameSk : product.name;
+  const displayDescription = isSk && product.descriptionSk ? product.descriptionSk : product.description;
   // Descriptions are stored as HTML (and ~70 % of products have none): strip the
   // markup, and fall back to plain facts so the snippet is never empty or "<p>…".
-  const text = htmlToPlainText(product.description);
+  const text = htmlToPlainText(displayDescription);
   const brandName = product.brand?.name;
   const price = Math.round(Number(product.price));
-  const facts = `${product.name}${brandName && !product.name.toLowerCase().includes(brandName.toLowerCase()) ? ` (${brandName})` : ""} za ${price} Kč. ${product.stock > 0 ? "Skladem, " : ""}doprava od 59 Kč, vrácení do 14 dnů. Originální zboží, Gotrid Perfume.`;
+  const settings = await getSettings();
+  const nameWithBrand = `${displayName}${brandName && !displayName.toLowerCase().includes(brandName.toLowerCase()) ? ` (${brandName})` : ""}`;
+  const facts = isSk
+    ? `${nameWithBrand} ${tr("za")} ${formatPriceIn(product.price, "EUR", settings.czkToEurRate)}. ${product.stock > 0 ? `${tr("Skladem")}, ` : ""}${tr("vrácení do 14 dní.")} ${tr("Originálny tovar")}, Gotrid Perfume.`
+    : `${nameWithBrand} za ${price} Kč. ${product.stock > 0 ? "Skladem, " : ""}doprava od 59 Kč, vrácení do 14 dnů. Originální zboží, Gotrid Perfume.`;
   return {
-    title: `${product.name} | Gotrid Perfume`,
+    title: `${displayName} | Gotrid Perfume`,
     description: truncateAtWord(text.length >= 60 ? text : `${facts}${text ? ` ${text}` : ""}`),
-    alternates: { canonical: `/produkt/${product.slug}` },
+    // A product without Slovak copy keeps the Czech page as its only canonical version.
+    alternates:
+      isSk && !product.nameSk
+        ? { canonical: `/produkt/${product.slug}` }
+        : localeAlternates(locale, `/produkt/${product.slug}`),
   };
 }
 
@@ -116,22 +130,30 @@ export default async function ProductPage({
   const product = await getProduct(slug);
   if (!product) notFound();
 
+  const [tr, locale] = await Promise.all([getTr(), getCurrentLocale()]);
+  const isSk = locale === "sk";
+  // Slovak copy (Product.nameSk / descriptionSk) when it exists; the many
+  // products not translated yet fall back to their Czech text.
+  const displayName = isSk && product.nameSk ? product.nameSk : product.name;
+  const displayDescription = isSk && product.descriptionSk ? product.descriptionSk : product.description;
+  const catName = (name: string) => (isSk ? categoryNameSk(name) : name);
+
   const primaryCategory = product.categories[0]?.category;
 
-  const [relatedProducts, sizeVariants, categoryBreadcrumb, frequentlyBoughtTogether, sameLineProducts, settings, headerList] =
+  const [relatedProducts, sizeVariants, categoryBreadcrumb, frequentlyBoughtTogether, sameLineProducts, settings] =
     await Promise.all([
       getRelatedProducts(
         product.id,
         product.categories.map((c) => c.categoryId),
+        isSk,
       ),
       getSizeVariants(product.variantGroupKey),
       primaryCategory ? getCategoryBreadcrumb(primaryCategory.fullSlug) : Promise.resolve([]),
-      getFrequentlyBoughtTogether(product.id),
-      getSameLineProducts(product),
+      getFrequentlyBoughtTogether(product.id, 4, isSk),
+      getSameLineProducts(product, 4, isSk),
       getSettings(),
-      headers(),
     ]);
-  const currency = readCurrencyCookie(headerList.get("cookie"));
+  const currency = currencyForLocale(locale);
   const price = (czk: Prisma.Decimal | number) => formatPriceIn(czk, currency, settings.czkToEurRate);
 
   // Shown next to Add to cart so price-comparison traffic (Zbozi/Heureka)
@@ -139,14 +161,20 @@ export default async function ProductPage({
   // Clarity session recordings showed visitors landing straight on
   // checkout from these sites and removing the item once they saw the
   // total including delivery, which the product page never mentioned.
-  const cheapestShippingPrice = Math.min(...Object.values(settings.shippingPrices).filter((p) => p > 0));
+  const cheapestShippingPrice = isSk
+    ? Math.min(
+        ...[settings.shippingPriceZasilkovnaSk ?? settings.shippingPrices.ZASILKOVNA, settings.shippingPriceGlsSk ?? settings.shippingPrices.GLS].filter(
+          (p) => p > 0,
+        ),
+      )
+    : Math.min(...Object.values(settings.shippingPrices).filter((p) => p > 0));
 
   const avgRating =
     product.reviews.length > 0
       ? product.reviews.reduce((sum, r) => sum + r.rating, 0) / product.reviews.length
       : null;
 
-  const specs = getProductSpecs(product);
+  const specs = getProductSpecs(product, tr, isSk);
   // Perfumes get one extra business day on top of the site default — some
   // perfume SKUs depend on a slower supplier (SP Venture) whose own
   // handoff-to-courier time is less predictable than for drugstore/cosmetic
@@ -157,16 +185,16 @@ export default async function ProductPage({
   const jsonLd = {
     "@context": "https://schema.org",
     "@type": "Product",
-    name: product.name,
+    name: displayName,
     image: product.images.map((i) => i.url),
-    description: htmlToPlainText(product.description) || undefined,
+    description: htmlToPlainText(displayDescription) || undefined,
     sku: product.code,
     gtin13: product.ean ?? undefined,
     brand: product.brand ? { "@type": "Brand", name: product.brand.name } : undefined,
     offers: {
       "@type": "Offer",
-      priceCurrency: "CZK",
-      price: Number(product.price),
+      priceCurrency: currency,
+      price: currency === "EUR" ? Math.round((Number(product.price) / settings.czkToEurRate) * 100) / 100 : Number(product.price),
       availability:
         product.stock > 0
           ? "https://schema.org/InStock"
@@ -191,27 +219,30 @@ export default async function ProductPage({
         type="application/ld+json"
         dangerouslySetInnerHTML={{
           __html: jsonLdScript(
-            breadcrumbJsonLd([
-              ...categoryBreadcrumb.map((c) => ({ name: c.name, path: `/kategorie/${c.fullSlug}` })),
-              { name: product.name, path: `/produkt/${product.slug}` },
-            ]),
+            breadcrumbJsonLd(
+              [
+                ...categoryBreadcrumb.map((c) => ({ name: catName(c.name), path: localePath(locale, `/kategorie/${c.fullSlug}`) })),
+                { name: displayName, path: localePath(locale, `/produkt/${product.slug}`) },
+              ],
+              { home: tr("Domů"), homePath: localePath(locale, "/") },
+            ),
           ),
         }}
       />
       <ProductViewTracker
-        product={{ id: product.id, code: product.code, name: product.name, price: Number(product.price) }}
+        product={{ id: product.id, code: product.code, name: displayName, price: Number(product.price) }}
       />
       <HeurekaProductView />
 
       <Breadcrumbs
         items={[
-          ...categoryBreadcrumb.map((c) => ({ name: c.name, href: `/kategorie/${c.fullSlug}` })),
-          { name: product.name },
+          ...categoryBreadcrumb.map((c) => ({ name: catName(c.name), href: `/kategorie/${c.fullSlug}` })),
+          { name: displayName },
         ]}
       />
 
       <div className="grid gap-8 md:grid-cols-2">
-        <ProductGallery images={product.images} alt={product.name} />
+        <ProductGallery images={product.images} alt={displayName} />
 
         <div className="flex flex-col gap-4">
           {product.brand && (
@@ -223,12 +254,12 @@ export default async function ProductPage({
             </Link>
           )}
           <div className="flex items-start justify-between gap-3">
-            <h1 className="text-2xl font-bold text-ink">{product.name}</h1>
+            <h1 className="text-2xl font-bold text-ink">{displayName}</h1>
             <WishlistButton
               product={{
                 productId: product.id,
                 slug: product.slug,
-                name: product.name,
+                name: displayName,
                 price: Number(product.price),
                 image: product.images[0]?.url ?? null,
               }}
@@ -250,14 +281,18 @@ export default async function ProductPage({
 
           {product.isDefective && (
             <span className="w-fit rounded-sm bg-amber-600 px-1.5 py-1 text-xs font-bold text-white">
-              Poškozený obal
+              {tr("Poškozený obal")}
             </span>
           )}
 
           {(isBestseller(product.salesCount) || product.isVegan || product.isCrueltyFree) && (
             <div className="flex flex-wrap items-center gap-1.5">
               {isBestseller(product.salesCount) && <BestsellerPill />}
-              <EthicsPills isVegan={product.isVegan} isCrueltyFree={product.isCrueltyFree} />
+              <EthicsPills
+                isVegan={product.isVegan}
+                isCrueltyFree={product.isCrueltyFree}
+                crueltyFreeTitle={tr("Cruelty-free: produkt ani jeho složky nebyly testovány na zvířatech")}
+              />
             </div>
           )}
 
@@ -296,7 +331,7 @@ export default async function ProductPage({
               return (
                 <div className="flex flex-col gap-2">
                   <span className="text-[11px] font-semibold tracking-wide text-accent-2 uppercase">
-                    Barva: <span className="text-ink normal-case">{currentLabel}</span>
+                    {tr("Barva")}: <span className="text-ink normal-case">{currentLabel}</span>
                   </span>
                   <div className="flex flex-wrap gap-3">
                     {sizeVariants.map((variant) => {
@@ -318,7 +353,7 @@ export default async function ProductPage({
                         <Link
                           key={variant.id}
                           href={`/produkt/${variant.slug}`}
-                          title={variant.stock <= 0 ? `${label} (vyprodáno)` : label}
+                          title={variant.stock <= 0 ? `${label} (${tr("vyprodáno")})` : label}
                           aria-label={label}
                         >
                           {circle}
@@ -333,7 +368,7 @@ export default async function ProductPage({
             return (
               <div className="flex flex-col gap-2">
                 <span className="text-[11px] font-semibold tracking-wide text-accent-2 uppercase">
-                  {isSizeGroup ? "Velikost" : "Odstín"}
+                  {isSizeGroup ? tr("Velikost") : tr("Odstín")}
                 </span>
                 <div className="flex flex-wrap gap-2">
                   {sizeVariants.map((variant) => {
@@ -356,7 +391,7 @@ export default async function ProductPage({
                       >
                         {label}
                         {variant.stock <= 0 && (
-                          <span className="text-accent-2"> (vyprodáno)</span>
+                          <span className="text-accent-2"> ({tr("vyprodáno")})</span>
                         )}
                       </Link>
                     );
@@ -385,7 +420,7 @@ export default async function ProductPage({
               ) : (
                 <span className="h-1.5 w-1.5 rounded-full bg-accent-2" />
               )}
-              {product.stock > 0 ? `Skladem (${product.stock} ks)` : "Vyprodáno"}
+              {product.stock > 0 ? tr("Skladem ({n} ks)", { n: product.stock }) : tr("Vyprodáno")}
             </span>
 
             {/* The old "máme na jiném skladu, doručení trvá déle" warning was removed
@@ -394,16 +429,16 @@ export default async function ProductPage({
                 still maintained by the SP Venture sync, just no longer shown. */}
             {product.stock > 0 && (
               <p className="pl-6 text-sm text-accent-2">
-                Ihned k odeslání od{" "}
+                {tr("Ihned k odeslání od")}{" "}
                 <span className="font-medium text-ink">{price(cheapestShippingPrice)}</span>
                 {deliveryEstimate && (
                   <>
-                    , u vás doma již{" "}
-                    <span className="font-medium text-ink">{formatDeliveryEstimate(deliveryEstimate)}</span>
+                    , {tr("u vás doma již")}{" "}
+                    <span className="font-medium text-ink">{formatDeliveryEstimate(deliveryEstimate, locale)}</span>
                   </>
                 )}
                 . <Link href="/doprava-a-platba" className="text-ink underline hover:text-accent">
-                  Možnosti dopravy
+                  {tr("Možnosti dopravy")}
                 </Link>
               </p>
             )}
@@ -415,7 +450,7 @@ export default async function ProductPage({
                 productId: product.id,
                 code: product.code,
                 slug: product.slug,
-                name: product.name,
+                name: displayName,
                 price: Number(product.price),
                 image: product.images[0]?.url ?? null,
                 stock: product.stock,
@@ -430,19 +465,19 @@ export default async function ProductPage({
             </div>
           )}
 
-          <ProductTrustStrip productName={product.name} />
+          <ProductTrustStrip productName={displayName} />
 
-          {product.description && (
+          {displayDescription && (
             <div
               className="prose prose-neutral mt-4 max-w-none text-sm leading-relaxed [&_li]:mb-1 [&_p]:mb-3 [&_strong]:font-semibold [&_ul]:mb-3 [&_ul]:list-disc [&_ul]:pl-5"
-              dangerouslySetInnerHTML={{ __html: sanitizeDescription(product.description) }}
+              dangerouslySetInnerHTML={{ __html: sanitizeDescription(displayDescription) }}
             />
           )}
 
           {specs.length > 0 && (
             <div className="mt-2">
               <h2 className="mb-2 text-[11px] font-semibold tracking-wide text-accent-2 uppercase">
-                Parametry
+                {tr("Parametry")}
               </h2>
               <dl className="divide-y divide-line border-y border-line text-sm">
                 {specs.map((spec) => (
@@ -458,7 +493,7 @@ export default async function ProductPage({
           {product.ingredients && (
             <div className="mt-2">
               <h2 className="mb-2 text-[11px] font-semibold tracking-wide text-accent-2 uppercase">
-                Složení (INCI)
+                {tr("Složení (INCI)")}
               </h2>
               <p className="text-sm whitespace-pre-line text-ink/70">{product.ingredients}</p>
             </div>
@@ -468,7 +503,7 @@ export default async function ProductPage({
 
       {frequentlyBoughtTogether.length > 0 && (
         <section className="border-t border-line pt-6">
-          <h2 className="mb-4 text-lg font-bold text-ink">Často kupováno spolu</h2>
+          <h2 className="mb-4 text-lg font-bold text-ink">{tr("Často kupováno spolu")}</h2>
           <div className="grid grid-cols-2 gap-x-4 gap-y-8 sm:grid-cols-3 md:grid-cols-4">
             {frequentlyBoughtTogether.map((item) => (
               <ProductCard
@@ -483,7 +518,7 @@ export default async function ProductPage({
 
       {sameLineProducts.length > 0 && (
         <section className="border-t border-line pt-6">
-          <h2 className="mb-4 text-lg font-bold text-ink">Další produkty ze stejné vůně</h2>
+          <h2 className="mb-4 text-lg font-bold text-ink">{tr("Další produkty ze stejné vůně")}</h2>
           <div className="grid grid-cols-2 gap-x-4 gap-y-8 sm:grid-cols-3 md:grid-cols-4">
             {sameLineProducts.map((item) => (
               <ProductCard
@@ -507,7 +542,7 @@ export default async function ProductPage({
 
       <section id="recenze" className="flex flex-col gap-4 border-t border-line pt-6">
         <h2 className="text-lg font-bold text-ink">
-          Recenze {avgRating && `— ${avgRating.toFixed(1)} / 5`}
+          {tr("Recenze")} {avgRating && `— ${avgRating.toFixed(1)} / 5`}
         </h2>
         {product.reviews.length > 0 && (
           <ul className="flex flex-col gap-4">
@@ -529,7 +564,7 @@ export default async function ProductPage({
 
       {relatedProducts.length > 0 && (
         <section className="border-t border-line pt-6">
-          <h2 className="mb-4 text-lg font-bold text-ink">Podobné produkty</h2>
+          <h2 className="mb-4 text-lg font-bold text-ink">{tr("Podobné produkty")}</h2>
           <div className="grid grid-cols-2 gap-x-4 gap-y-8 sm:grid-cols-3 md:grid-cols-4">
             {relatedProducts.map((related) => (
               <ProductCard

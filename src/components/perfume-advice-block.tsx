@@ -1,7 +1,9 @@
-import Link from "next/link";
+import { Link } from "@/i18n/navigation";
 import { WhatsappAdviceButton } from "@/components/whatsapp-advice-button";
+import { getCurrentLocale, getTr } from "@/i18n/tr.server";
 
-export function PerfumeAdviceBlock() {
+export async function PerfumeAdviceBlock() {
+  const [tr, locale] = await Promise.all([getTr(), getCurrentLocale()]);
   return (
     <section
       className="relative overflow-hidden rounded-sm border border-line px-6 py-10 sm:px-10 sm:py-12"
@@ -31,26 +33,26 @@ export function PerfumeAdviceBlock() {
 
         <div className="flex flex-1 flex-col gap-2">
           <h2 className="text-lg font-bold text-ink sm:text-xl">
-            Nevíte, jaký parfém vybrat?
+            {tr("Nevíte, jaký parfém vybrat?")}
           </h2>
           <p className="max-w-2xl text-sm leading-relaxed text-ink/70">
-            Vůni si přes obrazovku bohužel nepřivoníte — a to je u parfému to nejdůležitější.
-            Napište nám na WhatsApp, jaké vůně máte rádi a na jakou příležitost parfém hledáte,
-            a osobně vám doporučíme, co by vám mohlo sednout.
+            {tr("Vůni si přes obrazovku bohužel nepřivoníte — a to je u parfému to nejdůležitější. Napište nám na WhatsApp, jaké vůně máte rádi a na jakou příležitost parfém hledáte, a osobně vám doporučíme, co by vám mohlo sednout.")}
           </p>
         </div>
 
         <div className="flex w-full flex-col items-start gap-3 sm:w-auto">
           <WhatsappAdviceButton
-            message="Dobrý den, chtěl(a) bych poradit s výběrem parfému."
-            label="Poradit na WhatsAppu"
+            message={tr("Dobrý den, chtěl(a) bych poradit s výběrem parfému.")}
+            label={tr("Poradit na WhatsAppu")}
           />
-          <Link
-            href="/magazin/jak-vybrat-parfem"
-            className="text-sm font-medium text-ink underline-offset-2 hover:underline"
-          >
-            Jak vybrat parfém →
-          </Link>
+          {locale !== "sk" && (
+            <Link
+              href="/magazin/jak-vybrat-parfem"
+              className="text-sm font-medium text-ink underline-offset-2 hover:underline"
+            >
+              Jak vybrat parfém →
+            </Link>
+          )}
         </div>
       </div>
     </section>

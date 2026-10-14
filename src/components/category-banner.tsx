@@ -1,14 +1,16 @@
 import Image from "next/image";
-import Link from "next/link";
+import { Link } from "@/i18n/navigation";
 import type { CategoryBannerTile } from "@/lib/category-banner.server";
+import { getCurrentLocale, getTr } from "@/i18n/tr.server";
+import { categoryNameSk } from "@/lib/sk-terms";
 
-function productsLabel(n: number) {
+function productsLabel(n: number, sk: boolean) {
   if (n === 1) return "1 produkt";
   if (n >= 2 && n <= 4) return `${n} produkty`;
-  return `${n} produktů`;
+  return sk ? `${n} produktov` : `${n} produktů`;
 }
 
-export function CategoryBanner({
+export async function CategoryBanner({
   name,
   total,
   tiles,
@@ -17,13 +19,14 @@ export function CategoryBanner({
   total: number;
   tiles: CategoryBannerTile[];
 }) {
+  const [tr, locale] = await Promise.all([getTr(), getCurrentLocale()]);
   return (
     <section className="overflow-hidden rounded-2xl bg-ink text-white">
       <div className="flex flex-col gap-4 p-5 sm:p-6 lg:flex-row lg:items-center lg:gap-8">
         <div className="shrink-0 lg:w-56">
           <h1 className="text-2xl font-bold sm:text-3xl">{name}</h1>
           <p className="mt-1 text-sm text-white/60">
-            {productsLabel(total)} skladem · {tiles.length} podkategorií
+            {productsLabel(total, locale === "sk")} {tr("skladem")} · {tr("{n} podkategorií", { n: tiles.length })}
           </p>
         </div>
 
@@ -45,7 +48,7 @@ export function CategoryBanner({
                   ))}
                 </span>
                 <span className="text-xs font-medium leading-tight text-white group-hover:underline">
-                  {tile.name}
+                  {locale === "sk" ? categoryNameSk(tile.name) : tile.name}
                   <span className="block font-normal text-white/50">{tile.count}</span>
                 </span>
               </Link>

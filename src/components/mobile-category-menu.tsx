@@ -1,14 +1,17 @@
 "use client";
 
-import Link from "next/link";
+import { Link } from "@/i18n/navigation";
 import { useState } from "react";
 import type { CategoryNavNode } from "@/lib/categories.server";
+import { useTr, useIsSk } from "@/i18n/use-tr";
 
 // Mobile-only replacement for the horizontally-scrolling category row in
 // SiteHeader (desktop keeps that row — it wraps fine at that width). The
 // scroll row gave no visual hint more categories existed off-screen, so
 // visitors saw 3-4 pills and assumed that was the whole catalog.
 export function MobileCategoryMenu({ categories }: { categories: CategoryNavNode[] }) {
+  const tr = useTr();
+  const isSk = useIsSk();
   const [open, setOpen] = useState(false);
   const visible = categories.filter((c) => !c.hidden);
 
@@ -20,7 +23,7 @@ export function MobileCategoryMenu({ categories }: { categories: CategoryNavNode
         className="flex w-full items-center justify-between gap-2 border-t border-white/10 pt-3 text-sm font-medium text-white"
         aria-expanded={open}
       >
-        Kategorie
+        {tr("Kategorie")}
         <svg
           xmlns="http://www.w3.org/2000/svg"
           viewBox="0 0 24 24"
@@ -52,13 +55,15 @@ export function MobileCategoryMenu({ categories }: { categories: CategoryNavNode
                 {category.name}
               </Link>
             ))}
-            <Link
-              href="/magazin"
-              onClick={() => setOpen(false)}
-              className="border-t border-white/10 px-1 pt-3 pb-2 text-sm font-medium text-white/70 hover:text-white"
-            >
-              Magazín
-            </Link>
+            {!isSk && (
+              <Link
+                href="/magazin"
+                onClick={() => setOpen(false)}
+                className="border-t border-white/10 px-1 pt-3 pb-2 text-sm font-medium text-white/70 hover:text-white"
+              >
+                {tr("Magazín")}
+              </Link>
+            )}
           </div>
         </>
       )}

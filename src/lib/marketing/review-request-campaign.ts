@@ -1,5 +1,6 @@
 import { prisma } from "@/lib/prisma";
 import { logAdminActivity } from "@/lib/admin/activity-log";
+import { orderMailLocale } from "@/lib/email/locale";
 import { sendReviewRequestEmail, REVIEW_COUPON_CODE } from "@/lib/email/send-review-request-email";
 
 // Owner's call (2026-09-21): long enough to have actually tried the
@@ -10,6 +11,7 @@ interface ReviewCandidate {
   id: string;
   email: string;
   firstName: string;
+  shippingCountry: string;
 }
 
 async function getReviewRequestCandidates(): Promise<ReviewCandidate[]> {
@@ -25,6 +27,7 @@ async function getReviewRequestCandidates(): Promise<ReviewCandidate[]> {
       id: true,
       email: true,
       firstName: true,
+      shippingCountry: true,
     },
   });
 
@@ -46,6 +49,7 @@ export async function runReviewRequestCampaign(): Promise<{ emailed: number }> {
     await sendReviewRequestEmail({
       email: candidate.email,
       firstName: candidate.firstName,
+      locale: orderMailLocale(candidate),
     });
     await prisma.order.update({
       where: { id: candidate.id },

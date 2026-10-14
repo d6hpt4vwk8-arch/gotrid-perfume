@@ -1,5 +1,6 @@
 "use client";
 
+import { useTr } from "@/i18n/use-tr";
 import Image from "next/image";
 import { useState } from "react";
 import { useConsent } from "@/lib/consent-context";
@@ -13,6 +14,7 @@ import { useConsent } from "@/lib/consent-context";
 // on this: a banner that looks deliberately designed, not like a stock
 // compliance widget, measurably gets more "accept" responses.
 export function CookieBanner() {
+  const tr = useTr();
   const { consent, acceptAll, rejectAll, setPreferences } = useConsent();
   const [showSettings, setShowSettings] = useState(false);
   const [analyticsChecked, setAnalyticsChecked] = useState(true);
@@ -30,13 +32,12 @@ export function CookieBanner() {
         </div>
 
         <div className="flex flex-col gap-5 px-6 pb-6 sm:px-8 sm:pb-8">
-          <h2 className="text-xl font-bold text-ink">Souhlas s cookies</h2>
+          <h2 className="text-xl font-bold text-ink">{tr("Souhlas s cookies")}</h2>
 
           {!showSettings ? (
             <>
               <p className="text-sm leading-relaxed text-accent-2">
-                Používáme cookies pro analytiku a marketing (Meta Pixel, Microsoft Clarity), abychom
-                mohli měřit návštěvnost a zlepšovat nabídku. Nezbytné cookies (např. košík) běží vždy.
+                {tr("Používáme cookies pro analytiku a marketing (Meta Pixel, Microsoft Clarity), abychom mohli měřit návštěvnost a zlepšovat nabídku. Nezbytné cookies (např. košík) běží vždy.")}
               </p>
               <div className="flex flex-col gap-2.5">
                 <button
@@ -44,14 +45,14 @@ export function CookieBanner() {
                   onClick={acceptAll}
                   className="w-full rounded-sm bg-ink px-4 py-3 text-sm font-semibold text-white hover:bg-accent"
                 >
-                  Přijmout vše
+                  {tr("Přijmout vše")}
                 </button>
                 <button
                   type="button"
                   onClick={() => setShowSettings(true)}
                   className="w-full rounded-sm border border-line px-4 py-3 text-sm font-medium text-ink hover:border-accent-2"
                 >
-                  Nastavení
+                  {tr("Nastavení")}
                 </button>
               </div>
               <button
@@ -59,7 +60,7 @@ export function CookieBanner() {
                 onClick={rejectAll}
                 className="text-center text-xs text-accent-2 underline hover:text-ink"
               >
-                Odmítnout vše (pouze nezbytné cookies)
+                {tr("Odmítnout vše (pouze nezbytné cookies)")}
               </button>
             </>
           ) : (
@@ -71,7 +72,7 @@ export function CookieBanner() {
                   onChange={(e) => setAnalyticsChecked(e.target.checked)}
                   className="mt-0.5 accent-accent"
                 />
-                Analytické a marketingové cookies (Meta Pixel, Microsoft Clarity)
+                {tr("Analytické a marketingové cookies (Meta Pixel, Microsoft Clarity)")}
               </label>
               <div className="flex flex-col gap-2.5">
                 <button
@@ -81,7 +82,7 @@ export function CookieBanner() {
                   }
                   className="w-full rounded-sm bg-ink px-4 py-3 text-sm font-semibold text-white hover:bg-accent"
                 >
-                  Uložit nastavení
+                  {tr("Uložit nastavení")}
                 </button>
               </div>
               <button
@@ -89,7 +90,7 @@ export function CookieBanner() {
                 onClick={() => setShowSettings(false)}
                 className="text-center text-xs text-accent-2 underline hover:text-ink"
               >
-                Zpět
+                {tr("Zpět")}
               </button>
             </>
           )}

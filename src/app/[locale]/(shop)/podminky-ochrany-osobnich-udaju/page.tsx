@@ -1,13 +1,29 @@
 import type { Metadata } from "next";
 import { LegalPage } from "@/components/legal-page";
 import { currentSeller, CONTACT } from "@/lib/business-identity";
+import { getCurrentLocale, getTr } from "@/i18n/tr.server";
+import { OchranaUdajovSk } from "@/content-sk/legal-sk";
+import { localeAlternates } from "@/lib/seo";
 
-export const metadata: Metadata = {
-  title: "Podmínky ochrany osobních údajů | Gotrid Perfume",
-};
+export async function generateMetadata({ params }: { params: Promise<{ locale: string }> }): Promise<Metadata> {
+  const { locale } = await params;
+  const tr = await getTr();
+  return {
+    title: `${tr("Podmínky ochrany osobních údajů")} | Gotrid Perfume`,
+    alternates: localeAlternates(locale, "/podminky-ochrany-osobnich-udaju"),
+  };
+}
 
-export default function OchranaOsobnichUdajuPage() {
+export default async function OchranaOsobnichUdajuPage() {
   const seller = currentSeller();
+  if ((await getCurrentLocale()) === "sk") {
+    const tr = await getTr();
+    return (
+      <LegalPage title={tr("Podmínky ochrany osobních údajů")}>
+        <OchranaUdajovSk seller={seller} />
+      </LegalPage>
+    );
+  }
 
   return (
     <LegalPage title="Podmínky ochrany osobních údajů">

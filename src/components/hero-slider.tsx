@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState, type ReactNode } from "react";
+import { useTr } from "@/i18n/use-tr";
 
 const AUTO_ADVANCE_MS = 6000;
 
@@ -12,6 +13,7 @@ const AUTO_ADVANCE_MS = 6000;
  * the slide out from under someone reading it.
  */
 export function HeroSlider({ slides }: { slides: ReactNode[] }) {
+  const tr = useTr();
   const [index, setIndex] = useState(0);
   const [paused, setPaused] = useState(false);
   const count = slides.length;
@@ -71,7 +73,7 @@ export function HeroSlider({ slides }: { slides: ReactNode[] }) {
           <button
             type="button"
             onClick={() => goTo(index - 1)}
-            aria-label="Předchozí"
+            aria-label={tr("Předchozí")}
             className="absolute top-1/2 left-2 hidden h-9 w-9 -translate-y-1/2 items-center justify-center rounded-full bg-black/30 text-white backdrop-blur transition hover:bg-black/50 sm:left-4 sm:flex"
           >
             ‹
@@ -79,7 +81,7 @@ export function HeroSlider({ slides }: { slides: ReactNode[] }) {
           <button
             type="button"
             onClick={() => goTo(index + 1)}
-            aria-label="Další"
+            aria-label={tr("Další")}
             className="absolute top-1/2 right-2 hidden h-9 w-9 -translate-y-1/2 items-center justify-center rounded-full bg-black/30 text-white backdrop-blur transition hover:bg-black/50 sm:right-4 sm:flex"
           >
             ›
@@ -91,7 +93,7 @@ export function HeroSlider({ slides }: { slides: ReactNode[] }) {
                 key={i}
                 type="button"
                 onClick={() => goTo(i)}
-                aria-label={`Snímek ${i + 1}`}
+                aria-label={tr("Snímek {n}", { n: i + 1 })}
                 className={`h-1.5 rounded-full transition-all ${
                   i === index ? "w-5 bg-white" : "w-1.5 bg-white/40 hover:bg-white/60"
                 }`}

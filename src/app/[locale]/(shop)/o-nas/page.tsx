@@ -3,12 +3,25 @@ import { CONTACT } from "@/lib/business-identity";
 import { PICKUP_ADDRESS } from "@/lib/shipping";
 import Image from "next/image";
 import { LegalPage } from "@/components/legal-page";
+import { getCurrentLocale, getTr } from "@/i18n/tr.server";
+import { ONasSk } from "@/content-sk/legal-sk";
+import { localeAlternates } from "@/lib/seo";
 
-export const metadata: Metadata = {
-  title: "O nás | Gotrid Perfume",
-};
+export async function generateMetadata({ params }: { params: Promise<{ locale: string }> }): Promise<Metadata> {
+  const { locale } = await params;
+  const tr = await getTr();
+  return { title: `${tr("O nás")} | Gotrid Perfume`, alternates: localeAlternates(locale, "/o-nas") };
+}
 
-export default function ONasPage() {
+export default async function ONasPage() {
+  const [tr, locale] = await Promise.all([getTr(), getCurrentLocale()]);
+  if (locale === "sk") {
+    return (
+      <LegalPage title={tr("O nás")}>
+        <ONasSk />
+      </LegalPage>
+    );
+  }
   return (
     <LegalPage title="O nás">
       <div className="not-prose mb-2 flex flex-col items-center gap-4 sm:flex-row sm:items-start">

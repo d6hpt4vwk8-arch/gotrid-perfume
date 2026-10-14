@@ -1,5 +1,6 @@
 import { prisma } from "@/lib/prisma";
 import { isConditionFlagged } from "@/lib/feeds/condition-flagged";
+import { SK_ONLY_WHERE } from "@/lib/sk-visibility";
 
 // Root categories that mean "this customer buys home/car fragrance, not
 // perfume" — used to decide whether the "second order" email pitches
@@ -13,6 +14,7 @@ export type RecommendationTheme = "home_fragrance" | "perfume";
 export interface RecommendedProduct {
   id: string;
   name: string;
+  nameSk?: string | null;
   slug: string;
   price: number;
   imageUrl: string | null;
@@ -55,6 +57,7 @@ async function getCategoryIdsUnderRoot(rootName: string): Promise<string[]> {
  */
 export async function recommendProductsForBuyer(
   email: string,
+  skOnly = false,
 ): Promise<{ theme: RecommendationTheme; products: RecommendedProduct[] }> {
   const items = await prisma.orderItem.findMany({
     where: { order: { email: { equals: email, mode: "insensitive" } }, productId: { not: null } },
@@ -87,10 +90,12 @@ export async function recommendProductsForBuyer(
       stock: { gt: 0 },
       id: { notIn: [...purchasedProductIds] },
       categories: { some: { categoryId: { in: categoryIds } } },
+      ...(skOnly ? SK_ONLY_WHERE : {}),
     },
     select: {
       id: true,
       name: true,
+      nameSk: true,
       slug: true,
       price: true,
       isDefective: true,
@@ -107,6 +112,7 @@ export async function recommendProductsForBuyer(
     products: products.map((p) => ({
       id: p.id,
       name: p.name,
+      nameSk: p.nameSk,
       slug: p.slug,
       price: Number(p.price),
       imageUrl: p.images[0]?.url ?? null,
@@ -123,12 +129,14 @@ export async function recommendProductsForBuyer(
 export async function getPopularProductsExcluding(
   excludeIds: string[],
   take = 3,
+  skOnly = false,
 ): Promise<RecommendedProduct[]> {
   const candidates = await prisma.product.findMany({
-    where: { visible: true, stock: { gt: 0 }, id: { notIn: excludeIds } },
+    where: { visible: true, stock: { gt: 0 }, id: { notIn: excludeIds }, ...(skOnly ? SK_ONLY_WHERE : {}) },
     select: {
       id: true,
       name: true,
+      nameSk: true,
       slug: true,
       price: true,
       isDefective: true,
@@ -144,6 +152,7 @@ export async function getPopularProductsExcluding(
     .map((p) => ({
       id: p.id,
       name: p.name,
+      nameSk: p.nameSk,
       slug: p.slug,
       price: Number(p.price),
       imageUrl: p.images[0]?.url ?? null,
@@ -171,6 +180,7 @@ export async function getSimilarProducts(productId: string, take = 3): Promise<R
     select: {
       id: true,
       name: true,
+      nameSk: true,
       slug: true,
       price: true,
       isDefective: true,
@@ -186,6 +196,7 @@ export async function getSimilarProducts(productId: string, take = 3): Promise<R
     .map((p) => ({
       id: p.id,
       name: p.name,
+      nameSk: p.nameSk,
       slug: p.slug,
       price: Number(p.price),
       imageUrl: p.images[0]?.url ?? null,

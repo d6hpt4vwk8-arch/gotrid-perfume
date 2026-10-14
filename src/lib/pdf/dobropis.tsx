@@ -1,6 +1,7 @@
 import { Document, Page, Text, View, StyleSheet } from "@react-pdf/renderer";
 import type { Order, OrderItem } from "@prisma/client";
 import { formatPrice } from "@/lib/format";
+import type { Tr } from "@/i18n/tr";
 import { sellerForDate } from "@/lib/business-identity";
 import "@/lib/pdf/register-fonts";
 
@@ -36,7 +37,17 @@ const styles = StyleSheet.create({
 // The order model has no partial-refund tracking (see refundedAt's comment
 // in schema.prisma) — REFUNDED is all-or-nothing, so the credit note always
 // reverses the full original faktura rather than a partial line-item subset.
-export function DobropisDocument({ order }: { order: Order & { items: OrderItem[] } }) {
+export function DobropisDocument({
+  order,
+  tr = (k) => k,
+  locale = "cs",
+  itemNames,
+}: {
+  order: Order & { items: OrderItem[] };
+  tr?: Tr;
+  locale?: "cs" | "sk";
+  itemNames?: Map<string, string>;
+}) {
   const issuedAt = order.refundedAt ?? order.updatedAt;
   // Dated from the sale itself, same reasoning as FakturaDocument — this
   // reverses that specific faktura, so it must name the entity that was
@@ -46,24 +57,23 @@ export function DobropisDocument({ order }: { order: Order & { items: OrderItem[
   return (
     <Document>
       <Page size="A4" style={styles.page}>
-        <Text style={styles.title}>Dobropis k faktuře {order.number}</Text>
+        <Text style={styles.title}>{tr("Dobropis k faktuře")} {order.number}</Text>
         <Text style={styles.subtitle}>
-          Vystaveno {issuedAt.toLocaleDateString("cs-CZ")} · Důvod: vrácení objednávky
-          zákazníkovi (stav „Vrácená“)
+          {tr("Vystaveno")} {issuedAt.toLocaleDateString(locale === "sk" ? "sk-SK" : "cs-CZ")} · {tr("Důvod: vrácení objednávky zákazníkovi (stav „Vrácená“)")}
         </Text>
 
         <View style={styles.row}>
           <View style={styles.col}>
-            <Text style={styles.label}>Dodavatel</Text>
+            <Text style={styles.label}>{tr("Dodavatel")}</Text>
             <Text>{seller.legalName}</Text>
             <Text>{seller.street}</Text>
             <Text>{seller.city}</Text>
             <Text>IČO: {seller.ico}</Text>
             {seller.dic && <Text>DIČ: {seller.dic}</Text>}
-            <Text>{seller.vatNote}</Text>
+            <Text>{tr(seller.vatNote)}</Text>
           </View>
           <View style={styles.col}>
-            <Text style={styles.label}>Odběratel</Text>
+            <Text style={styles.label}>{tr("Odběratel")}</Text>
             {order.companyName ? (
               <>
                 <Text>{order.companyName}</Text>
@@ -87,14 +97,14 @@ export function DobropisDocument({ order }: { order: Order & { items: OrderItem[
         </View>
 
         <View style={styles.tableHeader}>
-          <Text style={styles.colName}>Položka</Text>
-          <Text style={styles.colQty}>Ks</Text>
-          <Text style={styles.colPrice}>Cena/ks</Text>
-          <Text style={styles.colTotal}>Celkem</Text>
+          <Text style={styles.colName}>{tr("Položka")}</Text>
+          <Text style={styles.colQty}>{tr("Ks")}</Text>
+          <Text style={styles.colPrice}>{tr("Cena/ks")}</Text>
+          <Text style={styles.colTotal}>{tr("Celkem")}</Text>
         </View>
         {order.items.map((item) => (
           <View key={item.id} style={styles.tableRow}>
-            <Text style={styles.colName}>{item.name}</Text>
+            <Text style={styles.colName}>{itemNames?.get(item.id) ?? item.name}</Text>
             <Text style={styles.colQty}>−{item.qty}</Text>
             <Text style={styles.colPrice}>{formatPrice(item.unitPrice)}</Text>
             <Text style={styles.colTotal}>−{formatPrice(Number(item.unitPrice) * item.qty)}</Text>
@@ -102,12 +112,11 @@ export function DobropisDocument({ order }: { order: Order & { items: OrderItem[
         ))}
 
         <View style={styles.totalsBox}>
-          <Text style={styles.grandTotal}>Vráceno celkem: −{formatPrice(order.total)}</Text>
+          <Text style={styles.grandTotal}>{tr("Vráceno celkem")}: −{formatPrice(order.total)}</Text>
         </View>
 
         <Text style={styles.footer}>
-          Tento dobropis stornuje fakturu {order.number} v plné výši. Původní fakturu najdete v
-          administraci u téže objednávky.
+          {tr("Tento dobropis stornuje fakturu")} {order.number} {tr("v plné výši.")}
         </Text>
       </Page>
     </Document>

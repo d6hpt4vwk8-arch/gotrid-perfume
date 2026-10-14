@@ -10,6 +10,8 @@ export function buildExactSearchWhere(query: string): Prisma.ProductWhereInput {
   return {
     OR: [
       { name: { contains: query, mode: "insensitive" } },
+      // Slovak storefront: shoppers type Slovak spellings ("šampón", "sviečka").
+      { nameSk: { contains: query, mode: "insensitive" } },
       { ean: { contains: query, mode: "insensitive" } },
       { brand: { name: { contains: query, mode: "insensitive" } } },
     ],
@@ -23,7 +25,12 @@ export function buildExactSearchWhere(query: string): Prisma.ProductWhereInput {
  * a word that's only mentioned in the description, not the title.
  */
 export function buildDescriptionSearchWhere(query: string): Prisma.ProductWhereInput {
-  return { description: { contains: query, mode: "insensitive" } };
+  return {
+    OR: [
+      { description: { contains: query, mode: "insensitive" } },
+      { descriptionSk: { contains: query, mode: "insensitive" } },
+    ],
+  };
 }
 
 // pg_trgm (enabled 2026-09-19 for this) — word_similarity(query, name)
@@ -52,8 +59,8 @@ export async function findFuzzyProductIds(query: string, limit: number): Promise
 
   const rows = await prisma.$queryRaw<{ id: string }[]>`
     SELECT id FROM "Product"
-    WHERE visible = true AND word_similarity(${trimmed}, name) > ${FUZZY_THRESHOLD}
-    ORDER BY word_similarity(${trimmed}, name) DESC
+    WHERE visible = true AND GREATEST(word_similarity(${trimmed}, name), word_similarity(${trimmed}, COALESCE("nameSk", ''))) > ${FUZZY_THRESHOLD}
+    ORDER BY GREATEST(word_similarity(${trimmed}, name), word_similarity(${trimmed}, COALESCE("nameSk", ''))) DESC
     LIMIT ${limit}
   `;
   return rows.map((r) => r.id);

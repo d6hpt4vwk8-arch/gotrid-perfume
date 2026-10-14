@@ -1,5 +1,6 @@
 import type { Prisma } from "@prisma/client";
 import { prisma } from "@/lib/prisma";
+import { getTr } from "@/i18n/tr.server";
 
 interface ScentNote {
   name: string;
@@ -102,6 +103,7 @@ export async function ScentNotesPyramid({
   baseNotes: Prisma.JsonValue;
   mainAccords: Prisma.JsonValue | null;
 }) {
+  const tr = await getTr();
   const top = asNotes(topNotes);
   const middle = asNotes(middleNotes);
   const base = asNotes(baseNotes);
@@ -114,17 +116,17 @@ export async function ScentNotesPyramid({
 
   return (
     <section className="border-t border-line pt-6">
-      <h2 className="mb-5 text-lg font-bold text-ink">Vůňová pyramida</h2>
+      <h2 className="mb-5 text-lg font-bold text-ink">{tr("Vůňová pyramida")}</h2>
       <div className="flex flex-col gap-6">
-        <NoteTier label="Vrchní tóny" notes={top} photos={photos} />
-        <NoteTier label="Srdcové tóny" notes={middle} photos={photos} />
-        <NoteTier label="Základní tóny" notes={base} photos={photos} />
+        <NoteTier label={tr("Vrchní tóny")} notes={top} photos={photos} />
+        <NoteTier label={tr("Srdcové tóny")} notes={middle} photos={photos} />
+        <NoteTier label={tr("Základní tóny")} notes={base} photos={photos} />
       </div>
 
       {accords.length > 0 && (
         <div className="mt-6 flex flex-col gap-2 border-t border-line pt-5">
           <span className="text-[11px] font-semibold tracking-wide text-accent-2 uppercase">
-            Charakter vůně
+            {tr("Charakter vůně")}
           </span>
           <ul className="flex flex-col gap-1.5">
             {accords.map((accord) => (
@@ -144,7 +146,7 @@ export async function ScentNotesPyramid({
 
       {hasUnsplashPhotos && (
         <p className="mt-4 text-[11px] text-accent-2">
-          Fotografie ingrediencí:{" "}
+          {tr("Fotografie ingrediencí:")}{" "}
           <a
             href="https://unsplash.com/?utm_source=gotrid-perfume&utm_medium=referral"
             target="_blank"
@@ -153,7 +155,7 @@ export async function ScentNotesPyramid({
           >
             Unsplash
           </a>{" "}
-          (najeďte myší na fotku pro jméno autora)
+          {tr("(najeďte myší na fotku pro jméno autora)")}
         </p>
       )}
     </section>

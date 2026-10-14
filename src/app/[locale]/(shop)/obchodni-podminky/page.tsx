@@ -1,13 +1,29 @@
 import type { Metadata } from "next";
 import { LegalPage } from "@/components/legal-page";
 import { currentSeller, CONTACT } from "@/lib/business-identity";
+import { getCurrentLocale, getTr } from "@/i18n/tr.server";
+import { ObchodnePodmienkySk } from "@/content-sk/legal-sk";
+import { localeAlternates } from "@/lib/seo";
 
-export const metadata: Metadata = {
-  title: "Obchodní podmínky | Gotrid Perfume",
-};
+export async function generateMetadata({ params }: { params: Promise<{ locale: string }> }): Promise<Metadata> {
+  const { locale } = await params;
+  const tr = await getTr();
+  return { title: `${tr("Obchodní podmínky")} | Gotrid Perfume`, alternates: localeAlternates(locale, "/obchodni-podminky") };
+}
 
-export default function ObchodniPodminkyPage() {
+export default async function ObchodniPodminkyPage() {
   const seller = currentSeller();
+  if ((await getCurrentLocale()) === "sk") {
+    const tr = await getTr();
+    return (
+      <LegalPage title={tr("Obchodní podmínky")}>
+        <ObchodnePodmienkySk
+          seller={seller}
+          register={seller.commercialRegister ? tr(seller.commercialRegister) : null}
+        />
+      </LegalPage>
+    );
+  }
 
   return (
     <LegalPage title="Obchodní podmínky">

@@ -5,6 +5,7 @@ import { findCategoryByFullSlug } from "@/lib/categories.server";
 import { getDescendantCategoryIds } from "@/lib/category-descendants.server";
 import { resolvePerfumeFilterCategoryIds } from "@/lib/perfume-structure-facets.server";
 import { buildOrderBy, buildProductWhere, parseFilterParams } from "@/lib/product-filters";
+import { skScope } from "@/lib/sk-visibility";
 
 const PAGE_SIZE = 24;
 
@@ -50,7 +51,10 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ slug
   });
   const categoryIds = await getDescendantCategoryIds(category.id);
   const perfumeCategoryIds = await resolvePerfumeFilterCategoryIds(filters.genderSlugs);
-  const baseWhere = { categories: { some: { categoryId: { in: categoryIds } } } };
+  const baseWhere = skScope(
+    { categories: { some: { categoryId: { in: categoryIds } } } },
+    sp.get("lang") === "sk",
+  );
   const where = buildProductWhere(baseWhere, filters, perfumeCategoryIds);
 
   const rawProducts = await prisma.product.findMany({
@@ -68,6 +72,7 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ slug
       id: p.id,
       slug: p.slug,
       name: p.name,
+      nameSk: p.nameSk,
       price: p.price.toString(),
       compareAtPrice: p.compareAtPrice?.toString() ?? null,
       stock: p.stock,

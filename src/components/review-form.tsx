@@ -1,9 +1,11 @@
 "use client";
 
+import { useTr } from "@/i18n/use-tr";
 import { useState } from "react";
 import { StarRatingInput } from "@/components/star-rating-input";
 
 export function ReviewForm({ productId }: { productId: string }) {
+  const tr = useTr();
   const [rating, setRating] = useState(5);
   const [authorName, setAuthorName] = useState("");
   const [text, setText] = useState("");
@@ -13,7 +15,7 @@ export function ReviewForm({ productId }: { productId: string }) {
   if (status === "done") {
     return (
       <p className="text-sm text-ok">
-        Děkujeme za recenzi! Zobrazí se po schválení.
+        {tr("Děkujeme za recenzi! Zobrazí se po schválení.")}
       </p>
     );
   }
@@ -32,27 +34,27 @@ export function ReviewForm({ productId }: { productId: string }) {
           });
           const data = await res.json();
           if (!res.ok) {
-            setError(data.error ?? "Recenzi se nepodařilo odeslat.");
+            setError(tr(data.error ?? "Recenzi se nepodařilo odeslat."));
             setStatus("error");
             return;
           }
           setStatus("done");
         } catch {
-          setError("Recenzi se nepodařilo odeslat, zkuste to prosím znovu.");
+          setError(tr("Recenzi se nepodařilo odeslat, zkuste to prosím znovu."));
           setStatus("error");
         }
       }}
       className="flex flex-col gap-3 border border-line p-4"
     >
-      <span className="text-sm font-semibold text-ink">Napsat recenzi</span>
+      <span className="text-sm font-semibold text-ink">{tr("Napsat recenzi")}</span>
 
       <div className="flex flex-col gap-1 text-sm text-ink">
-        Hodnocení
+        {tr("Hodnocení")}
         <StarRatingInput value={rating} onChange={setRating} />
       </div>
 
       <label className="flex flex-col gap-1 text-sm text-ink">
-        Jméno (nepovinné)
+        {tr("Jméno (nepovinné)")}
         <input
           value={authorName}
           onChange={(e) => setAuthorName(e.target.value)}
@@ -62,7 +64,7 @@ export function ReviewForm({ productId }: { productId: string }) {
       </label>
 
       <label className="flex flex-col gap-1 text-sm text-ink">
-        Recenze (nepovinná)
+        {tr("Recenze (nepovinná)")}
         <textarea
           value={text}
           onChange={(e) => setText(e.target.value)}
@@ -79,7 +81,7 @@ export function ReviewForm({ productId }: { productId: string }) {
         disabled={status === "submitting"}
         className="w-fit rounded-sm bg-ink px-4 py-2 text-sm font-semibold text-white hover:bg-accent disabled:cursor-not-allowed disabled:bg-line disabled:text-accent-2"
       >
-        {status === "submitting" ? "Odesílám…" : "Odeslat recenzi"}
+        {status === "submitting" ? tr("Odesílám…") : tr("Odeslat recenzi")}
       </button>
     </form>
   );

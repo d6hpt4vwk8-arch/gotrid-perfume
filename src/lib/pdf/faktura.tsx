@@ -3,6 +3,8 @@ import type { Order, OrderItem } from "@prisma/client";
 import { formatPrice } from "@/lib/format";
 import { SHIPPING_LABELS, PAYMENT_LABELS } from "@/lib/shipping";
 import { sellerForDate } from "@/lib/business-identity";
+import { formatEurAmount } from "@/lib/format";
+import type { Tr } from "@/i18n/tr";
 import "@/lib/pdf/register-fonts";
 
 const styles = StyleSheet.create({
@@ -35,7 +37,19 @@ const styles = StyleSheet.create({
   footer: { marginTop: 30, fontSize: 8, color: "#888" },
 });
 
-export function FakturaDocument({ order }: { order: Order & { items: OrderItem[] } }) {
+export function FakturaDocument({
+  order,
+  tr = (k) => k,
+  locale = "cs",
+  itemNames,
+}: {
+  order: Order & { items: OrderItem[] };
+  /** Slovak orders pass the Slovak dictionary; Czech (default) renders the sentences as written. */
+  tr?: Tr;
+  locale?: "cs" | "sk";
+  /** Display names per OrderItem id (Slovak product names for Slovak orders). */
+  itemNames?: Map<string, string>;
+}) {
   // Resolved from the order's own date, never from "today" — a faktura is
   // re-rendered on every download, and reissuing a past sale under a company
   // that didn't exist then would be plainly wrong. See business-identity.ts.
@@ -44,23 +58,23 @@ export function FakturaDocument({ order }: { order: Order & { items: OrderItem[]
   return (
     <Document>
       <Page size="A4" style={styles.page}>
-        <Text style={styles.title}>Faktura — {order.number}</Text>
+        <Text style={styles.title}>{tr("Faktura")} — {order.number}</Text>
         <Text style={styles.subtitle}>
-          Vystaveno {new Date(order.createdAt).toLocaleDateString("cs-CZ")}
+          {tr("Vystaveno")} {new Date(order.createdAt).toLocaleDateString(locale === "sk" ? "sk-SK" : "cs-CZ")}
         </Text>
 
         <View style={styles.row}>
           <View style={styles.col}>
-            <Text style={styles.label}>Dodavatel</Text>
+            <Text style={styles.label}>{tr("Dodavatel")}</Text>
             <Text>{seller.legalName}</Text>
             <Text>{seller.street}</Text>
             <Text>{seller.city}</Text>
             <Text>IČO: {seller.ico}</Text>
             {seller.dic && <Text>DIČ: {seller.dic}</Text>}
-            <Text>{seller.vatNote}</Text>
+            <Text>{tr(seller.vatNote)}</Text>
           </View>
           <View style={styles.col}>
-            <Text style={styles.label}>Odběratel</Text>
+            <Text style={styles.label}>{tr("Odběratel")}</Text>
             {order.companyName ? (
               <>
                 <Text>{order.companyName}</Text>
@@ -84,14 +98,14 @@ export function FakturaDocument({ order }: { order: Order & { items: OrderItem[]
         </View>
 
         <View style={styles.tableHeader}>
-          <Text style={styles.colName}>Položka</Text>
-          <Text style={styles.colQty}>Ks</Text>
-          <Text style={styles.colPrice}>Cena/ks</Text>
-          <Text style={styles.colTotal}>Celkem</Text>
+          <Text style={styles.colName}>{tr("Položka")}</Text>
+          <Text style={styles.colQty}>{tr("Ks")}</Text>
+          <Text style={styles.colPrice}>{tr("Cena/ks")}</Text>
+          <Text style={styles.colTotal}>{tr("Celkem")}</Text>
         </View>
         {order.items.map((item) => (
           <View key={item.id} style={styles.tableRow}>
-            <Text style={styles.colName}>{item.name}</Text>
+            <Text style={styles.colName}>{itemNames?.get(item.id) ?? item.name}</Text>
             <Text style={styles.colQty}>{item.qty}</Text>
             <Text style={styles.colPrice}>{formatPrice(item.unitPrice)}</Text>
             <Text style={styles.colTotal}>{formatPrice(Number(item.unitPrice) * item.qty)}</Text>
@@ -100,31 +114,37 @@ export function FakturaDocument({ order }: { order: Order & { items: OrderItem[]
 
         <View style={styles.totalsBox}>
           <View style={styles.totalRow}>
-            <Text>Zboží</Text>
+            <Text>{tr("Zboží")}</Text>
             <Text>{formatPrice(order.itemsTotal)}</Text>
           </View>
           <View style={styles.totalRow}>
-            <Text>Doprava ({SHIPPING_LABELS[order.shippingMethod]})</Text>
+            <Text>{tr("Doprava")} ({tr(SHIPPING_LABELS[order.shippingMethod])})</Text>
             <Text>{formatPrice(order.shippingPrice)}</Text>
           </View>
           {Number(order.codSurcharge) > 0 && (
             <View style={styles.totalRow}>
-              <Text>Příplatek za dobírku</Text>
+              <Text>{tr("Příplatek za dobírku")}</Text>
               <Text>{formatPrice(order.codSurcharge)}</Text>
             </View>
           )}
           {Number(order.discountAmount) > 0 && (
             <View style={styles.totalRow}>
-              <Text>Sleva {order.couponCode ? `(${order.couponCode})` : ""}</Text>
+              <Text>{tr("Sleva")} {order.couponCode ? `(${order.couponCode})` : ""}</Text>
               <Text>−{formatPrice(order.discountAmount)}</Text>
             </View>
           )}
-          <Text style={styles.grandTotal}>Celkem k úhradě: {formatPrice(order.total)}</Text>
+          <Text style={styles.grandTotal}>{tr("Celkem k úhradě")}: {formatPrice(order.total)}</Text>
+          {order.chargedCurrency === "EUR" && order.chargedAmount && (
+            <Text style={{ marginTop: 4 }}>
+              {tr("Uhrazeno v eurech")}: {formatEurAmount(order.chargedAmount)}
+            </Text>
+          )}
         </View>
 
         <Text style={styles.footer}>
-          Způsob platby: {PAYMENT_LABELS[order.paymentMethod]}. Cena je konečná.{" "}
-          {seller.dic ? `DIČ ${seller.dic}.` : "Dodavatel není plátcem DPH."}
+          {tr("Způsob platby")}: {tr(PAYMENT_LABELS[order.paymentMethod])}. {tr("Cena je konečná.")}{" "}
+          {seller.dic ? `DIČ ${seller.dic}.` : tr("Dodavatel není plátcem DPH.")}
+          {order.chargedCurrency === "EUR" ? ` ${tr("Částky jsou uvedeny v českých korunách (Kč); platba proběhla v eurech podle kurzu platného v den objednávky.")}` : ""}
         </Text>
       </Page>
     </Document>

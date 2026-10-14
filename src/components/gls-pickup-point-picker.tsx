@@ -1,5 +1,6 @@
 "use client";
 
+import { useTr } from "@/i18n/use-tr";
 import { useEffect, useState } from "react";
 
 const WIDGET_BASE_URL = "https://ps-maps.gls-czech.com/?find=1";
@@ -31,6 +32,7 @@ export function GlsPickupPointPicker({
   selectedPointName: string | null;
   onSelect: (point: GlsPickupPoint) => void;
 }) {
+  const tr = useTr();
   const [open, setOpen] = useState(false);
 
   useEffect(() => {
@@ -63,9 +65,9 @@ export function GlsPickupPointPicker({
         onClick={() => setOpen(true)}
         className="rounded-sm border border-line px-4 py-2 text-sm font-medium text-ink hover:border-accent hover:text-accent"
       >
-        {selectedPointName ? "Změnit výdejní místo GLS" : "Vybrat výdejní místo GLS"}
+        {selectedPointName ? tr("Změnit výdejní místo GLS") : tr("Vybrat výdejní místo GLS")}
       </button>
-      {selectedPointName && <p className="text-sm text-ink/80">Vybráno: {selectedPointName}</p>}
+      {selectedPointName && <p className="text-sm text-ink/80">{tr("Vybráno")}: {selectedPointName}</p>}
 
       {open && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4">
@@ -73,14 +75,14 @@ export function GlsPickupPointPicker({
             <button
               type="button"
               onClick={() => setOpen(false)}
-              aria-label="Zavřít"
+              aria-label={tr("Zavřít")}
               className="absolute top-2 right-2 z-10 flex h-8 w-8 items-center justify-center rounded-full bg-black/40 text-white hover:bg-black/60"
             >
               ✕
             </button>
             <iframe
               src={`${WIDGET_BASE_URL}&ctrcode=${country}&lng=${country === "SK" ? "sk" : "cs"}`}
-              title="Výdejní místa GLS" className="h-full w-full border-0" />
+              title={tr("Výdejní místa GLS")} className="h-full w-full border-0" />
           </div>
         </div>
       )}

@@ -1,8 +1,7 @@
-const WEEKDAY_DATE_FORMAT = new Intl.DateTimeFormat("cs-CZ", {
-  weekday: "long",
-  day: "numeric",
-  month: "long",
-});
+const WEEKDAY_DATE_FORMATS = {
+  cs: new Intl.DateTimeFormat("cs-CZ", { weekday: "long", day: "numeric", month: "long" }),
+  sk: new Intl.DateTimeFormat("sk-SK", { weekday: "long", day: "numeric", month: "long" }),
+};
 
 function isWeekend(date: Date): boolean {
   const day = date.getDay();
@@ -30,6 +29,6 @@ export function estimateDeliveryDate(businessDays = 3, from: Date = new Date()):
   return date;
 }
 
-export function formatDeliveryEstimate(date: Date): string {
-  return WEEKDAY_DATE_FORMAT.format(date);
+export function formatDeliveryEstimate(date: Date, locale: "cs" | "sk" = "cs"): string {
+  return WEEKDAY_DATE_FORMATS[locale].format(date);
 }

@@ -13,6 +13,9 @@ import { isConditionFlagged } from "../src/lib/feeds/condition-flagged";
 const arg = (k: string, d: string) => process.argv.find((a) => a.startsWith(`--${k}=`))?.split("=")[1] ?? d;
 const N = Number(arg("n", "60"));
 const OUT = arg("out", "ops/sk-work/batch.json");
+// --match=<regex> narrows the queue to products whose "code name" matches (e.g. perfumes: EDP|EDT).
+const MATCH = process.argv.find((a) => a.startsWith("--match="))?.slice(8);
+const matchRe = MATCH ? new RegExp(MATCH, "i") : null;
 
 (async () => {
   const feed = (await getFeedProducts()).filter(
@@ -24,7 +27,7 @@ const OUT = arg("out", "ops/sk-work/batch.json");
   });
   const m = new Map(meta.map((x) => [x.code, x]));
   const todo = feed
-    .filter((p) => !m.get(p.code)?.nameSk)
+    .filter((p) => !m.get(p.code)?.nameSk && (!matchRe || matchRe.test(`${p.code} ${p.name}`)))
     .sort((a, b) => {
       const A = m.get(a.code)!, B = m.get(b.code)!;
       return (B.ownStock > 0 ? 1 : 0) - (A.ownStock > 0 ? 1 : 0) || B.salesCount - A.salesCount || b.stock - a.stock;

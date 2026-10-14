@@ -1,18 +1,23 @@
 import Image from "next/image";
-import Link from "next/link";
+import { Link } from "@/i18n/navigation";
 import { getCategoryNavTree } from "@/lib/categories.server";
 import { SearchBar } from "@/components/search-bar";
 import { CartIconLink } from "@/components/cart-icon-link";
 import { WishlistIconLink } from "@/components/wishlist-icon-link";
 import { MobileCategoryMenu } from "@/components/mobile-category-menu";
-import { CurrencySwitcher } from "@/components/currency-switcher";
+import { LanguageSwitcher } from "@/components/language-switcher";
 import { getCurrentCustomerId } from "@/lib/customer/get-current-customer";
+import { getCurrentLocale, getTr } from "@/i18n/tr.server";
+import { translateCategoryTree } from "@/lib/sk-terms";
 
 export async function SiteHeader() {
-  const [categories, customerId] = await Promise.all([
+  const [rawCategories, customerId, tr, locale] = await Promise.all([
     getCategoryNavTree(),
     getCurrentCustomerId(),
+    getTr(),
+    getCurrentLocale(),
   ]);
+  const categories = locale === "sk" ? translateCategoryTree(rawCategories) : rawCategories;
 
   return (
     <header className="sticky inset-x-0 top-0 z-30 w-full bg-ink">
@@ -32,7 +37,7 @@ export async function SiteHeader() {
           </Link>
 
           <div className="order-2 flex items-center gap-4 text-white sm:order-3 sm:ml-auto">
-            <CurrencySwitcher />
+            <LanguageSwitcher />
             <Link
               href={customerId ? "/muj-ucet" : "/prihlaseni"}
               className="flex items-center gap-1.5 text-sm font-medium"
@@ -52,7 +57,7 @@ export async function SiteHeader() {
                   d="M17.25 21v-1.5a3.75 3.75 0 0 0-3.75-3.75h-3A3.75 3.75 0 0 0 6.75 19.5V21M15 8.25a3 3 0 1 1-6 0 3 3 0 0 1 6 0Z"
                 />
               </svg>
-              <span className="hidden sm:inline">{customerId ? "Můj účet" : "Přihlásit se"}</span>
+              <span className="hidden sm:inline">{customerId ? tr("Můj účet") : tr("Přihlásit se")}</span>
             </Link>
             <WishlistIconLink />
             <CartIconLink />
@@ -77,12 +82,14 @@ export async function SiteHeader() {
                 {category.name}
               </Link>
             ))}
-          <Link
-            href="/magazin"
-            className="shrink-0 border-l border-white/10 pl-5 font-medium text-white/70 hover:text-white"
-          >
-            Magazín
-          </Link>
+          {locale !== "sk" && (
+            <Link
+              href="/magazin"
+              className="shrink-0 border-l border-white/10 pl-5 font-medium text-white/70 hover:text-white"
+            >
+              {tr("Magazín")}
+            </Link>
+          )}
         </nav>
       </div>
     </header>

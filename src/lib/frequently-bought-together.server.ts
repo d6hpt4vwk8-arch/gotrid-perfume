@@ -1,5 +1,6 @@
 import { Prisma } from "@prisma/client";
 import { prisma } from "@/lib/prisma";
+import { skScope } from "@/lib/sk-visibility";
 
 /**
  * Products most often co-purchased with `productId` in the same order —
@@ -9,7 +10,7 @@ import { prisma } from "@/lib/prisma";
  * the two products, so a single coincidental cart doesn't get labeled
  * "frequently" bought together.
  */
-export async function getFrequentlyBoughtTogether(productId: string, limit = 4) {
+export async function getFrequentlyBoughtTogether(productId: string, limit = 4, skOnly = false) {
   const rows = await prisma.$queryRaw<{ productId: string; coCount: bigint }[]>`
     SELECT oi2."productId" AS "productId", COUNT(DISTINCT oi2."orderId") AS "coCount"
     FROM "OrderItem" oi1
@@ -26,7 +27,7 @@ export async function getFrequentlyBoughtTogether(productId: string, limit = 4) 
   if (rows.length === 0) return [];
 
   const products = await prisma.product.findMany({
-    where: { id: { in: rows.map((r) => r.productId) }, visible: true, stock: { gt: 0 } },
+    where: skScope({ id: { in: rows.map((r) => r.productId) }, visible: true, stock: { gt: 0 } }, skOnly),
     include: { brand: true, images: { orderBy: { sortOrder: "asc" }, take: 1 } },
   });
   const byId = new Map(products.map((p) => [p.id, p]));
@@ -44,7 +45,7 @@ export async function getFrequentlyBoughtTogether(productId: string, limit = 4) 
  * shared order history yet (a brand-new product, or too few past orders),
  * so the section never just renders empty.
  */
-export async function getFrequentlyBoughtTogetherForCart(cartProductIds: string[], limit = 3) {
+export async function getFrequentlyBoughtTogetherForCart(cartProductIds: string[], limit = 3, skOnly = false) {
   if (cartProductIds.length === 0) return [];
 
   const rows = await prisma.$queryRaw<{ productId: string; coCount: bigint }[]>`
@@ -63,7 +64,7 @@ export async function getFrequentlyBoughtTogetherForCart(cartProductIds: string[
 
   if (rows.length > 0) {
     const products = await prisma.product.findMany({
-      where: { id: { in: rows.map((r) => r.productId) }, visible: true, stock: { gt: 0 } },
+      where: skScope({ id: { in: rows.map((r) => r.productId) }, visible: true, stock: { gt: 0 } }, skOnly),
       include: { brand: true, images: { orderBy: { sortOrder: "asc" }, take: 1 } },
     });
     const byId = new Map(products.map((p) => [p.id, p]));
@@ -96,12 +97,12 @@ export async function getFrequentlyBoughtTogetherForCart(cartProductIds: string[
 
   if (cartCategoryIds.length > 0) {
     const sameCategory = await prisma.product.findMany({
-      where: {
+      where: skScope({
         visible: true,
         stock: { gt: 0 },
         id: { notIn: cartProductIds },
         categories: { some: { categoryId: { in: cartCategoryIds } } },
-      },
+      }, skOnly),
       include: { brand: true, images: { orderBy: { sortOrder: "asc" }, take: 1 } },
       orderBy: [{ ownStock: "desc" }, { priority: "desc" }],
       take: limit,
@@ -112,7 +113,7 @@ export async function getFrequentlyBoughtTogetherForCart(cartProductIds: string[
   // Last resort only — none of the cart's own categories have anything
   // else in stock to suggest.
   return prisma.product.findMany({
-    where: { visible: true, stock: { gt: 0 }, id: { notIn: cartProductIds } },
+    where: skScope({ visible: true, stock: { gt: 0 }, id: { notIn: cartProductIds } }, skOnly),
     include: { brand: true, images: { orderBy: { sortOrder: "asc" }, take: 1 } },
     orderBy: [{ ownStock: "desc" }, { priority: "desc" }],
     take: limit,

@@ -1,11 +1,12 @@
 "use client";
 
-import Link from "next/link";
+import { Link } from "@/i18n/navigation";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { useCart } from "@/lib/cart-context";
 import { useConsent } from "@/lib/consent-context";
 import { formatEur, formatPrice } from "@/lib/format";
 import { useCurrency } from "@/lib/currency-context";
+import { useTr } from "@/i18n/use-tr";
 import {
   PAYMENT_LABELS,
   PICKUP_ADDRESS,
@@ -49,10 +50,11 @@ export function CheckoutForm({
   const { items, total: itemsTotal, clear, giftProductId } = useCart();
   const { consent } = useConsent();
   // Seeds the checkout with the country that matches whatever currency the
-  // visitor was already browsing in (the header's CurrencySwitcher) — still
+  // visitor was already browsing in (the header's country switcher) — still
   // freely changeable below, but avoids the jarring "browsed in EUR, then
   // checkout suddenly shows CZK" experience of always defaulting to CZ.
   const { currency: browsingCurrency } = useCurrency();
+  const tr = useTr();
 
   const [email, setEmail] = useState(customer?.email ?? "");
   const [phone, setPhone] = useState(customer?.phone ?? "");
@@ -292,18 +294,18 @@ export function CheckoutForm({
   // once the earlier steps are actually filled in — otherwise it'd show as
   // done before the visitor has typed anything.
   const steps = [
-    { label: "Kontakt", done: contactDone },
-    { label: "Doprava", done: shippingDone },
-    { label: "Platba", done: shippingDone },
-    { label: "Hotovo", done: false },
+    { label: tr("Kontakt"), done: contactDone },
+    { label: tr("Doprava"), done: shippingDone },
+    { label: tr("Platba"), done: shippingDone },
+    { label: tr("Hotovo"), done: false },
   ];
 
   if (items.length === 0) {
     return (
       <main className="mx-auto flex max-w-3xl flex-1 flex-col items-center gap-4 px-4 py-20 text-center">
-        <h1 className="text-2xl font-bold text-ink">Košík je prázdný</h1>
+        <h1 className="text-2xl font-bold text-ink">{tr("Košík je prázdný")}</h1>
         <Link href="/" className="rounded-sm bg-ink px-5 py-2.5 text-sm font-semibold text-white hover:bg-accent">
-          Zpět na výběr produktů
+          {tr("Zpět na výběr produktů")}
         </Link>
       </main>
     );
@@ -366,7 +368,7 @@ export function CheckoutForm({
 
       const data = await res.json();
       if (!res.ok) {
-        setError(data.error ?? "Objednávku se nepodařilo odeslat.");
+        setError(tr(data.error ?? "Objednávku se nepodařilo odeslat."));
         setSubmitting(false);
         return;
       }
@@ -382,7 +384,7 @@ export function CheckoutForm({
         window.location.href = `/api/orders/${data.orderNumber}/access?token=${data.accessToken}`;
       }
     } catch {
-      setError("Objednávku se nepodařilo odeslat, zkuste to prosím znovu.");
+      setError(tr("Objednávku se nepodařilo odeslat, zkuste to prosím znovu."));
       setSubmitting(false);
     }
   }
@@ -390,27 +392,27 @@ export function CheckoutForm({
   return (
     <main className="mx-auto flex max-w-4xl flex-1 flex-col gap-8 px-4 py-10 md:flex-row">
       <form onSubmit={handleSubmit} className="flex flex-1 flex-col gap-6">
-        <h1 className="text-2xl font-bold text-ink">Pokladna</h1>
+        <h1 className="text-2xl font-bold text-ink">{tr("Pokladna")}</h1>
 
         <CheckoutSteps steps={steps} />
 
         {customer && (
           <div className="flex items-center justify-between rounded-sm border border-line bg-line/20 px-3 py-2 text-sm text-ink">
             <span>
-              Přihlášen jako <strong>{customer.email}</strong>
+              {tr("Přihlášen jako")} <strong>{customer.email}</strong>
             </span>
             <CustomerLogoutButton />
           </div>
         )}
 
         <fieldset className="flex flex-col gap-3">
-          <legend className="mb-1 text-sm font-semibold text-ink">Kontaktní údaje</legend>
+          <legend className="mb-1 text-sm font-semibold text-ink">{tr("Kontaktní údaje")}</legend>
           <input
             required
             type="email"
             name="email"
             autoComplete="email"
-            placeholder="E-mail"
+            placeholder={tr("E-mail")}
             value={email}
             onChange={(e) => setEmail(e.target.value)}
             className="rounded-sm border border-line px-3 py-2 text-sm text-ink"
@@ -420,7 +422,7 @@ export function CheckoutForm({
             type="tel"
             name="tel"
             autoComplete="tel"
-            placeholder="Telefon"
+            placeholder={tr("Telefon")}
             value={phone}
             onChange={(e) => setPhone(e.target.value)}
             className="rounded-sm border border-line px-3 py-2 text-sm text-ink"
@@ -430,7 +432,7 @@ export function CheckoutForm({
               required
               name="given-name"
               autoComplete="given-name"
-              placeholder="Jméno"
+              placeholder={tr("Jméno")}
               value={firstName}
               onChange={(e) => setFirstName(e.target.value)}
               className="w-full rounded-sm border border-line px-3 py-2 text-sm text-ink"
@@ -439,7 +441,7 @@ export function CheckoutForm({
               required
               name="family-name"
               autoComplete="family-name"
-              placeholder="Příjmení"
+              placeholder={tr("Příjmení")}
               value={lastName}
               onChange={(e) => setLastName(e.target.value)}
               className="w-full rounded-sm border border-line px-3 py-2 text-sm text-ink"
@@ -452,7 +454,7 @@ export function CheckoutForm({
               onChange={(e) => setNewsletterOptIn(e.target.checked)}
               className="mt-0.5 accent-accent"
             />
-            Chci dostávat novinky a slevy e-mailem
+            {tr("Chci dostávat novinky a slevy e-mailem")}
           </label>
           <label className="flex items-start gap-2 text-sm text-ink">
             <input
@@ -461,7 +463,7 @@ export function CheckoutForm({
               onChange={(e) => setIsCompany(e.target.checked)}
               className="mt-0.5 accent-accent"
             />
-            Nakupuji na firmu
+            {tr("Nakupuji na firmu")}
           </label>
           {isCompany && (
             <div className="flex flex-col gap-3 border-l-2 border-line pl-3">
@@ -469,7 +471,7 @@ export function CheckoutForm({
                 required
                 name="organization"
                 autoComplete="organization"
-                placeholder="Název firmy"
+                placeholder={tr("Název firmy")}
                 value={companyName}
                 onChange={(e) => setCompanyName(e.target.value)}
                 className="rounded-sm border border-line px-3 py-2 text-sm text-ink"
@@ -477,13 +479,13 @@ export function CheckoutForm({
               <div className="flex gap-3">
                 <input
                   required
-                  placeholder="IČO"
+                  placeholder={tr("IČO")}
                   value={ico}
                   onChange={(e) => setIco(e.target.value)}
                   className="w-full rounded-sm border border-line px-3 py-2 text-sm text-ink"
                 />
                 <input
-                  placeholder="DIČ (nepovinné)"
+                  placeholder={tr("DIČ (nepovinné)")}
                   value={dic}
                   onChange={(e) => setDic(e.target.value)}
                   className="w-full rounded-sm border border-line px-3 py-2 text-sm text-ink"
@@ -494,7 +496,7 @@ export function CheckoutForm({
         </fieldset>
 
         <fieldset className="flex flex-col gap-2">
-          <legend className="mb-1 text-sm font-semibold text-ink">Doprava</legend>
+          <legend className="mb-1 text-sm font-semibold text-ink">{tr("Doprava")}</legend>
 
           <div className="mb-1 flex gap-3 text-sm text-ink">
             <label className="flex items-center gap-1.5">
@@ -505,7 +507,7 @@ export function CheckoutForm({
                 onChange={() => setShippingCountry("CZ")}
                 className="accent-accent"
               />
-              Česko
+              {tr("Česko")}
             </label>
             <label className="flex items-center gap-1.5">
               <input
@@ -515,7 +517,7 @@ export function CheckoutForm({
                 onChange={() => setShippingCountry("SK")}
                 className="accent-accent"
               />
-              Slovensko
+              {tr("Slovensko")}
             </label>
           </div>
 
@@ -567,9 +569,9 @@ export function CheckoutForm({
                   className="accent-accent"
                 />
                 <ShippingIcon method={method} />
-                {SHIPPING_LABELS[method]} —{" "}
+                {tr(SHIPPING_LABELS[method])} —{" "}
                 {method === "OSOBNI_ODBER" || itemsTotal >= settings.freeShippingThreshold
-                  ? "zdarma"
+                  ? tr("zdarma")
                   : price(getShippingPrice(method, itemsTotal, settings, shippingCountry))}
               </label>
             ))}
@@ -599,8 +601,8 @@ export function CheckoutForm({
             </div>
           ) : isPersonalPickup ? (
             <p className="rounded-sm bg-line/30 p-3 text-sm text-ink/80">
-              Zboží si vyzvednete osobně na adrese <strong>{PICKUP_ADDRESS}</strong> — po
-              vyřízení objednávky vás budeme kontaktovat na dohodnutí termínu.
+              {tr("Zboží si vyzvednete osobně na adrese")} <strong>{PICKUP_ADDRESS}</strong> —{" "}
+              {tr("po vyřízení objednávky vás budeme kontaktovat na dohodnutí termínu.")}
             </p>
           ) : (
             <div className="flex flex-col gap-2 pt-2">
@@ -608,7 +610,7 @@ export function CheckoutForm({
                 required
                 name="street-address"
                 autoComplete="street-address"
-                placeholder="Ulice a číslo popisné"
+                placeholder={tr("Ulice a číslo popisné")}
                 value={street}
                 onChange={(e) => setStreet(e.target.value)}
                 className="rounded-sm border border-line px-3 py-2 text-sm text-ink"
@@ -618,7 +620,7 @@ export function CheckoutForm({
                   required
                   name="address-level2"
                   autoComplete="address-level2"
-                  placeholder="Město"
+                  placeholder={tr("Město")}
                   value={city}
                   onChange={(e) => setCity(e.target.value)}
                   className="w-full rounded-sm border border-line px-3 py-2 text-sm text-ink"
@@ -627,7 +629,7 @@ export function CheckoutForm({
                   required
                   name="postal-code"
                   autoComplete="postal-code"
-                  placeholder="PSČ"
+                  placeholder={tr("PSČ")}
                   value={postalCode}
                   onChange={(e) => setPostalCode(e.target.value)}
                   className="w-full rounded-sm border border-line px-3 py-2 text-sm text-ink"
@@ -638,7 +640,7 @@ export function CheckoutForm({
         </fieldset>
 
         <fieldset className="flex flex-col gap-2">
-          <legend className="mb-1 text-sm font-semibold text-ink">Platba</legend>
+          <legend className="mb-1 text-sm font-semibold text-ink">{tr("Platba")}</legend>
           {(Object.keys(PAYMENT_LABELS) as PaymentMethod[]).map((method) => {
             const disabled = method === "CASH_ON_DELIVERY" && !codAvailable;
             return (
@@ -654,12 +656,12 @@ export function CheckoutForm({
                   onChange={() => setPaymentMethod(method)}
                   className="accent-accent"
                 />
-                {PAYMENT_LABELS[method]}
+                {tr(PAYMENT_LABELS[method])}
                 {method === "CASH_ON_DELIVERY" &&
                   (disabled
                     ? glsToSk
-                      ? " (není dostupná u GLS na Slovensko)"
-                      : ` (nedostupné nad ${price(settings.freeShippingThreshold)})`
+                      ? ` (${tr("není dostupná u GLS na Slovensko")})`
+                      : ` (${tr("nedostupné nad")} ${price(settings.freeShippingThreshold)})`
                     : settings.codSurcharge > 0
                       ? ` (+${price(settings.codSurcharge)})`
                       : "")}
@@ -669,7 +671,7 @@ export function CheckoutForm({
         </fieldset>
 
         <fieldset className="flex flex-col gap-2">
-          <legend className="mb-1 text-sm font-semibold text-ink">Slevový kód</legend>
+          <legend className="mb-1 text-sm font-semibold text-ink">{tr("Slevový kód")}</legend>
           <CouponField onApplied={setCoupon} />
         </fieldset>
 
@@ -698,7 +700,7 @@ export function CheckoutForm({
 
         {coupon?.grantsGift && (
           <fieldset className="flex flex-col gap-2">
-            <legend className="mb-1 text-sm font-semibold text-ink">Dárek k objednávce</legend>
+            <legend className="mb-1 text-sm font-semibold text-ink">{tr("Dárek k objednávce")}</legend>
             <GiftPicker unlocked />
           </fieldset>
         )}
@@ -712,10 +714,9 @@ export function CheckoutForm({
               className="mt-0.5"
             />
             <span>
-              <span className="font-semibold">🎁 Kupuji jako dárek</span>
+              <span className="font-semibold">🎁 {tr("Kupuji jako dárek")}</span>
               <span className="mt-0.5 block text-accent-2">
-                Na obal balíčku vám zdarma nalepíme štítek s vaším přáním. Text přání napište
-                do poznámky níže, třeba „Všechno nejlepší! Od tety“.
+                {tr("Na obal balíčku vám zdarma nalepíme štítek s vaším přáním. Text přání napište do poznámky níže, třeba „Všechno nejlepší! Od tety“.")}
               </span>
             </span>
           </label>
@@ -723,7 +724,7 @@ export function CheckoutForm({
 
         <fieldset className="flex flex-col gap-1">
           <legend className="mb-1 text-sm font-semibold text-ink">
-            {giftEligible && giftSticker ? "Poznámka a text přání na štítek" : "Poznámka k objednávce"}
+            {giftEligible && giftSticker ? tr("Poznámka a text přání na štítek") : tr("Poznámka k objednávce")}
           </legend>
           <textarea
             value={customerNote}
@@ -732,8 +733,8 @@ export function CheckoutForm({
             rows={3}
             placeholder={
               giftEligible && giftSticker
-                ? "Např. Všechno nejlepší! Od tety"
-                : "Např. odešlete prosím později, poznámka k doručení…"
+                ? tr("Např. Všechno nejlepší! Od tety")
+                : tr("Např. odešlete prosím později, poznámka k doručení…")
             }
             className="rounded-sm border border-line px-3 py-2 text-sm text-ink"
           />
@@ -749,7 +750,7 @@ export function CheckoutForm({
             up. This makes the reason visible right next to the button. */}
         {usesPickupPoint && !pickupPoint && (
           <p className="text-sm text-red-600">
-            Vyberte prosím výdejní místo výše, abyste mohli dokončit objednávku.
+            {tr("Vyberte prosím výdejní místo výše, abyste mohli dokončit objednávku.")}
           </p>
         )}
 
@@ -763,12 +764,12 @@ export function CheckoutForm({
           disabled={submitting || (usesPickupPoint && !pickupPoint)}
           className="rounded-sm bg-ink px-5 py-3 text-sm font-semibold text-white hover:bg-accent disabled:cursor-not-allowed disabled:bg-line disabled:text-accent-2"
         >
-          {submitting ? "Odesílám…" : `Závazně objednat — ${price(total)}`}
+          {submitting ? tr("Odesílám…") : `${tr("Závazně objednat")} — ${price(total)}`}
         </button>
       </form>
 
       <aside className="w-full shrink-0 md:w-72">
-        <h2 className="mb-3 text-sm font-semibold text-ink">Souhrn objednávky</h2>
+        <h2 className="mb-3 text-sm font-semibold text-ink">{tr("Souhrn objednávky")}</h2>
         <ul className="flex flex-col gap-2 text-sm text-ink">
           {items.map((item) => (
             <li key={item.productId} className="flex justify-between">
@@ -781,22 +782,22 @@ export function CheckoutForm({
         </ul>
         <div className="mt-4 flex flex-col gap-1 border-t border-line pt-3 text-sm text-ink">
           <div className="flex justify-between">
-            <span>Zboží</span>
+            <span>{tr("Zboží")}</span>
             <span>{price(itemsTotal)}</span>
           </div>
           <div className="flex justify-between">
-            <span>Doprava</span>
-            <span>{shippingPrice === 0 ? "zdarma" : price(shippingPrice)}</span>
+            <span>{tr("Doprava")}</span>
+            <span>{shippingPrice === 0 ? tr("zdarma") : price(shippingPrice)}</span>
           </div>
           {codSurcharge > 0 && (
             <div className="flex justify-between">
-              <span>Příplatek za dobírku</span>
+              <span>{tr("Příplatek za dobírku")}</span>
               <span>{price(codSurcharge)}</span>
             </div>
           )}
           {coupon && !coupon.grantsGift && (
             <div className="flex justify-between text-ok">
-              <span>Sleva ({coupon.code})</span>
+              <span>{tr("Sleva")} ({coupon.code})</span>
               <span>−{price(coupon.discountAmount)}</span>
             </div>
           )}
@@ -807,7 +808,7 @@ export function CheckoutForm({
             </div>
           )}
           <div className="flex justify-between text-base font-bold">
-            <span>Celkem</span>
+            <span>{tr("Celkem")}</span>
             <span className="text-accent">{price(total)}</span>
           </div>
         </div>

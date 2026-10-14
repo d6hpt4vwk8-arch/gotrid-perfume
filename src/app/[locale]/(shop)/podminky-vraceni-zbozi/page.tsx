@@ -1,14 +1,27 @@
 import type { Metadata } from "next";
-import Link from "next/link";
+import NextLink from "next/link";
 import { LegalPage } from "@/components/legal-page";
 import { currentSeller, CONTACT } from "@/lib/business-identity";
 import { PICKUP_ADDRESS } from "@/lib/shipping";
+import { getCurrentLocale, getTr } from "@/i18n/tr.server";
+import { VratenieTovaruSk } from "@/content-sk/legal-sk";
+import { localeAlternates } from "@/lib/seo";
 
-export const metadata: Metadata = {
-  title: "Podmínky vrácení zboží | Gotrid Perfume",
-};
+export async function generateMetadata({ params }: { params: Promise<{ locale: string }> }): Promise<Metadata> {
+  const { locale } = await params;
+  const tr = await getTr();
+  return { title: `${tr("Podmínky vrácení zboží")} | Gotrid Perfume`, alternates: localeAlternates(locale, "/podminky-vraceni-zbozi") };
+}
 
-export default function PodminkyVraceniZboziPage() {
+export default async function PodminkyVraceniZboziPage() {
+  if ((await getCurrentLocale()) === "sk") {
+    const tr = await getTr();
+    return (
+      <LegalPage title={tr("Podmínky vrácení zboží")}>
+        <VratenieTovaruSk legalName={currentSeller().legalName} />
+      </LegalPage>
+    );
+  }
   return (
     <LegalPage title="Podmínky vrácení zboží">
       <h2>1. Právo na odstoupení od smlouvy</h2>
@@ -53,9 +66,9 @@ export default function PodminkyVraceniZboziPage() {
       <p>
         Pro vrácení zboží nás prosím kontaktujte na emailu info@gotridperfume.cz. Uveďte číslo
         objednávky a důvod vrácení (není povinný). Můžete využít i{" "}
-        <Link href="/api/dokumenty/odstoupeni-od-smlouvy">
+        <NextLink href="/api/dokumenty/odstoupeni-od-smlouvy">
           vzorový formulář pro odstoupení od smlouvy (PDF)
-        </Link>
+        </NextLink>
         . Po domluvě zašlete zboží na adresu:
       </p>
       <p>

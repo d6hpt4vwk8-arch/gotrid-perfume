@@ -17,16 +17,17 @@ export async function GET(
 ) {
   const { number } = await params;
   const token = req.nextUrl.searchParams.get("token");
-  const destination = new URL(`/objednavka/${number}`, req.nextUrl.origin);
+  const order = await prisma.order.findUnique({
+    where: { number },
+    select: { accessToken: true, shippingCountry: true },
+  });
+  // Slovak orders land on the Slovak order page (the storefront under /sk).
+  const prefix = order?.shippingCountry === "SK" ? "/sk" : "";
+  const destination = new URL(`${prefix}/objednavka/${number}`, req.nextUrl.origin);
 
   if (!token) {
     return NextResponse.redirect(destination, { status: 303 });
   }
-
-  const order = await prisma.order.findUnique({
-    where: { number },
-    select: { accessToken: true },
-  });
 
   const response = NextResponse.redirect(destination, { status: 303 });
   if (order && order.accessToken === token) {

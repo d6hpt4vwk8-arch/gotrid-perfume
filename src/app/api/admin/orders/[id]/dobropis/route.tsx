@@ -2,6 +2,8 @@ import { NextRequest, NextResponse } from "next/server";
 import { renderToBuffer } from "@react-pdf/renderer";
 import { prisma } from "@/lib/prisma";
 import { DobropisDocument } from "@/lib/pdf/dobropis";
+import { getMailContext, orderMailLocale } from "@/lib/email/locale";
+import { localizedItemNames } from "@/lib/orders/item-names";
 
 // Admin-only (protected by src/middleware.ts for every /api/admin/* path,
 // same as the GLS/Balíkovna label routes) — a credit note is a bookkeeping
@@ -19,7 +21,11 @@ export async function GET(_req: NextRequest, { params }: { params: Promise<{ id:
     );
   }
 
-  const buffer = await renderToBuffer(<DobropisDocument order={order} />);
+  const locale = orderMailLocale(order);
+  const [ctx, itemNames] = await Promise.all([getMailContext(locale), localizedItemNames(order.items, locale)]);
+  const buffer = await renderToBuffer(
+    <DobropisDocument order={order} tr={ctx.tr} locale={locale} itemNames={itemNames} />,
+  );
 
   return new NextResponse(new Uint8Array(buffer), {
     headers: {

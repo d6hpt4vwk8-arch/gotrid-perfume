@@ -1,5 +1,6 @@
 import "./register-fonts";
 import { Document, Image, Page, StyleSheet, Text, View } from "@react-pdf/renderer";
+import type { Tr } from "@/i18n/tr";
 
 const styles = StyleSheet.create({
   page: { padding: 48, fontSize: 11, fontFamily: "Noto Sans", lineHeight: 1.5, color: "#131110" },
@@ -18,26 +19,30 @@ export type PaymentSlipData = {
   orderNumber: string;
   account: string | null;
   iban: string;
+  bic: string | null;
   amount: string;
   variableSymbol: string;
   qrDataUrl: string;
   sellerName: string;
+  tr: Tr;
 };
 
 export function PaymentSlipDocument(d: PaymentSlipData) {
+  const { tr } = d;
   const rows: [string, string][] = [
-    ...(d.account ? ([["Číslo účtu", d.account]] as [string, string][]) : []),
+    ...(d.account ? ([[tr("Číslo účtu"), d.account]] as [string, string][]) : []),
     ["IBAN", d.iban],
-    ["Částka", d.amount],
-    ["Variabilní symbol", d.variableSymbol],
-    ["Příjemce", d.sellerName],
+    ...(d.bic ? ([["BIC", d.bic]] as [string, string][]) : []),
+    [tr("Částka"), d.amount],
+    [tr("Variabilní symbol"), d.variableSymbol],
+    [tr("Příjemce"), d.sellerName],
   ];
   return (
-    <Document title={`Platební údaje ${d.orderNumber}`}>
+    <Document title={`${tr("Platební údaje")} ${d.orderNumber}`}>
       <Page size="A4" style={styles.page}>
         <Text style={styles.brand}>GOTRID PERFUME</Text>
-        <Text style={styles.title}>Platební údaje k objednávce {d.orderNumber}</Text>
-        <Text style={styles.lead}>Naskenujte QR kód v bankovní aplikaci, nebo zadejte platbu ručně.</Text>
+        <Text style={styles.title}>{tr("Platební údaje k objednávce")} {d.orderNumber}</Text>
+        <Text style={styles.lead}>{tr("Naskenujte QR kód v bankovní aplikaci, nebo zadejte platbu ručně.")}</Text>
         <View style={styles.box}>
           <Image src={d.qrDataUrl} style={styles.qr} />
           <View style={{ flex: 1 }}>
@@ -50,7 +55,7 @@ export function PaymentSlipDocument(d: PaymentSlipData) {
           </View>
         </View>
         <Text style={styles.note}>
-          Zásilku odešleme po připsání platby. Uvedený variabilní symbol prosím nezaměňujte — podle něj platbu přiřadíme k vaší objednávce.
+          {tr("Zásilku odešleme po připsání platby. Uvedený variabilní symbol prosím nezaměňujte — podle něj platbu přiřadíme k vaší objednávce.")}
         </Text>
       </Page>
     </Document>

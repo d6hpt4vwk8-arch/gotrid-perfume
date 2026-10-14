@@ -2,6 +2,8 @@ import { NextRequest, NextResponse } from "next/server";
 import { renderToBuffer } from "@react-pdf/renderer";
 import { prisma } from "@/lib/prisma";
 import { FakturaDocument } from "@/lib/pdf/faktura";
+import { getMailContext, orderMailLocale } from "@/lib/email/locale";
+import { localizedItemNames } from "@/lib/orders/item-names";
 import { getCurrentCustomerId } from "@/lib/customer/get-current-customer";
 import { verifySessionToken } from "@/lib/admin-auth";
 import { canDownloadInvoice } from "@/lib/orders/status-labels";
@@ -48,7 +50,11 @@ export async function GET(
     );
   }
 
-  const buffer = await renderToBuffer(<FakturaDocument order={order} />);
+  const locale = orderMailLocale(order);
+  const [ctx, itemNames] = await Promise.all([getMailContext(locale), localizedItemNames(order.items, locale)]);
+  const buffer = await renderToBuffer(
+    <FakturaDocument order={order} tr={ctx.tr} locale={locale} itemNames={itemNames} />,
+  );
 
   return new NextResponse(new Uint8Array(buffer), {
     headers: {

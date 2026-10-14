@@ -1,6 +1,7 @@
 import { prisma } from "@/lib/prisma";
 import { logAdminActivity } from "@/lib/admin/activity-log";
 import { sendSecondOrderEmail } from "@/lib/email/send-second-order-email";
+import { orderMailLocale } from "@/lib/email/locale";
 import { recommendProductsForBuyer } from "./recommend-products";
 
 const COUNTABLE_STATUSES = ["NEW", "PAID", "PROCESSING", "SHIPPED", "DELIVERED"] as const;
@@ -50,6 +51,7 @@ interface SecondOrderCandidate {
   id: string;
   email: string;
   firstName: string;
+  shippingCountry: string;
 }
 
 async function getSecondOrderCandidates(): Promise<{
@@ -77,7 +79,7 @@ async function getSecondOrderCandidates(): Promise<{
       createdAt: { lte: cutoff },
       status: { in: [...COUNTABLE_STATUSES] },
     },
-    select: { id: true, email: true, firstName: true },
+    select: { id: true, email: true, firstName: true, shippingCountry: true },
   });
 
   const unsubscribed = await prisma.newsletterUnsubscribe.findMany({ select: { email: true } });
@@ -137,8 +139,10 @@ export async function runSecondOrderCampaign(): Promise<{ emailed: number; skipp
       settings.secondOrderDiscountPercent,
     );
     const validUntil = new Date(Date.now() + settings.secondOrderValidDays * 24 * 60 * 60 * 1000);
-    const { theme, products } = await recommendProductsForBuyer(candidate.email);
+    const locale = orderMailLocale(candidate);
+    const { theme, products } = await recommendProductsForBuyer(candidate.email, locale === "sk");
     await sendSecondOrderEmail({
+      locale,
       email: candidate.email,
       firstName: candidate.firstName,
       couponCode,

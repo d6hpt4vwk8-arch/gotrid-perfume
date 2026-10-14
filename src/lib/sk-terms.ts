@@ -110,6 +110,16 @@ const PARAM_VALUES: Record<string, string> = {
   "Hloubkové čištění": "Hĺbkové čistenie",
 };
 
+/** Single category name (e.g. in the nav or a category heading) in Slovak. */
+export function categoryNameSk(name: string): string {
+  return CATEGORIES[name] ?? name;
+}
+
+/** Same tree with every category name in Slovak (storefront nav on /sk). */
+export function translateCategoryTree<T extends { name: string; children: T[] }>(nodes: T[]): T[] {
+  return nodes.map((n) => ({ ...n, name: categoryNameSk(n.name), children: translateCategoryTree(n.children) }));
+}
+
 /** "Kosmetika | Pleť | Pleťové krémy" → Slovak breadcrumb, term by term. */
 export function categoryBreadcrumbSk(breadcrumb: string): string {
   return breadcrumb

@@ -43,7 +43,8 @@ export async function GET() {
 
   const items = products
     .map((p) => {
-      const url = `${SITE_URL}/produkt/${p.slug}`;
+      // The Slovak storefront (language switcher + EUR prices), not the Czech page.
+      const url = `${SITE_URL}/sk/produkt/${p.slug}`;
       const images = p.images.map((img) => `${SITE_URL}${img}`);
       const [mainImage, ...altImages] = images;
       const deliveryDate = p.stock > 0 ? "0" : "7";

@@ -1,10 +1,10 @@
-import { headers } from "next/headers";
 import Image from "next/image";
-import Link from "next/link";
+import { Link } from "@/i18n/navigation";
 import type { ReactNode } from "react";
 import type { Prisma } from "@prisma/client";
 import { formatPriceIn } from "@/lib/format";
-import { readCurrencyCookie } from "@/lib/currency-cookie";
+import { currencyForLocale } from "@/lib/currency";
+import { getCurrentLocale, getTr } from "@/i18n/tr.server";
 import { getSettings } from "@/lib/settings.server";
 import { getActiveGiftCoupon, getGiftOptions } from "@/lib/gifts.server";
 import { prisma } from "@/lib/prisma";
@@ -21,7 +21,7 @@ const HERO_PRODUCTS = [
 ] as const;
 
 export async function HomeHero() {
-  const [shown, giftCoupon, giftOptions, settings, headerList] = await Promise.all([
+  const [shown, giftCoupon, giftOptions, settings] = await Promise.all([
     prisma.product.findMany({
       where: { slug: { in: HERO_PRODUCTS.map((p) => p.slug) }, visible: true, stock: { gt: 0 } },
       select: { slug: true, price: true },
@@ -29,9 +29,10 @@ export async function HomeHero() {
     getActiveGiftCoupon(),
     getGiftOptions(),
     getSettings(),
-    headers(),
   ]);
-  const currency = readCurrencyCookie(headerList.get("cookie"));
+  const isSk = (await getCurrentLocale()) === "sk";
+  const tr = await getTr();
+  const currency = currencyForLocale(isSk ? "sk" : "cs");
   const price = (czk: Prisma.Decimal | number) => formatPriceIn(czk, currency, settings.czkToEurRate);
   const priceBySlug = new Map(shown.map((p) => [p.slug, p.price]));
 
@@ -58,7 +59,7 @@ export async function HomeHero() {
       <div className="relative aspect-[16/10] w-full lg:hidden">
         <Image
           src="/hero/hero-products.jpg"
-          alt="Lattafa Eclaire Pistache, Lattafa Khamrah Qahwa, Dr.Althea Aqua Marine serum a 345 Relief Cream"
+          alt={tr("Lattafa Eclaire Pistache, Lattafa Khamrah Qahwa, Dr.Althea Aqua Marine serum a 345 Relief Cream")}
           fill
           priority
           sizes="100vw"
@@ -69,36 +70,42 @@ export async function HomeHero() {
 
       <div className="relative z-10 flex flex-col items-start gap-5 px-6 pt-2 pb-14 sm:px-14 lg:w-[50%] lg:px-14 lg:py-14">
         <span className="rounded-full border border-white/25 bg-white/10 px-3 py-1.5 text-[10px] tracking-widest uppercase sm:text-[11px]">
-          Arabské parfémy &times; Korejská kosmetika
+          {tr("Arabské parfémy")} &times; {tr("Korejská kosmetika")}
         </span>
         <h1 className="text-3xl leading-[1.12] font-bold sm:text-4xl lg:text-[2.7rem]">
-          Vůně z Orientu a péče z Koreje za poctivou cenu.
+          {tr("Vůně z Orientu a péče z Koreje za poctivou cenu.")}
         </h1>
         <p className="max-w-md text-sm leading-relaxed text-white/70">
-          Pečlivě vybrané parfémy a korejská péče, které v běžném e-shopu nenajdete. Dovážíme od
-          ověřených distributorů a posíláme z Prahy.
+          {tr("Pečlivě vybrané parfémy a korejská péče, které v běžném e-shopu nenajdete. Dovážíme od ověřených distributorů a posíláme z Prahy.")}
         </p>
         <div className="flex w-full flex-col gap-3 pt-1 sm:w-auto sm:flex-row sm:flex-wrap">
           <Link
             href="/kategorie/parfemy/arabske-parfemy"
             className="rounded-sm bg-white px-5 py-3 text-center text-sm font-semibold text-ink transition hover:bg-white/85"
           >
-            Arabské parfémy
+            {tr("Arabské parfémy")}
           </Link>
           <Link
             href="/kategorie/kosmetika"
             className="rounded-sm border border-white/30 px-5 py-3 text-center text-sm font-semibold text-white transition hover:border-white/60 hover:bg-white/10"
           >
-            Korejská kosmetika
+            {tr("Korejská kosmetika")}
           </Link>
         </div>
         <ul className="flex flex-wrap gap-x-5 gap-y-1 pt-1 text-xs text-white/60">
-          <li>✓ Originální zboží od distributorů</li>
-          <li>✓ Doprava od 59 Kč</li>
-          <li>✓ Vrácení do 14 dnů</li>
+          <li>✓ {tr("Originální zboží od distributorů")}</li>
+          <li>
+            ✓{" "}
+            {isSk
+              ? tr("Doprava od {price}", {
+                  price: price(settings.shippingPriceZasilkovnaSk ?? settings.shippingPrices.ZASILKOVNA),
+                })
+              : "Doprava od 59 Kč"}
+          </li>
+          <li>✓ {tr("Vrácení do 14 dnů")}</li>
         </ul>
         <div className="flex flex-col gap-1.5 border-t border-white/15 pt-4 text-xs text-white/60">
-          <span className="font-semibold tracking-wider text-white/80 uppercase">Na obrázku</span>
+          <span className="font-semibold tracking-wider text-white/80 uppercase">{tr("Na obrázku")}</span>
           <div className="flex flex-wrap gap-x-4 gap-y-1">
             {HERO_PRODUCTS.map((item) => {
               const itemPrice = priceBySlug.get(item.slug);
@@ -145,7 +152,7 @@ export async function HomeHero() {
         <div className="relative aspect-[16/10] w-full lg:hidden">
           <Image
             src="/hero/hero-gifts.jpg"
-            alt="Dárky zdarma k objednávce"
+            alt={tr("Dárky zdarma k objednávce")}
             fill
             sizes="100vw"
             className="object-cover object-[78%_50%]"
@@ -155,16 +162,15 @@ export async function HomeHero() {
 
         <div className="relative z-10 flex flex-col items-start gap-5 px-6 pt-2 pb-14 sm:px-14 lg:w-[50%] lg:px-14 lg:py-14">
           <span className="rounded-full border border-white/25 bg-white/10 px-3 py-1.5 text-[10px] tracking-widest uppercase sm:text-[11px]">
-            Dárek zdarma
+            {tr("Dárek zdarma")}
           </span>
           <h2 className="text-3xl leading-[1.12] font-bold sm:text-4xl lg:text-[2.7rem]">
             {giftCoupon.minOrderValue
-              ? `Nákup nad ${price(Number(giftCoupon.minOrderValue))}? Dárek zdarma!`
-              : "Vyberte si dárek zdarma!"}
+              ? tr("Nákup nad {price}? Dárek zdarma!", { price: price(Number(giftCoupon.minOrderValue)) })
+              : tr("Vyberte si dárek zdarma!")}
           </h2>
           <p className="max-w-md text-sm leading-relaxed text-white/70">
-            Zadejte kód v košíku nebo na pokladně a vyberte si jeden z dárků z naší nabídky —
-            zdarma k vaší objednávce.
+            {tr("Zadejte kód v košíku nebo na pokladně a vyberte si jeden z dárků z naší nabídky — zdarma k vaší objednávce.")}
           </p>
           <div className="flex flex-wrap items-center gap-3 pt-1">
             <CopyCodeButton code={giftCoupon.code} />
@@ -172,12 +178,12 @@ export async function HomeHero() {
               href="/kosik"
               className="rounded-sm border border-white/30 px-5 py-3 text-center text-sm font-semibold text-white transition hover:border-white/60 hover:bg-white/10"
             >
-              Do košíku
+              {tr("Do košíku")}
             </Link>
           </div>
           {gifts.length > 0 && (
             <div className="flex w-full max-w-md flex-col gap-2 border-t border-white/15 pt-4 text-xs text-white/60">
-              <span className="font-semibold tracking-wider text-white/80 uppercase">Na výběr zdarma</span>
+              <span className="font-semibold tracking-wider text-white/80 uppercase">{tr("Na výběr zdarma")}</span>
               <ul className="flex flex-col gap-2">
                 {gifts.map((gift) => (
                   <li key={gift.productId} className="flex items-center gap-3">
@@ -186,11 +192,11 @@ export async function HomeHero() {
                         <Image src={gift.image} alt="" fill sizes="40px" className="object-contain p-1" />
                       )}
                     </span>
-                    <span className="line-clamp-1 flex-1 text-white/85">{gift.name}</span>
+                    <span className="line-clamp-1 flex-1 text-white/85">{isSk && gift.nameSk ? gift.nameSk : gift.name}</span>
                   </li>
                 ))}
               </ul>
-              {moreGifts > 0 && <span>… a dalších {moreGifts} dárků k výběru v košíku</span>}
+              {moreGifts > 0 && <span>{tr("… a dalších {n} dárků k výběru v košíku", { n: moreGifts })}</span>}
             </div>
           )}
         </div>

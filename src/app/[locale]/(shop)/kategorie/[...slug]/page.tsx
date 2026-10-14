@@ -1,5 +1,5 @@
 import Image from "next/image";
-import Link from "next/link";
+import { Link } from "@/i18n/navigation";
 import { notFound } from "next/navigation";
 import { prisma } from "@/lib/prisma";
 import { findCategoryByFullSlug, getCategoryBreadcrumb } from "@/lib/categories.server";
@@ -32,7 +32,11 @@ import { Pagination } from "@/components/pagination";
 import { getSettings } from "@/lib/settings.server";
 import type { Metadata } from "next";
 import { jsonLdScript } from "@/lib/json-ld";
-import { breadcrumbJsonLd, htmlToPlainText, truncateAtWord } from "@/lib/seo";
+import { breadcrumbJsonLd, htmlToPlainText, localeAlternates, localePath, truncateAtWord } from "@/lib/seo";
+import { getCurrentLocale, getTr } from "@/i18n/tr.server";
+import { categoryNameSk } from "@/lib/sk-terms";
+import { CATEGORY_CONTENT_SK, CATEGORY_DESCRIPTION_SK } from "@/lib/category-content-sk";
+import { skScope } from "@/lib/sk-visibility";
 
 const PAGE_SIZE = 24;
 
@@ -45,10 +49,12 @@ export async function generateMetadata({
   params,
   searchParams,
 }: {
-  params: Promise<{ slug: string[] }>;
+  params: Promise<{ slug: string[]; locale: string }>;
   searchParams: Promise<Record<string, string | string[] | undefined>>;
 }): Promise<Metadata> {
-  const { slug } = await params;
+  const { slug, locale } = await params;
+  const isSk = locale === "sk";
+  const tr = await getTr();
   const query = await searchParams;
   const fullSlug = slug.join("/");
   const category = await findCategoryByFullSlug(fullSlug);
@@ -56,13 +62,16 @@ export async function generateMetadata({
 
   const categoryIds = await getDescendantCategoryIds(category.id);
   const productCount = await prisma.product.count({
-    where: { visible: true, stock: { gt: 0 }, categories: { some: { categoryId: { in: categoryIds } } } },
+    where: skScope({ visible: true, stock: { gt: 0 }, categories: { some: { categoryId: { in: categoryIds } } } }, isSk),
   });
 
-  const intro = htmlToPlainText(category.description);
+  const categoryName = isSk ? categoryNameSk(category.name) : category.name;
+  const intro = htmlToPlainText(isSk ? CATEGORY_DESCRIPTION_SK[fullSlug] : category.description);
   const description = truncateAtWord(
     intro ||
-      `${category.name} – originální značkové zboží skladem${productCount > 0 ? ` (${productCount} produktů)` : ""}. Doprava od 59 Kč, vrácení do 14 dnů. Gotrid Perfume.`,
+      (isSk
+        ? `${categoryName} – ${tr("originální značkové zboží skladem")}${productCount > 0 ? ` (${tr("{n} produktů", { n: productCount })})` : ""}. ${tr("Vrácení do 14 dnů.")} Gotrid Perfume.`
+        : `${category.name} – originální značkové zboží skladem${productCount > 0 ? ` (${productCount} produktů)` : ""}. Doprava od 59 Kč, vrácení do 14 dnů. Gotrid Perfume.`),
   );
 
   const isFiltered = Object.keys(query).some((k) => !NON_FILTER_PARAMS.has(k) && query[k] !== undefined);
@@ -70,9 +79,12 @@ export async function generateMetadata({
   const basePath = `/kategorie/${fullSlug}`;
 
   return {
-    title: `${category.name} – originální a skladem | Gotrid Perfume`,
+    title: `${categoryName} – ${tr("originální a skladem")} | Gotrid Perfume`,
     description,
-    alternates: { canonical: !isFiltered && pageNumber > 1 ? `${basePath}?page=${pageNumber}` : basePath },
+    alternates: {
+      ...localeAlternates(locale, basePath),
+      canonical: localePath(locale, !isFiltered && pageNumber > 1 ? `${basePath}?page=${pageNumber}` : basePath),
+    },
     // Filtered views and empty categories (e.g. a hidden branch whose products were
     // all switched off) stay out of the index.
     ...(isFiltered || productCount === 0 ? { robots: { index: false, follow: true } } : {}),
@@ -89,6 +101,9 @@ export default async function CategoryPage({
   const { slug } = await params;
   const rawParams = await searchParams;
   const fullSlug = slug.join("/");
+  const [tr, locale] = await Promise.all([getTr(), getCurrentLocale()]);
+  const isSk = locale === "sk";
+  const catName = (name: string) => (isSk ? categoryNameSk(name) : name);
 
   const category = await findCategoryByFullSlug(fullSlug);
   if (!category) notFound();
@@ -97,7 +112,7 @@ export default async function CategoryPage({
     // switched off) is a dead end — 404 it instead of serving an empty listing.
     const liveIds = await getDescendantCategoryIds(category.id);
     const liveCount = await prisma.product.count({
-      where: { visible: true, stock: { gt: 0 }, categories: { some: { categoryId: { in: liveIds } } } },
+      where: skScope({ visible: true, stock: { gt: 0 }, categories: { some: { categoryId: { in: liveIds } } } }, isSk),
     });
     if (liveCount === 0) notFound();
   }
@@ -107,7 +122,7 @@ export default async function CategoryPage({
     getCategoryBreadcrumb(fullSlug),
   ]);
   const filters = parseFilterParams(rawParams);
-  const baseWhere = { categories: { some: { categoryId: { in: categoryIds } } } };
+  const baseWhere = skScope({ categories: { some: { categoryId: { in: categoryIds } } } }, isSk);
   const perfumeCategoryIds = await resolvePerfumeFilterCategoryIds(filters.genderSlugs);
   const where = buildProductWhere(baseWhere, filters, perfumeCategoryIds);
 
@@ -152,8 +167,12 @@ export default async function CategoryPage({
   ]);
 
   const totalPages = Math.ceil(total / PAGE_SIZE);
-  const content = CATEGORY_CONTENT[fullSlug];
-  const showHero = !!content?.hero && !category.description && !!content.intro;
+  // Prose (intro, FAQ, category description) exists only in Czech unless a
+  // Slovak version is registered in category-content-sk.ts — on /sk we show
+  // the Slovak text or nothing, never Czech paragraphs on a Slovak page.
+  const content = isSk ? CATEGORY_CONTENT_SK[fullSlug] : CATEGORY_CONTENT[fullSlug];
+  const categoryDescription = isSk ? (CATEGORY_DESCRIPTION_SK[fullSlug] ?? null) : category.description;
+  const showHero = !!content?.hero && !categoryDescription && !!content.intro;
 
   const paginationQuery = new URLSearchParams();
   filters.brandSlugs.forEach((b) => paginationQuery.append("brand", b));
@@ -178,45 +197,48 @@ export default async function CategoryPage({
         type="application/ld+json"
         dangerouslySetInnerHTML={{
           __html: jsonLdScript(
-            breadcrumbJsonLd(categoryBreadcrumb.map((c) => ({ name: c.name, path: `/kategorie/${c.fullSlug}` }))),
+            breadcrumbJsonLd(
+              categoryBreadcrumb.map((c) => ({ name: catName(c.name), path: localePath(locale, `/kategorie/${c.fullSlug}`) })),
+              { home: tr("Domů"), homePath: localePath(locale, "/") },
+            ),
           ),
         }}
       />
       <Breadcrumbs
         items={categoryBreadcrumb.map((c, i) => ({
-          name: c.name,
+          name: catName(c.name),
           href: i < categoryBreadcrumb.length - 1 ? `/kategorie/${c.fullSlug}` : undefined,
         }))}
       />
 
       {showHero ? (
         <CategoryHero
-          title={category.name}
+          title={catName(category.name)}
           paragraphs={content!.intro!}
           image={content!.hero!.image}
           alt={content!.hero!.alt}
         />
       ) : showBanner ? (
-        <CategoryBanner name={category.name} total={bannerTotal} tiles={bannerTiles} />
+        <CategoryBanner name={catName(category.name)} total={bannerTotal} tiles={bannerTiles} />
       ) : (
-        <h1 className="text-2xl font-bold text-ink">{category.name}</h1>
+        <h1 className="text-2xl font-bold text-ink">{catName(category.name)}</h1>
       )}
 
-      {category.description && (
+      {categoryDescription && (
         <section className="flex flex-col gap-6 border-b border-line pb-6 sm:flex-row sm:items-center">
           {category.bannerImage && (
             <div className="relative aspect-[4/3] w-full shrink-0 overflow-hidden rounded-sm bg-line/60 sm:w-72">
-              <Image src={category.bannerImage} alt={category.name} fill sizes="288px" className="object-cover" />
+              <Image src={category.bannerImage} alt={catName(category.name)} fill sizes="288px" className="object-cover" />
             </div>
           )}
           <div
             className="prose prose-neutral max-w-none text-sm leading-relaxed text-ink/80 [&_a]:font-semibold [&_a]:text-ink [&_a]:underline [&_p]:mb-3 [&_p:last-child]:mb-0"
-            dangerouslySetInnerHTML={{ __html: sanitizeDescription(category.description) }}
+            dangerouslySetInnerHTML={{ __html: isSk ? sanitizeDescription(categoryDescription).replaceAll('href="/', 'href="/sk/') : sanitizeDescription(categoryDescription) }}
           />
         </section>
       )}
 
-      {!showHero && !category.description && content?.intro && (
+      {!showHero && !categoryDescription && content?.intro && (
         <section className="flex flex-col gap-3 border-b border-line pb-6 text-sm leading-relaxed text-ink/80">
           {content.intro.map((paragraph) => (
             <p key={paragraph}>{paragraph}</p>
@@ -232,13 +254,13 @@ export default async function CategoryPage({
               href={`/kategorie/${child.fullSlug}`}
               className="rounded-full border border-line px-3 py-1 text-sm text-ink hover:border-accent hover:text-accent"
             >
-              {child.name}
+              {catName(child.name)}
             </Link>
           ))}
         </div>
       )}
 
-      {(fullSlug.startsWith("parfemy") || fullSlug.startsWith("nisove-parfemy")) && (
+      {!isSk && (fullSlug.startsWith("parfemy") || fullSlug.startsWith("nisove-parfemy")) && (
         <Link
           href="/magazin/jak-vybrat-parfem"
           className="flex w-fit items-center gap-2 rounded-sm border border-line px-3 py-2 text-sm text-ink hover:border-accent hover:text-accent"
@@ -259,7 +281,7 @@ export default async function CategoryPage({
         <div className="flex flex-1 flex-col gap-6">
           {products.length === 0 ? (
             <p className="text-sm text-accent-2">
-              V této kategorii jsme s vybranými filtry nic nenašli.
+              {tr("V této kategorii jsme s vybranými filtry nic nenašli.")}
             </p>
           ) : (
             <ProductGridLoadMore
@@ -273,7 +295,7 @@ export default async function CategoryPage({
               initialProducts={products}
               totalPages={totalPages}
               currentPage={filters.page}
-              fetchUrl={`/api/category-products/${fullSlug}?${paginationQuery.toString()}`}
+              fetchUrl={`/api/category-products/${fullSlug}?${paginationQuery.toString()}${isSk ? "&lang=sk" : ""}`}
               freeShippingThreshold={settings.freeShippingThreshold}
             />
           )}
@@ -289,7 +311,7 @@ export default async function CategoryPage({
 
       {content?.faq && content.faq.length > 0 && (
         <section className="mt-6 flex flex-col gap-4 border-t border-line pt-8">
-          <h2 className="text-lg font-bold text-ink">{content.faqTitle ?? "Časté otázky"}</h2>
+          <h2 className="text-lg font-bold text-ink">{content.faqTitle ?? tr("Časté otázky")}</h2>
           <div className="flex flex-col divide-y divide-line border-y border-line">
             {content.faq.map((item) => (
               <details key={item.q} className="group py-3">
@@ -316,8 +338,8 @@ export default async function CategoryPage({
           </div>
           {content.whatsappMessage && (
             <div className="flex flex-col gap-2">
-              <p className="text-sm text-ink/80">Nevybrali jste? Poradíme osobně.</p>
-              <WhatsappAdviceButton message={content.whatsappMessage} label="Poradit na WhatsAppu" />
+              <p className="text-sm text-ink/80">{tr("Nevybrali jste? Poradíme osobně.")}</p>
+              <WhatsappAdviceButton message={content.whatsappMessage} label={tr("Poradit na WhatsAppu")} />
             </div>
           )}
         </section>

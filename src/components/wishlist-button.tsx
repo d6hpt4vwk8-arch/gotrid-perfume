@@ -1,5 +1,6 @@
 "use client";
 
+import { useTr } from "@/i18n/use-tr";
 import { useWishlist, type WishlistItem } from "@/lib/wishlist-context";
 
 export function WishlistButton({
@@ -10,6 +11,7 @@ export function WishlistButton({
   className?: string;
 }) {
   const { isWishlisted, toggle } = useWishlist();
+  const tr = useTr();
   const active = isWishlisted(product.productId);
 
   return (
@@ -21,7 +23,7 @@ export function WishlistButton({
         toggle(product);
       }}
       aria-pressed={active}
-      aria-label={active ? "Odebrat z oblíbených" : "Přidat do oblíbených"}
+      aria-label={active ? tr("Odebrat z oblíbených") : tr("Přidat do oblíbených")}
       className={`flex items-center justify-center rounded-full transition ${className}`}
     >
       <svg

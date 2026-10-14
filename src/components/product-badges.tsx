@@ -38,10 +38,13 @@ export function EthicsPills({
   isVegan,
   isCrueltyFree,
   className = "",
+  crueltyFreeTitle = "Cruelty-free: produkt ani jeho složky nebyly testovány na zvířatech",
 }: {
   isVegan?: boolean;
   isCrueltyFree?: boolean;
   className?: string;
+  /** Tooltip text, translated by the caller (this file is rendered from both server and client components). */
+  crueltyFreeTitle?: string;
 }) {
   if (!isVegan && !isCrueltyFree) return null;
   // Same voice as the brand label above a product name: tiny, uppercase, tracked,
@@ -57,7 +60,7 @@ export function EthicsPills({
         </span>
       )}
       {isCrueltyFree && (
-        <span className={pill} title="Cruelty-free: produkt ani jeho složky nebyly testovány na zvířatech">
+        <span className={pill} title={crueltyFreeTitle}>
           <HeartIcon />
           Cruelty-free
         </span>

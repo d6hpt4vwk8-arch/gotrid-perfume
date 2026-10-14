@@ -1,11 +1,27 @@
 import type { Metadata } from "next";
 import { LegalPage } from "@/components/legal-page";
+import { getCurrentLocale, getTr } from "@/i18n/tr.server";
+import { ZarukaOriginalitySk } from "@/content-sk/legal-sk";
+import { localeAlternates } from "@/lib/seo";
 
-export const metadata: Metadata = {
-  title: "Garance originality produktů | Gotrid Perfume",
-};
+export async function generateMetadata({ params }: { params: Promise<{ locale: string }> }): Promise<Metadata> {
+  const { locale } = await params;
+  const tr = await getTr();
+  return {
+    title: `${tr("Garance originality produktů")} | Gotrid Perfume`,
+    alternates: localeAlternates(locale, "/garance-originality-produktu"),
+  };
+}
 
-export default function GaranceOriginalityPage() {
+export default async function GaranceOriginalityPage() {
+  const [tr, locale] = await Promise.all([getTr(), getCurrentLocale()]);
+  if (locale === "sk") {
+    return (
+      <LegalPage title={tr("Garance originality produktů")}>
+        <ZarukaOriginalitySk />
+      </LegalPage>
+    );
+  }
   return (
     <LegalPage title="Garance originality produktů">
       <p>

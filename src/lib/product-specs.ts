@@ -1,5 +1,7 @@
 import type { Prisma } from "@prisma/client";
 import { formatVolumeLabel } from "@/lib/parse-volume";
+import type { Tr } from "@/i18n/tr";
+import { categoryNameSk } from "@/lib/sk-terms";
 
 type ProductWithSpecs = Prisma.ProductGetPayload<{
   include: { brand: true; categories: { include: { category: true } } };
@@ -22,22 +24,23 @@ const GENDER_LABELS: Record<string, string> = {
  * the storefront filters derive it (a product's gender is implied by which
  * category branch it sits in, not a separate field).
  */
-export function getProductSpecs(product: ProductWithSpecs): ProductSpec[] {
+export function getProductSpecs(product: ProductWithSpecs, tr?: Tr, isSk = false): ProductSpec[] {
+  const t: Tr = tr ?? ((key) => key);
   const specs: ProductSpec[] = [];
 
-  if (product.brand) specs.push({ label: "Značka", value: product.brand.name });
+  if (product.brand) specs.push({ label: t("Značka"), value: product.brand.name });
 
   const volume = formatVolumeLabel(product.name);
-  if (volume) specs.push({ label: "Objem", value: volume });
+  if (volume) specs.push({ label: t("Objem"), value: volume });
 
   const category = product.categories[0]?.category;
   if (category) {
-    specs.push({ label: "Kategorie", value: category.name });
+    specs.push({ label: t("Kategorie"), value: isSk ? categoryNameSk(category.name) : category.name });
 
     const genderSlug = Object.keys(GENDER_LABELS).find(
       (slug) => category.fullSlug === slug || category.fullSlug.includes(`/${slug}`),
     );
-    if (genderSlug) specs.push({ label: "Pro koho", value: GENDER_LABELS[genderSlug] });
+    if (genderSlug) specs.push({ label: t("Pro koho"), value: t(GENDER_LABELS[genderSlug]!) });
   }
 
   if (product.ean) specs.push({ label: "EAN", value: product.ean });

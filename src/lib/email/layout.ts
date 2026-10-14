@@ -1,7 +1,7 @@
 import { CONTACT, currentSeller, sellerLine } from "@/lib/business-identity";
 import { FACEBOOK_URL, INSTAGRAM_HANDLE, INSTAGRAM_URL, SITE_URL, TIKTOK_URL } from "@/lib/site";
-import { formatPrice } from "@/lib/format";
 import { getSettings } from "@/lib/settings.server";
+import { CS_MAIL, type MailContext } from "./locale";
 import type { RecommendedProduct } from "@/lib/marketing/recommend-products";
 
 // Shared visual wrapper for every outgoing email — same ink/ground/line/accent
@@ -27,13 +27,14 @@ export function emailButton(href: string, label: string): string {
 
 // Same trust claims as TrustBadges/BenefitsBar on the site itself — never
 // invent marketing copy that isn't already true and shown on the storefront.
-export async function emailBenefits(): Promise<string> {
+export async function emailBenefits(ctx: MailContext = CS_MAIL): Promise<string> {
   const settings = await getSettings();
+  const { tr } = ctx;
   const items = [
-    `Doprava zdarma od ${formatPrice(settings.freeShippingThreshold)}`,
-    "100 % originální produkty",
-    "Vrácení zboží do 14 dnů",
-    "Zabezpečená platba",
+    tr("Doprava zdarma od {price}", { price: ctx.price(settings.freeShippingThreshold, settings.czkToEurRate) }),
+    tr("100 % originální produkty"),
+    tr("Vrácení zboží do 14 dnů"),
+    tr("Zabezpečená platba"),
   ];
   const cells = items
     .map(
@@ -51,15 +52,21 @@ export async function emailBenefits(): Promise<string> {
 
 // "You might also like" product cards — reused for order-confirmation,
 // abandoned-checkout, stock-alert and second-order cross-sell blocks.
-export function emailProductGrid(heading: string, products: RecommendedProduct[]): string {
+export function emailProductGrid(
+  heading: string,
+  products: RecommendedProduct[],
+  ctx: MailContext = CS_MAIL,
+  czkToEurRate = 1,
+): string {
   if (products.length === 0) return "";
+  const sk = ctx.locale === "sk";
   const cells = products
     .map(
       (p) => `
         <td style="padding:8px;text-align:center;vertical-align:top;width:${Math.floor(100 / products.length)}%;">
-          ${p.imageUrl ? `<a href="${SITE_URL}/produkt/${p.slug}"><img src="${SITE_URL}${p.imageUrl}" alt="" width="120" style="display:block;margin:0 auto 8px;border-radius:4px;max-width:100%;"></a>` : ""}
-          <a href="${SITE_URL}/produkt/${p.slug}" style="font-size:13px;color:${INK};text-decoration:none;">${p.name}</a>
-          <div style="font-size:13px;font-weight:700;margin-top:4px;">${formatPrice(p.price)}</div>
+          ${p.imageUrl ? `<a href="${ctx.url(`/produkt/${p.slug}`)}"><img src="${SITE_URL}${p.imageUrl}" alt="" width="120" style="display:block;margin:0 auto 8px;border-radius:4px;max-width:100%;"></a>` : ""}
+          <a href="${ctx.url(`/produkt/${p.slug}`)}" style="font-size:13px;color:${INK};text-decoration:none;">${sk && p.nameSk ? p.nameSk : p.name}</a>
+          <div style="font-size:13px;font-weight:700;margin-top:4px;">${ctx.price(p.price, czkToEurRate)}</div>
         </td>`,
     )
     .join("");
@@ -72,14 +79,15 @@ export function emailProductGrid(heading: string, products: RecommendedProduct[]
 // as a standalone card in marketing-adjacent emails (abandoned checkout,
 // second order) where a hesitant customer is more likely to reach for it
 // mid-email than to scroll all the way down to the footer.
-export function emailHelpCard(): string {
+export function emailHelpCard(ctx: MailContext = CS_MAIL): string {
+  const { tr } = ctx;
   return `
     <table role="presentation" cellpadding="0" cellspacing="0" style="width:100%;margin:0 0 24px;">
       <tr>
         <td style="background:${PAGE_BG};border-radius:6px;padding:20px 24px;">
-          <p style="margin:0 0 6px;font-size:14px;font-weight:700;color:${INK};">Můžeme vám s něčím pomoct?</p>
+          <p style="margin:0 0 6px;font-size:14px;font-weight:700;color:${INK};">${tr("Můžeme vám s něčím pomoct?")}</p>
           <p style="margin:0;font-size:13px;color:${MUTED};">
-            ${CONTACT.phone} · <a href="mailto:${CONTACT.email}" style="color:${INK};">${CONTACT.email}</a><br>${CONTACT.supportHours}
+            ${CONTACT.phone} · <a href="mailto:${CONTACT.email}" style="color:${INK};">${CONTACT.email}</a><br>${tr(CONTACT.supportHours)}
           </p>
         </td>
       </tr>
@@ -88,15 +96,16 @@ export function emailHelpCard(): string {
 
 // "Follow us" card — Instagram first (the channel we push hardest), then
 // Facebook and TikTok.
-export function emailSocialCard(): string {
+export function emailSocialCard(ctx: MailContext = CS_MAIL): string {
+  const { tr } = ctx;
   const link = (href: string, label: string) =>
     `<a href="${href}" style="font-size:14px;font-weight:600;color:${INK};margin-right:18px;">${label} →</a>`;
   return `
     <table role="presentation" cellpadding="0" cellspacing="0" style="width:100%;margin:0 0 24px;">
       <tr>
         <td style="background:${PAGE_BG};border-radius:6px;padding:20px 24px;">
-          <p style="margin:0 0 6px;font-size:14px;font-weight:700;color:${INK};">Sledujte nás</p>
-          <p style="margin:0 0 12px;font-size:13px;color:${MUTED};">Tipy na vůně a péči, novinky a ukázky našich produktů.</p>
+          <p style="margin:0 0 6px;font-size:14px;font-weight:700;color:${INK};">${tr("Sledujte nás")}</p>
+          <p style="margin:0 0 12px;font-size:13px;color:${MUTED};">${tr("Tipy na vůně a péči, novinky a ukázky našich produktů.")}</p>
           <p style="margin:0;font-size:14px;">
             ${link(INSTAGRAM_URL, `Instagram @${INSTAGRAM_HANDLE}`)}${link(FACEBOOK_URL, "Facebook")}${link(TIKTOK_URL, "TikTok")}
           </p>
@@ -105,10 +114,14 @@ export function emailSocialCard(): string {
     </table>`;
 }
 
-export function renderEmailLayout(innerHtml: string, opts?: { preheader?: string; footerNote?: string }): string {
+export function renderEmailLayout(
+  innerHtml: string,
+  opts?: { preheader?: string; footerNote?: string; ctx?: MailContext },
+): string {
   const seller = currentSeller();
+  const ctx = opts?.ctx ?? CS_MAIL;
   return `<!DOCTYPE html>
-<html lang="cs">
+<html lang="${ctx.locale}">
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
@@ -141,7 +154,7 @@ ${opts?.preheader ? `<div style="display:none;max-height:0;overflow:hidden;opaci
         <tr>
           <td style="border-top:1px solid ${LINE};padding:24px 32px;">
             <p style="font-size:13px;color:${MUTED};margin:0 0 8px;">
-              ${CONTACT.phone} · <a href="mailto:${CONTACT.email}" style="color:${MUTED};">${CONTACT.email}</a> · ${CONTACT.supportHours}
+              ${CONTACT.phone} · <a href="mailto:${CONTACT.email}" style="color:${MUTED};">${CONTACT.email}</a> · ${ctx.tr(CONTACT.supportHours)}
             </p>
             <p style="font-size:12px;color:${MUTED};margin:0;">${sellerLine(seller)}</p>
             ${opts?.footerNote ? `<p style="font-size:12px;color:${MUTED};margin:8px 0 0;">${opts.footerNote}</p>` : ""}

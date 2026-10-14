@@ -1,5 +1,6 @@
-import Link from "next/link";
-import { redirect } from "next/navigation";
+import { Link } from "@/i18n/navigation";
+import { redirect } from "@/i18n/navigation";
+import { getCurrentLocale, getTr } from "@/i18n/tr.server";
 import { prisma } from "@/lib/prisma";
 import { formatPrice, formatEurAmount } from "@/lib/format";
 import { ORDER_STATUS_LABELS } from "@/lib/orders/status-labels";
@@ -8,8 +9,11 @@ import { updateSavedAddress, updateMarketingOptIn } from "@/lib/customer/actions
 import { CustomerLogoutButton } from "@/components/customer/logout-button";
 
 export default async function AccountPage() {
-  const customer = await getCurrentCustomer();
-  if (!customer) redirect("/prihlaseni?next=/muj-ucet");
+  const [customer, tr, locale] = await Promise.all([getCurrentCustomer(), getTr(), getCurrentLocale()]);
+  if (!customer) {
+    redirect({ href: "/prihlaseni?next=/muj-ucet", locale });
+    return null;
+  }
 
   const orders = await prisma.order.findMany({
     where: { customerId: customer.id },
@@ -20,16 +24,16 @@ export default async function AccountPage() {
     <main className="mx-auto flex max-w-3xl flex-1 flex-col gap-10 px-4 py-10">
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-2xl font-bold text-ink">Můj účet</h1>
+          <h1 className="text-2xl font-bold text-ink">{tr("Můj účet")}</h1>
           <p className="text-sm text-accent-2">{customer.email}</p>
         </div>
         <CustomerLogoutButton />
       </div>
 
       <section className="flex flex-col gap-4">
-        <h2 className="text-lg font-bold text-ink">Historie objednávek</h2>
+        <h2 className="text-lg font-bold text-ink">{tr("Historie objednávek")}</h2>
         {orders.length === 0 ? (
-          <p className="text-sm text-accent-2">Zatím žádné objednávky.</p>
+          <p className="text-sm text-accent-2">{tr("Zatím žádné objednávky.")}</p>
         ) : (
           <ul className="flex flex-col divide-y divide-line border-y border-line">
             {orders.map((order) => (
@@ -42,8 +46,8 @@ export default async function AccountPage() {
                     {order.number}
                   </Link>
                   <span className="text-xs text-accent-2">
-                    {new Date(order.createdAt).toLocaleDateString("cs-CZ")} ·{" "}
-                    {ORDER_STATUS_LABELS[order.status]}
+                    {new Date(order.createdAt).toLocaleDateString(locale === "sk" ? "sk-SK" : "cs-CZ")} ·{" "}
+                    {tr(ORDER_STATUS_LABELS[order.status])}
                   </span>
                 </div>
                 <div className="text-right">
@@ -59,23 +63,23 @@ export default async function AccountPage() {
       </section>
 
       <section className="flex flex-col gap-4">
-        <h2 className="text-lg font-bold text-ink">Uložená adresa</h2>
+        <h2 className="text-lg font-bold text-ink">{tr("Uložená adresa")}</h2>
         <p className="text-sm text-accent-2">
-          Tyto údaje se automaticky předvyplní při příští objednávce.
+          {tr("Tyto údaje se automaticky předvyplní při příští objednávce.")}
         </p>
         <form action={updateSavedAddress} className="flex flex-col gap-3 max-w-sm">
           <div className="flex gap-3">
             <input
               name="firstName"
               required
-              placeholder="Jméno"
+              placeholder={tr("Jméno")}
               defaultValue={customer.firstName ?? ""}
               className="w-full rounded-sm border border-line px-3 py-2 text-sm text-ink"
             />
             <input
               name="lastName"
               required
-              placeholder="Příjmení"
+              placeholder={tr("Příjmení")}
               defaultValue={customer.lastName ?? ""}
               className="w-full rounded-sm border border-line px-3 py-2 text-sm text-ink"
             />
@@ -83,26 +87,26 @@ export default async function AccountPage() {
           <input
             name="phone"
             type="tel"
-            placeholder="Telefon"
+            placeholder={tr("Telefon")}
             defaultValue={customer.phone ?? ""}
             className="rounded-sm border border-line px-3 py-2 text-sm text-ink"
           />
           <input
             name="addressStreet"
-            placeholder="Ulice a číslo popisné"
+            placeholder={tr("Ulice a číslo popisné")}
             defaultValue={customer.addressStreet ?? ""}
             className="rounded-sm border border-line px-3 py-2 text-sm text-ink"
           />
           <div className="flex gap-3">
             <input
               name="addressCity"
-              placeholder="Město"
+              placeholder={tr("Město")}
               defaultValue={customer.addressCity ?? ""}
               className="w-full rounded-sm border border-line px-3 py-2 text-sm text-ink"
             />
             <input
               name="addressPostalCode"
-              placeholder="PSČ"
+              placeholder={tr("PSČ")}
               defaultValue={customer.addressPostalCode ?? ""}
               className="w-full rounded-sm border border-line px-3 py-2 text-sm text-ink"
             />
@@ -111,13 +115,13 @@ export default async function AccountPage() {
             type="submit"
             className="w-fit rounded-sm bg-ink px-5 py-2.5 text-sm font-semibold text-white hover:bg-accent"
           >
-            Uložit
+            {tr("Uložit")}
           </button>
         </form>
       </section>
 
       <section className="flex flex-col gap-4">
-        <h2 className="text-lg font-bold text-ink">Odběr novinek</h2>
+        <h2 className="text-lg font-bold text-ink">{tr("Odběr novinek")}</h2>
         <form action={updateMarketingOptIn} className="flex flex-col gap-3 max-w-sm">
           <label className="flex items-center gap-2 text-sm text-ink">
             <input
@@ -125,13 +129,13 @@ export default async function AccountPage() {
               name="marketingOptIn"
               defaultChecked={customer.marketingOptIn}
             />
-            Chci dostávat novinky a slevy e-mailem.
+            {tr("Chci dostávat novinky a slevy e-mailem.")}
           </label>
           <button
             type="submit"
             className="w-fit rounded-sm bg-ink px-5 py-2.5 text-sm font-semibold text-white hover:bg-accent"
           >
-            Uložit
+            {tr("Uložit")}
           </button>
         </form>
       </section>

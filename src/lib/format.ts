@@ -1,5 +1,5 @@
 import type { Prisma } from "@prisma/client";
-import type { Currency } from "@/lib/currency-cookie";
+import type { Currency } from "@/lib/currency";
 
 const czk = new Intl.NumberFormat("cs-CZ", {
   style: "currency",
@@ -32,7 +32,7 @@ export function formatEurAmount(value: Prisma.Decimal | number): string {
   return eur.format(Number(value));
 }
 
-/** For server components that read the currency cookie directly (see currency-cookie.ts) instead of useCurrency(). */
+/** For server components (see currencyForLocale) that format a price without useCurrency(). */
 export function formatPriceIn(
   valueCzk: Prisma.Decimal | number,
   currency: Currency,

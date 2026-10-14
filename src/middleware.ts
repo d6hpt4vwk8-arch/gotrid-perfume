@@ -40,12 +40,18 @@ const intlMiddleware = createIntlMiddleware(routing);
 // (see node_modules/next/dist/server/web/spec-extension/response.js,
 // handleMiddlewareField) directly to whatever response next-intl returns.
 function overrideRequestHeaders(response: NextResponse, headers: Headers): NextResponse {
-  const keys: string[] = [];
+  // next-intl already lists its own request header (x-next-intl-locale, the
+  // locale the page renders in) in x-middleware-override-headers — keep those
+  // keys, otherwise Next drops that header and every page renders in the
+  // default locale, ignoring the /sk prefix.
+  const keys = new Set(
+    (response.headers.get("x-middleware-override-headers") ?? "").split(",").filter(Boolean),
+  );
   headers.forEach((value, key) => {
     response.headers.set(`x-middleware-request-${key}`, value);
-    keys.push(key);
+    keys.add(key);
   });
-  response.headers.set("x-middleware-override-headers", keys.join(","));
+  response.headers.set("x-middleware-override-headers", [...keys].join(","));
   return response;
 }
 

@@ -1,6 +1,11 @@
+"use client";
+
+import { useTr } from "@/i18n/use-tr";
+
 const ITEMS = ["100 % originální produkty", "Vrácení zboží do 14 dnů", "Zabezpečená platba"];
 
 export function TrustBadges() {
+  const tr = useTr();
   return (
     <ul className="flex flex-col gap-1.5 text-xs text-accent-2 sm:flex-row sm:flex-wrap sm:gap-x-5">
       {ITEMS.map((item) => (
@@ -8,7 +13,7 @@ export function TrustBadges() {
           <span className="text-ok" aria-hidden>
             ✓
           </span>
-          {item}
+          {tr(item)}
         </li>
       ))}
     </ul>

@@ -24,6 +24,7 @@ export async function getActiveGiftCoupon(): Promise<Coupon | null> {
 export interface GiftOption {
   productId: string;
   name: string;
+  nameSk: string | null;
   image: string | null;
   /** Normal selling price — shown as "hodnota X" so the gift reads as worth something. */
   value: number;
@@ -41,6 +42,7 @@ export async function getGiftOptions(): Promise<GiftOption[]> {
     select: {
       id: true,
       name: true,
+      nameSk: true,
       price: true,
       images: { orderBy: { sortOrder: "asc" }, take: 1, select: { url: true } },
     },
@@ -49,6 +51,7 @@ export async function getGiftOptions(): Promise<GiftOption[]> {
   return products.map((p) => ({
     productId: p.id,
     name: p.name,
+    nameSk: p.nameSk,
     image: p.images[0]?.url ?? null,
     value: Number(p.price),
   }));

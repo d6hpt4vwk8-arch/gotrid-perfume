@@ -41,6 +41,8 @@ export async function createOrder(
   }, 0);
 
   const settings = await getSettings();
+  const paysInEur =
+    input.shippingCountry === "SK" && (input.paymentMethod === "CARD" || input.paymentMethod === "BANK_TRANSFER");
 
   // Honoured only when the cart really contains a perfume, whatever the form sent.
   const giftSticker = input.giftSticker ? await cartHasPerfume(productIds) : false;
@@ -202,14 +204,14 @@ export async function createOrder(
             shippingPrice,
             codSurcharge,
             total,
-            // Default: same as `total`, CZK. Overwritten right after this
-            // for CARD orders shipping to SK once the real Stripe-charged
-            // EUR amount is known (see src/app/api/orders/route.ts) — every
-            // other order (COD/bank transfer, or CZ) is genuinely charged
-            // this CZK amount, so it's correct as the final value, not a
-            // placeholder.
-            chargedCurrency: "CZK",
-            chargedAmount: total,
+            // What the customer really pays. Slovak card and bank-transfer
+            // orders are paid in EUR (card: Stripe charge, re-snapshotted in
+            // src/app/api/orders/route.ts; bank transfer: to the EUR account),
+            // so the EUR amount is fixed here at the current rate and never
+            // recomputed. Everything else (CZ, or COD whose carrier collects
+            // CZK) is paid in CZK = total.
+            chargedCurrency: paysInEur ? "EUR" : "CZK",
+            chargedAmount: paysInEur ? Math.round((total / settings.czkToEurRate) * 100) / 100 : total,
             items: {
               create: [
                 ...input.items.map((item) => {

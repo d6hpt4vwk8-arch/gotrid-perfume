@@ -223,6 +223,8 @@ model Product {
   reviews       Review[]
   orderItems    OrderItem[]
   stockAlerts   StockAlert[]
+  wishlistItems WishlistItem[]
+  supplierStockLogs SupplierStockLog[]
   priceAlerts   PriceAlert[]
   scentFamilies ProductScentFamily[]
   skinTypes     ProductSkinType[]
@@ -389,6 +391,45 @@ model PriceAlert {
   @@index([productId, notified])
 }
 
+// Favourites of a logged-in customer (the guest wishlist stays in the browser's
+// localStorage and is merged in on login). Gives us the signal "who wants what":
+// shown in the admin, and drives the price-drop / low-stock e-mails
+// (src/lib/marketing/wishlist-campaign.ts). priceAtAdd is the price when the
+// customer hearted it; lastNotifiedPrice remembers the price we last mailed
+// about so one price drop is announced once, not every day.
+model WishlistItem {
+  id                String    @id @default(cuid())
+  customerId        String
+  customer          Customer  @relation(fields: [customerId], references: [id], onDelete: Cascade)
+  productId         String
+  product           Product   @relation(fields: [productId], references: [id], onDelete: Cascade)
+  priceAtAdd        Decimal   @db.Decimal(10, 2)
+  lastNotifiedPrice Decimal?  @db.Decimal(10, 2)
+  lowStockNotifiedAt DateTime?
+  createdAt         DateTime  @default(now())
+
+  @@unique([customerId, productId])
+  @@index([productId])
+}
+
+// History of what the supplier (SP Venture) showed for a product, written by
+// the stock sync whenever the supplier's stock or wholesale price changes (plus
+// one baseline row the first time a product is seen). Lets the admin see how
+// fast a supplier's stock is draining or being refilled and when the wholesale
+// price jumped — the supplier number only, not our own `stock` (which also
+// counts ownStock). Rows are tiny; old ones are pruned by the daily cron.
+model SupplierStockLog {
+  id            String   @id @default(cuid())
+  productId     String
+  product       Product  @relation(fields: [productId], references: [id], onDelete: Cascade)
+  supplierStock Int
+  purchasePrice Decimal  @db.Decimal(10, 2)
+  createdAt     DateTime @default(now())
+
+  @@index([productId, createdAt])
+  @@index([createdAt])
+}
+
 model ProductImage {
   id        String  @id @default(cuid())
   productId String
@@ -461,6 +502,7 @@ model Customer {
 
   orders              Order[]
   passwordResetTokens PasswordResetToken[]
+  wishlistItems       WishlistItem[]
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt

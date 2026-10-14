@@ -12,8 +12,10 @@ import { HeurekaCertificateWidget } from "@/components/heureka-certificate-widge
 import { BenefitsBar } from "@/components/benefits-bar";
 import { NewsletterSignup } from "@/components/newsletter-signup";
 import { getSettings } from "@/lib/settings.server";
+import { getCurrentCustomerId } from "@/lib/customer/get-current-customer";
 import { CONSENT_COOKIE_NAME, type ConsentState } from "@/lib/consent-cookie";
-import { readCurrencyCookie } from "@/lib/currency-cookie";
+import { currencyForLocale } from "@/lib/currency";
+import { getCurrentLocale } from "@/i18n/tr.server";
 
 // Read server-side (a cookie, not localStorage, precisely so this is
 // possible) so the very first response already reflects a returning
@@ -67,7 +69,8 @@ export default async function ShopLayout({ children }: { children: React.ReactNo
   const headerList = await headers();
   const nonce = headerList.get("x-nonce") ?? undefined;
   const initialConsent = readConsentCookie(headerList.get("cookie"));
-  const initialCurrency = readCurrencyCookie(headerList.get("cookie"));
+  const isSk = (await getCurrentLocale()) === "sk";
+  const currency = currencyForLocale(isSk ? "sk" : "cs");
 
   return (
     <>
@@ -75,7 +78,8 @@ export default async function ShopLayout({ children }: { children: React.ReactNo
       <Providers
         freeShippingThreshold={settings.freeShippingThreshold}
         initialConsent={initialConsent}
-        initialCurrency={initialCurrency}
+        currency={currency}
+        loggedIn={Boolean(await getCurrentCustomerId())}
         czkToEurRate={settings.czkToEurRate}
       >
         <AttributionTracker />
@@ -83,7 +87,8 @@ export default async function ShopLayout({ children }: { children: React.ReactNo
         <SklikPixel />
         <GlamiPixel />
         <Clarity />
-        <HeurekaCertificateWidget />
+        {/* Heureka.cz certificate — meaningless on the Slovak storefront (Heureka.sk has its own). */}
+        {!isSk && <HeurekaCertificateWidget />}
         <BenefitsBar />
         <SiteHeader />
         {children}

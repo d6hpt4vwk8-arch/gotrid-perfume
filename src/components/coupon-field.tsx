@@ -1,5 +1,6 @@
 "use client";
 
+import { useTr } from "@/i18n/use-tr";
 import { useEffect, useRef, useState } from "react";
 import { useCart } from "@/lib/cart-context";
 import { useCurrency } from "@/lib/currency-context";
@@ -20,6 +21,7 @@ export interface AppliedCoupon {
 export function CouponField({ onApplied }: { onApplied?: (coupon: AppliedCoupon | null) => void }) {
   const { couponCode, setCouponCode, total: itemsTotal } = useCart();
   const { price } = useCurrency();
+  const tr = useTr();
   const [input, setInput] = useState("");
   const [applied, setApplied] = useState<AppliedCoupon | null>(null);
   const [error, setError] = useState<string | null>(null);
@@ -48,7 +50,7 @@ export function CouponField({ onApplied }: { onApplied?: (coupon: AppliedCoupon 
         if (!res.ok) {
           setApplied(null);
           onAppliedRef.current?.(null);
-          setError(data.error ?? "Slevový kód se nepodařilo ověřit.");
+          setError(tr(data.error ?? "Slevový kód se nepodařilo ověřit."));
           return;
         }
         setError(null);
@@ -59,7 +61,7 @@ export function CouponField({ onApplied }: { onApplied?: (coupon: AppliedCoupon 
         if (cancelled) return;
         setApplied(null);
         onAppliedRef.current?.(null);
-        setError("Slevový kód se nepodařilo ověřit.");
+        setError(tr("Slevový kód se nepodařilo ověřit."));
       })
       .finally(() => {
         if (!cancelled) setChecking(false);
@@ -67,18 +69,18 @@ export function CouponField({ onApplied }: { onApplied?: (coupon: AppliedCoupon 
     return () => {
       cancelled = true;
     };
-  }, [couponCode, itemsTotal]);
+  }, [couponCode, itemsTotal, tr]);
 
   if (applied) {
     return (
       <div className="flex flex-col gap-1">
         <div className="flex items-center justify-between rounded-sm border border-ok/40 bg-ok/10 px-3 py-2 text-sm text-ink">
           <span>
-            Kód <strong>{applied.code}</strong> uplatněn
+            {tr("Kód")} <strong>{applied.code}</strong> {tr("uplatněn")}
             {applied.grantsGift ? (
-              " — vyberte si dárek zdarma níže"
+              ` — ${tr("vyberte si dárek zdarma níže")}`
             ) : (
-              <> — sleva {price(applied.discountAmount)}</>
+              <> — {tr("sleva")} {price(applied.discountAmount)}</>
             )}
           </span>
           <button
@@ -90,7 +92,7 @@ export function CouponField({ onApplied }: { onApplied?: (coupon: AppliedCoupon 
             }}
             className="text-xs text-accent-2 underline hover:text-accent"
           >
-            Odebrat
+            {tr("Odebrat")}
           </button>
         </div>
       </div>
@@ -101,7 +103,7 @@ export function CouponField({ onApplied }: { onApplied?: (coupon: AppliedCoupon 
     <div className="flex flex-col gap-1">
       <div className="flex gap-2">
         <input
-          placeholder="Slevový kód"
+          placeholder={tr("Slevový kód")}
           value={input}
           onChange={(e) => setInput(e.target.value)}
           className="flex-1 rounded-sm border border-line px-3 py-2 text-sm text-ink"
@@ -112,7 +114,7 @@ export function CouponField({ onApplied }: { onApplied?: (coupon: AppliedCoupon 
           disabled={checking || !input.trim()}
           className="rounded-sm border border-line px-4 py-2 text-sm font-medium text-ink hover:border-accent hover:text-accent disabled:cursor-not-allowed disabled:opacity-50"
         >
-          {checking ? "Ověřuji…" : "Použít"}
+          {checking ? tr("Ověřuji…") : tr("Použít")}
         </button>
       </div>
       {error && <p className="text-xs text-red-600">{error}</p>}

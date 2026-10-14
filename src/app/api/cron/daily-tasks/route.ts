@@ -2,11 +2,13 @@ import { NextRequest, NextResponse } from "next/server";
 import { runSecondOrderCampaign, cleanupExpiredSecondOrderCoupons } from "@/lib/marketing/second-order-campaign";
 import { runReviewRequestCampaign } from "@/lib/marketing/review-request-campaign";
 import { runAbandonedCheckoutRecovery } from "@/lib/marketing/abandoned-checkout";
+import { runWishlistCampaign } from "@/lib/marketing/wishlist-campaign";
 import { syncPacketaDeliveryStatus } from "@/lib/orders/sync-packeta-delivery";
 import { syncGlsDeliveryStatus } from "@/lib/orders/sync-gls-delivery";
 import { checkZasilkovnaVolumeMilestone } from "@/lib/marketing/zasilkovna-volume-check.server";
 import { expireInactiveLoyaltyPoints } from "@/lib/loyalty";
 import { refreshInstagramToken } from "@/lib/instagram";
+import { sendSupplierWatchDigest } from "@/lib/marketing/supplier-watch-digest";
 
 // Triggered by Vercel Cron (see vercel.json) — same auth pattern as
 // src/app/api/cron/sync-spventure-stock/route.ts. Bundles the daily
@@ -44,33 +46,39 @@ export async function GET(req: NextRequest) {
     secondOrder,
     reviewRequest,
     abandonedCheckout,
+    wishlist,
     delivery,
     glsDelivery,
     zasilkovnaVolume,
     loyaltyExpiry,
     couponCleanup,
     instagramToken,
+    supplierWatch,
   ] = await Promise.all([
     runSecondOrderCampaign(),
     runReviewRequestCampaign(),
     runAbandonedCheckoutRecovery(),
+    runWishlistCampaign(),
     syncPacketaDeliveryStatus(),
     syncGlsDeliveryStatus(),
     checkZasilkovnaVolumeMilestone(),
     expireInactiveLoyaltyPoints(),
     cleanupExpiredSecondOrderCoupons(),
     refreshInstagramToken(),
+    sendSupplierWatchDigest(),
   ]);
 
   return NextResponse.json({
     secondOrder,
     reviewRequest,
     abandonedCheckout,
+    wishlist,
     delivery,
     glsDelivery,
     zasilkovnaVolume,
     loyaltyExpiry,
     couponCleanup,
     instagramToken,
+    supplierWatch,
   });
 }

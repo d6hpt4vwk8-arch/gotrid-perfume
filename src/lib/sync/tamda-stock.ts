@@ -25,6 +25,7 @@
 import { prisma } from "@/lib/prisma";
 import { logAdminActivity } from "@/lib/admin/activity-log";
 import { notifyStockAlerts } from "@/lib/stock-alerts";
+import { createSupplierLogRecorder } from "@/lib/sync/supplier-stock-log";
 
 const BASE = "https://tamdaexpress.eu";
 const CODE_PREFIX = "TDE-";
@@ -309,6 +310,8 @@ export async function syncTamdaStock(session: TamdaSession | null, opts: TamdaSy
     return result;
   }
 
+  const stockLog = await createSupplierLogRecorder();
+
   for (const product of answered) {
     const answer = answers.get(product.ean!)!;
 
@@ -330,6 +333,7 @@ export async function syncTamdaStock(session: TamdaSession | null, opts: TamdaSy
       result.priceRaised.push({ code: product.code, name: product.name, from: Number(product.price), to: floorPrice, tamda: answer.price!, sold: product.salesCount });
     }
     if (purchaseChanged) result.purchaseUpdated++;
+    stockLog.record(product.id, answer.stock, purchaseChanged ? newPurchase! : Number(product.purchasePrice));
 
     // Goods we hold ourselves stay sellable whatever Tamda says (owner's rule,
     // 2026-10-09): the storefront gates availability on `stock` alone, so the
@@ -355,6 +359,8 @@ export async function syncTamdaStock(session: TamdaSession | null, opts: TamdaSy
       void notifyStockAlerts(updated).catch((err) => console.error(`[tamda-sync] stock-alert notify failed for ${product.code}`, err));
     }
   }
+
+  if (!opts.dryRun) await stockLog.flush();
 
   if (!opts.dryRun && (result.updated.length > 0 || result.priceRaised.length > 0 || result.purchaseUpdated > 0)) {
     const toZero = result.updated.filter((u) => u.to === 0).length;
