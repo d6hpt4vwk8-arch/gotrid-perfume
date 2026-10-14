@@ -6,12 +6,15 @@ import { orderMoney } from "@/lib/orders/order-money";
 import { localizedItemNames } from "@/lib/orders/item-names";
 import { getPopularProductsExcluding } from "@/lib/marketing/recommend-products";
 import { getSettings } from "@/lib/settings.server";
+import { logAdminActivity } from "@/lib/admin/activity-log";
 import { emailBenefits, emailButton, emailSocialCard, emailProductGrid, renderEmailLayout } from "./layout";
 import { buildOrderConfirmationAttachments } from "./order-attachments";
 import { CS_MAIL, getMailContext, orderMailLocale, type MailContext } from "./locale";
 import { EMAIL_FROM, OWNER_EMAIL, getResendClient, isEmailConfigured } from "./resend";
 
 type OrderWithItems = Order & { items: OrderItem[] };
+
+const ATTACHMENT_TIMEOUT_MS = 20_000;
 
 function itemsTableHtml(
   items: OrderItem[],
@@ -109,9 +112,20 @@ export async function sendCustomerOrderConfirmation(order: OrderWithItems) {
   // a renderer hiccup) the confirmation must still go out without them.
   let attachments: Awaited<ReturnType<typeof buildOrderConfirmationAttachments>> = [];
   try {
-    attachments = await buildOrderConfirmationAttachments(order);
+    attachments = await Promise.race([
+      buildOrderConfirmationAttachments(order),
+      new Promise<never>((_, reject) =>
+        setTimeout(() => reject(new Error(`attachments not ready after ${ATTACHMENT_TIMEOUT_MS / 1000} s`)), ATTACHMENT_TIMEOUT_MS),
+      ),
+    ]);
   } catch (err) {
     console.error(`[email] attachments failed for ${order.number}, sending without`, err);
+    await logAdminActivity({
+      action: "order.confirmation_attachments_failed",
+      entityType: "Order",
+      entityId: order.id,
+      detail: `${order.number}: ${err instanceof Error ? err.message : String(err)}`,
+    });
   }
   const { error } = await resend.emails.send({
     from: EMAIL_FROM,
