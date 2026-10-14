@@ -1,4 +1,4 @@
-import { NextRequest, NextResponse } from "next/server";
+import { NextRequest, NextResponse, after } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { checkoutSchema } from "@/lib/orders/checkout-schema";
 import { CheckoutError, createOrder } from "@/lib/orders/create-order";
@@ -21,6 +21,9 @@ import { czkToEur } from "@/lib/format";
 // Rate-limited on successful orders, not validation failures — a customer
 // fixing a typo'd postcode shouldn't burn through the same budget as a
 // script trying to grief stock via unpaid COD/bank-transfer orders.
+// Rendering the order e-mail (PDF attachments included) runs in after().
+export const maxDuration = 60;
+
 const MAX_ORDERS = 8;
 const WINDOW_MS = 15 * 60 * 1000;
 
@@ -75,23 +78,31 @@ export async function POST(req: NextRequest) {
   // Best-effort — a failed email must not roll back a paid/created order.
   // Logged to AdminActivityLog (not just console.error) so a failure is
   // visible in /admin/email-marketing instead of only in Vercel function logs.
-  void sendCustomerOrderConfirmation(order).catch((err) => {
-    console.error(`[email] customer confirmation failed for ${order.number}`, err);
-    void logAdminActivity({
-      action: "order.confirmation_email_failed",
-      entityType: "Order",
-      entityId: order.id,
-      detail: `${order.number}: ${err instanceof Error ? err.message : String(err)}`,
-    });
-  });
-  void sendOwnerNewOrderNotification(order).catch((err) => {
-    console.error(`[email] owner notification failed for ${order.number}`, err);
-    void logAdminActivity({
-      action: "order.owner_notification_email_failed",
-      entityType: "Order",
-      entityId: order.id,
-      detail: `${order.number}: ${err instanceof Error ? err.message : String(err)}`,
-    });
+  // after() keeps the serverless function alive until the mails are out —
+  // a bare `void promise` is dropped once the response has been sent, which
+  // silently lost the confirmation e-mail (found 2026-10-14, first Slovak
+  // test order: order saved, no mail, nothing in the activity log).
+  after(async () => {
+    await Promise.allSettled([
+      sendCustomerOrderConfirmation(order).catch((err) => {
+        console.error(`[email] customer confirmation failed for ${order.number}`, err);
+        return logAdminActivity({
+          action: "order.confirmation_email_failed",
+          entityType: "Order",
+          entityId: order.id,
+          detail: `${order.number}: ${err instanceof Error ? err.message : String(err)}`,
+        });
+      }),
+      sendOwnerNewOrderNotification(order).catch((err) => {
+        console.error(`[email] owner notification failed for ${order.number}`, err);
+        return logAdminActivity({
+          action: "order.owner_notification_email_failed",
+          entityType: "Order",
+          entityId: order.id,
+          detail: `${order.number}: ${err instanceof Error ? err.message : String(err)}`,
+        });
+      }),
+    ]);
   });
 
   if (order.paymentMethod === "CARD") {

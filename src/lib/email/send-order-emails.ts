@@ -105,12 +105,20 @@ export async function sendCustomerOrderConfirmation(order: OrderWithItems) {
 
   const ctx = await getMailContext(orderMailLocale(order));
   const resend = getResendClient();
+  // The PDFs are a nicety: if building them fails (a legal page unreachable,
+  // a renderer hiccup) the confirmation must still go out without them.
+  let attachments: Awaited<ReturnType<typeof buildOrderConfirmationAttachments>> = [];
+  try {
+    attachments = await buildOrderConfirmationAttachments(order);
+  } catch (err) {
+    console.error(`[email] attachments failed for ${order.number}, sending without`, err);
+  }
   const { error } = await resend.emails.send({
     from: EMAIL_FROM,
     to: order.email,
     subject: `${ctx.tr("Potvrzení objednávky")} ${order.number} — Gotrid Perfume`,
     html: await renderCustomerOrderConfirmationHtml(order),
-    attachments: await buildOrderConfirmationAttachments(order),
+    ...(attachments.length > 0 ? { attachments } : {}),
   });
   // The Resend SDK returns { data, error } instead of throwing on API-level
   // failures (e.g. unverified sending domain) — surface it so the caller's
