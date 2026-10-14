@@ -68,7 +68,7 @@ export default async function AdminSupplierWatchPage({
       <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
         <StatCard label="Sledovaných produktů" value={rows.length} />
         <StatCard label="Klesá ≥ 20 % za 7 dní" value={fallingCount} />
-        <StatCard label="Dochází (≤ 10 ks, prodává se)" value={lowCount} />
+        <StatCard label="Dochází (můžeme prodat ≤ 10 ks)" value={lowCount} />
         <StatCard
           label="Poslední změna sync SPV / Tamda"
           value={`${lastSpvSync ? formatDate(lastSpvSync.createdAt) : "—"} / ${lastTamdaSync ? formatDate(lastTamdaSync.createdAt) : "—"}`}
@@ -102,7 +102,7 @@ export default async function AdminSupplierWatchPage({
               <th className="px-3 py-2">před 7 dny</th>
               <th className="px-3 py-2">Tempo / vystačí</th>
               <th className="px-3 py-2">Nákup bez DPH</th>
-              <th className="px-3 py-2">Náš sklad</th>
+              <th className="px-3 py-2">Náš vlastní sklad</th>
             </tr>
           </thead>
           <tbody>
@@ -117,10 +117,11 @@ export default async function AdminSupplierWatchPage({
                     {!p.visible && " · skryto"}
                     {p.slowerDelivery && " · jen z druhého skladu"}
                   </div>
-                  {(falling || low || costUp) && (
+                  {(falling || low || costUp || (p.ownStock > 0 && supplierNow === 0)) && (
                     <div className="mt-1 flex flex-wrap gap-1 text-xs">
                       {falling && <span className="rounded-sm bg-amber-100 px-1.5 py-0.5 text-amber-800">sklad klesá</span>}
                       {low && <span className="rounded-sm bg-red-100 px-1.5 py-0.5 text-red-700">dochází</span>}
+                      {p.ownStock > 0 && supplierNow === 0 && <span className="rounded-sm bg-blue-100 px-1.5 py-0.5 text-blue-800">dodavatel nemá, jen náš sklad</span>}
                       {costUp && <span className="rounded-sm bg-red-100 px-1.5 py-0.5 text-red-700">cena ↑</span>}
                     </div>
                   )}
@@ -128,7 +129,9 @@ export default async function AdminSupplierWatchPage({
                 <td className="px-3 py-2">
                   {sold30} / {sold60}
                 </td>
-                <td className="px-3 py-2 font-medium">{supplierNow} ks</td>
+                <td className="px-3 py-2 font-medium">
+                  {supplierNow !== null ? `${supplierNow} ks` : <span className="font-normal text-accent-2">čeká na 1. sync</span>}
+                </td>
                 <td className="px-3 py-2 text-accent-2">{s1 !== null ? `${s1} ks` : "—"}</td>
                 <td className="px-3 py-2 text-accent-2">
                   {s7 !== null ? `${s7} ks` : "—"}

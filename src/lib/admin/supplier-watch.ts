@@ -31,7 +31,10 @@ export interface SupplierWatchRow {
   };
   sold30: number;
   sold60: number;
-  supplierNow: number;
+  /** Supplier's own number from the latest history row — null until a sync with logging has seen the product (never our `stock`, which also counts own units). */
+  supplierNow: number | null;
+  /** Units we can actually sell right now: `Product.stock` (supplier stock or own units, whichever is higher). */
+  available: number;
   s1: number | null;
   s7: number | null;
   delta7: number | null;
@@ -47,7 +50,7 @@ export interface SupplierWatchRow {
 /**
  * Supplier-side trend for the goods we sell (sold in the last 60 days) or hold
  * ourselves, plus any `extraIds` (admin search hits). "Falling" = supplier stock
- * dropped ≥ 20 % in 7 days; "low" = ≤ 10 left while we still sell it; "costUp" =
+ * dropped ≥ 20 % in 7 days; "low" = we can sell ≤ 10 more (supplier stock or own units, whichever is higher) while it is still selling; "costUp" =
  * wholesale price ≥ 5 % above the oldest snapshot in the last 30 days.
  */
 export async function loadSupplierWatch(extraIds: string[] = []): Promise<{ rows: SupplierWatchRow[]; firstLogAt: Date | null }> {
@@ -102,14 +105,14 @@ export async function loadSupplierWatch(extraIds: string[] = []): Promise<{ rows
     .map((p): SupplierWatchRow => {
       const logs = logsByProduct.get(p.id) ?? [];
       const last = logs.length > 0 ? logs[logs.length - 1] : null;
-      const supplierNow = last ? last.supplierStock : p.stock;
+      const supplierNow = last ? last.supplierStock : null;
       const s1 = stockAt(logs, new Date(now.getTime() - DAY));
       const s7 = stockAt(logs, new Date(now.getTime() - 7 * DAY));
-      const delta7 = s7 !== null ? supplierNow - s7 : null;
+      const delta7 = s7 !== null && supplierNow !== null ? supplierNow - s7 : null;
       const firstPoint = logs[0] ?? null;
       const elapsedDays = firstPoint ? Math.min(7, Math.max(1, (now.getTime() - firstPoint.createdAt.getTime()) / DAY)) : null;
       const perDay = delta7 !== null && delta7 < 0 && elapsedDays ? -delta7 / elapsedDays : null;
-      const daysLeft = perDay && perDay > 0 ? Math.round(supplierNow / perDay) : null;
+      const daysLeft = perDay && perDay > 0 && supplierNow !== null ? Math.round(supplierNow / perDay) : null;
       const cost = Number(p.purchasePrice);
       const cost30 = logs.find((l) => l.createdAt >= since30)?.purchasePrice ?? firstPoint?.purchasePrice ?? null;
       return {
@@ -117,6 +120,7 @@ export async function loadSupplierWatch(extraIds: string[] = []): Promise<{ rows
         sold30: sold30.get(p.id) ?? 0,
         sold60: sold60.get(p.id) ?? 0,
         supplierNow,
+        available: p.stock,
         s1,
         s7,
         delta7,
@@ -126,7 +130,7 @@ export async function loadSupplierWatch(extraIds: string[] = []): Promise<{ rows
         costChange: cost30 !== null ? cost - cost30 : null,
         costUp: cost30 !== null && cost30 > 0 && cost >= cost30 * 1.05,
         falling: s7 !== null && s7 >= 20 && delta7 !== null && delta7 <= -0.2 * s7,
-        low: supplierNow <= 10 && (sold30.get(p.id) ?? 0) > 0,
+        low: p.stock <= 10 && (sold30.get(p.id) ?? 0) > 0,
       };
     })
     .sort((a, b) => b.sold30 - a.sold30 || b.sold60 - a.sold60 || a.product.name.localeCompare(b.product.name, "cs"));

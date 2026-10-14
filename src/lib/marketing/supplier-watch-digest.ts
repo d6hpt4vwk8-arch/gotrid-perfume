@@ -28,7 +28,7 @@ export async function sendSupplierWatchDigest(): Promise<{ sent: boolean; flagge
       return `<tr>
         <td style="padding:6px 8px;border-bottom:1px solid #eee">${esc(r.product.name)}<br><span style="color:#888;font-size:12px">${esc(r.product.code)}</span></td>
         <td style="padding:6px 8px;border-bottom:1px solid #eee">${r.sold30}</td>
-        <td style="padding:6px 8px;border-bottom:1px solid #eee">${r.supplierNow} ks${trend}</td>
+        <td style="padding:6px 8px;border-bottom:1px solid #eee">${r.supplierNow !== null ? `${r.supplierNow} ks${trend}` : "—"}${r.product.ownStock > 0 ? `<br><span style="color:#888;font-size:12px">vlastní sklad ${r.product.ownStock} ks</span>` : ""}</td>
         <td style="padding:6px 8px;border-bottom:1px solid #eee">${cost}</td>
         <td style="padding:6px 8px;border-bottom:1px solid #eee">${flags}</td>
       </tr>`;
