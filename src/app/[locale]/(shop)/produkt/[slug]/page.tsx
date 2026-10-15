@@ -180,7 +180,12 @@ export default async function ProductPage({
   // handoff-to-courier time is less predictable than for drugstore/cosmetic
   // items sourced faster elsewhere (2026-09-23, owner request).
   const isPerfume = product.categories.some((c) => c.category.fullSlug.startsWith("parfemy"));
-  const deliveryEstimate = product.stock > 0 ? estimateDeliveryDate(isPerfume ? 4 : 3) : null;
+  // SP Venture items that only exist in their other warehouse (slowerDelivery,
+  // kept by the SP Venture sync) get one extra business day — a plain promise
+  // instead of the old "may take a week" warning that scared customers off
+  // (owner's call, 2026-10-16).
+  const deliveryEstimate =
+    product.stock > 0 ? estimateDeliveryDate((isPerfume ? 4 : 3) + (product.slowerDelivery ? 1 : 0)) : null;
 
   const jsonLd = {
     "@context": "https://schema.org",

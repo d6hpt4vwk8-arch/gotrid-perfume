@@ -25,6 +25,7 @@ export async function GET(req: NextRequest) {
       price: Number(p.price),
       compareAtPrice: p.compareAtPrice ? Number(p.compareAtPrice) : null,
       stock: p.stock,
+      slowerDelivery: p.slowerDelivery,
       isDefective: p.isDefective,
       salesCount: p.salesCount,
       isVegan: p.isVegan,

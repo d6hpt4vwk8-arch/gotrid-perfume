@@ -21,11 +21,29 @@ export default function CartPage() {
   const tr = useTr();
   const isSk = useIsSk();
   const remaining = freeShippingThreshold - total;
-  const deliveryEstimate = formatDeliveryEstimate(estimateDeliveryDate(), isSk ? "sk" : "cs");
   const [coupon, setCoupon] = useState<AppliedCoupon | null>(null);
   const totalAfterDiscount = Math.max(0, total - (coupon?.discountAmount ?? 0));
 
   const cartProductIds = items.map((i) => i.productId).join(",");
+  // One item from SP Venture's other warehouse adds a business day to the promised date.
+  const [slowerInCart, setSlowerInCart] = useState(false);
+  useEffect(() => {
+    if (!cartProductIds) {
+      setSlowerInCart(false);
+      return;
+    }
+    let cancelled = false;
+    fetch(`/api/products/by-ids?ids=${encodeURIComponent(cartProductIds)}`)
+      .then((r) => r.json())
+      .then((data: { products?: { slowerDelivery?: boolean }[] }) => {
+        if (!cancelled) setSlowerInCart((data.products ?? []).some((p) => p.slowerDelivery));
+      })
+      .catch(() => {});
+    return () => {
+      cancelled = true;
+    };
+  }, [cartProductIds]);
+  const deliveryEstimate = formatDeliveryEstimate(estimateDeliveryDate(slowerInCart ? 4 : 3), isSk ? "sk" : "cs");
   const [recommendations, setRecommendations] = useState<ProductCardData[]>([]);
 
   useEffect(() => {
