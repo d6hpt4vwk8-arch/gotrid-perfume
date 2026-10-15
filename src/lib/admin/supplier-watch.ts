@@ -108,9 +108,12 @@ export async function loadSupplierWatch(extraIds: string[] = []): Promise<{ rows
       const supplierNow = last ? last.supplierStock : null;
       const s1 = stockAt(logs, new Date(now.getTime() - DAY));
       const s7 = stockAt(logs, new Date(now.getTime() - 7 * DAY));
-      const delta7 = s7 !== null && supplierNow !== null ? supplierNow - s7 : null;
+      // While the history is younger than a week, compare against the oldest snapshot we have (at least 3 h old) so a sharp drop is flagged right away.
       const firstPoint = logs[0] ?? null;
-      const elapsedDays = firstPoint ? Math.min(7, Math.max(1, (now.getTime() - firstPoint.createdAt.getTime()) / DAY)) : null;
+      const youngFirst = firstPoint && now.getTime() - firstPoint.createdAt.getTime() >= 3 * 60 * 60 * 1000 ? firstPoint : null;
+      const refStock = s7 ?? (youngFirst ? youngFirst.supplierStock : null);
+      const delta7 = refStock !== null && supplierNow !== null ? supplierNow - refStock : null;
+      const elapsedDays = s7 !== null ? 7 : youngFirst ? Math.max(0.25, (now.getTime() - youngFirst.createdAt.getTime()) / DAY) : null;
       const perDay = delta7 !== null && delta7 < 0 && elapsedDays ? -delta7 / elapsedDays : null;
       const daysLeft = perDay && perDay > 0 && supplierNow !== null ? Math.round(supplierNow / perDay) : null;
       const cost = Number(p.purchasePrice);
@@ -129,7 +132,7 @@ export async function loadSupplierWatch(extraIds: string[] = []): Promise<{ rows
         cost,
         costChange: cost30 !== null ? cost - cost30 : null,
         costUp: cost30 !== null && cost30 > 0 && cost >= cost30 * 1.05,
-        falling: s7 !== null && s7 >= 20 && delta7 !== null && delta7 <= -0.2 * s7,
+        falling: refStock !== null && refStock >= 20 && delta7 !== null && delta7 <= -0.2 * refStock,
         low: p.stock <= 10 && (sold30.get(p.id) ?? 0) > 0,
       };
     })
