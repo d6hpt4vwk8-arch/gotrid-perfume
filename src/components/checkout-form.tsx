@@ -550,9 +550,18 @@ export function CheckoutForm({
                 method === "GLS" ||
                 method === "GLS_MISTO",
             )
-            // GLS ParcelShop is listed (and preselected) first: it costs us
-            // less than Zásilkovna per parcel (see shippingCost* in settings).
-            .sort((a, b) => Number(b === "GLS_MISTO") - Number(a === "GLS_MISTO"))
+            // Česko: Zásilkovna is listed first among the pickup-point carriers —
+            // a condition of the Zásilkovna campaign price list (ID 964365, accepted
+            // 2026-10-15: "první dopravce v nabídce doručení do boxů / výdejních
+            // míst"). GLS ParcelShop stays preselected (it costs us less per parcel,
+            // see shippingCost* in settings), so only the ORDER changes, not the
+            // default. Slovensko keeps GLS ParcelShop first (the campaign is CZ-only).
+            .sort((a, b) => {
+              const first = shippingCountry === "SK" ? "GLS_MISTO" : "ZASILKOVNA";
+              const second = shippingCountry === "SK" ? "ZASILKOVNA" : "GLS_MISTO";
+              const rank = (m: ShippingMethod) => (m === first ? 0 : m === second ? 1 : 2);
+              return rank(a) - rank(b);
+            })
             .map((method) => (
               <label key={method} className="flex items-center gap-2 text-sm text-ink">
                 <input
