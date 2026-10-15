@@ -1,5 +1,6 @@
 import { prisma } from "@/lib/prisma";
 import { logAdminActivity } from "@/lib/admin/activity-log";
+import { runLeftNewEffects } from "@/lib/orders/auto-status-effects";
 import {
   getPacketStatus,
   PACKETA_DELIVERED_STATUS_CODE,
@@ -24,7 +25,7 @@ export async function syncPacketaDeliveryStatus(): Promise<{
       packetaId: { not: null },
       status: { notIn: ["DELIVERED", "CANCELLED", "REFUNDED"] },
     },
-    select: { id: true, number: true, packetaId: true },
+    select: { id: true, number: true, packetaId: true, status: true },
   });
 
   let delivered = 0;
@@ -49,6 +50,8 @@ export async function syncPacketaDeliveryStatus(): Promise<{
         entityId: order.id,
         detail: `${order.number}: automaticky označeno jako Doručeno (Zásilkovna: ${status.codeText})`,
       });
+      // Same as a manual NEW -> anything change for COD / bank transfer.
+      if (order.status === "NEW") await runLeftNewEffects(order.id);
       delivered++;
     } else if (status.statusCode === PACKETA_RETURNED_STATUS_CODE) {
       await prisma.order.update({ where: { id: order.id }, data: { status: "REFUNDED" } });
