@@ -125,6 +125,7 @@ export default async function HomePage() {
               telephone: CONTACT.phone,
               sameAs: BRAND_PROFILE_URLS,
               identifier: { "@type": "PropertyValue", propertyID: "IČO", value: seller.ico },
+              ...(seller.dic ? { taxID: seller.dic } : {}),
               address: {
                 "@type": "PostalAddress",
                 streetAddress: seller.street,

@@ -22,7 +22,9 @@ export function ObchodnePodmienkySk({ seller, register }: { seller: SellerIdenti
       </p>
       <p>
         {seller.legalName}, IČO: {seller.ico}, so sídlom: {seller.street}, {seller.city}.{" "}
-        {seller.dic ? `Predávajúci je platiteľom DPH, DIČ: ${seller.dic}.` : "Predávajúci nie je platiteľom DPH."}
+        {seller.vatPayer
+          ? `Predávajúci je platiteľom DPH, DIČ: ${seller.dic}.`
+          : `Predávajúci nie je platiteľom DPH.${seller.dic ? ` DIČ: ${seller.dic}.` : ""}`}
         {register && (
           <>
             <br />

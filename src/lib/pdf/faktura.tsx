@@ -143,7 +143,7 @@ export function FakturaDocument({
 
         <Text style={styles.footer}>
           {tr("Způsob platby")}: {tr(PAYMENT_LABELS[order.paymentMethod])}. {tr("Cena je konečná.")}{" "}
-          {seller.dic ? `DIČ ${seller.dic}.` : tr("Dodavatel není plátcem DPH.")}
+          {seller.vatPayer ? `DIČ ${seller.dic}.` : tr("Dodavatel není plátcem DPH.")}
           {order.chargedCurrency === "EUR" ? ` ${tr("Částky jsou uvedeny v českých korunách (Kč); platba proběhla v eurech podle kurzu platného v den objednávky.")}` : ""}
         </Text>
       </Page>

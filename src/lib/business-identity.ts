@@ -13,8 +13,15 @@ export interface SellerIdentity {
   /** Legal name exactly as registered — must match ARES, the domain registrant and the payment account. */
   legalName: string;
   ico: string;
-  /** Registered VAT id, or null while not a VAT payer. */
+  /**
+   * DIČ as assigned by the tax office, or null while none exists. NOT proof of
+   * being a VAT payer: a s.r.o. that is only registered for income tax gets a
+   * DIČ too (Gotrid s.r.o., 15. 10. 2026) — use `vatPayer` for anything that
+   * depends on VAT status.
+   */
   dic: string | null;
+  /** Registered for VAT (plátce DPH). Drives the VAT wording in legal text and the cost-of-goods calculation. */
+  vatPayer: boolean;
   street: string;
   city: string;
   /** Rendered on invoices and quoted in the obchodní podmínky. */
@@ -35,6 +42,7 @@ const SOLE_TRADER: SellerIdentity = {
   legalName: "Pavlo Hrytsan",
   ico: "19296037",
   dic: null,
+  vatPayer: false,
   street: "Na Jarově 2425/4",
   city: "130 00 Praha 3-Žižkov",
   vatNote: "Není plátcem DPH",
@@ -44,12 +52,16 @@ const SOLE_TRADER: SellerIdentity = {
 // Gotrid s.r.o. — registered 17. 9. 2026 (Městský soud v Praze, C 456103),
 // sídlo is the registered-agent address, not the Na Jarově warehouse (that
 // stays the GLS/Balíkovna/Zásilkovna pickup address regardless of entity).
-// Address confirmed live against ares.gov.cz. DIČ left null (not yet a VAT
-// payer).
+// Address confirmed live against ares.gov.cz. DIČ CZ30030404 assigned by
+// Finanční úřad pro hl. m. Prahu (ÚzP Praha 2) in the rozhodnutí o registraci
+// of 15. 10. 2026 — registration for corporate income tax only, ex officio
+// because the 15-day deadline after the register entry was missed. That does
+// NOT make the company a VAT payer, so vatPayer stays false.
 const COMPANY: SellerIdentity | null = {
   legalName: "Gotrid s.r.o.",
   ico: "30030404",
-  dic: null,
+  dic: "CZ30030404",
+  vatPayer: false,
   street: "Sokolská 1883/8",
   city: "120 00 Praha 2-Nové Město",
   vatNote: "Není plátcem DPH",
@@ -82,9 +94,9 @@ export function currentSeller(): SellerIdentity {
   return sellerForDate(new Date());
 }
 
-/** "Pavlo Hrytsan, IČO 19296037" — the one-line form used in the footer and legal text. */
+/** "Gotrid s.r.o., IČO 30030404, DIČ CZ30030404" — the one-line form used in the footer and legal text. */
 export function sellerLine(seller: SellerIdentity): string {
-  return `${seller.legalName}, IČO ${seller.ico}`;
+  return `${seller.legalName}, IČO ${seller.ico}${seller.dic ? `, DIČ ${seller.dic}` : ""}`;
 }
 
 /** Internal notifications (new order, stock warnings). Moves to a company mailbox via env — no deploy needed. */

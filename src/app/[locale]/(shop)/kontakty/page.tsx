@@ -27,6 +27,7 @@ export default async function KontaktyPage() {
           </p>
           <p>IČO: {seller.ico}</p>
           {seller.dic && <p>DIČ: {seller.dic}</p>}
+          {!seller.vatPayer && <p>{tr(seller.vatNote)}</p>}
           {seller.commercialRegister && <p>{tr(seller.commercialRegister)}</p>}
           <p>
             <a href={`mailto:${CONTACT.email}`} className="hover:text-accent hover:underline">

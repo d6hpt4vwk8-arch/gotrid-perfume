@@ -34,9 +34,9 @@ export default async function ObchodniPodminkyPage() {
       </p>
       <p>
         {seller.legalName}, IČ: {seller.ico}, se sídlem: {seller.street}, {seller.city}.{" "}
-        {seller.dic
+        {seller.vatPayer
           ? `Prodávající je plátcem DPH, DIČ: ${seller.dic}.`
-          : "Prodávající není plátcem DPH."}
+          : `Prodávající není plátcem DPH.${seller.dic ? ` DIČ: ${seller.dic}.` : ""}`}
         {seller.commercialRegister && (
           <>
             <br />
