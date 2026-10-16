@@ -1,0 +1,21 @@
+{
+  "period": { "from": "2026-09-17", "to": "2026-10-16" },
+  "note": "Costs copied from Heureka (Statistiky, drill-down by category) and Sklik/Zboží (Produktové skupiny). Heureka cost = clicks x average CPC per category; ~33 Kč of the 3 451 Kč total is rounding. 'ostatni' = Heureka search clicks (not attributable to a segment).",
+  "Heureka": {
+    "totalCost": 3451,
+    "segments": {
+      "parfémy": { "clicks": 158, "cost": 1234 },
+      "kosmetika": { "clicks": 296, "cost": 1256 },
+      "drogerie": { "clicks": 232, "cost": 725 },
+      "ostatní": { "clicks": 49, "cost": 203 }
+    }
+  },
+  "Zboží.cz": {
+    "totalCost": 1551,
+    "segments": {
+      "parfémy": { "clicks": 91, "cost": 332, "conversions": 7, "conversionValue": 5662 },
+      "kosmetika": { "clicks": 258, "cost": 921, "conversions": 5, "conversionValue": 2363 },
+      "drogerie": { "clicks": 83, "cost": 298, "conversions": 1, "conversionValue": 881 }
+    }
+  }
+}
