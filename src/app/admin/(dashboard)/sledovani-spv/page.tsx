@@ -63,6 +63,9 @@ export default async function AdminSupplierWatchPage({
           jeho skladu, vývoj za 24 h a 7 dní, změny nákupní ceny — vedle našich prodejů. Hodí se na rozhodnutí, kdy dokoupit pár
           kusů předem.
         </p>
+        <Link href="/admin/sledovani-spv/zmeny" className="mt-1 inline-block text-sm underline hover:text-accent">
+          Všechny změny cen a zásob u dodavatelů →
+        </Link>
       </div>
 
       <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
@@ -115,7 +118,10 @@ export default async function AdminSupplierWatchPage({
                   <div className="text-xs text-accent-2">
                     {p.code}
                     {!p.visible && " · skryto"}
-                    {p.slowerDelivery && " · jen z druhého skladu"}
+                    {p.slowerDelivery && " · jen z druhého skladu"} ·{" "}
+                    <Link href={`/admin/sledovani-spv/${p.id}`} className="underline hover:text-accent">
+                      historie
+                    </Link>
                   </div>
                   {(falling || low || costUp || (p.ownStock > 0 && supplierNow === 0)) && (
                     <div className="mt-1 flex flex-wrap gap-1 text-xs">
