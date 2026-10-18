@@ -1,3 +1,4 @@
+import { prisma } from "@/lib/prisma";
 import { buildUnsubscribeUrl } from "@/lib/marketing/unsubscribe";
 import { getSettings } from "@/lib/settings.server";
 import { emailBenefits, emailButton, emailHelpCard, renderEmailLayout } from "./layout";
@@ -30,11 +31,14 @@ export async function renderReviewRequestEmailHtml(params: {
   const ctx = await getMailContext(params.locale ?? "cs");
   const { tr } = ctx;
   const sk = ctx.locale === "sk";
-  const [unsubscribeUrl, benefits, settings] = await Promise.all([
+  const [unsubscribeUrl, benefits, settings, validDaysRow] = await Promise.all([
     buildUnsubscribeUrl(params.email),
     emailBenefits(ctx),
     getSettings(),
+    // Same validity window the checkout enforces for personal codes (src/lib/coupons.ts).
+    prisma.settings.findUnique({ where: { id: "singleton" }, select: { secondOrderValidDays: true } }),
   ]);
+  const validDays = validDaysRow?.secondOrderValidDays ?? 14;
   // The coupon's CZK values (30 Kč from 250 Kč) shown in euros for Slovak customers.
   const couponDisplay = sk
     ? tr("{discount} při objednávce od {min}", {
@@ -53,7 +57,7 @@ export async function renderReviewRequestEmailHtml(params: {
           </td>
         </tr>
       </table>
-      <p style="font-size:13px;color:#8a857e;margin:-12px 0 20px;">${tr("Jako poděkování za recenzi máte tento kód na vaši příští objednávku — stačí ho zadat v košíku.")}</p>
+      <p style="font-size:13px;color:#8a857e;margin:-12px 0 20px;">${tr("Jako poděkování za recenzi máte tento kód na vaši příští objednávku — stačí ho zadat v košíku.")} ${tr("Kód platí do {date}, jednou, při objednávce na tento e-mail ({email}). Pokud vám nefunguje, napište nám na info@gotridperfume.cz.", { date: new Date(Date.now() + validDays * 24 * 60 * 60 * 1000).toLocaleDateString(sk ? "sk-SK" : "cs-CZ"), email: params.email })}</p>
       ${
         sk
           ? // Zboží.cz and Heureka.cz reviews mean nothing to a Slovak shopper — the Facebook page is the shared place.

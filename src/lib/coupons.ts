@@ -2,6 +2,7 @@ import type { Coupon } from "@prisma/client";
 import type { Prisma, PrismaClient } from "@prisma/client";
 import { prisma } from "@/lib/prisma";
 import { CheckoutError } from "@/lib/orders/checkout-error";
+import { REVIEW_COUPON_CODE } from "@/lib/email/send-review-request-email";
 
 type TxClient = PrismaClient | Prisma.TransactionClient;
 
@@ -35,11 +36,15 @@ async function assertSecondOrderEligible(client: TxClient, coupon: Coupon, email
     const settings = await client.settings.findUnique({ where: { id: "singleton" } });
     const validDays = settings?.secondOrderValidDays ?? 14;
     const since = new Date(Date.now() - validDays * 24 * 60 * 60 * 1000);
+    // The review-request code (RECENZE30) follows the same rule, keyed on
+    // when the review-request mail went out. The second-order campaign was
+    // switched off 2026-10-18 (0 coupon uses in 207 mails), so that mail is
+    // now the only one that hands out a personal, time-limited code.
     const campaignOrder = await client.order.findFirst({
       where: {
         email: { equals: normalized, mode: "insensitive" },
         status: { in: [...SECOND_ORDER_COUNTABLE] },
-        secondOrderEmailSentAt: { gte: since },
+        OR: [{ secondOrderEmailSentAt: { gte: since } }, { reviewRequestSentAt: { gte: since } }],
       },
       select: { id: true },
     });
@@ -79,7 +84,7 @@ async function loadValidCoupon(
   }
   // The cart-side preview has no e-mail yet (see /api/coupons/validate) — the
   // per-e-mail check always runs for real in validateCoupon at order time.
-  if (coupon.secondOrderOnly && email !== undefined) {
+  if ((coupon.secondOrderOnly || coupon.code === REVIEW_COUPON_CODE) && email !== undefined) {
     await assertSecondOrderEligible(client, coupon, email);
   }
   return coupon;

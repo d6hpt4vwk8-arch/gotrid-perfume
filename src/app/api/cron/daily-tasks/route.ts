@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { runSecondOrderCampaign, cleanupExpiredSecondOrderCoupons } from "@/lib/marketing/second-order-campaign";
+import { cleanupExpiredSecondOrderCoupons } from "@/lib/marketing/second-order-campaign";
 import { runReviewRequestCampaign } from "@/lib/marketing/review-request-campaign";
 import { runAbandonedCheckoutRecovery } from "@/lib/marketing/abandoned-checkout";
 import { runWishlistCampaign } from "@/lib/marketing/wishlist-campaign";
@@ -55,7 +55,10 @@ export async function GET(req: NextRequest) {
     instagramToken,
     supplierWatch,
   ] = await Promise.all([
-    runSecondOrderCampaign(),
+    // Second-order discount mail switched off 2026-10-18 (owner's call: 207 sent,
+    // 0 coupon uses, 10 unsubscribes, and too many marketing mails per customer).
+    // Re-enable by restoring runSecondOrderCampaign() here; the code is intact.
+    Promise.resolve({ emailed: 0, skipped: 0, disabled: true }),
     runReviewRequestCampaign(),
     runAbandonedCheckoutRecovery(),
     runWishlistCampaign(),
