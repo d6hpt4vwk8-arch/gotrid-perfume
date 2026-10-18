@@ -1,7 +1,8 @@
 import { prisma } from "@/lib/prisma";
 import { buildUnsubscribeUrl } from "@/lib/marketing/unsubscribe";
 import { getSettings } from "@/lib/settings.server";
-import { emailBenefits, emailButton, emailHelpCard, renderEmailLayout } from "./layout";
+import type { RecommendedProduct } from "@/lib/marketing/recommend-products";
+import { emailBenefits, emailButton, emailHelpCard, emailProductGrid, renderEmailLayout } from "./layout";
 import { getMailContext, type MailLocale } from "./locale";
 import { EMAIL_FROM, getResendClient, isEmailConfigured } from "./resend";
 
@@ -27,6 +28,8 @@ export async function renderReviewRequestEmailHtml(params: {
   email: string;
   firstName: string;
   locale?: MailLocale;
+  /** Goods from the category the buyer bought from (see recommendProductsForBuyer) — a reminder of what else they can order. */
+  products?: RecommendedProduct[];
 }): Promise<string> {
   const ctx = await getMailContext(params.locale ?? "cs");
   const { tr } = ctx;
@@ -68,6 +71,7 @@ export async function renderReviewRequestEmailHtml(params: {
       objednávky přišla pozvánka od Heureky, budeme rádi i za hodnocení
       <a href="${HEUREKA_REVIEW_URL}" style="color:#131110">tam</a>.</p>`
       }
+      ${emailProductGrid(tr("Vyberte si z nabídky"), params.products ?? [], ctx, settings.czkToEurRate)}
       ${benefits}
       ${emailHelpCard(ctx)}
     `;
@@ -82,6 +86,7 @@ export async function sendReviewRequestEmail(params: {
   email: string;
   firstName: string;
   locale?: MailLocale;
+  products?: RecommendedProduct[];
 }): Promise<void> {
   if (!isEmailConfigured()) {
     console.warn(`[email] Resend not configured — skipping review-request email for ${params.email}`);

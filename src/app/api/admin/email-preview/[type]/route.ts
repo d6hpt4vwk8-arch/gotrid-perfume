@@ -9,6 +9,7 @@ import { renderSecondOrderEmailHtml } from "@/lib/email/send-second-order-email"
 import { renderPasswordResetEmailHtml } from "@/lib/email/send-password-reset-email";
 import { renderStockAlertEmailHtml } from "@/lib/email/send-stock-alert-email";
 import { renderReviewRequestEmailHtml } from "@/lib/email/send-review-request-email";
+import { recommendProductsForBuyer } from "@/lib/marketing/recommend-products";
 import { renderShippedEmailHtml } from "@/lib/email/send-shipped-email";
 import { isConditionFlagged } from "@/lib/feeds/condition-flagged";
 import type { CartItem } from "@/lib/cart-context";
@@ -150,10 +151,15 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ type
       where: { status: "DELIVERED" },
       orderBy: { createdAt: "desc" },
     });
+    const locale = req.nextUrl.searchParams.get("country") === "sk" ? "sk" : "cs";
+    const { products } = order
+      ? await recommendProductsForBuyer(order.email, locale === "sk")
+      : { products: [] };
     const html = await renderReviewRequestEmailHtml({
-      locale: req.nextUrl.searchParams.get("country") === "sk" ? "sk" : "cs",
+      locale,
       email: "nahled@example.com",
       firstName: order?.firstName ?? "Zákazníku",
+      products,
     });
     return new NextResponse(html, { headers: { "Content-Type": "text/html; charset=utf-8" } });
   }

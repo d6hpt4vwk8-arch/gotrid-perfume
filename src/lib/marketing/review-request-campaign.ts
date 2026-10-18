@@ -2,6 +2,7 @@ import { prisma } from "@/lib/prisma";
 import { logAdminActivity } from "@/lib/admin/activity-log";
 import { orderMailLocale } from "@/lib/email/locale";
 import { sendReviewRequestEmail, REVIEW_COUPON_CODE } from "@/lib/email/send-review-request-email";
+import { recommendProductsForBuyer } from "./recommend-products";
 
 // Owner's call (2026-09-21): long enough to have actually tried the
 // product, short enough that the order is still fresh in mind.
@@ -46,10 +47,16 @@ export async function runReviewRequestCampaign(): Promise<{ emailed: number }> {
   let emailed = 0;
 
   for (const candidate of candidates) {
+    const locale = orderMailLocale(candidate);
+    // The 5 % second-order mail (which listed goods) is switched off, so this
+    // mail now also reminds the buyer what else they can order — picked from
+    // the category they actually bought from.
+    const { products } = await recommendProductsForBuyer(candidate.email, locale === "sk");
     await sendReviewRequestEmail({
       email: candidate.email,
       firstName: candidate.firstName,
-      locale: orderMailLocale(candidate),
+      locale,
+      products,
     });
     await prisma.order.update({
       where: { id: candidate.id },
