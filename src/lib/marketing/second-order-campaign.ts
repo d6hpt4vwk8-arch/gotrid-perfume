@@ -140,7 +140,7 @@ export async function runSecondOrderCampaign(): Promise<{ emailed: number; skipp
     );
     const validUntil = new Date(Date.now() + settings.secondOrderValidDays * 24 * 60 * 60 * 1000);
     const locale = orderMailLocale(candidate);
-    const { theme, products } = await recommendProductsForBuyer(candidate.email, locale === "sk");
+    const { theme, products, ctaPath, categoryName } = await recommendProductsForBuyer(candidate.email, locale === "sk");
     await sendSecondOrderEmail({
       locale,
       email: candidate.email,
@@ -150,6 +150,7 @@ export async function runSecondOrderCampaign(): Promise<{ emailed: number; skipp
       validUntil,
       theme,
       products,
+      ctaPath,
     });
     await prisma.order.update({
       where: { id: candidate.id },
@@ -159,7 +160,7 @@ export async function runSecondOrderCampaign(): Promise<{ emailed: number; skipp
       action: "marketing.second_order_email",
       entityType: "Order",
       entityId: candidate.id,
-      detail: `${candidate.email}: odesláno s kódem ${couponCode} (${settings.secondOrderDiscountPercent} %, motiv: ${theme})`,
+      detail: `${candidate.email}: odesláno s kódem ${couponCode} (${settings.secondOrderDiscountPercent} %, motiv: ${theme}${categoryName ? `/${categoryName}` : ""})`,
     });
     emailed++;
   }

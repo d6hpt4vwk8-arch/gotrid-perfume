@@ -565,5 +565,7 @@
  "Číslo účtu": "Číslo účtu",
  "Řazení": "Radenie",
  "Ženšen": "Ženšen",
- "… a dalších {n} dárků k výběru v košíku": "… a ďalších {n} darčekov na výber v košíku"
+ "… a dalších {n} dárků k výběru v košíku": "… a ďalších {n} darčekov na výber v košíku",
+ "Doufáme, že jste s první objednávkou spokojeni. Jako poděkování máte slevu {percent} % na další nákup.": "Dúfame, že ste s prvou objednávkou spokojní. Ako poďakovanie máte zľavu {percent} % na ďalší nákup.",
+ "Pokračovat v nákupu": "Pokračovať v nákupe"
 }

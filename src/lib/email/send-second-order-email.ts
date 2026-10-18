@@ -15,6 +15,10 @@ const THEME_COPY: Record<RecommendationTheme, { heading: string; cta: string }> 
       "Doufáme, že vám vaše difuzér/svíčka od Gotrid Perfume voní. Jako poděkování máte slevu {percent} % na další kousek do interiéru nebo auta.",
     cta: "Prohlédnout vůně do interiéru a auta",
   },
+  category: {
+    heading: "Doufáme, že jste s první objednávkou spokojeni. Jako poděkování máte slevu {percent} % na další nákup.",
+    cta: "Pokračovat v nákupu",
+  },
 };
 
 export async function renderSecondOrderEmailHtml(params: {
@@ -25,6 +29,7 @@ export async function renderSecondOrderEmailHtml(params: {
   validUntil: Date;
   theme: RecommendationTheme;
   products: RecommendedProduct[];
+  ctaPath?: string;
   locale?: MailLocale;
 }): Promise<string> {
   const ctx = await getMailContext(params.locale ?? "cs");
@@ -49,7 +54,7 @@ export async function renderSecondOrderEmailHtml(params: {
       </table>
       <p style="font-size:13px;color:#8a857e;margin:-12px 0 24px;">${tr("Kód platí do {date}, jednou, při objednávce na tento e-mail ({email}). Pokud vám nefunguje, napište nám na info@gotridperfume.cz.", { date: params.validUntil.toLocaleDateString(ctx.locale === "sk" ? "sk-SK" : "cs-CZ"), email: params.email })}</p>
       ${emailProductGrid(tr("Vyberte si z nabídky"), params.products, ctx, settings.czkToEurRate)}
-      ${emailButton(ctx.url("/"), tr(copy.cta))}
+      ${emailButton(ctx.url(params.ctaPath ?? "/"), tr(copy.cta))}
       ${benefits}
       ${emailHelpCard(ctx)}
     `;
@@ -68,6 +73,7 @@ export async function sendSecondOrderEmail(params: {
   validUntil: Date;
   theme: RecommendationTheme;
   products: RecommendedProduct[];
+  ctaPath?: string;
   locale?: MailLocale;
 }): Promise<void> {
   if (!isEmailConfigured()) {
