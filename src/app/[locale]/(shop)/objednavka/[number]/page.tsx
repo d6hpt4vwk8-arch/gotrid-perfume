@@ -78,6 +78,7 @@ export default async function OrderConfirmationPage({
         orderId={order.number}
         itemIds={order.items.map((item) => item.product?.code ?? item.ean ?? item.name)}
         value={Number(order.total)}
+        createdAt={order.createdAt.toISOString()}
       />
       <h1 className="text-2xl font-bold text-ink">{tr("Děkujeme za objednávku!")}</h1>
       <p className="text-ink/70">
