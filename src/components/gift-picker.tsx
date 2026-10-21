@@ -12,6 +12,8 @@ interface GiftOption {
   nameSk?: string | null;
   image: string | null;
   value: number;
+  blurb?: string | null;
+  blurbSk?: string | null;
 }
 
 /**
@@ -100,7 +102,12 @@ export function GiftPicker({ unlocked }: { unlocked: boolean }) {
                 <Image src={gift.image} alt="" fill sizes="40px" className="object-cover" />
               </span>
             )}
-            <span className="flex-1 text-sm text-ink">{isSk && gift.nameSk ? gift.nameSk : gift.name}</span>
+            <span className="flex flex-1 flex-col gap-0.5">
+              <span className="text-sm text-ink">{isSk && gift.nameSk ? gift.nameSk : gift.name}</span>
+              {(isSk ? gift.blurbSk ?? gift.blurb : gift.blurb) && (
+                <span className="text-xs leading-snug text-accent-2">{isSk ? gift.blurbSk ?? gift.blurb : gift.blurb}</span>
+              )}
+            </span>
             {gift.value > 0 && (
               <span className="text-xs text-accent-2">{tr("v hodnotě")} {price(gift.value)}</span>
             )}

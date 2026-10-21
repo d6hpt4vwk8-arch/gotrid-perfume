@@ -1,6 +1,6 @@
 import type { Coupon } from "@prisma/client";
 import { prisma } from "@/lib/prisma";
-import { isSampleGiftCode, sampleGiftTriggers, SAMPLE_GIFT_PREFIX, triggersFromFullSlugs, type GiftTrigger } from "@/lib/sample-gifts";
+import { isSampleGiftCode, sampleGiftBlurb, sampleGiftTriggers, SAMPLE_GIFT_PREFIX, triggersFromFullSlugs, type GiftTrigger } from "@/lib/sample-gifts";
 
 /**
  * The GIFT-type coupon currently worth announcing (benefits bar, homepage
@@ -29,6 +29,9 @@ export interface GiftOption {
   image: string | null;
   /** Normal selling price — shown as "hodnota X" so the gift reads as worth something. */
   value: number;
+  /** One-line description shown next to a sample gift (sample-gifts.ts). */
+  blurb?: string | null;
+  blurbSk?: string | null;
 }
 
 /**
@@ -94,6 +97,8 @@ export async function getSampleGiftOptions(triggers: GiftTrigger[]): Promise<Gif
       nameSk: p.nameSk,
       image: p.images[0]?.url ?? null,
       value: 0, // samples carry no stated value — the picker hides "v hodnotě" at 0
+      blurb: sampleGiftBlurb(p.code)?.cs ?? null,
+      blurbSk: sampleGiftBlurb(p.code)?.sk ?? null,
     }));
 }
 

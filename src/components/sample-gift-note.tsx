@@ -1,35 +1,59 @@
 import Image from "next/image";
-import { getTr } from "@/i18n/tr.server";
+import { getCurrentLocale, getTr } from "@/i18n/tr.server";
 import { getGiftTriggersForProducts, getSampleGiftOptions } from "@/lib/gifts.server";
 
 /**
- * "Dárek k nákupu" strip on a product page: shown for K-beauty and Arabic perfume
- * products (the carts that unlock a free sample, see sample-gifts.ts). Lists the
- * samples currently on offer with photos but never how many are left (owner's call).
+ * "Dárek zdarma" strip on a product page: shown for K-beauty and Arabic perfume
+ * products (the carts that unlock a free sample, see sample-gifts.ts). A compact
+ * row of overlapping sample photos; tapping it unfolds what each sample is.
+ * Never shows how many are left (owner's call).
  */
 export async function SampleGiftNote({ productId }: { productId: string }) {
   const gifts = await getSampleGiftOptions(await getGiftTriggersForProducts([productId]));
   if (gifts.length === 0) return null;
   const tr = await getTr();
+  const isSk = (await getCurrentLocale()) === "sk";
+  const withImage = gifts.filter((g) => g.image);
 
   return (
-    <div className="flex max-w-md flex-col gap-2 rounded-sm border border-ok/40 bg-ok/5 p-3">
-      <p className="text-sm font-semibold text-ink">🎁 {tr("K nákupu dárek zdarma")}</p>
-      <p className="text-sm text-accent-2">
-        {tr("Přidejte produkt do košíku a vyberte si jeden vzorek zdarma — bez minimální hodnoty objednávky.")}
-      </p>
-      <ul className="flex flex-wrap gap-3">
+    <details className="group max-w-md rounded-sm border border-ok/40 bg-gradient-to-br from-ok/10 to-ok/[0.03]">
+      <summary className="flex cursor-pointer list-none items-center gap-3 p-3 [&::-webkit-details-marker]:hidden">
+        <span className="flex shrink-0 -space-x-3">
+          {withImage.slice(0, 4).map((gift) => (
+            <span
+              key={gift.productId}
+              className="relative h-11 w-11 overflow-hidden rounded-full border-2 border-white bg-line/60 shadow-sm"
+            >
+              <Image src={gift.image!} alt="" fill sizes="44px" className="object-cover" />
+            </span>
+          ))}
+        </span>
+        <span className="flex min-w-0 flex-1 flex-col">
+          <span className="text-sm font-semibold text-ink">🎁 {tr("Dárek zdarma k nákupu")}</span>
+          <span className="text-xs text-accent-2">
+            {tr("Vyberte si 1 z {n} vzorků v košíku", { n: String(gifts.length) })}
+          </span>
+        </span>
+        <span aria-hidden className="text-accent-2 transition-transform group-open:rotate-180">▾</span>
+      </summary>
+      <ul className="flex flex-col gap-2 border-t border-ok/30 p-3">
         {gifts.map((gift) => (
-          <li key={gift.productId} className="flex w-20 flex-col items-center gap-1 text-center">
+          <li key={gift.productId} className="flex items-center gap-3">
             {gift.image && (
-              <span className="relative h-16 w-16 overflow-hidden rounded-sm bg-line/60">
-                <Image src={gift.image} alt={gift.name} fill sizes="64px" className="object-cover" />
+              <span className="relative h-12 w-12 shrink-0 overflow-hidden rounded-sm bg-line/60">
+                <Image src={gift.image} alt="" fill sizes="48px" className="object-cover" />
               </span>
             )}
-            <span className="text-[11px] leading-tight text-ink">{gift.name}</span>
+            <span className="flex flex-col">
+              <span className="text-sm text-ink">{isSk && gift.nameSk ? gift.nameSk : gift.name}</span>
+              {(isSk ? gift.blurbSk ?? gift.blurb : gift.blurb) && (
+                <span className="text-xs leading-snug text-accent-2">{isSk ? gift.blurbSk ?? gift.blurb : gift.blurb}</span>
+              )}
+            </span>
           </li>
         ))}
+        <li className="text-xs text-accent-2">{tr("Bez minimální hodnoty objednávky.")}</li>
       </ul>
-    </div>
+    </details>
   );
 }

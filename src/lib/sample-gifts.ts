@@ -31,3 +31,31 @@ export function triggersFromFullSlugs(fullSlugs: string[]): GiftTrigger[] {
     fullSlugs.some((s) => s === TRIGGER_FULL_SLUGS[t] || s.startsWith(`${TRIGGER_FULL_SLUGS[t]}/`)),
   );
 }
+
+// One-line "what is it" for the gift list, so the customer can tell the samples apart.
+const BLURBS: Record<string, { cs: string; sk: string }> = {
+  "GIFT-NAMA-FIJI": {
+    cs: "6 sáčků: peeling, čisticí mléko, čisticí gel, maska, sérum a krém — celý mini rituál péče o pleť",
+    sk: "6 vreciek: peeling, čistiace mlieko, čistiaci gél, maska, sérum a krém — celý mini rituál starostlivosti o pleť",
+  },
+  "GIFT-SKIN1004-CENTELLA-AMPOULE": {
+    cs: "Hydratační sérum pro zklidnění a posílení citlivé pleti",
+    sk: "Hydratačné sérum na zklidnenie a posilnenie citlivej pleti",
+  },
+  "GIFT-SKIN1004-PROBIO-AMPOULE": {
+    cs: "Zklidňující sérum pro obnovu kožní bariéry",
+    sk: "Zklidňujúce sérum na obnovu kožnej bariéry",
+  },
+  "GIFT-SKIN1004-PROBIO-CREAM": {
+    cs: "Intenzivně hydratační krém pro zklidnění pleti",
+    sk: "Intenzívne hydratačný krém na zklidnenie pleti",
+  },
+  "GIFT-SKIN1004-SUN-SERUM": {
+    cs: "Ochranné sérum SPF50+ s hydratačním účinkem",
+    sk: "Ochranné sérum SPF50+ s hydratačným účinkom",
+  },
+};
+
+export function sampleGiftBlurb(code: string): { cs: string; sk: string } | null {
+  return BLURBS[code] ?? null;
+}
