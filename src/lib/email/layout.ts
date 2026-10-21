@@ -114,20 +114,33 @@ export function emailSocialCard(ctx: MailContext = CS_MAIL): string {
     </table>`;
 }
 
+// The <style> block below is dropped by some mail apps (Gmail on iOS with a non-Google
+// account, seen 2026-10-21): paragraphs then lose line-height and iOS inflates their font,
+// so lines overlap. Mirror the block's essentials as inline styles on every p / h1.
+function inlineProseStyles(html: string): string {
+  const base = `font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;`;
+  return html
+    .replace(/<p>/g, `<p style="${base}font-size:15px;line-height:1.6;margin:0 0 16px;color:${INK};">`)
+    .replace(/<h1>/g, `<h1 style="${base}font-size:20px;line-height:1.3;margin:0 0 16px;font-weight:600;color:${INK};">`)
+    .replace(/<p style="([^"]*)"/g, (m, st: string) =>
+      /line-height/.test(st) ? m : `<p style="${base}line-height:1.5;${st}"`,
+    );
+}
+
 export function renderEmailLayout(
   innerHtml: string,
   opts?: { preheader?: string; footerNote?: string; ctx?: MailContext },
 ): string {
   const seller = currentSeller();
   const ctx = opts?.ctx ?? CS_MAIL;
-  return `<!DOCTYPE html>
+  return inlineProseStyles(`<!DOCTYPE html>
 <html lang="${ctx.locale}">
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <title></title>
 <style>
-  body { margin:0; padding:0; background:${PAGE_BG}; }
+  body { margin:0; padding:0; background:${PAGE_BG}; -webkit-text-size-adjust:100%; text-size-adjust:100%; }
   body, td, a, p, h1 { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; }
   h1 { font-size:20px; line-height:1.3; margin:0 0 16px; font-weight:600; color:${INK}; }
   p { font-size:15px; line-height:1.6; margin:0 0 16px; color:${INK}; }
@@ -135,7 +148,7 @@ export function renderEmailLayout(
   table { border-collapse:collapse; }
 </style>
 </head>
-<body>
+<body style="margin:0;padding:0;-webkit-text-size-adjust:100%;text-size-adjust:100%;">
 ${opts?.preheader ? `<div style="display:none;max-height:0;overflow:hidden;opacity:0;">${opts.preheader}</div>` : ""}
 <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="background:${PAGE_BG};padding:32px 0;">
   <tr>
@@ -165,5 +178,5 @@ ${opts?.preheader ? `<div style="display:none;max-height:0;overflow:hidden;opaci
   </tr>
 </table>
 </body>
-</html>`;
+</html>`);
 }
