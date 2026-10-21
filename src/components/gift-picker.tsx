@@ -15,45 +15,65 @@ interface GiftOption {
 }
 
 /**
- * "Pick a free gift" list, shown once a GIFT-type coupon is applied (see
- * CouponField) — in the cart and again at checkout. The choice lives in the
+ * "Pick a free gift" list: coupon gifts once a GIFT-type coupon is applied (see
+ * CouponField), plus free sample gifts for carts holding K-beauty / Arabic perfume
+ * (sample-gifts.ts) — in the cart and again at checkout. The choice lives in the
  * cart context so it survives the move between the two; coupon validity and
  * gift eligibility/stock are always re-checked server-side in createOrder(),
  * this is only the shop window.
  */
 export function GiftPicker({ unlocked }: { unlocked: boolean }) {
-  const { giftProductId, setGiftProductId } = useCart();
+  const { giftProductId, setGiftProductId, items } = useCart();
   const { price } = useCurrency();
   const tr = useTr();
   const isSk = useIsSk();
   const [gifts, setGifts] = useState<GiftOption[]>([]);
   const [loaded, setLoaded] = useState(false);
+  // Sample gifts depend on what is in the cart, so refetch when the set of products changes.
+  const cartKey = items
+    .map((i) => i.productId)
+    .sort()
+    .join(",");
 
   useEffect(() => {
-    if (!unlocked) return;
     let cancelled = false;
-    fetch("/api/gifts")
-      .then((res) => res.json())
-      .then((data: { gifts: GiftOption[] }) => {
-        if (cancelled) return;
-        setGifts(data.gifts);
-        setLoaded(true);
-      })
-      .catch(() => {
-        if (!cancelled) setLoaded(true);
-      });
+    const productIds = cartKey ? cartKey.split(",") : [];
+    Promise.all([
+      unlocked
+        ? fetch("/api/gifts")
+            .then((res) => res.json())
+            .then((d: { gifts: GiftOption[] }) => d.gifts)
+            .catch(() => [] as GiftOption[])
+        : Promise.resolve([] as GiftOption[]),
+      productIds.length > 0
+        ? fetch("/api/gifts/samples", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ productIds }),
+          })
+            .then((res) => res.json())
+            .then((d: { gifts: GiftOption[] }) => d.gifts)
+            .catch(() => [] as GiftOption[])
+        : Promise.resolve([] as GiftOption[]),
+    ]).then(([couponGifts, sampleGifts]) => {
+      if (cancelled) return;
+      // One gift per order: coupon gifts and free samples share a single choice.
+      setGifts([...sampleGifts, ...couponGifts]);
+      setLoaded(true);
+    });
     return () => {
       cancelled = true;
     };
-  }, [unlocked]);
+  }, [unlocked, cartKey]);
 
-  // Drop a gift that's no longer earned (coupon removed or expired) —
+  // Drop a chosen gift that's no longer on offer (coupon removed, sample sold out, cart changed) —
   // otherwise checkout would submit a gift the server then rejects.
   useEffect(() => {
-    if (giftProductId && !unlocked) setGiftProductId(null);
-  }, [giftProductId, unlocked, setGiftProductId]);
+    if (!loaded || !giftProductId) return;
+    if (!gifts.some((g) => g.productId === giftProductId)) setGiftProductId(null);
+  }, [loaded, gifts, giftProductId, setGiftProductId]);
 
-  if (!unlocked || !loaded || gifts.length === 0) return null;
+  if (!loaded || gifts.length === 0) return null;
 
   return (
     <div className="flex flex-col gap-2 rounded-sm border border-ok/40 bg-ok/5 p-3">
@@ -81,7 +101,9 @@ export function GiftPicker({ unlocked }: { unlocked: boolean }) {
               </span>
             )}
             <span className="flex-1 text-sm text-ink">{isSk && gift.nameSk ? gift.nameSk : gift.name}</span>
-            <span className="text-xs text-accent-2">{tr("v hodnotě")} {price(gift.value)}</span>
+            {gift.value > 0 && (
+              <span className="text-xs text-accent-2">{tr("v hodnotě")} {price(gift.value)}</span>
+            )}
           </label>
         ))}
       </div>

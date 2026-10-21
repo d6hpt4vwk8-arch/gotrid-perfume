@@ -707,12 +707,7 @@ export function CheckoutForm({
           </fieldset>
         )}
 
-        {coupon?.grantsGift && (
-          <fieldset className="flex flex-col gap-2">
-            <legend className="mb-1 text-sm font-semibold text-ink">{tr("Dárek k objednávce")}</legend>
-            <GiftPicker unlocked />
-          </fieldset>
-        )}
+        <GiftPicker unlocked={coupon?.grantsGift ?? false} />
 
         {giftEligible && (
           <label className="flex items-start gap-2 rounded-sm border border-line bg-line/20 px-3 py-3 text-sm text-ink">

@@ -7,6 +7,8 @@ import { previewCoupon, validateCoupon } from "@/lib/coupons";
 import { redeemPoints } from "@/lib/loyalty";
 import { hasTooManyCancelledOrders } from "@/lib/customer-reputation";
 import { cartHasPerfume } from "@/lib/gift-sticker";
+import { isSampleGiftAllowedForCart } from "@/lib/gifts.server";
+import { isSampleGiftCode } from "@/lib/sample-gifts";
 import { CheckoutError } from "./checkout-error";
 import type { CheckoutInput } from "./checkout-schema";
 
@@ -71,18 +73,28 @@ export async function createOrder(
   // one up means the customer actually saw and typed the promo code.
   let giftProduct: (typeof products)[number] | null = null;
   if (input.giftProductId) {
-    if (!input.couponCode) {
-      throw new CheckoutError("Dárek zdarma je podmíněný platným slevovým kódem.");
-    }
-    const couponPreview = await previewCoupon(input.couponCode, itemsTotal).catch(() => null);
-    if (!couponPreview?.grantsGift) {
-      throw new CheckoutError("Zadaný slevový kód neopravňuje k výběru dárku zdarma.");
-    }
-    giftProduct = await prisma.product.findFirst({
-      where: { id: input.giftProductId, giftEligible: true, visible: true, stock: { gt: 0 } },
+    const requested = await prisma.product.findFirst({
+      where: { id: input.giftProductId, giftEligible: true, stock: { gt: 0 } },
     });
-    if (!giftProduct) {
-      throw new CheckoutError("Vybraný dárek už bohužel není dostupný, zvolte prosím jiný.");
+    if (requested && isSampleGiftCode(requested.code)) {
+      // Free sample gifts (sample-gifts.ts) need no coupon, only a qualifying cart —
+      // K-beauty or Arabic perfume among the items — re-checked here, not trusted from the form.
+      if (!(await isSampleGiftAllowedForCart(requested.code, productIds))) {
+        throw new CheckoutError("Tento dárek k vašemu nákupu bohužel nelze přidat, zvolte prosím jiný.");
+      }
+      giftProduct = requested;
+    } else {
+      if (!input.couponCode) {
+        throw new CheckoutError("Dárek zdarma je podmíněný platným slevovým kódem.");
+      }
+      const couponPreview = await previewCoupon(input.couponCode, itemsTotal).catch(() => null);
+      if (!couponPreview?.grantsGift) {
+        throw new CheckoutError("Zadaný slevový kód neopravňuje k výběru dárku zdarma.");
+      }
+      giftProduct = requested && requested.visible ? requested : null;
+      if (!giftProduct) {
+        throw new CheckoutError("Vybraný dárek už bohužel není dostupný, zvolte prosím jiný.");
+      }
     }
   }
 

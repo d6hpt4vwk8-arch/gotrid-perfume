@@ -9,6 +9,7 @@ import { getCurrentLocale, getTr } from "@/i18n/tr.server";
 import { categoryNameSk } from "@/lib/sk-terms";
 import { skScope } from "@/lib/sk-visibility";
 import { AddToCartButton } from "@/components/add-to-cart-button";
+import { SampleGiftNote } from "@/components/sample-gift-note";
 import { ProductViewTracker } from "@/components/product-view-tracker";
 import { HeurekaProductView } from "@/components/heureka-product-view";
 import { sanitizeDescription } from "@/lib/sanitize-description";
@@ -463,6 +464,8 @@ export default async function ProductPage({
               }}
             />
           </div>
+
+          {product.stock > 0 && <SampleGiftNote productId={product.id} />}
 
           {product.stock <= 0 && (
             <div className="max-w-xs">
