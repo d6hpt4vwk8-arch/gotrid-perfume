@@ -12,6 +12,43 @@ const REVENUE_STATUSES = ["PAID", "PROCESSING", "SHIPPED", "DELIVERED"] as const
 
 const LOW_STOCK_THRESHOLD = 5;
 
+// "Today" for the shop owner means the Prague calendar day, not UTC — a UTC
+// midnight cut would split the evening's orders onto the wrong day.
+function startOfPragueDay(daysAgo = 0): Date {
+  const tz = "Europe/Prague";
+  const ymd = new Intl.DateTimeFormat("en-CA", { timeZone: tz }).format(new Date()); // YYYY-MM-DD
+  const [y, m, d] = ymd.split("-").map(Number);
+  const utcGuess = Date.UTC(y, m - 1, d - daysAgo);
+  // Offset of Prague at that instant (CET/CEST): read the guess back as Prague wall-clock
+  // parts and compare in UTC, so the result doesn't depend on the host's own timezone.
+  const parts = Object.fromEntries(
+    new Intl.DateTimeFormat("en-US", {
+      timeZone: tz,
+      hourCycle: "h23",
+      year: "numeric",
+      month: "numeric",
+      day: "numeric",
+      hour: "numeric",
+      minute: "numeric",
+      second: "numeric",
+    })
+      .formatToParts(new Date(utcGuess))
+      .map((x) => [x.type, Number(x.value)]),
+  ) as Record<string, number>;
+  const offsetMs = Date.UTC(parts.year, parts.month - 1, parts.day, parts.hour, parts.minute, parts.second) - utcGuess;
+  return new Date(utcGuess - offsetMs);
+}
+
+// For the daily figures, COD and bank-transfer orders count from the moment they
+// are placed (they sit in NEW until shipped/paid, so REVENUE_STATUSES alone would
+// hide most of a busy day). Only unconfirmed card orders stay out (they may be abandoned).
+const DAY_ORDER_FILTER = {
+  OR: [
+    { status: { in: [...REVENUE_STATUSES] } },
+    { status: "NEW" as const, paymentMethod: { not: "CARD" as const } },
+  ],
+};
+
 export default async function AdminDashboardPage() {
   const thirtyDaysAgo = new Date(Date.now() - 30 * 24 * 60 * 60 * 1000);
 
@@ -27,6 +64,9 @@ export default async function AdminDashboardPage() {
     topSellers,
     lowStock,
     pendingReviews,
+    todayOrders,
+    yesterdayOrders,
+    todayUnconfirmed,
   ] = await Promise.all([
     prisma.product.count(),
     prisma.order.count(),
@@ -66,18 +106,56 @@ export default async function AdminDashboardPage() {
       select: { id: true, name: true, stock: true },
     }),
     prisma.review.count({ where: { published: false } }),
+    prisma.order.findMany({
+      where: { ...DAY_ORDER_FILTER, createdAt: { gte: startOfPragueDay(0) } },
+      select: {
+        total: true,
+        shippingMethod: true,
+        shippingCountry: true,
+        paymentMethod: true,
+        items: { select: { qty: true, isGift: true, product: { select: { purchasePrice: true, vatRate: true } } } },
+      },
+    }),
+    prisma.order.findMany({
+      where: {
+        ...DAY_ORDER_FILTER,
+        createdAt: { gte: startOfPragueDay(1), lt: startOfPragueDay(0) },
+      },
+      select: {
+        total: true,
+        shippingMethod: true,
+        shippingCountry: true,
+        paymentMethod: true,
+        items: { select: { qty: true, isGift: true, product: { select: { purchasePrice: true, vatRate: true } } } },
+      },
+    }),
+    prisma.order.aggregate({
+      where: { status: "NEW", paymentMethod: "CARD", createdAt: { gte: startOfPragueDay(0) } },
+      _sum: { total: true },
+      _count: true,
+    }),
   ]);
 
-  const netProfit30d = ordersForProfit.reduce((sum, order) => {
-    const costOfGoods = order.items.reduce(
-      (itemSum, item) =>
-        itemSum +
-        (item.isGift || !item.product ? 0 : purchaseCost(item.product.purchasePrice, item.product.vatRate) * item.qty),
-      0,
-    );
-    const shippingCost = getShippingCost(order.shippingMethod, settings, order.shippingCountry, order.paymentMethod);
-    return sum + Number(order.total) - costOfGoods - shippingCost;
-  }, 0);
+  type ProfitOrder = (typeof ordersForProfit)[number];
+  const profitOf = (list: ProfitOrder[]) =>
+    list.reduce((sum, order) => {
+      const costOfGoods = order.items.reduce(
+        (itemSum, item) =>
+          itemSum +
+          (item.isGift || !item.product ? 0 : purchaseCost(item.product.purchasePrice, item.product.vatRate) * item.qty),
+        0,
+      );
+      const shippingCost = getShippingCost(order.shippingMethod, settings, order.shippingCountry, order.paymentMethod);
+      return sum + Number(order.total) - costOfGoods - shippingCost;
+    }, 0);
+  const revenueOf = (list: { total: unknown }[]) => list.reduce((sum, o) => sum + Number(o.total), 0);
+
+  const netProfit30d = profitOf(ordersForProfit);
+  const todayRevenue = revenueOf(todayOrders);
+  const todayProfit = profitOf(todayOrders as ProfitOrder[]);
+  const yesterdayRevenue = revenueOf(yesterdayOrders);
+  const yesterdayProfit = profitOf(yesterdayOrders as ProfitOrder[]);
+
   const avgOrderValue30d = revenue._count > 0 ? Number(revenue._sum.total ?? 0) / revenue._count : 0;
   const avgMargin30d = revenue._count > 0 ? netProfit30d / revenue._count : 0;
 
@@ -104,6 +182,32 @@ export default async function AdminDashboardPage() {
             <div className="text-sm text-accent-2">{s.label}</div>
           </Link>
         ))}
+      </div>
+
+      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+        <div className="rounded-sm border border-line bg-white p-4">
+          <div className="text-sm text-accent-2">Dnešní obrat</div>
+          <div className="text-2xl font-bold text-ink">{formatPrice(todayRevenue)}</div>
+          <div className="text-xs text-accent-2">
+            {todayOrders.length} objednávek (bez zrušených) · včera {formatPrice(yesterdayRevenue)} ({yesterdayOrders.length})
+          </div>
+          {todayUnconfirmed._count > 0 && (
+            <div className="mt-1 text-xs text-accent-2">
+              + {todayUnconfirmed._count} nepotvrzených platba kartou ({formatPrice(todayUnconfirmed._sum.total ?? 0)})
+            </div>
+          )}
+        </div>
+
+        <div className="rounded-sm border border-line bg-white p-4">
+          <div className="text-sm text-accent-2">Dnešní zisk</div>
+          <div className={`text-2xl font-bold ${todayProfit >= 0 ? "text-ink" : "text-red-600"}`}>
+            {formatPrice(todayProfit)}
+          </div>
+          <div className="text-xs text-accent-2">
+            Po odečtení zboží a dopravy · včera {formatPrice(yesterdayProfit)}
+          </div>
+        </div>
+
       </div>
 
       <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">

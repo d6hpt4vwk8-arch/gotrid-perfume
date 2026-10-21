@@ -265,6 +265,18 @@ interface GetParcelListStatusesResponse {
   ParcelList: ParcelStatuses[] | null;
 }
 
+/** Full tracking history (every status with its timestamp), oldest first — for audits like COD payout timing. */
+export async function getParcelHistory(parcelNumber: string): Promise<ParcelStatus[]> {
+  const response = await callApi<GetParcelListStatusesResponse>("GetParcelListStatuses", {
+    ...authBase(),
+    ParcelNumberList: [Number(parcelNumber)],
+    LanguageIsoCode: "CS",
+  });
+  throwIfErrors(response.GetParcelListStatusesErrors);
+  const statuses = response.ParcelList?.[0]?.ParcelStatusList ?? [];
+  return [...statuses].sort((a, b) => (a.StatusDate < b.StatusDate ? -1 : 1));
+}
+
 export async function getParcelStatuses(
   parcelNumbers: string[],
 ): Promise<Map<string, { statusCode: string; statusDescription: string }>> {

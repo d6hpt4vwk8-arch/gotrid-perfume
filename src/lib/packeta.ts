@@ -119,6 +119,64 @@ export async function createPacket(input: CreatePacketInput): Promise<string> {
   return String(result.id);
 }
 
+export type CreateAddressPacketInput = {
+  orderNumber: string;
+  firstName: string;
+  lastName: string;
+  email: string;
+  phone: string;
+  street: string;
+  city: string;
+  postalCode: string;
+  country: "CZ" | "SK";
+  weightKg: number;
+  /** Declared value and COD are in `currency` — Packeta requires EUR for Slovak parcels. */
+  currency: "CZK" | "EUR";
+  value: number;
+  codAmount: number | null;
+};
+
+// Packeta carrier ids for "home delivery" (addressId of an address packet).
+// 106 = Zásilkovna Česko — doručení na adresu, 131 = Zásilkovna Slovensko — doručení na adresu.
+const HOME_DELIVERY_CARRIER_ID: Record<"CZ" | "SK", number> = { CZ: 106, SK: 131 };
+
+/** "Fraňa Kráľa 276/30" → street + house number as Packeta wants them separately. */
+function splitStreet(full: string): { street: string; houseNumber: string } {
+  const m = full.trim().match(/^(.*?)[\s,]+(\d+[a-zA-Z]?(?:\/\d+[a-zA-Z]?)?)$/);
+  return m ? { street: m[1].trim(), houseNumber: m[2] } : { street: full.trim(), houseNumber: "" };
+}
+
+/** Creates a Zásilkovna packet for home (address) delivery and returns its packet ID. */
+export async function createAddressPacket(input: CreateAddressPacketInput): Promise<string> {
+  const eshop = requireEnv("PACKETA_ESHOP_ID");
+  const { street, houseNumber } = splitStreet(input.street);
+  const money = (n: number) => (input.currency === "CZK" ? String(Math.round(n)) : n.toFixed(2));
+
+  const packetAttributes: Record<string, unknown> = {
+    number: input.orderNumber,
+    name: input.firstName,
+    surname: input.lastName,
+    email: input.email,
+    phone: input.phone,
+    addressId: HOME_DELIVERY_CARRIER_ID[input.country],
+    street,
+    houseNumber,
+    city: input.city.trim(),
+    zip: input.postalCode.replace(/\s+/g, ""),
+    value: money(input.value),
+    currency: input.currency,
+    weight: input.weightKg,
+    eshop,
+  };
+  if (input.codAmount) packetAttributes.cod = money(input.codAmount);
+
+  const result = (await callPacketaApi("createPacket", { packetAttributes })) as { id?: string | number };
+  if (!result?.id) {
+    throw new PacketaError("Packeta API nevrátila ID vytvořené zásilky.");
+  }
+  return String(result.id);
+}
+
 export type LabelFormat = "A6 on A6" | "A7 on A7" | "A6 on A4" | "A7 on A4" | "105x35mm on A4" | "A8 on A8";
 
 /** Fetches the shipping label PDF for an already-created packet. */
@@ -140,6 +198,17 @@ export async function fetchLabelPdf(packetId: string, format: LabelFormat = "A6 
 // https://docs.packeta.com/docs/packet-tracking/status-codes
 export const PACKETA_DELIVERED_STATUS_CODE = "7";
 export const PACKETA_RETURNED_STATUS_CODE = "10";
+
+/** Full tracking history of a packet (every status with its timestamp), oldest first — for audits like COD payout timing. */
+export async function getPacketHistory(packetId: string): Promise<{ dateTime: string; statusCode: string; codeText: string }[]> {
+  const result = (await callPacketaApi("packetTracking", { packetId })) as {
+    record?: { dateTime?: string; statusCode?: string | number; codeText?: string } | { dateTime?: string; statusCode?: string | number; codeText?: string }[];
+  };
+  const records = Array.isArray(result.record) ? result.record : result.record ? [result.record] : [];
+  return records
+    .map((r) => ({ dateTime: r.dateTime ?? "", statusCode: String(r.statusCode ?? ""), codeText: r.codeText ?? "" }))
+    .sort((a, b) => (a.dateTime < b.dateTime ? -1 : 1));
+}
 
 /** Fetches the current Packeta status of a packet (statusCode 7 = delivered). */
 export async function getPacketStatus(packetId: string): Promise<{ statusCode: string; codeText: string }> {

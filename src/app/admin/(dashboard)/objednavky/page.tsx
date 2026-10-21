@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { Prisma } from "@prisma/client";
 import { prisma } from "@/lib/prisma";
+import { findOrderIdsBySearch } from "@/lib/orders/search.server";
 import { formatPrice, formatEurAmount } from "@/lib/format";
 import { ORDER_STATUS_LABELS } from "@/lib/orders/status-labels";
 import { getCustomerReputationMap } from "@/lib/customer-reputation";
@@ -22,20 +23,11 @@ export default async function AdminOrdersPage({
 
   const statusFilter: Prisma.OrderWhereInput =
     status && status in ORDER_STATUS_LABELS ? { status: status as OrderStatus } : {};
-  // Číslo/jméno/telefon/e-mail live directly on Order; a product name needs
-  // reaching through items — "some" so any one matching line item counts,
-  // not every item in a multi-item order.
+  // Word-by-word, accent-insensitive search over order number, name (first +
+  // last typed together works), company, phone, e-mail and line items
+  // (name / EAN / product code) — see findOrderIdsBySearch.
   const searchFilter: Prisma.OrderWhereInput = query
-    ? {
-        OR: [
-          { number: { contains: query, mode: "insensitive" } },
-          { firstName: { contains: query, mode: "insensitive" } },
-          { lastName: { contains: query, mode: "insensitive" } },
-          { phone: { contains: query, mode: "insensitive" } },
-          { email: { contains: query, mode: "insensitive" } },
-          { items: { some: { name: { contains: query, mode: "insensitive" } } } },
-        ],
-      }
+    ? { id: { in: await findOrderIdsBySearch(query) } }
     : {};
   const where: Prisma.OrderWhereInput = { AND: [statusFilter, searchFilter] };
 
@@ -78,7 +70,7 @@ export default async function AdminOrdersPage({
           type="search"
           name="q"
           defaultValue={query}
-          placeholder="Číslo objednávky, jméno, telefon, e-mail nebo název produktu…"
+          placeholder="Číslo objednávky, jméno a příjmení, telefon, e-mail, EAN nebo název produktu…"
           className="w-full max-w-md rounded-sm border border-line px-3 py-2 text-sm"
         />
         <button
