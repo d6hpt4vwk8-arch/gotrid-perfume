@@ -32,6 +32,8 @@ import { ProductGallery } from "@/components/product-gallery";
 import { primaryVariantWhere } from "@/lib/product-filters";
 import { ScentNotesPyramid } from "@/components/scent-notes-pyramid";
 import { ProductTrustStrip } from "@/components/product-trust-strip";
+import { ProductDetailsBlocks } from "@/components/product-details-blocks";
+import { pickProductDetails } from "@/lib/product-details";
 import { BestsellerPill, EthicsPills, isBestseller } from "@/components/product-badges";
 
 async function getProduct(slug: string) {
@@ -137,6 +139,7 @@ export default async function ProductPage({
   // products not translated yet fall back to their Czech text.
   const displayName = isSk && product.nameSk ? product.nameSk : product.name;
   const displayDescription = isSk && product.descriptionSk ? product.descriptionSk : product.description;
+  const structuredDetails = pickProductDetails(product.details, isSk ? "sk" : "cs");
   const catName = (name: string) => (isSk ? categoryNameSk(name) : name);
 
   const primaryCategory = product.categories[0]?.category;
@@ -508,6 +511,8 @@ export default async function ProductPage({
           )}
         </div>
       </div>
+
+      {structuredDetails && <ProductDetailsBlocks details={structuredDetails} />}
 
       {frequentlyBoughtTogether.length > 0 && (
         <section className="border-t border-line pt-6">

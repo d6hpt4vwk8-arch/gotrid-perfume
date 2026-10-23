@@ -27,6 +27,8 @@ import { CategoryBanner } from "@/components/category-banner";
 import { WhatsappAdviceButton } from "@/components/whatsapp-advice-button";
 import { CATEGORY_CONTENT } from "@/lib/category-content";
 import { CategoryHero } from "@/components/category-hero";
+import { KbeautyAdvisor } from "@/components/kbeauty-advisor";
+import { KBEAUTY_FULL_SLUG, getKbeautyAdvisorConcerns } from "@/lib/kbeauty-advisor.server";
 import { getCategoryBannerTiles } from "@/lib/category-banner.server";
 import { Pagination } from "@/components/pagination";
 import { getSettings } from "@/lib/settings.server";
@@ -191,6 +193,9 @@ export default async function CategoryPage({
   if (filters.saleOnly) paginationQuery.set("sale", "1");
   if (filters.sort !== "newest") paginationQuery.set("sort", filters.sort);
 
+  const showAdvisor = fullSlug === KBEAUTY_FULL_SLUG && filters.page === 1 && paginationQuery.toString() === "";
+  const advisorConcerns = showAdvisor ? await getKbeautyAdvisorConcerns(categoryIds, isSk) : [];
+
   return (
     <main className="mx-auto flex max-w-6xl flex-1 flex-col gap-6 px-4 py-10">
       <script
@@ -267,6 +272,10 @@ export default async function CategoryPage({
         >
           Nevíte, který parfém vybrat? Poradíme →
         </Link>
+      )}
+
+      {showAdvisor && advisorConcerns.length > 0 && (
+        <KbeautyAdvisor concerns={advisorConcerns} freeShippingThreshold={settings.freeShippingThreshold} />
       )}
 
       <div className="flex flex-col gap-6 sm:flex-row">

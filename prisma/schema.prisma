@@ -128,6 +128,10 @@ model Product {
   nameSk        String?
   descriptionSk String? @db.Text
 
+  // Structured product-page blocks (who it is for, key ingredients, how to use, what to expect, FAQ) —
+  // shape { cs: ProductDetails, sk?: ProductDetails }, see src/lib/product-details.ts. Null = no extra blocks.
+  details Json?
+
   visible Boolean @default(true)
 
   // Units physically held at our own location, separate from `stock` above
