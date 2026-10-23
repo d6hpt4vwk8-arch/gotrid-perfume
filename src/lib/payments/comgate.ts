@@ -15,6 +15,21 @@ export function isComgateTestMode(): boolean {
   return process.env.COMGATE_TEST === "true";
 }
 
+/**
+ * Which gateway a card order should use. While COMGATE_TEST=true the live shop must not send real customers to a
+ * test gateway (their orders would end up "paid" without any money), so only the e-mails listed in
+ * COMGATE_TEST_EMAILS (comma separated, the owner's) go through Comgate; everyone else keeps using Stripe.
+ */
+export function shouldUseComgate(customerEmail: string): boolean {
+  if (!isComgateConfigured()) return false;
+  if (!isComgateTestMode()) return true;
+  const allowed = (process.env.COMGATE_TEST_EMAILS ?? "")
+    .split(",")
+    .map((e) => e.trim().toLowerCase())
+    .filter(Boolean);
+  return allowed.includes(customerEmail.trim().toLowerCase());
+}
+
 function authHeader(): string {
   const merchant = process.env.COMGATE_MERCHANT;
   const secret = process.env.COMGATE_SECRET;

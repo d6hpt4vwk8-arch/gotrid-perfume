@@ -3,7 +3,7 @@ import { prisma } from "@/lib/prisma";
 import { checkoutSchema } from "@/lib/orders/checkout-schema";
 import { CheckoutError, createOrder } from "@/lib/orders/create-order";
 import { isStripeConfigured, createCheckoutSession } from "@/lib/payments/stripe";
-import { createComgatePayment, isComgateConfigured } from "@/lib/payments/comgate";
+import { createComgatePayment, isComgateConfigured, shouldUseComgate } from "@/lib/payments/comgate";
 import { cancelUnpaidOrder } from "@/lib/payments/order-payment-effects";
 import {
   sendCustomerOrderConfirmation,
@@ -116,7 +116,7 @@ export async function POST(req: NextRequest) {
     const amount = isSk ? czkToEur(order.total, settings.czkToEurRate) : Number(order.total);
     const currency = isSk ? "eur" : "czk";
 
-    if (isComgateConfigured()) {
+    if (shouldUseComgate(order.email)) {
       // Comgate is the card/online-bank gateway; Stripe below only serves until its keys are removed.
       let payment;
       try {
