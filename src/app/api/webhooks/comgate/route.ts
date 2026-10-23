@@ -12,9 +12,23 @@ const FAIL = (message: string, status = 400) =>
   new NextResponse(`code=1&message=${encodeURIComponent(message)}`, { status, headers: { "Content-Type": "application/x-www-form-urlencoded" } });
 
 export async function POST(req: NextRequest) {
-  const form = new URLSearchParams(await req.text());
+  const raw = await req.text();
+  // Documented as form-encoded, but accept JSON too so a format surprise can't silently drop a paid order.
+  let form: URLSearchParams;
+  try {
+    const json = raw.trim().startsWith("{") ? (JSON.parse(raw) as Record<string, unknown>) : null;
+    form = json ? new URLSearchParams(Object.entries(json).map(([k, v]) => [k, String(v)])) : new URLSearchParams(raw);
+  } catch {
+    form = new URLSearchParams(raw);
+  }
   const transId = form.get("transId");
-  if (!isValidComgateSecret(form.get("secret")) || form.get("merchant") !== process.env.COMGATE_MERCHANT || !transId) {
+  const secretOk = isValidComgateSecret(form.get("secret"));
+  const merchantOk = form.get("merchant") === process.env.COMGATE_MERCHANT;
+  if (!secretOk || !merchantOk || !transId) {
+    // Field names and which check failed only — never the secret itself.
+    console.error(
+      `[comgate webhook] rejected: secret ${secretOk ? "ok" : "bad"}, merchant ${merchantOk ? "ok" : `bad (${form.get("merchant")})`}, transId ${transId ? "present" : "missing"}, content-type ${req.headers.get("content-type")}, fields: ${[...form.keys()].join(",")}`,
+    );
     return FAIL("invalid request", 403);
   }
 
