@@ -8,6 +8,8 @@ import { getCurrentLocale, getTr } from "@/i18n/tr.server";
 import { DopravaPlatbaSk } from "@/content-sk/legal-sk";
 import { localeAlternates } from "@/lib/seo";
 import { PICKUP_ADDRESS } from "@/lib/shipping";
+import { ComgatePaymentInfo } from "@/components/comgate-payment-info";
+import { isComgateConfigured } from "@/lib/payments/comgate";
 
 export async function generateMetadata({ params }: { params: Promise<{ locale: string }> }): Promise<Metadata> {
   const { locale } = await params;
@@ -33,6 +35,7 @@ export default async function DopravaAPlatbaPage() {
           freeFrom={settings.freeShippingThreshold}
           codSurcharge={settings.codSurcharge}
           codLimit={settings.freeShippingThreshold}
+          paymentInfo={isComgateConfigured() ? <ComgatePaymentInfo lang="sk" /> : null}
           prices={{
             zasilkovna: settings.shippingPriceZasilkovnaSk ?? settings.shippingPrices.ZASILKOVNA,
             zasilkovnaHd: settings.shippingPrices.ZASILKOVNA_HD,
@@ -89,6 +92,7 @@ export default async function DopravaAPlatbaPage() {
           ).
         </li>
       </ul>
+      {isComgateConfigured() && <ComgatePaymentInfo lang="cs" />}
 
       <h2>4. Důležité informace</h2>
       <p>

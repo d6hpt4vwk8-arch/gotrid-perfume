@@ -1,6 +1,7 @@
 import { PaymentIcons } from "@/components/payment-icons";
 import { buildWhatsappHref } from "@/lib/whatsapp";
 import { getTr } from "@/i18n/tr.server";
+import { isComgateConfigured } from "@/lib/payments/comgate";
 
 export async function ProductTrustStrip({ productName }: { productName: string }) {
   const tr = await getTr();
@@ -15,7 +16,7 @@ export async function ProductTrustStrip({ productName }: { productName: string }
             <rect x="4" y="11" width="16" height="9" rx="2" stroke="currentColor" strokeWidth="2" />
             <path d="M8 11V7a4 4 0 0 1 8 0v4" stroke="currentColor" strokeWidth="2" />
           </svg>
-          {tr("Zabezpečená platba přes Stripe")}
+          {isComgateConfigured() ? tr("Zabezpečená platba přes Comgate") : tr("Zabezpečená platba přes Stripe")}
         </span>
       </div>
       <a

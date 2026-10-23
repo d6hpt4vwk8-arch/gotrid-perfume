@@ -3,6 +3,8 @@ import { prisma } from "@/lib/prisma";
 import { checkoutSchema } from "@/lib/orders/checkout-schema";
 import { CheckoutError, createOrder } from "@/lib/orders/create-order";
 import { isStripeConfigured, createCheckoutSession } from "@/lib/payments/stripe";
+import { createComgatePayment, isComgateConfigured } from "@/lib/payments/comgate";
+import { cancelUnpaidOrder } from "@/lib/payments/order-payment-effects";
 import {
   sendCustomerOrderConfirmation,
   sendOwnerNewOrderNotification,
@@ -47,7 +49,7 @@ export async function POST(req: NextRequest) {
     );
   }
 
-  if (parsed.data.paymentMethod === "CARD" && !isStripeConfigured()) {
+  if (parsed.data.paymentMethod === "CARD" && !isComgateConfigured() && !isStripeConfigured()) {
     return NextResponse.json(
       { error: "Platba kartou momentálně není dostupná, zvolte prosím jinou metodu platby." },
       { status: 400 },
@@ -113,6 +115,56 @@ export async function POST(req: NextRequest) {
     const isSk = order.shippingCountry === "SK";
     const amount = isSk ? czkToEur(order.total, settings.czkToEurRate) : Number(order.total);
     const currency = isSk ? "eur" : "czk";
+
+    if (isComgateConfigured()) {
+      // Comgate is the card/online-bank gateway; Stripe below only serves until its keys are removed.
+      let payment;
+      try {
+        payment = await createComgatePayment({
+          orderNumber: order.number,
+          amount,
+          currency: isSk ? "EUR" : "CZK",
+          email: order.email,
+          phone: order.phone,
+          fullName: `${order.firstName} ${order.lastName}`.trim(),
+          country: isSk ? "SK" : "CZ",
+          lang: isSk ? "sk" : "cs",
+          // Comgate fills ${id} / ${refId} itself; the return handler checks both against the order.
+          urlPaid: `${origin}/api/payments/comgate/return?id=\${id}&refId=\${refId}`,
+          urlPending: `${origin}/api/payments/comgate/return?id=\${id}&refId=\${refId}`,
+          urlCancelled: `${origin}${isSk ? "/sk" : ""}/kosik`,
+        });
+      } catch (err) {
+        console.error(`[comgate] could not create payment for ${order.number}`, err);
+        await logAdminActivity({
+          action: "order.payment_create_failed",
+          entityType: "Order",
+          entityId: order.id,
+          detail: `${order.number}: ${err instanceof Error ? err.message : String(err)}`,
+        });
+        // Nothing was charged — release the stock this unpaid order reserved.
+        await cancelUnpaidOrder(order.id);
+        return NextResponse.json(
+          { error: "Platební bránu se nepodařilo spustit. Zkuste to prosím znovu, nebo zvolte jinou metodu platby." },
+          { status: 502 },
+        );
+      }
+      await prisma.order.update({
+        where: { id: order.id },
+        data: {
+          comgateTransId: payment.transId,
+          // Snapshot what is actually charged (EUR for Slovak orders), see Order.chargedCurrency.
+          ...(isSk ? { chargedCurrency: "EUR", chargedAmount: amount } : {}),
+        },
+      });
+      // Purchase fires from the Comgate webhook once the payment is confirmed.
+      return NextResponse.json({
+        orderNumber: order.number,
+        accessToken: order.accessToken,
+        redirectUrl: payment.redirect,
+      });
+    }
+
     const session = await createCheckoutSession({
       orderNumber: order.number,
       orderId: order.id,

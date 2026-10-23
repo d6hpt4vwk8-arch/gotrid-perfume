@@ -738,6 +738,10 @@ model Order {
   chargedCurrency String?
   chargedAmount   Decimal? @db.Decimal(10, 2)
 
+  // Comgate transaction id (transId) of the card/online payment started for this order — the return and
+  // webhook handlers look the order up by it. Null for bank-transfer/COD and for older Stripe orders.
+  comgateTransId String? @unique
+
   // Loyalty points — see LoyaltyTransaction below for the actual ledger;
   // these are a denormalized snapshot on the order itself, same pattern as
   // couponCode/discountAmount, so the order detail page doesn't need a join

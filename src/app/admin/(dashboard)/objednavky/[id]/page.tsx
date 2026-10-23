@@ -237,7 +237,7 @@ export default async function AdminOrderDetailPage({
           </div>
           {order.chargedCurrency === "EUR" && order.chargedAmount && (
             <div className="flex justify-between text-accent-2">
-              <span>Klientovi naúčtováno (Stripe)</span>
+              <span>Klientovi naúčtováno (online platba)</span>
               <span>{formatEurAmount(order.chargedAmount)}</span>
             </div>
           )}

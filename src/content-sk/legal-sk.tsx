@@ -590,7 +590,9 @@ export function ZarukaOriginalitySk() {
   );
 }
 
-export function DopravaPlatbaSk({ price, freeFrom, codSurcharge, codLimit, prices }: {
+export function DopravaPlatbaSk({ price, freeFrom, codSurcharge, codLimit, prices, paymentInfo }: {
+  /** Gateway block (Comgate) shown right after the payment methods list. */
+  paymentInfo?: React.ReactNode;
   price: (czk: number) => string;
   freeFrom: number;
   codSurcharge: number;
@@ -642,6 +644,7 @@ export function DopravaPlatbaSk({ price, freeFrom, codSurcharge, codLimit, price
           Slovensko).
         </li>
       </ul>
+      {paymentInfo}
 
       <h2>4. Dôležité informácie</h2>
       <p>

@@ -4,6 +4,8 @@ import { InstagramFeed } from "@/components/instagram-feed";
 import { SocialLinks } from "@/components/social-links";
 import { ShippingIcon } from "@/components/shipping-icons";
 import { PaymentIcons } from "@/components/payment-icons";
+import { ComgateBadges } from "@/components/comgate-badges";
+import { isComgateConfigured } from "@/lib/payments/comgate";
 import { prisma } from "@/lib/prisma";
 import { currentSeller, sellerLine, CONTACT } from "@/lib/business-identity";
 import type { ShippingMethod } from "@prisma/client";
@@ -63,9 +65,7 @@ export async function SiteFooter() {
               </span>
             ))}
           </div>
-          <div className="mt-2">
-            <PaymentIcons />
-          </div>
+          <div className="mt-2">{isComgateConfigured() ? <ComgateBadges /> : <PaymentIcons />}</div>
         </div>
         <div>
           <h3 className="text-sm font-semibold text-white">{tr("Nákup s jistotou")}</h3>
