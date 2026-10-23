@@ -75,8 +75,10 @@ export async function createComgatePayment(input: CreateComgatePaymentInput): Pr
     // 1–16 characters, shown in the portal: our order number (GT261023-1234 = 13 chars).
     label: input.orderNumber.slice(0, 16),
     refId: input.orderNumber,
-    // The payer picks (card, Apple/Google Pay, bank buttons) on Comgate's page — whatever is enabled for the shop.
-    method: "ALL",
+    // Cards + Apple/Google Pay only: bank transfers/QR are paid straight to our own account (free and instant),
+    // so Comgate's pay-by-bank methods (fee, payout delay) are deliberately not offered. Override with COMGATE_METHOD
+    // (Comgate method expression, e.g. "ALL") if that ever changes.
+    method: process.env.COMGATE_METHOD || "CARD_ALL+APPLEPAY_REDIRECT+GOOGLEPAY_REDIRECT",
     email: input.email,
     phone: normalizePhone(input.phone),
     fullName: input.fullName,
