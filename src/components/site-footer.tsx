@@ -72,6 +72,20 @@ export async function SiteFooter() {
                 </span>
               );
             })}
+            <Link
+              href="/doprava-a-platba"
+              className="flex h-11 items-center gap-2 rounded-md bg-white px-3.5 text-xs font-semibold leading-tight text-ink"
+            >
+              <svg width="16" height="20" viewBox="0 0 16 20" aria-hidden="true" className="shrink-0">
+                <path d="M8 1C4.7 1 2 3.7 2 7c0 4.5 6 11 6 11s6-6.5 6-11c0-3.3-2.7-6-6-6Z" fill="none" stroke="currentColor" strokeWidth="1.6" />
+                <circle cx="8" cy="7" r="2.2" fill="currentColor" />
+              </svg>
+              <span>
+                {tr("Osobní odběr")}
+                <br />
+                {tr("v Praze")}
+              </span>
+            </Link>
           </div>
         </div>
         <div>
