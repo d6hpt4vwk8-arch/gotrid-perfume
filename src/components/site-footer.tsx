@@ -65,7 +65,7 @@ export async function SiteFooter() {
               </span>
             ))}
           </div>
-          <div className="mt-2">{isComgateConfigured() ? <ComgateBadges /> : <PaymentIcons />}</div>
+          <div className="mt-6">{isComgateConfigured() ? <ComgateBadges /> : <PaymentIcons />}</div>
         </div>
         <div>
           <h3 className="text-sm font-semibold text-white">{tr("Nákup s jistotou")}</h3>
