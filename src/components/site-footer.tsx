@@ -65,7 +65,6 @@ export async function SiteFooter() {
               </span>
             ))}
           </div>
-          <div className="mt-6">{isComgateConfigured() ? <ComgateBadges /> : <PaymentIcons />}</div>
         </div>
         <div>
           <h3 className="text-sm font-semibold text-white">{tr("Nákup s jistotou")}</h3>
@@ -130,6 +129,8 @@ export async function SiteFooter() {
           <div className="mt-2">
             <SocialLinks />
           </div>
+          <h3 className="mt-8 text-sm font-semibold text-white">{tr("Platby")}</h3>
+          <div className="mt-3">{isComgateConfigured() ? <ComgateBadges /> : <PaymentIcons />}</div>
         </div>
       </div>
 
