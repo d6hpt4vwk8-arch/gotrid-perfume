@@ -71,7 +71,17 @@ export async function cancelUnpaidOrder(orderId: string): Promise<boolean> {
     const items = await tx.orderItem.findMany({ where: { orderId } });
     for (const item of items) {
       if (!item.productId) continue; // product was deleted since the order was placed
-      await tx.product.updateMany({ where: { id: item.productId }, data: { stock: { increment: item.qty } } });
+      // Same rule as updateOrderStatus: supplier-synced stock (SPV-/PWH-) is the supplier's own number, so only
+      // our own units go back there; ownStock always gets back exactly what this order took from it.
+      const product = await tx.product.findUnique({ where: { id: item.productId }, select: { code: true } });
+      const supplierSynced = !!product && (product.code.startsWith("SPV-") || product.code.startsWith("PWH-"));
+      await tx.product.updateMany({
+        where: { id: item.productId },
+        data: {
+          stock: { increment: supplierSynced ? item.ownStockTaken : item.qty },
+          ownStock: { increment: item.ownStockTaken },
+        },
+      });
     }
     return true;
   });
