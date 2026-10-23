@@ -2,7 +2,6 @@ import Image from "next/image";
 import { Link } from "@/i18n/navigation";
 import { InstagramFeed } from "@/components/instagram-feed";
 import { SocialLinks } from "@/components/social-links";
-import { ShippingIcon } from "@/components/shipping-icons";
 import { PaymentIcons } from "@/components/payment-icons";
 import { ComgateBadges } from "@/components/comgate-badges";
 import { isComgateConfigured } from "@/lib/payments/comgate";
@@ -16,6 +15,10 @@ const TOP_BRANDS_COUNT = 14;
 
 // Only the two carriers the owner wants highlighted in the footer.
 const DELIVERY_METHODS: ShippingMethod[] = ["ZASILKOVNA", "GLS"];
+const FOOTER_CARRIER_LOGOS: Record<string, { src: string; alt: string; className: string }> = {
+  ZASILKOVNA: { src: "/shipping-logos/zasilkovna.svg", alt: "Zásilkovna", className: "h-8" },
+  GLS: { src: "/shipping-logos/gls.svg", alt: "GLS", className: "h-6" },
+};
 
 const INFO_LINKS = [
   { href: "/o-nas", label: "O nás" },
@@ -51,19 +54,24 @@ export async function SiteFooter() {
     <footer className="bg-ink text-white">
       <div className="mx-auto grid max-w-6xl gap-8 px-4 py-10 sm:grid-cols-2 lg:grid-cols-5">
         <div>
-          <Link href="/" className="flex items-center gap-2.5">
-            <Image src="/logo.svg" alt="Gotrid Perfume" width={32} height={32} className="brightness-0 invert" />
-            <span className="text-base font-semibold tracking-tight text-white">Gotrid Perfume</span>
+          <Link href="/" className="flex items-center gap-3">
+            <Image src="/logo-mark.svg" alt="" width={48} height={48} className="brightness-0 invert" />
+            <span className="flex flex-col leading-tight">
+              <span className="text-lg font-semibold tracking-tight text-white">Gotrid Perfume</span>
+              <span className="mt-0.5 text-xs text-white/55">{tr("Originální značková parfumerie")}</span>
+            </span>
           </Link>
-          <div className="mt-4 flex flex-wrap items-center gap-2">
-            {DELIVERY_METHODS.map((method) => (
-              <span
-                key={method}
-                className="flex h-9 w-14 items-center justify-center rounded-md bg-white"
-              >
-                <ShippingIcon method={method} />
-              </span>
-            ))}
+          <h3 className="mt-6 text-sm font-semibold text-white">{tr("Doprava")}</h3>
+          <div className="mt-3 flex flex-wrap items-center gap-2">
+            {DELIVERY_METHODS.map((method) => {
+              const logo = FOOTER_CARRIER_LOGOS[method];
+              return (
+                <span key={method} className="flex h-11 items-center justify-center rounded-md bg-white px-3.5">
+                  {/* eslint-disable-next-line @next/next/no-img-element */}
+                  <img src={logo.src} alt={logo.alt} className={`${logo.className} w-auto`} />
+                </span>
+              );
+            })}
           </div>
         </div>
         <div>
