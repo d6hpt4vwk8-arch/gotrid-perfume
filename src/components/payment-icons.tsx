@@ -1,10 +1,43 @@
-// Card-network marks shown near the checkout submit button so customers
-// recognize accepted payment methods before entering card details on
-// Stripe's own page. Stripe Checkout accepts Visa/Mastercard by default and
-// surfaces Google Pay automatically as a wallet option on supported devices.
+// Payment marks shown near the checkout submit button, on product pages, in the cart and in the footer so customers
+// recognize the accepted methods before they reach the gateway. Cards plus the Apple Pay / Google Pay wallets
+// (Comgate shows both automatically on its card page when the device supports them; Stripe does the same).
+const APPLE_LOGO =
+  "M12.152 6.896c-.948 0-2.415-1.078-3.96-1.04-2.04.027-3.91 1.183-4.961 3.014-2.117 3.675-.546 9.103 1.519 12.09 1.013 1.454 2.208 3.09 3.792 3.039 1.52-.065 2.09-.987 3.935-.987 1.831 0 2.35.987 3.96.948 1.637-.026 2.676-1.48 3.676-2.948 1.156-1.688 1.636-3.325 1.662-3.415-.039-.013-3.182-1.221-3.22-4.857-.026-3.04 2.48-4.494 2.597-4.559-1.429-2.09-3.623-2.324-4.39-2.376-2-.156-3.675 1.09-4.61 1.09zM15.53 3.83c.843-1.012 1.4-2.427 1.245-3.83-1.207.052-2.662.805-3.532 1.818-.78.896-1.454 2.338-1.273 3.714 1.338.104 2.715-.688 3.559-1.701";
+
+const GOOGLE_G =
+  "M12.48 10.92v3.28h7.84c-.24 1.84-.853 3.187-1.787 4.133-1.147 1.147-2.933 2.4-6.053 2.4-4.827 0-8.6-3.893-8.6-8.72s3.773-8.72 8.6-8.72c2.6 0 4.507 1.027 5.907 2.347l2.307-2.307C18.747 1.44 16.133 0 12.48 0 5.867 0 .307 5.387.307 12s5.56 12 12.173 12c3.573 0 6.267-1.173 8.373-3.36 2.16-2.16 2.84-5.213 2.84-7.667 0-.76-.053-1.467-.173-2.053H12.48z";
+
+export function ApplePayMark() {
+  return (
+    <svg width="38" height="24" viewBox="0 0 38 24" role="img" aria-label="Apple Pay">
+      <rect width="38" height="24" rx="3" fill="#000" />
+      <g transform="translate(7.5 6.2) scale(0.4)">
+        <path d={APPLE_LOGO} fill="#fff" />
+      </g>
+      <text x="16.5" y="16" fontFamily="Arial, sans-serif" fontWeight="600" fontSize="9.5" fill="#fff">
+        Pay
+      </text>
+    </svg>
+  );
+}
+
+export function GooglePayMark() {
+  return (
+    <svg width="38" height="24" viewBox="0 0 38 24" role="img" aria-label="Google Pay">
+      <rect width="38" height="24" rx="3" fill="#fff" stroke="#e2e2e2" />
+      <g transform="translate(8 6.2) scale(0.5)">
+        <path d={GOOGLE_G} fill="#4285F4" />
+      </g>
+      <text x="21" y="16" fontFamily="Arial, sans-serif" fontWeight="500" fontSize="9.5" fill="#3c4043">
+        Pay
+      </text>
+    </svg>
+  );
+}
+
 export function PaymentIcons() {
   return (
-    <div className="flex items-center gap-2" aria-label="Přijímáme platby: Visa, Mastercard, Google Pay">
+    <div className="flex flex-wrap items-center gap-2" aria-label="Přijímáme platby: Visa, Mastercard, Apple Pay, Google Pay">
       <svg width="38" height="24" viewBox="0 0 38 24" role="img" aria-label="Visa">
         <rect width="38" height="24" rx="3" fill="#1A1F71" />
         <text
@@ -25,26 +58,8 @@ export function PaymentIcons() {
         <circle cx="16" cy="12" r="7" fill="#EB001B" />
         <circle cx="24" cy="12" r="7" fill="#F79E1B" fillOpacity="0.9" />
       </svg>
-      <svg width="38" height="24" viewBox="0 0 38 24" role="img" aria-label="Google Pay">
-        <rect width="38" height="24" rx="3" fill="#fff" stroke="#e2e2e2" />
-        <text
-          x="19"
-          y="16"
-          textAnchor="middle"
-          fontFamily="Arial, sans-serif"
-          fontWeight="500"
-          fontSize="8.5"
-          fill="#3c4043"
-        >
-          <tspan fill="#4285F4">G</tspan>
-          <tspan fill="#EA4335">o</tspan>
-          <tspan fill="#FBBC04">o</tspan>
-          <tspan fill="#4285F4">g</tspan>
-          <tspan fill="#34A853">l</tspan>
-          <tspan fill="#EA4335">e</tspan>
-          <tspan fill="#3c4043"> Pay</tspan>
-        </text>
-      </svg>
+      <ApplePayMark />
+      <GooglePayMark />
     </div>
   );
 }
