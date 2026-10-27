@@ -12,6 +12,19 @@ export function isCompanyOrder(order: { ico: string | null; companyName: string 
 }
 
 /**
+ * Whether the shipped e-mail should carry the faktura: a company order that is already paid. Cash on delivery is not
+ * (nothing is paid yet — the faktura belongs to the sale once the courier collects), a card/bank-transfer order that
+ * has reached SHIPPED is.
+ */
+export function shouldAttachInvoiceToShippedEmail(order: {
+  ico: string | null;
+  companyName: string | null;
+  paymentMethod: string;
+}): boolean {
+  return isCompanyOrder(order) && order.paymentMethod !== "CASH_ON_DELIVERY";
+}
+
+/**
  * The faktura PDF for an order, as an e-mail attachment — same document the
  * /api/orders/[number]/faktura download renders. Returns null for a sale that
  * hasn't happened yet (NEW/CANCELLED, see canDownloadInvoice).

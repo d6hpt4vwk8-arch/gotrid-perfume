@@ -2,7 +2,7 @@ import type { Order } from "@prisma/client";
 import { emailBenefits, emailButton, renderEmailLayout } from "./layout";
 import { getMailContext, orderMailLocale } from "./locale";
 import { EMAIL_FROM, getResendClient, isEmailConfigured } from "./resend";
-import { buildInvoiceAttachment, isCompanyOrder } from "./invoice-attachment";
+import { buildInvoiceAttachment, shouldAttachInvoiceToShippedEmail } from "./invoice-attachment";
 
 // Closes a promise the order-confirmation email already makes ("O odeslání
 // zásilky vás budeme informovat samostatným e-mailem." — send-order-emails.ts)
@@ -23,7 +23,7 @@ export async function renderShippedEmailHtml(order: Order): Promise<string> {
           ? `<p style="margin-bottom:24px">${tr("Sledovací číslo zásilky")}: <strong>${order.trackingNumber}</strong></p>`
           : ""
       }
-      ${isCompanyOrder(order) ? `<p>${tr("Fakturu k objednávce najdete v příloze tohoto e-mailu.")}</p>` : ""}
+      ${shouldAttachInvoiceToShippedEmail(order) ? `<p>${tr("Fakturu k objednávce najdete v příloze tohoto e-mailu.")}</p>` : ""}
       ${emailButton(ctx.apiUrl(`/api/orders/${order.number}/access?token=${order.accessToken}`), tr("Zobrazit stav objednávky"))}
       ${benefits}
     `;
@@ -39,10 +39,10 @@ export async function sendShippedEmail(order: Order) {
   const ctx = await getMailContext(orderMailLocale(order));
   const resend = getResendClient();
   // A company can't use "download it from the order page": attach the faktura
-  // to the shipped e-mail (found missing 2026-10-27 — a hotel that bought 22
-  // diffusers never received one). Never blocks the e-mail itself.
+  // to the shipped e-mail once the order is paid (not for cash on delivery — found
+  // missing 2026-10-27, a hotel that bought 22 diffusers never got one). Never blocks the e-mail.
   let attachments: { filename: string; content: Buffer }[] = [];
-  if (isCompanyOrder(order)) {
+  if (shouldAttachInvoiceToShippedEmail(order)) {
     try {
       const invoice = await buildInvoiceAttachment(order.id);
       if (invoice) attachments = [invoice];
