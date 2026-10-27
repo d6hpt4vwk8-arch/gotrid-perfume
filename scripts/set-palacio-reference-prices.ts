@@ -1,6 +1,6 @@
 /**
  * Sets Product.compareAtPrice of visible Palacio products to the manufacturer's current retail price (palacioshop.cz,
- * incl. VAT) so the site can show "Cena u výrobce" crossed out next to our lower price. Matching is by EAN; only
+ * incl. VAT) so the site can show "Doporučená cena" crossed out next to our lower price. Matching is by EAN; only
  * prices that make a believable comparison are written (our price 8–50 % below theirs). Prices come from
  * ops/palacio-prices-2026-10-27.json (scraped from the product pages' JSON-LD, ex-VAT x 1.21). Re-scrape and re-run
  * when Palacio changes its prices. A before-snapshot goes to ops/snapshots/.

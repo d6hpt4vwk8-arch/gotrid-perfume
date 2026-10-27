@@ -1,0 +1,3 @@
+import { prisma } from "../../src/lib/prisma";
+async function main(){ const p=await prisma.product.findUnique({where:{code:"GVS-256795-DEFECT"},include:{categories:{include:{category:true}},images:true,brand:true}}); console.log(JSON.stringify({name:p!.name,slug:p!.slug,ean:p!.ean,desc:p!.description,imgs:p!.images.map(i=>i.url),cats:p!.categories.map(c=>c.category.fullSlug),price:p!.price,cost:p!.purchasePrice,nameSk:p!.nameSk,pt:(p as any).productType, pc:p!.pairCode},null,1)); const r=await prisma.product.findUnique({where:{code:"GVS-256795"},select:{name:true,pairCode:true,price:true,purchasePrice:true,slug:true}}); console.log(r); }
+main().finally(()=>prisma.$disconnect());

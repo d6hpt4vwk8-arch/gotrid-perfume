@@ -302,7 +302,7 @@ export default async function ProductPage({
             {product.compareAtPrice && (
               <>
                 {hasManufacturerReferencePrice(product.brand?.name) && (
-                  <span className="text-xs text-accent-2">{tr("Cena u výrobce")}</span>
+                  <span className="text-xs text-accent-2">{tr("Doporučená cena")}</span>
                 )}
                 <span className="text-lg text-accent-2 line-through">
                   {price(product.compareAtPrice)}
