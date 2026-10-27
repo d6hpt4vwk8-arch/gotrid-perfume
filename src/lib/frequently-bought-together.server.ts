@@ -45,7 +45,13 @@ export async function getFrequentlyBoughtTogether(productId: string, limit = 4, 
  * shared order history yet (a brand-new product, or too few past orders),
  * so the section never just renders empty.
  */
-export async function getFrequentlyBoughtTogetherForCart(cartProductIds: string[], limit = 3, skOnly = false) {
+export async function getFrequentlyBoughtTogetherForCart(
+  cartProductIds: string[],
+  limit = 3,
+  skOnly = false,
+  /** false = real co-purchases only (empty when there are none), so callers can slot rule-based picks in before the generic fallbacks. */
+  withFallback = true,
+) {
   if (cartProductIds.length === 0) return [];
 
   const rows = await prisma.$queryRaw<{ productId: string; coCount: bigint }[]>`
@@ -71,6 +77,13 @@ export async function getFrequentlyBoughtTogetherForCart(cartProductIds: string[
     const ordered = rows.map((r) => byId.get(r.productId)).filter((p): p is NonNullable<typeof p> => Boolean(p));
     if (ordered.length > 0) return ordered;
   }
+
+  if (!withFallback) return [];
+
+  // Generic fallbacks must not pitch anything pricier than the cart itself: a 1 200 Kč perfume
+  // offered next to a 40 Kč item costs conversion more than it adds to the basket.
+  const cartMax = await prisma.product.aggregate({ where: { id: { in: cartProductIds } }, _max: { price: true } });
+  const priceCap = Math.max(150, Number(cartMax._max.price ?? 0) * 1.2);
 
   // No co-purchase signal yet (needs 2+ shared past orders, which is rare
   // across an 18k+-SKU catalog) — fall back to products sharing a category
@@ -101,6 +114,7 @@ export async function getFrequentlyBoughtTogetherForCart(cartProductIds: string[
         visible: true,
         stock: { gt: 0 },
         id: { notIn: cartProductIds },
+        price: { lte: priceCap },
         categories: { some: { categoryId: { in: cartCategoryIds } } },
       }, skOnly),
       include: { brand: true, images: { orderBy: { sortOrder: "asc" }, take: 1 } },
@@ -113,7 +127,7 @@ export async function getFrequentlyBoughtTogetherForCart(cartProductIds: string[
   // Last resort only — none of the cart's own categories have anything
   // else in stock to suggest.
   return prisma.product.findMany({
-    where: skScope({ visible: true, stock: { gt: 0 }, id: { notIn: cartProductIds } }, skOnly),
+    where: skScope({ visible: true, stock: { gt: 0 }, id: { notIn: cartProductIds }, price: { lte: priceCap } }, skOnly),
     include: { brand: true, images: { orderBy: { sortOrder: "asc" }, take: 1 } },
     orderBy: [{ ownStock: "desc" }, { priority: "desc" }],
     take: limit,

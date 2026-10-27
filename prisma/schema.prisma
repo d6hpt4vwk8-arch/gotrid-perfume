@@ -1114,3 +1114,24 @@ model PriceCompetitionRow {
   @@index([importId])
   @@index([productCode])
 }
+
+// ---------------------------------------------------------------------------
+// RecommendationEvent — anonymous counters for the cross-sell blocks (product-page
+// "Podobné produkty" / "Často kupováno spolu" / "Hodí se k tomu" / same-scent, cart
+// "Doplňte objednávku"): how often a block is seen, a recommended product opened or
+// added to the cart. No IP, cookie or visitor id is stored, so it needs no consent —
+// it only answers "does this block earn clicks?".
+// ---------------------------------------------------------------------------
+
+model RecommendationEvent {
+  id              String   @id @default(cuid())
+  block           String
+  event           String // view | click | add
+  productId       String? // the recommended product (null for "view")
+  sourceProductId String? // the product page the block sits on (null in the cart)
+  locale          String?
+  createdAt       DateTime @default(now())
+
+  @@index([block, event, createdAt])
+  @@index([createdAt])
+}

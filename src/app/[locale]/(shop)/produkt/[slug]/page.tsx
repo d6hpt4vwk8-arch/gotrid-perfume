@@ -7,7 +7,6 @@ import { formatPriceIn } from "@/lib/format";
 import { currencyForLocale } from "@/lib/currency";
 import { getCurrentLocale, getTr } from "@/i18n/tr.server";
 import { categoryNameSk } from "@/lib/sk-terms";
-import { skScope } from "@/lib/sk-visibility";
 import { AddToCartButton } from "@/components/add-to-cart-button";
 import { SampleGiftNote } from "@/components/sample-gift-note";
 import { ProductViewTracker } from "@/components/product-view-tracker";
@@ -23,13 +22,14 @@ import { getCategoryBreadcrumb } from "@/lib/categories.server";
 import { Breadcrumbs } from "@/components/breadcrumbs";
 import { getFrequentlyBoughtTogether } from "@/lib/frequently-bought-together.server";
 import { getSameLineProducts } from "@/lib/product-line.server";
+import { getComplementProducts, getRelatedProducts } from "@/lib/related-products.server";
+import { RecommendationBlock } from "@/components/recommendation-block";
 import { parseVolumeMl, formatVolumeLabel } from "@/lib/parse-volume";
 import { parseShadeLabel, SHADE_SWATCH_COLORS } from "@/lib/parse-shade";
 import { estimateDeliveryDate, formatDeliveryEstimate } from "@/lib/delivery-estimate";
 import { getSettings } from "@/lib/settings.server";
 import { ReviewForm } from "@/components/review-form";
 import { ProductGallery } from "@/components/product-gallery";
-import { primaryVariantWhere } from "@/lib/product-filters";
 import { ScentNotesPyramid } from "@/components/scent-notes-pyramid";
 import { ProductTrustStrip } from "@/components/product-trust-strip";
 import { ProductDetailsBlocks } from "@/components/product-details-blocks";
@@ -73,22 +73,6 @@ async function getSizeVariants(variantGroupKey: string | null) {
   return products.sort((a, b) =>
     (parseShadeLabel(a.name) ?? "").localeCompare(parseShadeLabel(b.name) ?? ""),
   );
-}
-
-async function getRelatedProducts(productId: string, categoryIds: string[], isSk: boolean) {
-  if (categoryIds.length === 0) return [];
-  return prisma.product.findMany({
-    where: skScope({
-      id: { not: productId },
-      visible: true,
-      categories: { some: { categoryId: { in: categoryIds } } },
-      ...primaryVariantWhere,
-      stock: { gt: 0 },
-    }, isSk),
-    include: { brand: true, images: { orderBy: { sortOrder: "asc" }, take: 1 } },
-    orderBy: [{ ownStock: "desc" }, { priority: "desc" }, { createdAt: "desc" }],
-    take: 8,
-  });
 }
 
 export async function generateMetadata({
@@ -144,13 +128,20 @@ export default async function ProductPage({
 
   const primaryCategory = product.categories[0]?.category;
 
-  const [relatedProducts, sizeVariants, categoryBreadcrumb, frequentlyBoughtTogether, sameLineProducts, settings] =
+  const similarityBase = {
+    id: product.id,
+    name: product.name,
+    price: product.price,
+    brandId: product.brandId,
+    concentration: product.concentration,
+    productType: product.productType,
+    occasions: product.occasions,
+    keyIngredients: product.keyIngredients,
+  };
+  const [relatedProducts, complementProducts, sizeVariants, categoryBreadcrumb, frequentlyBoughtTogether, sameLineProducts, settings] =
     await Promise.all([
-      getRelatedProducts(
-        product.id,
-        product.categories.map((c) => c.categoryId),
-        isSk,
-      ),
+      getRelatedProducts(similarityBase, isSk),
+      getComplementProducts(similarityBase, isSk),
       getSizeVariants(product.variantGroupKey),
       primaryCategory ? getCategoryBreadcrumb(primaryCategory.fullSlug) : Promise.resolve([]),
       getFrequentlyBoughtTogether(product.id, 4, isSk),
@@ -517,30 +508,45 @@ export default async function ProductPage({
       {frequentlyBoughtTogether.length > 0 && (
         <section className="border-t border-line pt-6">
           <h2 className="mb-4 text-lg font-bold text-ink">{tr("Často kupováno spolu")}</h2>
-          <div className="grid grid-cols-2 gap-x-4 gap-y-8 sm:grid-cols-3 md:grid-cols-4">
-            {frequentlyBoughtTogether.map((item) => (
-              <ProductCard
-                key={item.slug}
-                product={item}
-                freeShippingThreshold={settings.freeShippingThreshold}
-              />
-            ))}
-          </div>
+          <RecommendationBlock block="pdp_fbt" sourceProductId={product.id}>
+            <div className="grid grid-cols-2 gap-x-4 gap-y-8 sm:grid-cols-3 md:grid-cols-4">
+              {frequentlyBoughtTogether.map((item) => (
+                <div key={item.slug} data-rec-product={item.id}>
+                  <ProductCard product={item} freeShippingThreshold={settings.freeShippingThreshold} />
+                </div>
+              ))}
+            </div>
+          </RecommendationBlock>
+        </section>
+      )}
+
+      {complementProducts.length > 0 && (
+        <section className="border-t border-line pt-6">
+          <h2 className="mb-4 text-lg font-bold text-ink">{tr("Hodí se k tomu")}</h2>
+          <RecommendationBlock block="pdp_complement" sourceProductId={product.id}>
+            <div className="grid grid-cols-2 gap-x-4 gap-y-8 sm:grid-cols-3 md:grid-cols-4">
+              {complementProducts.map((item) => (
+                <div key={item.slug} data-rec-product={item.id}>
+                  <ProductCard product={item} freeShippingThreshold={settings.freeShippingThreshold} />
+                </div>
+              ))}
+            </div>
+          </RecommendationBlock>
         </section>
       )}
 
       {sameLineProducts.length > 0 && (
         <section className="border-t border-line pt-6">
           <h2 className="mb-4 text-lg font-bold text-ink">{tr("Další produkty ze stejné vůně")}</h2>
-          <div className="grid grid-cols-2 gap-x-4 gap-y-8 sm:grid-cols-3 md:grid-cols-4">
-            {sameLineProducts.map((item) => (
-              <ProductCard
-                key={item.slug}
-                product={item}
-                freeShippingThreshold={settings.freeShippingThreshold}
-              />
-            ))}
-          </div>
+          <RecommendationBlock block="pdp_line" sourceProductId={product.id}>
+            <div className="grid grid-cols-2 gap-x-4 gap-y-8 sm:grid-cols-3 md:grid-cols-4">
+              {sameLineProducts.map((item) => (
+                <div key={item.slug} data-rec-product={item.id}>
+                  <ProductCard product={item} freeShippingThreshold={settings.freeShippingThreshold} />
+                </div>
+              ))}
+            </div>
+          </RecommendationBlock>
         </section>
       )}
 
@@ -578,15 +584,15 @@ export default async function ProductPage({
       {relatedProducts.length > 0 && (
         <section className="border-t border-line pt-6">
           <h2 className="mb-4 text-lg font-bold text-ink">{tr("Podobné produkty")}</h2>
-          <div className="grid grid-cols-2 gap-x-4 gap-y-8 sm:grid-cols-3 md:grid-cols-4">
-            {relatedProducts.map((related) => (
-              <ProductCard
-                key={related.slug}
-                product={related}
-                freeShippingThreshold={settings.freeShippingThreshold}
-              />
-            ))}
-          </div>
+          <RecommendationBlock block="pdp_related" sourceProductId={product.id}>
+            <div className="grid grid-cols-2 gap-x-4 gap-y-8 sm:grid-cols-3 md:grid-cols-4">
+              {relatedProducts.map((related) => (
+                <div key={related.slug} data-rec-product={related.id}>
+                  <ProductCard product={related} freeShippingThreshold={settings.freeShippingThreshold} />
+                </div>
+              ))}
+            </div>
+          </RecommendationBlock>
         </section>
       )}
     </main>

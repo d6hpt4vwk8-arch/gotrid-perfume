@@ -106,6 +106,7 @@ export function AddToCartButton({
     <>
       <button
         type="button"
+        data-add-to-cart
         disabled={outOfStock}
         onClick={(e) => {
           e.preventDefault();

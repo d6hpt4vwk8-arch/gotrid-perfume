@@ -12,6 +12,7 @@ import { CheckoutSteps } from "@/components/checkout-steps";
 import { CouponField } from "@/components/coupon-field";
 import { GiftPicker } from "@/components/gift-picker";
 import { ProductCard, type ProductCardData } from "@/components/product-card";
+import { RecommendationBlock } from "@/components/recommendation-block";
 import { estimateDeliveryDate, formatDeliveryEstimate } from "@/lib/delivery-estimate";
 import { useTr, useIsSk } from "@/i18n/use-tr";
 
@@ -177,11 +178,15 @@ export default function CartPage() {
       {recommendations.length > 0 && (
         <div className="flex flex-col gap-4 border-t border-line pt-6">
           <h2 className="text-sm font-bold text-ink">{tr("Mohlo by se vám také líbit")}</h2>
-          <div className="grid grid-cols-2 gap-x-4 gap-y-8 sm:grid-cols-3">
-            {recommendations.map((product) => (
-              <ProductCard key={product.slug} product={product} freeShippingThreshold={freeShippingThreshold} />
-            ))}
-          </div>
+          <RecommendationBlock block="cart_complete">
+            <div className="grid grid-cols-2 gap-x-4 gap-y-8 sm:grid-cols-3">
+              {recommendations.map((product) => (
+                <div key={product.slug} data-rec-product={product.id}>
+                  <ProductCard product={product} freeShippingThreshold={freeShippingThreshold} />
+                </div>
+              ))}
+            </div>
+          </RecommendationBlock>
         </div>
       )}
     </main>
