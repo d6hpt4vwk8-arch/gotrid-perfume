@@ -303,7 +303,16 @@ export function CategoryFilters({
     return `${tr("Zobrazit")} ${n} ${word}`;
   }
 
-  const visibleBrands = brands.filter((b) => b.name.toLowerCase().includes(brandQuery.toLowerCase()));
+  // Biggest brands first (alphabetical put "4711, Acqua Di Parma, Adam Levine…" — one product each — ahead of Lattafa
+  // and Armaf, and only 8 show before "Zobrazit všechny"); selected brands stay on top.
+  const visibleBrands = brands
+    .filter((b) => b.name.toLowerCase().includes(brandQuery.toLowerCase()))
+    .sort(
+      (a, b) =>
+        Number(selectedBrands.includes(b.slug)) - Number(selectedBrands.includes(a.slug)) ||
+        b.count - a.count ||
+        a.name.localeCompare(b.name, "cs"),
+    );
   const brandsToShow = showAllBrands ? visibleBrands : visibleBrands.slice(0, 8);
 
   const activeCountUrl = activeChips.length;
