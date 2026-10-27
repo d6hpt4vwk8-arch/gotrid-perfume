@@ -1,3 +1,4 @@
+import { MANUFACTURER_REFERENCE_PRICE_BRANDS } from "@/lib/reference-price";
 import Image from "next/image";
 import { Link } from "@/i18n/navigation";
 import { prisma } from "@/lib/prisma";
@@ -63,7 +64,17 @@ export default async function HomePage() {
     await Promise.all([
       getCategoryNavTree(),
       prisma.product.findMany({
-        where: skScope({ visible: true, ...primaryVariantWhere, compareAtPrice: { not: null }, stock: { gt: 0 } }, isSk),
+        where: skScope(
+          {
+            visible: true,
+            ...primaryVariantWhere,
+            compareAtPrice: { not: null },
+            stock: { gt: 0 },
+            // Palacio's crossed-out price is the manufacturer's, not a real sale — keep it out of the sale strip.
+            NOT: { brand: { name: { in: MANUFACTURER_REFERENCE_PRICE_BRANDS } } },
+          },
+          isSk,
+        ),
         orderBy: [{ ownStock: "desc" }, { priority: "desc" }, { createdAt: "desc" }],
         take: 12,
         include: { brand: true, images: { orderBy: { sortOrder: "asc" }, take: 1 } },

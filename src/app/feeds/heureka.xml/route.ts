@@ -4,6 +4,7 @@ import { isPaidAdsEligible } from "@/lib/feeds/paid-ads-eligibility";
 import { isConditionFlagged } from "@/lib/feeds/condition-flagged";
 import { cdata, escapeXml, isValidEan } from "@/lib/feeds/xml";
 import { SITE_URL } from "@/lib/site";
+import { hasManufacturerReferencePrice } from "@/lib/reference-price";
 import { getSettings } from "@/lib/settings.server";
 
 // Delivery codes per Heureka's XML feed manual (sluzby.heureka.cz/napoveda/xml-feed/).
@@ -76,7 +77,7 @@ export async function GET() {
     ${mainImage ? `<IMGURL>${escapeXml(mainImage)}</IMGURL>` : ""}
 ${altImages.map((img) => `    <IMGURL_ALTERNATIVE>${escapeXml(img)}</IMGURL_ALTERNATIVE>`).join("\n")}
     <PRICE_VAT>${p.price.toFixed(2)}</PRICE_VAT>
-    ${p.compareAtPrice ? `<PRICE_BEFORE>${p.compareAtPrice.toFixed(2)}</PRICE_BEFORE>` : ""}
+    ${p.compareAtPrice && !hasManufacturerReferencePrice(p.brandName) ? `<PRICE_BEFORE>${p.compareAtPrice.toFixed(2)}</PRICE_BEFORE>` : ""}
     ${p.brandName ? `<MANUFACTURER>${escapeXml(p.brandName)}</MANUFACTURER>` : ""}
     ${p.ean && isValidEan(p.ean) ? `<EAN>${escapeXml(p.ean)}</EAN>` : ""}
     ${p.categoryBreadcrumb ? `<CATEGORYTEXT>${escapeXml(p.categoryBreadcrumb)}</CATEGORYTEXT>` : ""}

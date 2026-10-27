@@ -38,11 +38,11 @@ function FilterSection({
 }) {
   return (
     <details className="group border-b border-line pb-4" open={defaultOpen}>
-      <summary className="flex cursor-pointer list-none items-center justify-between text-[11px] font-semibold tracking-wide text-accent-2 uppercase">
+      <summary className="flex cursor-pointer list-none items-center justify-between text-base font-bold text-ink sm:text-xs sm:font-semibold sm:tracking-wide sm:text-accent-2 sm:uppercase">
         {title}
         <span className="text-ink transition group-open:rotate-180">⌄</span>
       </summary>
-      <div className="mt-2.5">{children}</div>
+      <div className="mt-3 sm:mt-2.5">{children}</div>
     </details>
   );
 }
@@ -340,13 +340,13 @@ export function CategoryFilters({
                 key={`m-${chip.key}-${chip.value}`}
                 type="button"
                 onClick={() => removeChip(chip.key, chip.value)}
-                className="flex items-center gap-1 rounded-full bg-ink px-2.5 py-1 text-xs font-medium text-white"
+                className="flex items-center gap-1 rounded-full bg-ink px-3 py-1.5 text-sm font-medium text-white"
               >
                 {chip.label}
                 <span aria-hidden>×</span>
               </button>
             ))}
-            <button type="button" onClick={clearAll} className="text-xs text-accent-2 underline">
+            <button type="button" onClick={clearAll} className="text-sm text-accent-2 underline">
               {tr("Vymazat vše")}
             </button>
           </div>
@@ -459,12 +459,12 @@ export function CategoryFilters({
       )}
 
       <div className="flex flex-col gap-2 border-b border-line pb-4">
-        <label className="flex items-center gap-2 text-sm text-ink">
+        <label className="flex items-center gap-2.5 text-base text-ink sm:gap-2 sm:text-sm">
           <input
             type="checkbox"
             checked={searchParams.get("sale") === "1"}
             onChange={() => toggleBoolean("sale")}
-            className="accent-accent"
+            className="h-5 w-5 accent-accent sm:h-4 sm:w-4"
           />
           {tr("Ve slevě")}
         </label>
@@ -479,7 +479,7 @@ export function CategoryFilters({
             onChange={(e) => setPriceMin(e.target.value)}
             onBlur={applyPriceRange}
             placeholder={tr("od")}
-            className="w-full rounded-sm border border-line px-2 py-1 text-sm text-ink"
+            className="w-full rounded-sm border border-line px-3 py-2 text-base text-ink sm:px-2 sm:py-1 sm:text-sm"
           />
           <input
             type="number"
@@ -488,25 +488,25 @@ export function CategoryFilters({
             onChange={(e) => setPriceMax(e.target.value)}
             onBlur={applyPriceRange}
             placeholder={tr("do")}
-            className="w-full rounded-sm border border-line px-2 py-1 text-sm text-ink"
+            className="w-full rounded-sm border border-line px-3 py-2 text-base text-ink sm:px-2 sm:py-1 sm:text-sm"
           />
         </div>
       </FilterSection>
 
       {structure.genderOptions.length > 0 && (
         <FilterSection title={tr("Pro koho")}>
-          <ul className="flex flex-col gap-1.5">
+          <ul className="flex flex-col gap-3 sm:gap-1.5">
             {structure.genderOptions.map((option) => (
               <li key={option.slug}>
-                <label className="flex items-center gap-2 text-sm text-ink">
+                <label className="flex items-center gap-2.5 text-base text-ink sm:gap-2 sm:text-sm">
                   <input
                     type="checkbox"
                     checked={selectedGenders.includes(option.slug)}
                     onChange={() => toggleMulti("gender", selectedGenders, option.slug)}
-                    className="accent-accent"
+                    className="h-5 w-5 accent-accent sm:h-4 sm:w-4"
                   />
                   {tr(option.name)}
-                  <span className="text-xs text-accent-2">({option.count})</span>
+                  <span className="text-sm text-accent-2 sm:text-xs">({option.count})</span>
                 </label>
               </li>
             ))}
@@ -516,18 +516,18 @@ export function CategoryFilters({
 
       {structure.concentrationOptions.length > 0 && (
         <FilterSection title={tr("Typ")}>
-          <ul className="flex flex-col gap-1.5">
+          <ul className="flex flex-col gap-3 sm:gap-1.5">
             {structure.concentrationOptions.map((option) => (
               <li key={option.slug}>
-                <label className="flex items-center gap-2 text-sm text-ink">
+                <label className="flex items-center gap-2.5 text-base text-ink sm:gap-2 sm:text-sm">
                   <input
                     type="checkbox"
                     checked={selectedConcentrations.includes(option.slug)}
                     onChange={() => toggleMulti("concentration", selectedConcentrations, option.slug)}
-                    className="accent-accent"
+                    className="h-5 w-5 accent-accent sm:h-4 sm:w-4"
                   />
                   {tr(option.name)}
-                  <span className="text-xs text-accent-2">({option.count})</span>
+                  <span className="text-sm text-accent-2 sm:text-xs">({option.count})</span>
                 </label>
               </li>
             ))}
@@ -537,18 +537,18 @@ export function CategoryFilters({
 
       {scentFamilies.length > 0 && (
         <FilterSection title={tr("Charakter vůně")}>
-          <ul className="flex flex-col gap-1.5">
+          <ul className="flex flex-col gap-3 sm:gap-1.5">
             {scentFamilies.map((family) => (
               <li key={family.slug}>
-                <label className="flex items-center gap-2 text-sm text-ink">
+                <label className="flex items-center gap-2.5 text-base text-ink sm:gap-2 sm:text-sm">
                   <input
                     type="checkbox"
                     checked={selectedScents.includes(family.slug)}
                     onChange={() => toggleMulti("scent", selectedScents, family.slug)}
-                    className="accent-accent"
+                    className="h-5 w-5 accent-accent sm:h-4 sm:w-4"
                   />
                   {tr(family.name)}
-                  <span className="text-xs text-accent-2">({family.count})</span>
+                  <span className="text-sm text-accent-2 sm:text-xs">({family.count})</span>
                 </label>
               </li>
             ))}
@@ -558,18 +558,18 @@ export function CategoryFilters({
 
       {structure.occasionOptions.length > 0 && (
         <FilterSection title={tr("Příležitost")}>
-          <ul className="flex flex-col gap-1.5">
+          <ul className="flex flex-col gap-3 sm:gap-1.5">
             {structure.occasionOptions.map((option) => (
               <li key={option.slug}>
-                <label className="flex items-center gap-2 text-sm text-ink">
+                <label className="flex items-center gap-2.5 text-base text-ink sm:gap-2 sm:text-sm">
                   <input
                     type="checkbox"
                     checked={selectedOccasions.includes(option.slug)}
                     onChange={() => toggleMulti("occasion", selectedOccasions, option.slug)}
-                    className="accent-accent"
+                    className="h-5 w-5 accent-accent sm:h-4 sm:w-4"
                   />
                   {tr(option.name)}
-                  <span className="text-xs text-accent-2">({option.count})</span>
+                  <span className="text-sm text-accent-2 sm:text-xs">({option.count})</span>
                 </label>
               </li>
             ))}
@@ -579,18 +579,18 @@ export function CategoryFilters({
 
       {cosmetics.productTypes.length > 0 && (
         <FilterSection title={tr("Druh produktu")}>
-          <ul className="flex flex-col gap-1.5">
+          <ul className="flex flex-col gap-3 sm:gap-1.5">
             {cosmetics.productTypes.map((option) => (
               <li key={option.slug}>
-                <label className="flex items-center gap-2 text-sm text-ink">
+                <label className="flex items-center gap-2.5 text-base text-ink sm:gap-2 sm:text-sm">
                   <input
                     type="checkbox"
                     checked={selectedKinds.includes(option.slug)}
                     onChange={() => toggleMulti("kind", selectedKinds, option.slug)}
-                    className="accent-accent"
+                    className="h-5 w-5 accent-accent sm:h-4 sm:w-4"
                   />
                   {tr(option.name)}
-                  <span className="text-xs text-accent-2">({option.count})</span>
+                  <span className="text-sm text-accent-2 sm:text-xs">({option.count})</span>
                 </label>
               </li>
             ))}
@@ -600,18 +600,18 @@ export function CategoryFilters({
 
       {cosmetics.concerns.length > 0 && (
         <FilterSection title={tr("Účel")}>
-          <ul className="flex flex-col gap-1.5">
+          <ul className="flex flex-col gap-3 sm:gap-1.5">
             {cosmetics.concerns.map((option) => (
               <li key={option.slug}>
-                <label className="flex items-center gap-2 text-sm text-ink">
+                <label className="flex items-center gap-2.5 text-base text-ink sm:gap-2 sm:text-sm">
                   <input
                     type="checkbox"
                     checked={selectedConcerns.includes(option.slug)}
                     onChange={() => toggleMulti("concern", selectedConcerns, option.slug)}
-                    className="accent-accent"
+                    className="h-5 w-5 accent-accent sm:h-4 sm:w-4"
                   />
                   {tr(option.name)}
-                  <span className="text-xs text-accent-2">({option.count})</span>
+                  <span className="text-sm text-accent-2 sm:text-xs">({option.count})</span>
                 </label>
               </li>
             ))}
@@ -621,18 +621,18 @@ export function CategoryFilters({
 
       {cosmetics.skinTypes.length > 0 && (
         <FilterSection title={tr("Typ pleti")}>
-          <ul className="flex flex-col gap-1.5">
+          <ul className="flex flex-col gap-3 sm:gap-1.5">
             {cosmetics.skinTypes.map((option) => (
               <li key={option.slug}>
-                <label className="flex items-center gap-2 text-sm text-ink">
+                <label className="flex items-center gap-2.5 text-base text-ink sm:gap-2 sm:text-sm">
                   <input
                     type="checkbox"
                     checked={selectedSkinTypes.includes(option.slug)}
                     onChange={() => toggleMulti("skinType", selectedSkinTypes, option.slug)}
-                    className="accent-accent"
+                    className="h-5 w-5 accent-accent sm:h-4 sm:w-4"
                   />
                   {tr(option.name)}
-                  <span className="text-xs text-accent-2">({option.count})</span>
+                  <span className="text-sm text-accent-2 sm:text-xs">({option.count})</span>
                 </label>
               </li>
             ))}
@@ -642,18 +642,18 @@ export function CategoryFilters({
 
       {cosmetics.ingredients.length > 0 && (
         <FilterSection title={tr("Složka")}>
-          <ul className="flex flex-col gap-1.5">
+          <ul className="flex flex-col gap-3 sm:gap-1.5">
             {cosmetics.ingredients.map((option) => (
               <li key={option.slug}>
-                <label className="flex items-center gap-2 text-sm text-ink">
+                <label className="flex items-center gap-2.5 text-base text-ink sm:gap-2 sm:text-sm">
                   <input
                     type="checkbox"
                     checked={selectedIngredients.includes(option.slug)}
                     onChange={() => toggleMulti("ingredient", selectedIngredients, option.slug)}
-                    className="accent-accent"
+                    className="h-5 w-5 accent-accent sm:h-4 sm:w-4"
                   />
                   {tr(option.name)}
-                  <span className="text-xs text-accent-2">({option.count})</span>
+                  <span className="text-sm text-accent-2 sm:text-xs">({option.count})</span>
                 </label>
               </li>
             ))}
@@ -663,32 +663,32 @@ export function CategoryFilters({
 
       {(cosmetics.vegan > 0 || cosmetics.crueltyFree > 0) && (
         <FilterSection title={tr("Vlastnosti")}>
-          <ul className="flex flex-col gap-1.5">
+          <ul className="flex flex-col gap-3 sm:gap-1.5">
             {cosmetics.vegan > 0 && (
               <li>
-                <label className="flex items-center gap-2 text-sm text-ink">
+                <label className="flex items-center gap-2.5 text-base text-ink sm:gap-2 sm:text-sm">
                   <input
                     type="checkbox"
                     checked={searchParams.get("vegan") === "1"}
                     onChange={() => toggleBoolean("vegan")}
-                    className="accent-accent"
+                    className="h-5 w-5 accent-accent sm:h-4 sm:w-4"
                   />
                   Vegan
-                  <span className="text-xs text-accent-2">({cosmetics.vegan})</span>
+                  <span className="text-sm text-accent-2 sm:text-xs">({cosmetics.vegan})</span>
                 </label>
               </li>
             )}
             {cosmetics.crueltyFree > 0 && (
               <li>
-                <label className="flex items-center gap-2 text-sm text-ink">
+                <label className="flex items-center gap-2.5 text-base text-ink sm:gap-2 sm:text-sm">
                   <input
                     type="checkbox"
                     checked={searchParams.get("cf") === "1"}
                     onChange={() => toggleBoolean("cf")}
-                    className="accent-accent"
+                    className="h-5 w-5 accent-accent sm:h-4 sm:w-4"
                   />
                   Cruelty-free
-                  <span className="text-xs text-accent-2">({cosmetics.crueltyFree})</span>
+                  <span className="text-sm text-accent-2 sm:text-xs">({cosmetics.crueltyFree})</span>
                 </label>
               </li>
             )}
@@ -704,21 +704,21 @@ export function CategoryFilters({
                 value={brandQuery}
                 onChange={(e) => setBrandQuery(e.target.value)}
                 placeholder={tr("Hledat značku…")}
-                className="rounded-sm border border-line px-2 py-1 text-sm text-ink"
+                className="rounded-sm border border-line px-3 py-2 text-base text-ink sm:px-2 sm:py-1 sm:text-sm"
               />
             )}
             <ul className="flex max-h-64 flex-col gap-1.5 overflow-y-auto">
               {brandsToShow.map((brand) => (
                 <li key={brand.slug}>
-                  <label className="flex items-center gap-2 text-sm text-ink">
+                  <label className="flex items-center gap-2.5 text-base text-ink sm:gap-2 sm:text-sm">
                     <input
                       type="checkbox"
                       checked={selectedBrands.includes(brand.slug)}
                       onChange={() => toggleMulti("brand", selectedBrands, brand.slug)}
-                      className="accent-accent"
+                      className="h-5 w-5 accent-accent sm:h-4 sm:w-4"
                     />
                     {brand.name}
-                    <span className="text-xs text-accent-2">({brand.count})</span>
+                    <span className="text-sm text-accent-2 sm:text-xs">({brand.count})</span>
                   </label>
                 </li>
               ))}

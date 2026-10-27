@@ -24,6 +24,7 @@ import { getFrequentlyBoughtTogether } from "@/lib/frequently-bought-together.se
 import { getSameLineProducts } from "@/lib/product-line.server";
 import { getComplementProducts, getRelatedProducts } from "@/lib/related-products.server";
 import { RecommendationBlock } from "@/components/recommendation-block";
+import { hasManufacturerReferencePrice } from "@/lib/reference-price";
 import { parseVolumeMl, formatVolumeLabel } from "@/lib/parse-volume";
 import { parseShadeLabel, SHADE_SWATCH_COLORS } from "@/lib/parse-shade";
 import { estimateDeliveryDate, formatDeliveryEstimate } from "@/lib/delivery-estimate";
@@ -300,6 +301,9 @@ export default async function ProductPage({
             <span className="text-2xl font-bold text-accent">{price(product.price)}</span>
             {product.compareAtPrice && (
               <>
+                {hasManufacturerReferencePrice(product.brand?.name) && (
+                  <span className="text-xs text-accent-2">{tr("Cena u výrobce")}</span>
+                )}
                 <span className="text-lg text-accent-2 line-through">
                   {price(product.compareAtPrice)}
                 </span>

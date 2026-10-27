@@ -7,6 +7,7 @@ import { czkToEur } from "@/lib/format";
 import { categoryBreadcrumbSk, paramNameSk, paramValueSk } from "@/lib/sk-terms";
 import { stripHtml } from "@/lib/feeds/xml";
 import { SITE_URL } from "@/lib/site";
+import { hasManufacturerReferencePrice } from "@/lib/reference-price";
 import { getSettings } from "@/lib/settings.server";
 
 // Slovak counterpart of heureka.xml — separate Heureka.sk shop account/feed
@@ -51,7 +52,9 @@ export async function GET() {
       const productName = p.nameSk!;
       const description = stripHtml(p.descriptionSk!).slice(0, 5000);
       const priceEur = czkToEur(p.price, rate);
-      const priceBeforeEur = p.compareAtPrice !== null ? czkToEur(p.compareAtPrice, rate) : null;
+      // A manufacturer reference price is not our own "price before discount" — Heureka's PRICE_BEFORE must be the latter.
+      const priceBeforeEur =
+        p.compareAtPrice !== null && !hasManufacturerReferencePrice(p.brandName) ? czkToEur(p.compareAtPrice, rate) : null;
 
       return `  <SHOPITEM>
     <ITEM_ID>${escapeXml(p.code)}</ITEM_ID>
