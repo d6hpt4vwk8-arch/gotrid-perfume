@@ -396,7 +396,7 @@ export function CategoryFilters({
           <div className="flex flex-col gap-4 overflow-y-auto px-4 pb-4 pt-3 sm:overflow-visible sm:p-0">
       {topProducts.length > 0 && (
         <div className="hidden flex-col gap-2 border-b border-line pb-4 sm:flex">
-          <span className="text-[11px] font-semibold tracking-wide text-accent-2 uppercase">
+          <span className="text-[13px] font-bold tracking-wide text-ink uppercase">
             {tr("Top prodejů")}
           </span>
           <ul className="flex flex-col gap-2">
@@ -406,16 +406,16 @@ export function CategoryFilters({
                 <li key={product.slug}>
                   <Link
                     href={`/produkt/${product.slug}`}
-                    className="group flex items-center gap-2.5 rounded-sm py-1 text-sm hover:bg-line/30"
+                    className="group flex items-center gap-3 rounded-sm py-1 text-[15px] hover:bg-line/30"
                   >
-                    <span className="relative h-12 w-12 shrink-0 overflow-hidden bg-line/60">
+                    <span className="relative h-14 w-14 shrink-0 overflow-hidden bg-line/60">
                       {image ? (
-                        <Image src={image.url} alt={isSk && product.nameSk ? product.nameSk : product.name} fill sizes="48px" className="object-cover" />
+                        <Image src={image.url} alt={isSk && product.nameSk ? product.nameSk : product.name} fill sizes="56px" className="object-cover" />
                       ) : null}
                     </span>
                     <span className="flex flex-col gap-0.5 overflow-hidden">
                       <span className="line-clamp-2 text-ink group-hover:underline">{isSk && product.nameSk ? product.nameSk : product.name}</span>
-                      <span className="font-semibold text-accent">{price(product.price)}</span>
+                      <span className="font-bold text-ink">{price(product.price)}</span>
                     </span>
                   </Link>
                 </li>
@@ -426,13 +426,13 @@ export function CategoryFilters({
       )}
 
       <div className="hidden sm:block">
-        <label className="text-[11px] font-semibold tracking-wide text-accent-2 uppercase">
+        <label className="text-[13px] font-bold tracking-wide text-ink uppercase">
           {tr("Řazení")}
         </label>
         <select
           value={searchParams.get("sort") ?? "newest"}
           onChange={(e) => setSort(e.target.value)}
-          className="mt-1 w-full rounded-sm border border-line px-2 py-1.5 text-sm text-ink"
+          className="mt-1.5 w-full rounded-sm border border-line px-2.5 py-2 text-[15px] text-ink"
         >
           {Object.entries(SORT_LABELS).map(([value, label]) => (
             <option key={value} value={value}>

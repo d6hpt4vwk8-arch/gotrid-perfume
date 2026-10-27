@@ -39,7 +39,7 @@ export async function HomeHero() {
   const slides: ReactNode[] = [
     <section
       key="main"
-      className="relative flex h-full flex-col overflow-hidden rounded-sm bg-ink text-white lg:min-h-[560px] lg:flex-row lg:items-center"
+      className="relative flex h-full flex-col overflow-hidden rounded-sm bg-ink text-white lg:min-h-[440px] lg:flex-row lg:items-center"
     >
       {/* Artwork built from the real product photos (Lattafa Eclaire Pistache + Khamrah Qahwa,
           Dr.Althea serum + 345 Relief Cream) on graphite plinths — dark like the rest of the site;
@@ -68,7 +68,7 @@ export async function HomeHero() {
         <div className="absolute inset-x-0 bottom-0 h-1/3 bg-gradient-to-t from-ink to-transparent" />
       </div>
 
-      <div className="relative z-10 flex flex-col items-start gap-5 px-6 pt-2 pb-14 sm:px-14 lg:w-[50%] lg:px-14 lg:py-14">
+      <div className="relative z-10 flex flex-col items-start gap-5 px-6 pt-2 pb-14 sm:px-14 lg:w-[50%] lg:gap-4 lg:px-14 lg:py-8">
         <span className="rounded-full border border-white/25 bg-white/10 px-3 py-1.5 text-[10px] tracking-widest uppercase sm:text-[11px]">
           {tr("Arabské parfémy")} &times; {tr("Korejská kosmetika")}
         </span>
@@ -134,7 +134,7 @@ export async function HomeHero() {
     slides.push(
       <section
         key="gift"
-        className="relative flex h-full flex-col overflow-hidden rounded-sm bg-ink text-white lg:min-h-[560px] lg:flex-row lg:items-center"
+        className="relative flex h-full flex-col overflow-hidden rounded-sm bg-ink text-white lg:min-h-[440px] lg:flex-row lg:items-center"
       >
         {/* Same dark 3D look as the main slide — the artwork was generated from the real gift
             products (Freeman masks and dry shampoo, Humble floss and toothbrushes); the full live
@@ -160,7 +160,7 @@ export async function HomeHero() {
           <div className="absolute inset-x-0 bottom-0 h-1/3 bg-gradient-to-t from-ink to-transparent" />
         </div>
 
-        <div className="relative z-10 flex flex-col items-start gap-5 px-6 pt-2 pb-14 sm:px-14 lg:w-[50%] lg:px-14 lg:py-14">
+        <div className="relative z-10 flex flex-col items-start gap-5 px-6 pt-2 pb-14 sm:px-14 lg:w-[50%] lg:gap-4 lg:px-14 lg:py-8">
           <span className="rounded-full border border-white/25 bg-white/10 px-3 py-1.5 text-[10px] tracking-widest uppercase sm:text-[11px]">
             {tr("Dárek zdarma")}
           </span>
@@ -182,9 +182,9 @@ export async function HomeHero() {
             </Link>
           </div>
           {gifts.length > 0 && (
-            <div className="flex w-full max-w-md flex-col gap-2 border-t border-white/15 pt-4 text-xs text-white/60">
+            <div className="flex w-full max-w-md flex-col gap-2 border-t border-white/15 pt-4 text-xs text-white/60 lg:max-w-xl">
               <span className="font-semibold tracking-wider text-white/80 uppercase">{tr("Na výběr zdarma")}</span>
-              <ul className="flex flex-col gap-2">
+              <ul className="flex flex-col gap-2 lg:grid lg:grid-cols-2 lg:gap-x-6">
                 {gifts.map((gift) => (
                   <li key={gift.productId} className="flex items-center gap-3">
                     <span className="relative h-10 w-10 shrink-0 overflow-hidden rounded-sm bg-white">

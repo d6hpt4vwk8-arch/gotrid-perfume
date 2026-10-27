@@ -120,7 +120,7 @@ export default async function HomePage() {
     // widest content (an unwrapped heading) instead of the viewport —
     // pushing the whole homepage ~120px wider than the screen on a phone
     // and silently clipping the right edge of every section.
-    <main className="mx-auto flex w-full max-w-6xl flex-1 flex-col gap-12 px-4 py-10">
+    <main data-wide className="mx-auto flex w-full max-w-(--page-max) flex-1 flex-col gap-12 px-4 py-10 xl:px-8">
       <script
         type="application/ld+json"
         dangerouslySetInnerHTML={{
@@ -165,7 +165,7 @@ export default async function HomePage() {
         <h2 className="mb-4 text-lg font-semibold">{tr("Kategorie")}</h2>
         {/* One 3D icon per top-level category (public/categories/<fullSlug>.jpg); a category without
             an icon yet falls back to a plain text tile. */}
-        <div className="grid grid-cols-2 gap-x-4 gap-y-5 sm:grid-cols-5">
+        <div className="grid grid-cols-2 gap-x-4 gap-y-5 sm:grid-cols-5 xl:grid-cols-9">
           {categories
             .filter((c) => !c.hidden)
             .map((category) => (
@@ -202,7 +202,7 @@ export default async function HomePage() {
       {koreanCosmetics.length > 0 && (
         <section>
           <h2 className="mb-4 text-lg font-semibold">{tr("Korejská kosmetika")}</h2>
-          <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 md:grid-cols-4">
+          <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 md:grid-cols-4 xl:grid-cols-6">
             {koreanCosmetics.map((product) => (
               <ProductCard key={product.slug} product={product} freeShippingThreshold={settings.freeShippingThreshold} />
             ))}
@@ -213,7 +213,7 @@ export default async function HomePage() {
       {arabicPerfumes.length > 0 && (
         <section>
           <h2 className="mb-4 text-lg font-semibold">{tr("Arabské parfémy")}</h2>
-          <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 md:grid-cols-4">
+          <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 md:grid-cols-4 xl:grid-cols-6">
             {arabicPerfumes.map((product) => (
               <ProductCard key={product.slug} product={product} freeShippingThreshold={settings.freeShippingThreshold} />
             ))}
@@ -224,7 +224,7 @@ export default async function HomePage() {
       {saleProducts.length > 0 && (
         <section>
           <h2 className="mb-4 text-lg font-semibold">{tr("Výprodej")}</h2>
-          <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 md:grid-cols-4">
+          <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 md:grid-cols-4 xl:grid-cols-6">
             {saleProducts.map((product) => (
               <ProductCard key={product.slug} product={product} freeShippingThreshold={settings.freeShippingThreshold} />
             ))}
