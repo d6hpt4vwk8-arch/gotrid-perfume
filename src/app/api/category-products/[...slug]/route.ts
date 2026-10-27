@@ -4,7 +4,8 @@ import { prisma } from "@/lib/prisma";
 import { findCategoryByFullSlug } from "@/lib/categories.server";
 import { getDescendantCategoryIds } from "@/lib/category-descendants.server";
 import { resolvePerfumeFilterCategoryIds } from "@/lib/perfume-structure-facets.server";
-import { buildOrderBy, buildProductWhere, parseFilterParams } from "@/lib/product-filters";
+import { buildProductWhere, parseFilterParams } from "@/lib/product-filters";
+import { findProductsPage } from "@/lib/product-listing.server";
 import { skScope } from "@/lib/sk-visibility";
 
 const PAGE_SIZE = 24;
@@ -62,13 +63,7 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ slug
     return NextResponse.json({ total: await prisma.product.count({ where }) });
   }
 
-  const rawProducts = await prisma.product.findMany({
-    where,
-    orderBy: buildOrderBy(filters.sort),
-    skip: (filters.page - 1) * PAGE_SIZE,
-    take: PAGE_SIZE,
-    include: { brand: true, images: { orderBy: { sortOrder: "asc" }, take: 1 } },
-  });
+  const rawProducts = await findProductsPage({ where, sort: filters.sort, page: filters.page, pageSize: PAGE_SIZE });
 
   const products = await attachColorSwatches(rawProducts);
 

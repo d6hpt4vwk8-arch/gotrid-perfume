@@ -315,7 +315,7 @@ export function CategoryFilters({
           <button
             type="button"
             onClick={openSheet}
-            className="flex flex-1 items-center justify-center gap-2 rounded-sm border border-ink px-4 py-2.5 text-sm font-semibold text-ink"
+            className="flex shrink-0 items-center justify-center gap-2 whitespace-nowrap rounded-sm border border-ink px-4 py-2.5 text-sm font-semibold text-ink"
           >
             <span aria-hidden>☰</span>
             <span>{tr("Filtry")}{activeCountUrl > 0 && ` (${activeCountUrl})`}</span>
@@ -324,7 +324,7 @@ export function CategoryFilters({
             aria-label={tr("Řazení")}
             value={urlParams.get("sort") ?? "newest"}
             onChange={(e) => setSortNow(e.target.value)}
-            className="flex-1 rounded-sm border border-line px-2 py-2.5 text-sm text-ink"
+            className="min-w-0 flex-1 rounded-sm border border-line px-2 py-2.5 text-sm text-ink"
           >
             {Object.entries(SORT_LABELS).map(([value, label]) => (
               <option key={value} value={value}>

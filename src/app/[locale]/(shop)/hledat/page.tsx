@@ -3,6 +3,7 @@ import type { Prisma } from "@prisma/client";
 import { after } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { getAvailableBrands } from "@/lib/category-brands.server";
+import { findProductsPage } from "@/lib/product-listing.server";
 import { getScentFamilyFacets } from "@/lib/category-scent-facets.server";
 import { getCosmeticsFacets } from "@/lib/category-cosmetics-facets.server";
 import {
@@ -10,7 +11,6 @@ import {
   resolvePerfumeFilterCategoryIds,
 } from "@/lib/perfume-structure-facets.server";
 import {
-  buildOrderBy,
   buildProductWhere,
   parseFilterParams,
   type CategoryFilterParams,
@@ -93,13 +93,7 @@ export default async function SearchPage({
 
   const [rawProducts, total, brands, scentFacets, structureFacets, cosmeticsFacets, settings] =
     await Promise.all([
-      prisma.product.findMany({
-        where,
-        orderBy: buildOrderBy(filters.sort),
-        skip: (filters.page - 1) * PAGE_SIZE,
-        take: PAGE_SIZE,
-        include: { brand: true, images: { orderBy: { sortOrder: "asc" }, take: 1 } },
-      }),
+      findProductsPage({ where, sort: filters.sort, page: filters.page, pageSize: PAGE_SIZE }),
       prisma.product.count({ where }),
       getAvailableBrands(withSk(searchWhere)),
       getScentFamilyFacets(withSk(searchWhere)),
