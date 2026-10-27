@@ -106,14 +106,14 @@ export function ProductCard({
       </div>
       <div className="flex flex-1 flex-col gap-1.5 pt-3">
         {product.brand && (
-          <span className="border-b border-line pb-1.5 text-[10px] font-medium tracking-wide text-accent-2 uppercase">
+          <span className="border-b border-line pb-1.5 text-[11px] font-medium tracking-wide text-accent-2 uppercase lg:text-xs">
             {product.brand.name}
           </span>
         )}
-        <span className="line-clamp-2 text-sm font-semibold text-ink group-hover:underline">
+        <span className="line-clamp-2 text-sm font-semibold text-ink group-hover:underline lg:text-base">
           {title}
         </span>
-        {subtitle && <span className="line-clamp-2 text-xs leading-snug text-accent-2">{subtitle}</span>}
+        {subtitle && <span className="line-clamp-2 text-xs leading-snug text-accent-2 lg:text-sm">{subtitle}</span>}
         {product.colorSwatches && product.colorSwatches.length > 1 && (
           <div
             className="flex items-center gap-1.5"
@@ -130,13 +130,13 @@ export function ProductCard({
           </div>
         )}
         <div className="flex items-baseline gap-2">
-          <span className="font-bold text-accent">{price(product.price)}</span>
+          <span className="font-bold text-accent lg:text-lg">{price(product.price)}</span>
           {product.compareAtPrice && (
-            <span className="text-sm text-accent-2 line-through">{price(product.compareAtPrice)}</span>
+            <span className="text-sm text-accent-2 line-through lg:text-base">{price(product.compareAtPrice)}</span>
           )}
         </div>
         <span
-          className={`flex items-center gap-1.5 text-xs ${product.stock > 0 ? "text-ok" : "text-accent-2"}`}
+          className={`flex items-center gap-1.5 text-xs lg:text-sm ${product.stock > 0 ? "text-ok" : "text-accent-2"}`}
         >
           <span
             className={`h-1.5 w-1.5 rounded-full ${product.stock > 0 ? "bg-ok" : "bg-accent-2"}`}
@@ -155,7 +155,7 @@ export function ProductCard({
               stock: product.stock,
               isDefective: product.isDefective,
             }}
-            className="w-full rounded-sm bg-ink px-3 py-2.5 text-xs font-semibold text-white transition hover:bg-accent disabled:cursor-not-allowed disabled:bg-line disabled:text-accent-2"
+            className="w-full rounded-sm bg-ink px-3 py-2.5 text-xs font-semibold text-white transition lg:py-3 lg:text-sm hover:bg-accent disabled:cursor-not-allowed disabled:bg-line disabled:text-accent-2"
           />
         </div>
       </div>

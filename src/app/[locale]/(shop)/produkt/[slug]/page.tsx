@@ -211,7 +211,7 @@ export default async function ProductPage({
   };
 
   return (
-    <main className="mx-auto flex max-w-6xl flex-1 flex-col gap-8 px-4 py-10">
+    <main data-wide className="mx-auto flex max-w-(--page-max) flex-1 flex-col gap-8 px-4 py-10 xl:px-8">
       <script
         type="application/ld+json"
         dangerouslySetInnerHTML={{ __html: jsonLdScript(jsonLd) }}
@@ -242,7 +242,7 @@ export default async function ProductPage({
         ]}
       />
 
-      <div className="grid gap-8 md:grid-cols-2">
+      <div className="grid gap-8 md:grid-cols-2 xl:grid-cols-[minmax(0,1fr)_minmax(0,1.1fr)] xl:gap-12">
         <ProductGallery images={product.images} alt={displayName} />
 
         <div className="flex flex-col gap-4">

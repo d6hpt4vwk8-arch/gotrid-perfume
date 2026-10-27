@@ -36,15 +36,10 @@ html {
   overflow-x: hidden;
 }
 
-/* Page frame width: listing pages (category, brand, search, favourites) mark their <main> with
-   data-wide and use the full desktop width; the header/footer follow via :has() so the frame stays aligned. */
+/* Desktop page frame: header, footer and the listing/product pages share one wide frame so the header never
+   changes width between pages. Pages that keep a narrower column (home, cart, forms) just centre inside it. */
 :root {
-  --page-max: 72rem;
-}
-@media (min-width: 1280px) {
-  body:has([data-wide]) {
-    --page-max: 90rem;
-  }
+  --page-max: 90rem;
 }
 
 body {
