@@ -57,6 +57,11 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ slug
   );
   const where = buildProductWhere(baseWhere, filters, perfumeCategoryIds);
 
+  // ?count=1 — just the number of matches, for the mobile filter sheet's "Zobrazit N produktů" button.
+  if (sp.get("count") === "1") {
+    return NextResponse.json({ total: await prisma.product.count({ where }) });
+  }
+
   const rawProducts = await prisma.product.findMany({
     where,
     orderBy: buildOrderBy(filters.sort),

@@ -4,7 +4,7 @@ import Image from "next/image";
 import { Link } from "@/i18n/navigation";
 import { useSearchParams } from "next/navigation";
 import { usePathname, useRouter } from "@/i18n/navigation";
-import { useMemo, useState, type ReactNode } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState, type ReactNode } from "react";
 import type { BrandFacet } from "@/lib/category-brands.server";
 import type { ScentFamilyFacet } from "@/lib/category-scent-facets.server";
 import type { PerfumeStructureFacets } from "@/lib/perfume-structure-facets.server";
@@ -62,11 +62,31 @@ export function CategoryFilters({
 }) {
   const router = useRouter();
   const pathname = usePathname();
-  const searchParams = useSearchParams();
+  const urlParams = useSearchParams();
   const { price, currency, czkToEurRate } = useCurrency();
   const tr = useTr();
   const isSk = useIsSk();
   const eur = currency === "EUR";
+
+  const [priceMin, setPriceMin] = useState(() => czkToDisplay(urlParams.get("priceMin") ?? "", eur, czkToEurRate));
+  const [priceMax, setPriceMax] = useState(() => czkToDisplay(urlParams.get("priceMax") ?? "", eur, czkToEurRate));
+  const [brandQuery, setBrandQuery] = useState("");
+  const [showAllBrands, setShowAllBrands] = useState(false);
+  // Mobile: the filters open as a bottom sheet that works on a DRAFT of the URL params — ticking several filters
+  // doesn't reload the page each time; "Zobrazit N produktů" applies them all at once. Desktop (sheet never opens)
+  // keeps applying each change immediately.
+  const [mobileOpen, setMobileOpen] = useState(false);
+  const [draft, setDraft] = useState<string | null>(null);
+  const [draftCount, setDraftCount] = useState<number | null>(null);
+  const [showFloating, setShowFloating] = useState(false);
+  const draftRef = useRef<string | null>(null);
+  const barRef = useRef<HTMLDivElement>(null);
+  draftRef.current = draft;
+  // Every read below goes through `searchParams`: the draft while the sheet is open, the real URL otherwise.
+  const searchParams = useMemo(
+    () => new URLSearchParams(mobileOpen && draft !== null ? draft : urlParams.toString()),
+    [mobileOpen, draft, urlParams],
+  );
 
   const selectedBrands = searchParams.getAll("brand");
   const selectedScents = searchParams.getAll("scent");
@@ -77,18 +97,73 @@ export function CategoryFilters({
   const selectedConcerns = searchParams.getAll("concern");
   const selectedKinds = searchParams.getAll("kind");
   const selectedIngredients = searchParams.getAll("ingredient");
-  const [priceMin, setPriceMin] = useState(() => czkToDisplay(searchParams.get("priceMin") ?? "", eur, czkToEurRate));
-  const [priceMax, setPriceMax] = useState(() => czkToDisplay(searchParams.get("priceMax") ?? "", eur, czkToEurRate));
-  const [brandQuery, setBrandQuery] = useState("");
-  const [showAllBrands, setShowAllBrands] = useState(false);
-  const [mobileOpen, setMobileOpen] = useState(false);
 
   function updateParams(mutate: (params: URLSearchParams) => void) {
     const params = new URLSearchParams(searchParams.toString());
     mutate(params);
     params.delete("page"); // any filter change resets pagination
-    router.push(`${pathname}?${params.toString()}`);
+    if (mobileOpen) setDraft(params.toString());
+    else router.push(`${pathname}?${params.toString()}`, { scroll: false });
   }
+
+  const openSheet = useCallback(() => {
+    setDraft(urlParams.toString());
+    setDraftCount(null);
+    setMobileOpen(true);
+  }, [urlParams]);
+
+  function closeSheet() {
+    setMobileOpen(false);
+    setDraft(null);
+  }
+
+  function applySheet() {
+    const qs = draftRef.current ?? urlParams.toString();
+    setMobileOpen(false);
+    setDraft(null);
+    router.push(qs ? `${pathname}?${qs}` : pathname, { scroll: false });
+    // Land on the filter bar (so the results start right below), not at the page top and not deep in the old list.
+    setTimeout(() => barRef.current?.scrollIntoView({ block: "start" }), 60);
+  }
+
+  // Lock the page behind the sheet.
+  useEffect(() => {
+    if (!mobileOpen) return;
+    const prev = document.body.style.overflow;
+    document.body.style.overflow = "hidden";
+    return () => {
+      document.body.style.overflow = prev;
+    };
+  }, [mobileOpen]);
+
+  // Floating "Filtry" button once the visitor has scrolled past the top bar.
+  useEffect(() => {
+    const onScroll = () => setShowFloating(window.scrollY > 450);
+    onScroll();
+    window.addEventListener("scroll", onScroll, { passive: true });
+    return () => window.removeEventListener("scroll", onScroll);
+  }, []);
+
+  // Live result count for the draft ("Zobrazit 357 produktů") — category pages only (the search page has tiered fallbacks).
+  const categorySlug = pathname.match(/\/kategorie\/(.+)$/)?.[1] ?? null;
+  useEffect(() => {
+    if (!mobileOpen || draft === null || !categorySlug) return;
+    const controller = new AbortController();
+    const timer = setTimeout(() => {
+      const params = new URLSearchParams(draft);
+      params.delete("page");
+      params.set("count", "1");
+      if (isSk) params.set("lang", "sk");
+      fetch(`/api/category-products/${categorySlug}?${params.toString()}`, { signal: controller.signal })
+        .then((res) => res.json())
+        .then((data: { total?: number }) => setDraftCount(typeof data.total === "number" ? data.total : null))
+        .catch(() => {});
+    }, 250);
+    return () => {
+      clearTimeout(timer);
+      controller.abort();
+    };
+  }, [mobileOpen, draft, categorySlug, isSk]);
 
   function toggleMulti(key: string, current: string[], value: string) {
     const isSelected = current.includes(value);
@@ -117,6 +192,14 @@ export function CategoryFilters({
 
   function setSort(sort: string) {
     updateParams((params) => params.set("sort", sort));
+  }
+
+  // The mobile bar's sort select lives outside the sheet, so it always applies immediately to the real URL.
+  function setSortNow(sort: string) {
+    const params = new URLSearchParams(urlParams.toString());
+    params.set("sort", sort);
+    params.delete("page");
+    router.push(`${pathname}?${params.toString()}`, { scroll: false });
   }
 
   const activeChips = useMemo(() => {
@@ -208,26 +291,102 @@ export function CategoryFilters({
 
   function clearAll() {
     const q = searchParams.get("q");
-    router.push(q ? `${pathname}?q=${encodeURIComponent(q)}` : pathname);
+    if (mobileOpen) {
+      setDraft(q ? `q=${encodeURIComponent(q)}` : "");
+      return;
+    }
+    router.push(q ? `${pathname}?q=${encodeURIComponent(q)}` : pathname, { scroll: false });
+  }
+
+  function productsLabel(n: number) {
+    const word = n === 1 ? tr("produkt") : n >= 2 && n <= 4 ? tr("produkty") : tr("produktů");
+    return `${tr("Zobrazit")} ${n} ${word}`;
   }
 
   const visibleBrands = brands.filter((b) => b.name.toLowerCase().includes(brandQuery.toLowerCase()));
   const brandsToShow = showAllBrands ? visibleBrands : visibleBrands.slice(0, 8);
 
+  const activeCountUrl = activeChips.length;
   return (
     <aside className="flex w-full flex-col gap-4 sm:w-60 sm:shrink-0">
-      <button
-        type="button"
-        onClick={() => setMobileOpen((open) => !open)}
-        className="flex items-center justify-between rounded-sm border border-line px-4 py-2.5 text-sm font-semibold text-ink sm:hidden"
-      >
-        <span>{tr("Filtrovat")}{activeChips.length > 0 && ` (${activeChips.length})`}</span>
-        <span className={`text-accent-2 transition ${mobileOpen ? "rotate-180" : ""}`}>⌄</span>
-      </button>
+      {/* Mobile: top bar (filters + sort) and the active filters as removable chips — always visible, no panel to open first. */}
+      <div ref={barRef} className="flex scroll-mt-2 flex-col gap-2 sm:hidden">
+        <div className="flex items-center gap-2">
+          <button
+            type="button"
+            onClick={openSheet}
+            className="flex flex-1 items-center justify-center gap-2 rounded-sm border border-ink px-4 py-2.5 text-sm font-semibold text-ink"
+          >
+            <span aria-hidden>☰</span>
+            <span>{tr("Filtry")}{activeCountUrl > 0 && ` (${activeCountUrl})`}</span>
+          </button>
+          <select
+            aria-label={tr("Řazení")}
+            value={urlParams.get("sort") ?? "newest"}
+            onChange={(e) => setSortNow(e.target.value)}
+            className="flex-1 rounded-sm border border-line px-2 py-2.5 text-sm text-ink"
+          >
+            {Object.entries(SORT_LABELS).map(([value, label]) => (
+              <option key={value} value={value}>
+                {tr(label)}
+              </option>
+            ))}
+          </select>
+        </div>
+        {!mobileOpen && activeChips.length > 0 && (
+          <div className="flex flex-wrap items-center gap-1.5">
+            {activeChips.map((chip) => (
+              <button
+                key={`m-${chip.key}-${chip.value}`}
+                type="button"
+                onClick={() => removeChip(chip.key, chip.value)}
+                className="flex items-center gap-1 rounded-full bg-ink px-2.5 py-1 text-xs font-medium text-white"
+              >
+                {chip.label}
+                <span aria-hidden>×</span>
+              </button>
+            ))}
+            <button type="button" onClick={clearAll} className="text-xs text-accent-2 underline">
+              {tr("Vymazat vše")}
+            </button>
+          </div>
+        )}
+      </div>
 
-      <div className={`${mobileOpen ? "flex" : "hidden"} flex-col gap-4 sm:flex`}>
+      {showFloating && !mobileOpen && (
+        <button
+          type="button"
+          onClick={openSheet}
+          className="fixed bottom-4 left-1/2 z-30 flex -translate-x-1/2 items-center gap-2 rounded-full bg-ink px-5 py-3 text-sm font-semibold text-white shadow-lg sm:hidden"
+        >
+          <span aria-hidden>☰</span>
+          {tr("Filtry")}{activeCountUrl > 0 && ` (${activeCountUrl})`}
+        </button>
+      )}
+
+      <div
+        className={`${mobileOpen ? "fixed inset-0 z-50 flex flex-col justify-end bg-ink/50" : "hidden"} sm:static sm:z-auto sm:block sm:bg-transparent`}
+        onClick={(e) => {
+          if (mobileOpen && e.target === e.currentTarget) closeSheet();
+        }}
+      >
+        <div className="flex max-h-[88vh] flex-col rounded-t-2xl bg-white sm:max-h-none sm:rounded-none sm:bg-transparent">
+          <div className="flex items-center justify-between border-b border-line px-4 py-3 sm:hidden">
+            <span className="text-base font-bold text-ink">{tr("Filtry")}</span>
+            <div className="flex items-center gap-4">
+              {activeChips.length > 0 && (
+                <button type="button" onClick={clearAll} className="text-sm text-accent-2 underline">
+                  {tr("Zrušit vše")}
+                </button>
+              )}
+              <button type="button" onClick={closeSheet} aria-label={tr("Zavřít")} className="text-2xl leading-none text-ink">
+                ×
+              </button>
+            </div>
+          </div>
+          <div className="flex flex-col gap-4 overflow-y-auto px-4 pb-4 pt-3 sm:overflow-visible sm:p-0">
       {topProducts.length > 0 && (
-        <div className="flex flex-col gap-2 border-b border-line pb-4">
+        <div className="hidden flex-col gap-2 border-b border-line pb-4 sm:flex">
           <span className="text-[11px] font-semibold tracking-wide text-accent-2 uppercase">
             {tr("Top prodejů")}
           </span>
@@ -257,7 +416,7 @@ export function CategoryFilters({
         </div>
       )}
 
-      <div>
+      <div className="hidden sm:block">
         <label className="text-[11px] font-semibold tracking-wide text-accent-2 uppercase">
           {tr("Řazení")}
         </label>
@@ -275,7 +434,7 @@ export function CategoryFilters({
       </div>
 
       {activeChips.length > 0 && (
-        <div className="flex flex-col gap-2 border-b border-line pb-4">
+        <div className="flex flex-col gap-2 border-b border-line pb-4 sm:flex">
           <div className="flex flex-wrap gap-1.5">
             {activeChips.map((chip) => (
               <button
@@ -576,6 +735,17 @@ export function CategoryFilters({
           </div>
         </FilterSection>
       )}
+          </div>
+          <div className="border-t border-line bg-white px-4 py-3 sm:hidden">
+            <button
+              type="button"
+              onClick={applySheet}
+              className="w-full rounded-sm bg-ink px-4 py-3 text-sm font-semibold text-white"
+            >
+              {draftCount !== null ? productsLabel(draftCount) : tr("Zobrazit výsledky")}
+            </button>
+          </div>
+        </div>
       </div>
     </aside>
   );
