@@ -26,6 +26,10 @@ export function CouponField({ onApplied }: { onApplied?: (coupon: AppliedCoupon 
   const [applied, setApplied] = useState<AppliedCoupon | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [checking, setChecking] = useState(false);
+  // Collapsed behind a link until asked for: an always-open "Slevový kód" box
+  // got ~30 % of cart-page clicks in Clarity but only a handful of "Použít",
+  // i.e. shoppers without a code click in and may leave to hunt for one.
+  const [open, setOpen] = useState(false);
   const onAppliedRef = useRef(onApplied);
   onAppliedRef.current = onApplied;
 
@@ -99,10 +103,23 @@ export function CouponField({ onApplied }: { onApplied?: (coupon: AppliedCoupon 
     );
   }
 
+  if (!open && !input && !error && !couponCode) {
+    return (
+      <button
+        type="button"
+        onClick={() => setOpen(true)}
+        className="self-start text-sm text-accent-2 underline hover:text-accent"
+      >
+        {tr("Máte slevový kód?")}
+      </button>
+    );
+  }
+
   return (
     <div className="flex flex-col gap-1">
       <div className="flex gap-2">
         <input
+          autoFocus={open}
           placeholder={tr("Slevový kód")}
           value={input}
           onChange={(e) => setInput(e.target.value)}
