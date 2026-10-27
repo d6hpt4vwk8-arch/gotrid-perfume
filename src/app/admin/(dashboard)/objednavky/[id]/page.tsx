@@ -7,7 +7,7 @@ import { SHIPPING_LABELS, PAYMENT_LABELS, getShippingCost } from "@/lib/shipping
 import { purchaseCost } from "@/lib/cost-of-goods";
 import { ShippingIcon } from "@/components/shipping-icons";
 import { ORDER_STATUS_LABELS } from "@/lib/orders/status-labels";
-import { updateOrderStatus } from "@/lib/admin/actions/orders";
+import { emailInvoice, updateOrderStatus } from "@/lib/admin/actions/orders";
 import { getCustomerReputationMap } from "@/lib/customer-reputation";
 
 export default async function AdminOrderDetailPage({
@@ -107,6 +107,11 @@ export default async function AdminOrderDetailPage({
           >
             Faktura (PDF)
           </a>
+          <form action={emailInvoice.bind(null, order.id)}>
+            <button type="submit" className="text-sm font-medium underline">
+              Poslat fakturu e-mailem
+            </button>
+          </form>
           {order.status === "REFUNDED" && (
             <a
               href={`/api/admin/orders/${order.id}/dobropis`}

@@ -7,6 +7,7 @@ import { requireAdmin } from "@/lib/admin/require-admin";
 import { sendHeurekaOrderLog } from "@/lib/analytics/heureka-overeno";
 import { awardPointsForOrder } from "@/lib/loyalty";
 import { sendShippedEmail } from "@/lib/email/send-shipped-email";
+import { sendInvoiceEmail } from "@/lib/email/send-invoice-email";
 import type { OrderStatus } from "@prisma/client";
 
 const VALID_STATUSES: OrderStatus[] = [
@@ -146,4 +147,19 @@ export async function updateOrderStatus(id: string, formData: FormData) {
   revalidatePath("/admin/objednavky");
   revalidatePath(`/admin/objednavky/${id}`);
   revalidatePath(`/objednavka/${order.number}`);
+}
+
+
+/** "Poslat fakturu e-mailem" on the admin order page — sends the faktura PDF to the order's e-mail address. */
+export async function emailInvoice(id: string) {
+  await requireAdmin();
+  const order = await prisma.order.findUniqueOrThrow({ where: { id } });
+  await sendInvoiceEmail(order);
+  await logAdminActivity({
+    action: "order.invoice_emailed",
+    entityType: "Order",
+    entityId: id,
+    detail: `${order.number}: faktura odeslána e-mailem na ${order.email}`,
+  });
+  revalidatePath(`/admin/objednavky/${id}`);
 }
