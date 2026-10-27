@@ -36,6 +36,17 @@ html {
   overflow-x: hidden;
 }
 
+/* Page frame width: listing pages (category, brand, search, favourites) mark their <main> with
+   data-wide and use the full desktop width; the header/footer follow via :has() so the frame stays aligned. */
+:root {
+  --page-max: 72rem;
+}
+@media (min-width: 1280px) {
+  body:has([data-wide]) {
+    --page-max: 90rem;
+  }
+}
+
 body {
   background: var(--background);
   color: var(--foreground);

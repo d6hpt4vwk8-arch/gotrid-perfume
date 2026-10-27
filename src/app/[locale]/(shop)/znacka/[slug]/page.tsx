@@ -59,7 +59,7 @@ export default async function BrandPage({
   const products = await attachColorSwatches(rawProducts);
 
   return (
-    <main className="mx-auto flex max-w-6xl flex-1 flex-col gap-6 px-4 py-10">
+    <main data-wide className="mx-auto flex max-w-(--page-max) flex-1 flex-col gap-6 px-4 py-10 xl:px-8">
       <script
         type="application/ld+json"
         dangerouslySetInnerHTML={{
@@ -79,7 +79,7 @@ export default async function BrandPage({
       {products.length === 0 ? (
         <p className="text-sm text-accent-2">{tr("U této značky zatím nejsou žádné produkty.")}</p>
       ) : (
-        <div className="grid grid-cols-2 gap-x-4 gap-y-8 sm:grid-cols-3 md:grid-cols-4">
+        <div className="grid grid-cols-2 gap-x-4 gap-y-8 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5">
           {products.map((product) => (
             <ProductCard
               key={product.slug}

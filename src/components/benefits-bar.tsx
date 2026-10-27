@@ -30,7 +30,7 @@ export async function BenefitsBar() {
 
   return (
     <div className="bg-ink">
-      <div className="mx-auto max-w-6xl px-4 py-1.5">
+      <div className="mx-auto max-w-(--page-max) px-4 py-1.5 xl:px-8">
         <BenefitsRotator items={items} />
       </div>
     </div>

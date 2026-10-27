@@ -52,7 +52,7 @@ export async function SiteFooter() {
 
   return (
     <footer className="bg-ink text-white">
-      <div className="mx-auto grid max-w-6xl gap-8 px-4 py-10 sm:grid-cols-2 lg:grid-cols-5">
+      <div className="mx-auto grid max-w-(--page-max) gap-8 px-4 py-10 xl:px-8 sm:grid-cols-2 lg:grid-cols-5">
         <div>
           <Link href="/" className="flex items-center gap-3">
             <Image src="/logo-mark.svg" alt="" width={48} height={48} className="brightness-0 invert" />
@@ -158,7 +158,7 @@ export async function SiteFooter() {
 
       {topBrands.length > 0 && (
         <div className="border-t border-white/10 px-4 py-8">
-          <div className="mx-auto flex max-w-6xl flex-col gap-3">
+          <div className="mx-auto flex max-w-(--page-max) flex-col gap-3 xl:px-4">
             <h3 className="text-sm font-semibold text-white">{tr("Značky")}</h3>
             <div className="flex flex-wrap gap-2">
               {topBrands.map((brand) => (

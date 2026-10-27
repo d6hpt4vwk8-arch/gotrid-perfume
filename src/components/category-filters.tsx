@@ -317,7 +317,7 @@ export function CategoryFilters({
 
   const activeCountUrl = activeChips.length;
   return (
-    <aside className="flex w-full flex-col gap-4 sm:w-60 sm:shrink-0">
+    <aside className="flex w-full flex-col gap-4 sm:w-60 sm:shrink-0 xl:w-64">
       {/* Mobile: top bar (filters + sort) and the active filters as removable chips — always visible, no panel to open first. */}
       <div ref={barRef} className="flex scroll-mt-2 flex-col gap-2 sm:hidden">
         <div className="flex items-center gap-2">

@@ -21,7 +21,7 @@ export async function SiteHeader() {
 
   return (
     <header className="sticky inset-x-0 top-0 z-30 w-full bg-ink">
-      <div className="mx-auto flex max-w-6xl flex-wrap items-center gap-4 px-4 py-3 sm:gap-8">
+      <div className="mx-auto flex max-w-(--page-max) flex-wrap items-center gap-4 px-4 py-3 sm:gap-8 xl:px-8">
         <div className="flex w-full items-center justify-between sm:contents">
           <Link href="/" className="flex shrink-0 items-center gap-2.5">
             <Image

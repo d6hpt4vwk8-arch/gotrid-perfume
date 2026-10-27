@@ -191,7 +191,7 @@ export default async function CategoryPage({
   const advisorConcerns = showAdvisor ? await getKbeautyAdvisorConcerns(categoryIds, isSk) : [];
 
   return (
-    <main className="mx-auto flex max-w-6xl flex-1 flex-col gap-6 px-4 py-10">
+    <main data-wide className="mx-auto flex max-w-(--page-max) flex-1 flex-col gap-6 px-4 py-10 xl:px-8">
       <script
         type="application/ld+json"
         dangerouslySetInnerHTML={{

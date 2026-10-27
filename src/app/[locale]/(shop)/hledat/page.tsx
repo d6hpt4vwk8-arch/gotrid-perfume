@@ -43,7 +43,7 @@ export default async function SearchPage({
 
   if (query.length < 2) {
     return (
-      <main className="mx-auto flex max-w-6xl flex-1 flex-col gap-6 px-4 py-10">
+      <main data-wide className="mx-auto flex max-w-(--page-max) flex-1 flex-col gap-6 px-4 py-10 xl:px-8">
         <h1 className="text-2xl font-bold text-ink">{tr("Výsledky hledání")}</h1>
         <p className="text-sm text-accent-2">{tr("Zadejte alespoň 2 znaky.")}</p>
       </main>
@@ -138,7 +138,7 @@ export default async function SearchPage({
   if (filters.sort !== "newest") paginationQuery.set("sort", filters.sort);
 
   return (
-    <main className="mx-auto flex max-w-6xl flex-1 flex-col gap-6 px-4 py-10">
+    <main data-wide className="mx-auto flex max-w-(--page-max) flex-1 flex-col gap-6 px-4 py-10 xl:px-8">
       <h1 className="text-2xl font-bold text-ink">{tr("Výsledky hledání")}: „{query}“</h1>
       {usedFallback === "description" && (
         <p className="-mt-4 text-sm text-accent-2">
@@ -166,7 +166,7 @@ export default async function SearchPage({
               {tr("Hledáte něco konkrétního? Napište nám na info@gotridperfume.cz a zkusíme to pro vás sehnat.")}
             </p>
           ) : (
-            <div className="grid grid-cols-2 gap-x-4 gap-y-8 sm:grid-cols-3 lg:grid-cols-4">
+            <div className="grid grid-cols-2 gap-x-4 gap-y-8 sm:grid-cols-3 xl:grid-cols-4">
               {products.map((product) => (
                 <ProductCard
                   key={product.slug}

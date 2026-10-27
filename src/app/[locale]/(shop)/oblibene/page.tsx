@@ -25,7 +25,7 @@ export default function WishlistPage() {
 
   if (products === null) {
     return (
-      <main className="mx-auto flex max-w-6xl flex-1 flex-col px-4 py-10">
+      <main data-wide className="mx-auto flex max-w-(--page-max) flex-1 flex-col px-4 py-10 xl:px-8">
         <h1 className="mb-6 text-2xl font-bold text-ink">{tr("Oblíbené produkty")}</h1>
         <p className="text-accent-2">{tr("Načítání…")}</p>
       </main>
@@ -50,9 +50,9 @@ export default function WishlistPage() {
   }
 
   return (
-    <main className="mx-auto flex max-w-6xl flex-1 flex-col px-4 py-10">
+    <main data-wide className="mx-auto flex max-w-(--page-max) flex-1 flex-col px-4 py-10 xl:px-8">
       <h1 className="mb-6 text-2xl font-bold text-ink">{tr("Oblíbené produkty")}</h1>
-      <div className="grid grid-cols-2 gap-x-4 gap-y-8 sm:grid-cols-3 md:grid-cols-4">
+      <div className="grid grid-cols-2 gap-x-4 gap-y-8 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5">
         {products.map((product) => (
           <ProductCard key={product.slug} product={product} />
         ))}
