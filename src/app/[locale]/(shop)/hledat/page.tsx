@@ -15,7 +15,12 @@ import {
   parseFilterParams,
   type CategoryFilterParams,
 } from "@/lib/product-filters";
-import { buildDescriptionSearchWhere, buildExactSearchWhere, findFuzzyProductIds } from "@/lib/product-search";
+import {
+  buildDescriptionSearchWhere,
+  buildExactSearchWhere,
+  findFuzzyProductIds,
+  findTokenProductIds,
+} from "@/lib/product-search";
 import { ProductCard } from "@/components/product-card";
 import { CategoryFilters } from "@/components/category-filters";
 import { Pagination } from "@/components/pagination";
@@ -48,25 +53,38 @@ export default async function SearchPage({
   const filters = parseFilterParams(rawParams);
   const perfumeCategoryIds = await resolvePerfumeFilterCategoryIds(filters.genderSlugs);
 
-  // Three tiers, same fallback order as /api/search: exact name/EAN/brand
-  // match, then the description, then fuzzy name matching (pg_trgm) for a
-  // typo like "Latafa" for "Lattafa" — each tier only runs if the previous
-  // one, combined with the visitor's own filters, found literally nothing.
-  // Whichever tier finally has results is what facets/pagination below are
-  // built from, so a fuzzy-tier result page still has working filters.
+  // Fallback tiers, same order as /api/search: exact name/EAN/brand phrase,
+  // then every word on its own (multi-word queries, Czech word forms,
+  // synonyms like "mastičky"), then the description, then most of the words,
+  // then fuzzy name matching (pg_trgm) for a typo like "Latafa" for
+  // "Lattafa" — each tier only runs if the previous one, combined with the
+  // visitor's own filters, found literally nothing. Whichever tier finally
+  // has results is what facets/pagination below are built from, so a
+  // fallback result page still has working filters.
   let searchWhere: Prisma.ProductWhereInput = buildExactSearchWhere(query);
-  let usedFallback: "description" | "fuzzy" | null = null;
+  let usedFallback: "description" | "fuzzy" | "words" | null = null;
+  const hasResults = async (candidate: Prisma.ProductWhereInput) =>
+    (await prisma.product.count({ where: buildProductWhere(withSk(candidate), filters, perfumeCategoryIds) })) > 0;
 
-  if ((await prisma.product.count({ where: buildProductWhere(withSk(searchWhere), filters, perfumeCategoryIds) })) === 0) {
-    const descriptionWhere = buildDescriptionSearchWhere(query);
-    if ((await prisma.product.count({ where: buildProductWhere(withSk(descriptionWhere), filters, perfumeCategoryIds) })) > 0) {
-      searchWhere = descriptionWhere;
+  if (!(await hasResults(searchWhere))) {
+    const allWordIds = await findTokenProductIds(query, 200, "all");
+    if (allWordIds.length > 0 && (await hasResults({ id: { in: allWordIds } }))) {
+      searchWhere = { id: { in: allWordIds } };
+      usedFallback = "words";
+    } else if (await hasResults(buildDescriptionSearchWhere(query))) {
+      searchWhere = buildDescriptionSearchWhere(query);
       usedFallback = "description";
     } else {
-      const fuzzyIds = await findFuzzyProductIds(query, 100);
-      if (fuzzyIds.length > 0) {
-        searchWhere = { id: { in: fuzzyIds } };
-        usedFallback = "fuzzy";
+      const mostWordIds = await findTokenProductIds(query, 200, "most");
+      if (mostWordIds.length > 0 && (await hasResults({ id: { in: mostWordIds } }))) {
+        searchWhere = { id: { in: mostWordIds } };
+        usedFallback = "words";
+      } else {
+        const fuzzyIds = await findFuzzyProductIds(query, 100);
+        if (fuzzyIds.length > 0) {
+          searchWhere = { id: { in: fuzzyIds } };
+          usedFallback = "fuzzy";
+        }
       }
     }
   }
@@ -150,7 +168,8 @@ export default async function SearchPage({
         <div className="flex flex-1 flex-col gap-6">
           {products.length === 0 ? (
             <p className="text-sm text-accent-2">
-              {tr("Nic jsme nenašli. Zkuste jiný výraz nebo upravte filtry.")}
+              {tr("Nic jsme nenašli. Zkuste jiný výraz nebo upravte filtry.")}{" "}
+              {tr("Hledáte něco konkrétního? Napište nám na info@gotridperfume.cz a zkusíme to pro vás sehnat.")}
             </p>
           ) : (
             <div className="grid grid-cols-2 gap-x-4 gap-y-8 sm:grid-cols-3 lg:grid-cols-4">

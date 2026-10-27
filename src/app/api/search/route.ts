@@ -2,7 +2,12 @@ import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { isRateLimited, recordRateLimitHit, getClientIp } from "@/lib/rate-limit";
 import { skScope } from "@/lib/sk-visibility";
-import { buildDescriptionSearchWhere, buildExactSearchWhere, findFuzzyProductIds } from "@/lib/product-search";
+import {
+  buildDescriptionSearchWhere,
+  buildExactSearchWhere,
+  findFuzzyProductIds,
+  findTokenProductIds,
+} from "@/lib/product-search";
 
 // Fires on every keystroke from the client — unlike the other public routes
 // this had no length cap or rate limit at all (security audit finding),
@@ -34,12 +39,31 @@ export async function GET(req: NextRequest) {
     include: PRODUCT_INCLUDE,
   });
 
+  // Every word on its own (multi-word queries, Czech word forms, synonyms) —
+  // IDs come back unscoped, so over-fetch and re-apply the SK scope here.
+  const byIdOrder = async (ids: string[]) => {
+    if (ids.length === 0) return [];
+    const rows = await prisma.product.findMany({
+      where: skScope({ id: { in: ids }, visible: true }, isSk),
+      include: PRODUCT_INCLUDE,
+    });
+    const byId = new Map(rows.map((p) => [p.id, p]));
+    return ids.map((id) => byId.get(id)).filter((p): p is NonNullable<typeof p> => Boolean(p)).slice(0, RESULT_LIMIT);
+  };
+  if (products.length === 0) {
+    products = await byIdOrder(await findTokenProductIds(q, RESULT_LIMIT * 4, "all"));
+  }
+
   if (products.length === 0) {
     products = await prisma.product.findMany({
       where: skScope({ visible: true, ...buildDescriptionSearchWhere(q) }, isSk),
       take: RESULT_LIMIT,
       include: PRODUCT_INCLUDE,
     });
+  }
+
+  if (products.length === 0) {
+    products = await byIdOrder(await findTokenProductIds(q, RESULT_LIMIT * 4, "most"));
   }
 
   if (products.length === 0) {
