@@ -225,3 +225,24 @@ body {
   left: 0;
   color: var(--color-accent-2);
 }
+
+/* Filter checkboxes: solid black box with a white tick, large enough to read at a glance. */
+.filter-check {
+  appearance: none;
+  flex-shrink: 0;
+  width: 1.25rem;
+  height: 1.25rem;
+  border: 2px solid var(--color-ink);
+  border-radius: 3px;
+  background: #fff;
+  cursor: pointer;
+}
+.filter-check:checked {
+  background-color: var(--color-ink);
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16' fill='none' stroke='white' stroke-width='2.6' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M3.5 8.5l3 3 6-7'/%3E%3C/svg%3E");
+  background-size: 100% 100%;
+}
+.filter-check:focus-visible {
+  outline: 2px solid var(--color-ink);
+  outline-offset: 2px;
+}

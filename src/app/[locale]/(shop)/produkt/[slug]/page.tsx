@@ -298,16 +298,16 @@ export default async function ProductPage({
           )}
 
           <div className="flex items-baseline gap-3">
-            <span className="text-2xl font-bold text-accent">{price(product.price)}</span>
+            <span className="text-4xl font-extrabold tracking-tight text-ink">{price(product.price)}</span>
             {product.compareAtPrice && (
               <>
                 {hasManufacturerReferencePrice(product.brand?.name) && (
                   <span className="text-xs text-accent-2">{tr("Doporučená cena")}</span>
                 )}
-                <span className="text-lg text-accent-2 line-through">
+                <span className="text-xl text-accent-2 line-through">
                   {price(product.compareAtPrice)}
                 </span>
-                <span className="rounded-sm bg-red-600 px-1.5 py-1 text-xs font-bold text-white">
+                <span className="rounded-sm bg-red-600 px-2 py-1 text-sm font-bold text-white">
                   -{Math.round((1 - Number(product.price) / Number(product.compareAtPrice)) * 100)}%
                 </span>
               </>
