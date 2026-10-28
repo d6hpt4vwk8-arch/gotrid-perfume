@@ -47,7 +47,8 @@ export async function renderWeeklyNewsletterHtml(
     opts.settings ?? getSettings(),
   ]);
   const rate = settings.czkToEurRate;
-  const complementHeading = plan.complementOf ? `${tr("K tomu se hodí")} — ${plan.complementOf}` : tr("K tomu se hodí");
+  // Generic heading on purpose: naming the last purchased product made long, odd headings and felt like surveillance.
+  const complementHeading = tr("K tomu se hodí");
   const ctaLabel =
     plan.theme === "perfume"
       ? tr("Zobrazit všechny parfémy")
