@@ -14,7 +14,17 @@ const MUTED = "#8a857e";
 const OK = "#4b6b4f";
 const PAGE_BG = "#f3f2f0";
 
-export function emailButton(href: string, label: string): string {
+export function emailButton(href: string, label: string, opts: { large?: boolean } = {}): string {
+  if (opts.large) {
+    return `
+    <table role="presentation" cellpadding="0" cellspacing="0" style="width:100%;margin:4px 0 24px;border-collapse:collapse;">
+      <tr>
+        <td align="center" style="background:${INK};border-radius:6px;">
+          <a href="${href}" style="display:block;padding:18px 24px;color:${GROUND};text-decoration:none;font-size:17px;font-weight:700;text-align:center;">${label}</a>
+        </td>
+      </tr>
+    </table>`;
+  }
   return `
     <table role="presentation" cellpadding="0" cellspacing="0" style="margin:4px 0 20px;border-collapse:collapse;">
       <tr>
@@ -40,17 +50,15 @@ export async function emailBenefits(
     tr("Vrácení zboží do 14 dnů"),
     tr("Zabezpečená platba"),
   ];
-  const cells = items
+  // Wrapping inline items (not one nowrap table row): a row wider than the phone made mail apps shrink the whole message.
+  const spans = items
     .map(
-      (item) => `
-        <td style="padding:6px 12px 6px 0;font-size:13px;color:${INK};white-space:nowrap;">
-          <span style="color:${OK};font-weight:700;">✓</span> ${item}
-        </td>`,
+      (item) => `<span style="display:inline-block;margin:0 14px 6px 0;font-size:13px;line-height:19px;color:${INK};"><span style="color:${OK};font-weight:700;">✓</span> ${item}</span>`,
     )
     .join("");
   return `
     <table role="presentation" cellpadding="0" cellspacing="0" style="width:100%;margin:0 0 24px;border-top:1px solid ${LINE};border-bottom:1px solid ${LINE};">
-      <tr><td style="padding:14px 0;"><table role="presentation" cellpadding="0" cellspacing="0"><tr>${cells}</tr></table></td></tr>
+      <tr><td style="padding:14px 0 8px;">${spans}</td></tr>
     </table>`;
 }
 
@@ -157,27 +165,29 @@ ${opts?.preheader ? `<div style="display:none;max-height:0;overflow:hidden;opaci
 <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="background:${PAGE_BG};padding:32px 0;">
   <tr>
     <td align="center">
-      <table role="presentation" width="560" cellpadding="0" cellspacing="0" style="width:560px;max-width:100%;background:${GROUND};">
+      <!--[if mso]><table role="presentation" width="560" align="center" cellpadding="0" cellspacing="0"><tr><td><![endif]-->
+      <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="width:100%;max-width:560px;background:${GROUND};">
         <tr>
-          <td style="background:${INK};padding:20px 32px;">
+          <td style="background:${INK};padding:20px 20px;">
             <span style="color:${GROUND};font-size:16px;font-weight:700;letter-spacing:0.5px;">GOTRID PERFUME</span>
           </td>
         </tr>
         <tr>
-          <td style="padding:32px;">
+          <td style="padding:28px 20px;">
             ${innerHtml}
           </td>
         </tr>
         <tr>
-          <td style="border-top:1px solid ${LINE};padding:24px 32px;">
-            <p style="font-size:13px;color:${MUTED};margin:0 0 8px;">
+          <td style="border-top:1px solid ${LINE};padding:24px 20px;">
+            <p style="font-size:13px;line-height:19px;color:${MUTED};margin:0 0 8px;-webkit-text-size-adjust:100%;text-size-adjust:100%;">
               ${CONTACT.phone} · <a href="mailto:${CONTACT.email}" style="color:${MUTED};">${CONTACT.email}</a> · ${ctx.tr(CONTACT.supportHours)}
             </p>
-            <p style="font-size:12px;color:${MUTED};margin:0;">${sellerLine(seller)}</p>
-            ${opts?.footerNote ? `<p style="font-size:12px;color:${MUTED};margin:8px 0 0;">${opts.footerNote}</p>` : ""}
+            <p style="font-size:12px;line-height:18px;color:${MUTED};margin:0;-webkit-text-size-adjust:100%;text-size-adjust:100%;">${sellerLine(seller)}</p>
+            ${opts?.footerNote ? `<p style="font-size:12px;line-height:18px;color:${MUTED};margin:8px 0 0;-webkit-text-size-adjust:100%;text-size-adjust:100%;">${opts.footerNote}</p>` : ""}
           </td>
         </tr>
       </table>
+      <!--[if mso]></td></tr></table><![endif]-->
     </td>
   </tr>
 </table>

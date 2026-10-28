@@ -64,6 +64,9 @@ function subjectFor(theme: RecommendationTheme, categoryName: string | null): st
 export async function planWeeklyNewsletter(email: string, firstName: string): Promise<WeeklyNewsletterPlan> {
   const rec = await recommendProductsForBuyer(email);
 
+  const rootIds = (await Promise.all(rootsForTheme(rec.theme, rec.categoryName).map(getCategoryIdsUnderRoot))).flat();
+  const rootIdSet = new Set(rootIds);
+
   const orderItems = await prisma.orderItem.findMany({
     where: {
       order: { email: { equals: email, mode: "insensitive" }, status: { in: [...COUNTABLE_STATUSES] } },
@@ -83,13 +86,16 @@ export async function planWeeklyNewsletter(email: string, firstName: string): Pr
           productType: true,
           occasions: true,
           keyIngredients: true,
+          categories: { select: { categoryId: true } },
         },
       },
     },
   });
   const purchased = orderItems.flatMap((i) => (i.product ? [i.product] : []));
   const purchasedIds = new Set(purchased.map((p) => p.id));
-  const last = purchased[0] ?? null;
+  // Anchor on the latest purchase inside the buyer's main category, so subject, picks and complements agree
+  // (a cosmetics buyer who last bought one perfume still gets a cosmetics e-mail).
+  const last = purchased.find((p) => p.categories.some((c) => rootIdSet.has(c.categoryId))) ?? purchased[0] ?? null;
 
   // "Pro vás": products similar to what they bought last (same specific category, scent, skin concern…) first —
   // a buyer of an acne cream should not be pitched shampoo just because both sit under "Kosmetika". The root-category
@@ -110,7 +116,6 @@ export async function planWeeklyNewsletter(email: string, firstName: string): Pr
     .map(toRecommended);
   complements.forEach((p) => taken.add(p.id));
 
-  const rootIds = (await Promise.all(rootsForTheme(rec.theme, rec.categoryName).map(getCategoryIdsUnderRoot))).flat();
   const dealRows = rootIds.length
     ? await prisma.product.findMany({
         where: {

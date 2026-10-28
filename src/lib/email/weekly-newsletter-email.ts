@@ -61,7 +61,7 @@ export async function renderWeeklyNewsletterHtml(
       ${emailProductGrid(tr("Pro vás tento týden"), plan.picks, ctx, rate)}
       ${emailProductGrid(complementHeading, plan.complements, ctx, rate)}
       ${emailDealGrid(tr("Teď zlevněno"), plan.deals, ctx, rate)}
-      ${emailButton(ctx.url(plan.ctaPath), ctaLabel)}
+      ${emailButton(ctx.url(plan.ctaPath), ctaLabel, { large: true })}
       ${benefits}
     `;
   return renderEmailLayout(inner, {
