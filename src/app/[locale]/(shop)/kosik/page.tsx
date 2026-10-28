@@ -72,7 +72,7 @@ export default function CartPage() {
 
   if (items.length === 0) {
     return (
-      <main className="mx-auto flex min-h-[85svh] max-w-3xl flex-1 flex-col items-center gap-4 px-4 py-20 text-center">
+      <main className="mx-auto flex min-h-[85svh] w-full max-w-3xl flex-1 flex-col items-center gap-4 px-4 py-20 text-center">
         <h1 className="text-2xl font-bold text-ink">{tr("Košík je prázdný")}</h1>
         <p className="text-accent-2">{tr("Přidejte si produkty z katalogu.")}</p>
         <Link
@@ -86,7 +86,7 @@ export default function CartPage() {
   }
 
   return (
-    <main className="mx-auto flex min-h-[85svh] max-w-3xl flex-1 flex-col gap-6 px-4 py-10">
+    <main className="mx-auto flex min-h-[85svh] w-full max-w-3xl flex-1 flex-col gap-6 px-4 py-10">
       <h1 className="text-2xl font-bold text-ink">{tr("Košík")}</h1>
 
       <CheckoutSteps

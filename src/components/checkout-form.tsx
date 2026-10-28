@@ -307,7 +307,7 @@ export function CheckoutForm({
 
   if (items.length === 0) {
     return (
-      <main className="mx-auto flex min-h-[85svh] max-w-3xl flex-1 flex-col items-center gap-4 px-4 py-20 text-center">
+      <main className="mx-auto flex min-h-[85svh] w-full max-w-3xl flex-1 flex-col items-center gap-4 px-4 py-20 text-center">
         <h1 className="text-2xl font-bold text-ink">{tr("Košík je prázdný")}</h1>
         <Link href="/" className="rounded-sm bg-ink px-5 py-2.5 text-sm font-semibold text-white hover:bg-accent">
           {tr("Zpět na výběr produktů")}
@@ -395,7 +395,7 @@ export function CheckoutForm({
   }
 
   return (
-    <main className="mx-auto flex min-h-[85svh] max-w-4xl flex-1 flex-col gap-8 px-4 py-10 md:flex-row">
+    <main className="mx-auto flex min-h-[85svh] w-full max-w-4xl flex-1 flex-col gap-8 px-4 py-10 md:flex-row">
       <form onSubmit={handleSubmit} className="flex flex-1 flex-col gap-6">
         <h1 className="text-2xl font-bold text-ink">{tr("Pokladna")}</h1>
 
