@@ -24,6 +24,13 @@ export interface RecommendedProduct {
   imageUrl: string | null;
 }
 
+/** The root categories a theme pitches from (perfume = Parfémy + Niche, home fragrance = diffusers/candles/car, otherwise the buyer's own root). */
+export function rootsForTheme(theme: RecommendationTheme, categoryName: string | null): string[] {
+  if (theme === "perfume") return PERFUME_ROOTS;
+  if (theme === "home_fragrance") return HOME_FRAGRANCE_ROOTS;
+  return categoryName ? [categoryName] : [];
+}
+
 async function getRootCategory(categoryId: string): Promise<{ name: string; fullSlug: string } | null> {
   let current = await prisma.category.findUnique({
     where: { id: categoryId },
@@ -38,7 +45,7 @@ async function getRootCategory(categoryId: string): Promise<{ name: string; full
   return current ? { name: current.name, fullSlug: current.fullSlug } : null;
 }
 
-async function getCategoryIdsUnderRoot(rootName: string): Promise<string[]> {
+export async function getCategoryIdsUnderRoot(rootName: string): Promise<string[]> {
   const root = await prisma.category.findFirst({
     where: { name: rootName, parentId: null },
     select: { fullSlug: true },

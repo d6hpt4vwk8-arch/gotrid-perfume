@@ -27,8 +27,12 @@ export function emailButton(href: string, label: string): string {
 
 // Same trust claims as TrustBadges/BenefitsBar on the site itself — never
 // invent marketing copy that isn't already true and shown on the storefront.
-export async function emailBenefits(ctx: MailContext = CS_MAIL): Promise<string> {
-  const settings = await getSettings();
+export async function emailBenefits(
+  ctx: MailContext = CS_MAIL,
+  // Scripts run outside Next, where getSettings()'s unstable_cache can't work — they pass the two values directly.
+  settingsOverride?: { freeShippingThreshold: number; czkToEurRate: number },
+): Promise<string> {
+  const settings = settingsOverride ?? (await getSettings());
   const { tr } = ctx;
   const items = [
     tr("Doprava zdarma od {price}", { price: ctx.price(settings.freeShippingThreshold, settings.czkToEurRate) }),
