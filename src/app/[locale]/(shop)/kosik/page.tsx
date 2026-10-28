@@ -17,7 +17,7 @@ import { estimateDeliveryDate, formatDeliveryEstimate } from "@/lib/delivery-est
 import { useTr, useIsSk } from "@/i18n/use-tr";
 
 export default function CartPage() {
-  const { items, setQty, removeItem, total, freeShippingThreshold } = useCart();
+  const { items, hydrated, setQty, removeItem, total, freeShippingThreshold } = useCart();
   const { price } = useCurrency();
   const tr = useTr();
   const isSk = useIsSk();
@@ -60,9 +60,19 @@ export default function CartPage() {
     return () => controller.abort();
   }, [cartProductIds, isSk]);
 
+  // The cart lives in localStorage, so the server render has no items. Hold a full-screen space until it is read
+  // (the footer stays below the fold in every state) — otherwise "empty cart" flashes and the real cart pushes the whole footer down (CLS).
+  if (!hydrated) {
+    return (
+      <main className="mx-auto flex min-h-[85svh] w-full max-w-3xl flex-1 flex-col gap-6 px-4 py-10" aria-busy="true">
+        <h1 className="text-2xl font-bold text-ink">{tr("Košík")}</h1>
+      </main>
+    );
+  }
+
   if (items.length === 0) {
     return (
-      <main className="mx-auto flex max-w-3xl flex-1 flex-col items-center gap-4 px-4 py-20 text-center">
+      <main className="mx-auto flex min-h-[85svh] max-w-3xl flex-1 flex-col items-center gap-4 px-4 py-20 text-center">
         <h1 className="text-2xl font-bold text-ink">{tr("Košík je prázdný")}</h1>
         <p className="text-accent-2">{tr("Přidejte si produkty z katalogu.")}</p>
         <Link
@@ -76,7 +86,7 @@ export default function CartPage() {
   }
 
   return (
-    <main className="mx-auto flex max-w-3xl flex-1 flex-col gap-6 px-4 py-10">
+    <main className="mx-auto flex min-h-[85svh] max-w-3xl flex-1 flex-col gap-6 px-4 py-10">
       <h1 className="text-2xl font-bold text-ink">{tr("Košík")}</h1>
 
       <CheckoutSteps

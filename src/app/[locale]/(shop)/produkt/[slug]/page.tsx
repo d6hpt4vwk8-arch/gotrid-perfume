@@ -34,6 +34,8 @@ import { ProductGallery } from "@/components/product-gallery";
 import { ScentNotesPyramid } from "@/components/scent-notes-pyramid";
 import { ProductTrustStrip } from "@/components/product-trust-strip";
 import { ProductDetailsBlocks } from "@/components/product-details-blocks";
+import { ProductFactCards } from "@/components/product-fact-cards";
+import { parseDescriptionFacts } from "@/lib/description-facts";
 import { pickProductDetails } from "@/lib/product-details";
 import { BestsellerPill, EthicsPills, isBestseller } from "@/components/product-badges";
 
@@ -125,6 +127,7 @@ export default async function ProductPage({
   const displayName = isSk && product.nameSk ? product.nameSk : product.name;
   const displayDescription = isSk && product.descriptionSk ? product.descriptionSk : product.description;
   const structuredDetails = pickProductDetails(product.details, isSk ? "sk" : "cs");
+  const descriptionFacts = parseDescriptionFacts(displayDescription);
   const catName = (name: string) => (isSk ? categoryNameSk(name) : name);
 
   const primaryCategory = product.categories[0]?.category;
@@ -476,9 +479,10 @@ export default async function ProductPage({
           {displayDescription && (
             <div
               className="prose prose-neutral mt-4 max-w-none text-sm leading-relaxed [&_li]:mb-1 [&_p]:mb-3 [&_strong]:font-semibold [&_ul]:mb-3 [&_ul]:list-disc [&_ul]:pl-5"
-              dangerouslySetInnerHTML={{ __html: sanitizeDescription(displayDescription) }}
+              dangerouslySetInnerHTML={{ __html: sanitizeDescription(descriptionFacts?.introHtml ?? displayDescription) }}
             />
           )}
+          {descriptionFacts && <ProductFactCards facts={descriptionFacts} />}
 
           {specs.length > 0 && (
             <div className="mt-2">

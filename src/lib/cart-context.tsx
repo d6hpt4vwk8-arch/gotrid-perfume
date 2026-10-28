@@ -25,6 +25,8 @@ export interface CartItem {
 
 interface CartContextValue {
   items: CartItem[];
+  /** False during SSR and the first client render — the stored cart (localStorage) hasn't been read yet. */
+  hydrated: boolean;
   addItem: (item: Omit<CartItem, "qty">, qty?: number) => void;
   removeItem: (productId: string) => void;
   setQty: (productId: string, qty: number) => void;
@@ -176,6 +178,7 @@ export function CartProvider({
     <CartContext.Provider
       value={{
         items,
+        hydrated,
         addItem,
         removeItem,
         setQty,
