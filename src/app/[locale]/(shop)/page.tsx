@@ -246,7 +246,6 @@ export default async function HomePage() {
                   {"☆".repeat(5 - review.rating)}
                 </span>
                 <p className="text-neutral-600 line-clamp-3">{review.text}</p>
-                <span className="text-xs text-neutral-400">{tr("Ověřeno zákazníky — Heureka.cz")}</span>
               </div>
             ))}
           </div>

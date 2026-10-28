@@ -39,10 +39,12 @@ function loadWidget() {
 export function HeurekaCertificateWidget() {
   const pathname = usePathname();
   const isOrderPage = pathname?.startsWith("/objednavka") || pathname?.startsWith("/pokladna");
+  // The certificate belongs to Heureka.cz; the Slovak storefront must not show it as if Heureka.sk had certified us.
+  const isSkPage = pathname === "/sk" || pathname?.startsWith("/sk/");
 
   useEffect(() => {
-    if (!isOrderPage) loadWidget();
-  }, [isOrderPage]);
+    if (!isOrderPage && !isSkPage) loadWidget();
+  }, [isOrderPage, isSkPage]);
 
   return null;
 }
