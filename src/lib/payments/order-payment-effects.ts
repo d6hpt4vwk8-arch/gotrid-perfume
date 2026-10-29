@@ -53,7 +53,7 @@ export async function markOrderPaid(orderId: string): Promise<boolean> {
   }
 
   // Heureka's survey is a service request about an order the customer just paid for, not ad tracking.
-  void sendHeurekaOrderLog({ orderId: order.number, email: order.email, items: itemInputs }).catch((err) =>
+  void sendHeurekaOrderLog({ orderId: order.number, email: order.email, items: itemInputs, country: order.shippingCountry }).catch((err) =>
     console.error(`[heureka-overeno] failed for ${order.number}`, err),
   );
   void awardPointsForOrder(order.id).catch((err) => console.error(`[loyalty] award failed for ${order.number}`, err));

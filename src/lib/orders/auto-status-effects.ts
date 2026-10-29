@@ -19,6 +19,7 @@ export async function runLeftNewEffects(orderId: string): Promise<void> {
     await sendHeurekaOrderLog({
       orderId: order.number,
       email: order.email,
+      country: order.shippingCountry,
       items: order.items.map((i) => ({
         productId: i.productId,
         name: i.name,
