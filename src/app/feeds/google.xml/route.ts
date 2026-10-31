@@ -2,7 +2,7 @@ import { NextResponse } from "next/server";
 import { getFeedProducts } from "@/lib/feeds/get-feed-products";
 import { isConditionFlagged } from "@/lib/feeds/condition-flagged";
 import { isPaidAdsEligible } from "@/lib/feeds/paid-ads-eligibility";
-import { isExcludedFromGoogleAds } from "@/lib/feeds/google-exclusions";
+import { isExcludedFromGoogleAds, isHempRestricted } from "@/lib/feeds/google-exclusions";
 import { buildGoogleShoppingRss } from "@/lib/feeds/google-shopping-rss";
 
 // Rendered per-request rather than ISR-cached — see feeds/heureka.xml/route.ts
@@ -22,7 +22,8 @@ export async function GET() {
     (p) =>
       !isConditionFlagged(p.name, p.isDefective) &&
       isPaidAdsEligible(p.code, p.brandName) &&
-      !isExcludedFromGoogleAds(p),
+      !isExcludedFromGoogleAds(p) &&
+      !isHempRestricted(p.name),
   );
   const xml = buildGoogleShoppingRss(products);
 

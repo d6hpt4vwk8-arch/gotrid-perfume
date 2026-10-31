@@ -1,6 +1,39 @@
 import type { FeedProduct } from "./get-feed-products";
 import { cdata, escapeXml, isValidEan } from "./xml";
-import { SITE_URL } from "@/lib/site";
+import { SEO_URL } from "@/lib/site";
+
+// Promotional text in a title ("… + kartáček zdarma", "70+10 zdarma") is not allowed in Google/Meta feeds.
+// Only the feed title is cleaned — the product name on the site stays as it is.
+export function stripPromoFromTitle(name: string): string {
+  if (!/zdarma/i.test(name)) return name;
+  let t = name
+    .replace(/\s*\+\s*\d+\s*ks\s+zdarma\b/iu, "") // "10 ks + 4 ks ZDARMA"
+    .replace(/\+\d+\s+zdarma\b/iu, "") // "70+10 zdarma" -> "70"
+    .replace(/\s*\+[\p{L}\s+]*?\bzdarma\b/iu, ""); // "+kartáček+mezizubní kartáček zdarma"
+  t = t.replace(/\s*\bzdarma\b/iu, "").replace(/\s+/g, " ").trim();
+  return t || name;
+}
+
+/**
+ * One offer per GTIN: the same product is sometimes imported twice (Tamda and SP Venture) with slightly
+ * different prices, and Google then sees two items claiming one identity. Keep the one that is in stock,
+ * then the cheaper one. Items without a valid GTIN are never merged.
+ */
+export function dedupeByGtin(products: FeedProduct[]): FeedProduct[] {
+  const best = new Map<string, FeedProduct>();
+  for (const p of products) {
+    if (!p.ean || !isValidEan(p.ean)) continue;
+    const current = best.get(p.ean);
+    if (!current) {
+      best.set(p.ean, p);
+      continue;
+    }
+    const better =
+      (p.stock > 0) !== (current.stock > 0) ? p.stock > 0 : p.price !== current.price ? p.price < current.price : p.code < current.code;
+    if (better) best.set(p.ean, p);
+  }
+  return products.filter((p) => !p.ean || !isValidEan(p.ean) || best.get(p.ean) === p);
+}
 
 /**
  * RSS 2.0 + g: namespace feed — the shared format accepted by both Google
@@ -8,15 +41,16 @@ import { SITE_URL } from "@/lib/site";
  * Google Shopping XML schema as a catalog feed source).
  */
 export function buildGoogleShoppingRss(products: FeedProduct[]): string {
-  const items = products
+  // SEO_URL = the canonical www host: feed links must not go through the apex → www 308.
+  const items = dedupeByGtin(products)
     .map((p) => {
-      const url = `${SITE_URL}/produkt/${p.slug}`;
-      const image = p.images[0] ? `${SITE_URL}${p.images[0]}` : null;
-      const extraImages = p.images.slice(1, 11).map((img) => `${SITE_URL}${img}`);
+      const url = `${SEO_URL}/produkt/${p.slug}`;
+      const image = p.images[0] ? `${SEO_URL}${p.images[0]}` : null;
+      const extraImages = p.images.slice(1, 11).map((img) => `${SEO_URL}${img}`);
 
       return `    <item>
       <g:id>${escapeXml(p.code)}</g:id>
-      <title>${escapeXml(p.name)}</title>
+      <title>${escapeXml(stripPromoFromTitle(p.name))}</title>
       <description>${cdata(p.description)}</description>
       <link>${escapeXml(url)}</link>
       ${image ? `<g:image_link>${escapeXml(image)}</g:image_link>` : ""}
@@ -36,7 +70,7 @@ ${extraImages.map((img) => `      <g:additional_image_link>${escapeXml(img)}</g:
 <rss version="2.0" xmlns:g="http://base.google.com/ns/1.0">
   <channel>
     <title>Gotrid Perfume</title>
-    <link>${SITE_URL}</link>
+    <link>${SEO_URL}</link>
     <description>Originální značková parfumerie, kosmetika a péče.</description>
 ${items}
   </channel>

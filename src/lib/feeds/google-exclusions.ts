@@ -15,3 +15,10 @@ export function isExcludedFromGoogleAds(product: {
   if (product.isOnClearance) return true;
   return false;
 }
+
+// Cannabis/CBD names are a restricted category for Google Shopping and Meta (and the EU rules differ per
+// country), so they stay out of both feeds. Plain hemp-seed cosmetics ("konopné semínko", "konopný balzám")
+// are legal everyday products and are not matched — only an explicit CBD or cannabis in the name.
+export function isHempRestricted(name: string): boolean {
+  return /\bcbd\b|cannab|cannasex/i.test(name);
+}
