@@ -7,6 +7,7 @@ import { ORDER_STATUS_LABELS } from "@/lib/orders/status-labels";
 import { getCurrentCustomer } from "@/lib/customer/get-current-customer";
 import { updateSavedAddress, updateMarketingOptIn } from "@/lib/customer/actions";
 import { CustomerLogoutButton } from "@/components/customer/logout-button";
+import { LoyaltySection } from "@/components/customer/loyalty-section";
 
 export default async function AccountPage() {
   const [customer, tr, locale] = await Promise.all([getCurrentCustomer(), getTr(), getCurrentLocale()]);
@@ -29,6 +30,8 @@ export default async function AccountPage() {
         </div>
         <CustomerLogoutButton />
       </div>
+
+      <LoyaltySection email={customer.email} />
 
       <section className="flex flex-col gap-4">
         <h2 className="text-lg font-bold text-ink">{tr("Historie objednávek")}</h2>

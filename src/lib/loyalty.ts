@@ -66,7 +66,7 @@ export async function redeemPoints(
  * sendHeurekaOrderLog (updateOrderStatus leaving NEW for COD/bank transfer,
  * the Stripe webhook's checkout.session.completed for CARD). Idempotent
  * (checked by orderId) so a retried webhook delivery can't double-award.
- * Earns only on cash actually collected for goods — never on
+ * Earns only for registered customers, and only on cash actually collected for goods — never on
  * shipping/COD surcharge, and never on the points-funded or coupon-funded
  * portion of the order, so points can't compound on themselves.
  */
@@ -78,6 +78,15 @@ export async function awardPointsForOrder(orderId: string): Promise<void> {
     where: { orderId, type: "EARN" },
   });
   if (existing) return;
+
+  // Points are for people with an account (owner's call 2026-10-31): a guest checkout earns nothing, the
+  // order page and checkout invite them to register instead. A password-less Customer row (created by the
+  // newsletter opt-in) is still a guest.
+  const customer = await prisma.customer.findUnique({
+    where: { email: normalizeEmail(order.email) },
+    select: { passwordHash: true },
+  });
+  if (!customer?.passwordHash) return;
 
   const settings = await prisma.settings.upsert({
     where: { id: "singleton" },

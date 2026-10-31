@@ -111,7 +111,9 @@ export function CheckoutForm({
     [paymentMethod, settings],
   );
   const pointsToRedeem = LOYALTY_PROGRAM_ENABLED && useLoyaltyPoints ? (loyalty?.maxRedeemable ?? 0) : 0;
-  const total = itemsTotal + shippingPrice + codSurcharge - (coupon?.discountAmount ?? 0) - pointsToRedeem;
+  // A free-shipping coupon (loyalty reward) zeroes the shipping price — re-checked server-side in createOrder().
+  const shippingCharged = coupon?.freeShipping ? 0 : shippingPrice;
+  const total = itemsTotal + shippingCharged + codSurcharge - (coupon?.discountAmount ?? 0) - pointsToRedeem;
 
   // Every DB price is CZK — a Slovak card charged in CZK eats the bank's own
   // conversion fee on top of ours, so once Slovensko is picked, everything
@@ -712,7 +714,7 @@ export function CheckoutForm({
           </fieldset>
         )}
 
-        <GiftPicker unlocked={coupon?.grantsGift ?? false} />
+        <GiftPicker unlocked={coupon?.grantsGift ?? false} onlyProductId={coupon?.giftProductId} />
 
         {giftEligible && (
           <label className="flex items-start gap-2 rounded-sm border border-line bg-line/20 px-3 py-3 text-sm text-ink">
@@ -796,7 +798,7 @@ export function CheckoutForm({
           </div>
           <div className="flex justify-between">
             <span>{tr("Doprava")}</span>
-            <span>{shippingPrice === 0 ? tr("zdarma") : price(shippingPrice)}</span>
+            <span>{shippingCharged === 0 ? tr("zdarma") : price(shippingCharged)}</span>
           </div>
           {codSurcharge > 0 && (
             <div className="flex justify-between">
@@ -804,7 +806,7 @@ export function CheckoutForm({
               <span>{price(codSurcharge)}</span>
             </div>
           )}
-          {coupon && !coupon.grantsGift && (
+          {coupon && coupon.discountAmount > 0 && (
             <div className="flex justify-between text-ok">
               <span>{tr("Sleva")} ({coupon.code})</span>
               <span>−{price(coupon.discountAmount)}</span>
@@ -820,6 +822,17 @@ export function CheckoutForm({
             <span>{tr("Celkem")}</span>
             <span className="text-accent">{price(total)}</span>
           </div>
+          {settings.loyaltyEarnPercent > 0 && (
+            <p className="mt-1 rounded-sm bg-ok/10 px-3 py-2 text-xs text-ink">
+              {customer
+                ? tr("Za tuto objednávku získáte {n} bodů do věrnostního programu.", {
+                    n: Math.max(0, Math.floor(((itemsTotal - (coupon?.discountAmount ?? 0)) * settings.loyaltyEarnPercent) / 100)),
+                  })
+                : tr("Se zákaznickým účtem byste za tuto objednávku získali {n} bodů na slevy a dárky. Účet si můžete vytvořit po objednávce.", {
+                    n: Math.max(0, Math.floor(((itemsTotal - (coupon?.discountAmount ?? 0)) * settings.loyaltyEarnPercent) / 100)),
+                  })}
+            </p>
+          )}
         </div>
       </aside>
     </main>

@@ -795,6 +795,29 @@ model LoyaltyTransaction {
 }
 
 // ---------------------------------------------------------------------------
+// LoyaltyReward — what a registered customer can buy with points in "Můj účet". Buying one spends the points
+// (a REDEEM ledger row) and creates a personal single-use Coupon (see Coupon.ownerEmail) of the reward's type:
+// FIXED = Kč off, FREE_SHIPPING, GIFT (a specific product via giftProductId, or the generic gift list).
+// ---------------------------------------------------------------------------
+
+model LoyaltyReward {
+  id            String     @id @default(cuid())
+  name          String
+  nameSk        String?
+  pointsCost    Int
+  type          CouponType
+  // Kč off for FIXED; unused for the other types.
+  value         Decimal    @default(0) @db.Decimal(10, 2)
+  minOrderValue Decimal?   @db.Decimal(10, 2)
+  giftProductId String?
+  // How long the coupon stays valid after it was bought.
+  validDays     Int        @default(60)
+  active        Boolean    @default(true)
+  sortOrder     Int        @default(0)
+  createdAt     DateTime   @default(now())
+}
+
+// ---------------------------------------------------------------------------
 // Coupon — owner-managed discount codes, applied at checkout.
 // ---------------------------------------------------------------------------
 
@@ -806,6 +829,8 @@ enum CouponType {
   // to be typed in, rather than unlocking automatically past a cart total,
   // means the customer had to have actually seen the promo somewhere first.
   GIFT
+  // Carries no discount either — the order's shipping price becomes 0 (loyalty reward "Doprava zdarma").
+  FREE_SHIPPING
 }
 
 model Coupon {
@@ -826,6 +851,11 @@ model Coupon {
   // owner has activated by hand (skips the campaign/time check, still once each).
   secondOrderOnly Boolean   @default(false)
   allowedEmails   String[]  @default([])
+
+  // Personal coupon bought with loyalty points (LoyaltyReward): only this e-mail may use it.
+  ownerEmail    String?
+  // GIFT coupon for one specific product (instead of the generic free-gift list).
+  giftProductId String?
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt

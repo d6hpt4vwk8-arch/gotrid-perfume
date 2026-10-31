@@ -24,7 +24,7 @@ interface GiftOption {
  * gift eligibility/stock are always re-checked server-side in createOrder(),
  * this is only the shop window.
  */
-export function GiftPicker({ unlocked }: { unlocked: boolean }) {
+export function GiftPicker({ unlocked, onlyProductId }: { unlocked: boolean; onlyProductId?: string | null }) {
   const { giftProductId, setGiftProductId, items } = useCart();
   const { price } = useCurrency();
   const tr = useTr();
@@ -42,7 +42,7 @@ export function GiftPicker({ unlocked }: { unlocked: boolean }) {
     const productIds = cartKey ? cartKey.split(",") : [];
     Promise.all([
       unlocked
-        ? fetch("/api/gifts")
+        ? fetch(onlyProductId ? `/api/gifts?productId=${encodeURIComponent(onlyProductId)}` : "/api/gifts")
             .then((res) => res.json())
             .then((d: { gifts: GiftOption[] }) => d.gifts)
             .catch(() => [] as GiftOption[])
@@ -66,7 +66,7 @@ export function GiftPicker({ unlocked }: { unlocked: boolean }) {
     return () => {
       cancelled = true;
     };
-  }, [unlocked, cartKey]);
+  }, [unlocked, onlyProductId, cartKey]);
 
   // Drop a chosen gift that's no longer on offer (coupon removed, sample sold out, cart changed) —
   // otherwise checkout would submit a gift the server then rejects.

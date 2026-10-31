@@ -8,11 +8,12 @@ function formatDateInput(date: Date | null): string {
 }
 
 export default async function AdminCouponsPage() {
-  const coupons = await prisma.coupon.findMany({ orderBy: { createdAt: "desc" } });
+  const coupons = await prisma.coupon.findMany({ where: { ownerEmail: null }, orderBy: { createdAt: "desc" } });
 
   return (
     <div className="flex flex-col gap-8">
       <h1 className="text-2xl font-bold text-ink">Slevové kódy ({coupons.length})</h1>
+      <p className="-mt-6 text-xs text-accent-2">Osobní kupony za body (BODY-…) tu nejsou — viz Body a odměny.</p>
 
       <ul className="flex flex-col gap-3">
         {coupons.map((c) => (
@@ -39,6 +40,7 @@ export default async function AdminCouponsPage() {
                   <option value="PERCENT">% sleva</option>
                   <option value="FIXED">Kč sleva</option>
                   <option value="GIFT">Dárek zdarma</option>
+                  <option value="FREE_SHIPPING">Doprava zdarma</option>
                 </select>
               </label>
               <label className="flex flex-col gap-1">
@@ -128,6 +130,7 @@ export default async function AdminCouponsPage() {
               <option value="PERCENT">% sleva</option>
               <option value="FIXED">Kč sleva</option>
               <option value="GIFT">Dárek zdarma</option>
+                  <option value="FREE_SHIPPING">Doprava zdarma</option>
             </select>
           </label>
           <label className="flex flex-col gap-1 text-sm">

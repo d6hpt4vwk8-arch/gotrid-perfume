@@ -17,6 +17,7 @@ import { orderMoney } from "@/lib/orders/order-money";
 import { localizedItemNames } from "@/lib/orders/item-names";
 import { FACEBOOK_URL, INSTAGRAM_HANDLE, INSTAGRAM_URL, TIKTOK_URL } from "@/lib/site";
 import { getCurrentCustomerId } from "@/lib/customer/get-current-customer";
+import { getSettings } from "@/lib/settings.server";
 import {
   ADMIN_COOKIE_NAME,
   ORDER_ACCESS_COOKIE_NAME,
@@ -58,6 +59,13 @@ export default async function OrderConfirmationPage({
     Number(order.discountAmount),
   );
 
+  // Points need an account: invite a guest (no password-protected Customer row for this e-mail) to register.
+  const [loyaltySettings, orderCustomer] = await Promise.all([
+    getSettings(),
+    prisma.customer.findUnique({ where: { email: order.email.trim().toLowerCase() }, select: { passwordHash: true } }),
+  ]);
+  const loyaltyInvite = orderCustomer?.passwordHash ? 0 : loyaltySettings.loyaltyEarnPercent;
+
   const bank = getBankPayment(order);
   const qrDataUrl = bank ? await bankQrDataUrl(bank) : null;
 
@@ -84,6 +92,18 @@ export default async function OrderConfirmationPage({
       <p className="text-ink/70">
         {tr("Číslo objednávky")} <strong className="text-ink">{order.number}</strong>. {tr("Potvrzení jsme poslali na")} {order.email}.
       </p>
+
+      {loyaltyInvite > 0 && (
+        <div className="flex flex-col gap-2 rounded-sm border border-ok/40 bg-ok/10 p-4 text-sm text-ink">
+          <span className="font-semibold">{tr("Sbírejte body za nákupy")}</span>
+          <span>
+            {tr("Za každých 100 Kč získáte {n} bodů, které můžete vyměnit za dopravu zdarma, slevu nebo dárek. Stačí si vytvořit zákaznický účet s e-mailem {email}.", { n: loyaltyInvite, email: order.email })}
+          </span>
+          <Link href="/registrace" className="w-fit rounded-sm bg-ink px-4 py-2 text-sm font-semibold text-white hover:bg-accent">
+            {tr("Vytvořit účet")}
+          </Link>
+        </div>
+      )}
 
       <div className="flex flex-col gap-1 border border-line bg-line/30 p-4 text-sm text-ink">
         <span>

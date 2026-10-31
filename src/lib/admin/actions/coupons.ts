@@ -16,7 +16,7 @@ const couponSchema = z
       .min(2, "Kód musí mít alespoň 2 znaky.")
       .max(50)
       .transform((v) => v.toUpperCase()),
-    type: z.enum(["PERCENT", "FIXED", "GIFT"]),
+    type: z.enum(["PERCENT", "FIXED", "GIFT", "FREE_SHIPPING"]),
     // GIFT coupons carry no discount — value is meaningless for them, so it's
     // only required to be positive for PERCENT/FIXED (checked below).
     value: z.coerce.number().min(0),
@@ -38,7 +38,7 @@ const couponSchema = z
         .pipe(z.array(z.string().email("Neplatný e-mail v seznamu povolených adres."))),
     ),
   })
-  .refine((data) => data.type === "GIFT" || data.value > 0, {
+  .refine((data) => data.type === "GIFT" || data.type === "FREE_SHIPPING" || data.value > 0, {
     message: "Hodnota slevy musí být kladná.",
     path: ["value"],
   });

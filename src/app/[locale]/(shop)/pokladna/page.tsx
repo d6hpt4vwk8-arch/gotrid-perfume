@@ -4,5 +4,7 @@ import { CheckoutForm } from "@/components/checkout-form";
 
 export default async function CheckoutPage() {
   const [settings, customer] = await Promise.all([getSettings(), getCurrentCustomer()]);
-  return <CheckoutForm settings={settings} customer={customer} />;
+  // The form only prefills contact/address — never ship the password hash (or session version) to the browser.
+  const safeCustomer = customer ? { ...customer, passwordHash: null, sessionVersion: 0 } : null;
+  return <CheckoutForm settings={settings} customer={safeCustomer} />;
 }

@@ -157,10 +157,10 @@ export default function CartPage() {
 
       <CouponField onApplied={setCoupon} />
 
-      <GiftPicker unlocked={coupon?.grantsGift ?? false} />
+      <GiftPicker unlocked={coupon?.grantsGift ?? false} onlyProductId={coupon?.giftProductId} />
 
       <div className="flex flex-col gap-1 text-sm text-ink">
-        {coupon && !coupon.grantsGift && (
+        {coupon && coupon.discountAmount > 0 && (
           <div className="flex justify-between text-ok">
             <span>{tr("Sleva")} ({coupon.code})</span>
             <span>−{price(coupon.discountAmount)}</span>

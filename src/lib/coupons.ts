@@ -7,9 +7,9 @@ import { REVIEW_COUPON_CODE } from "@/lib/email/send-review-request-email";
 type TxClient = PrismaClient | Prisma.TransactionClient;
 
 function computeDiscount(coupon: Coupon, itemsTotal: number): number {
-  // GIFT coupons carry no discount — applying one unlocks the free-gift
-  // picker instead (see grantsGift below).
-  if (coupon.type === "GIFT") return 0;
+  // GIFT and FREE_SHIPPING coupons carry no discount — a gift one unlocks the free-gift picker
+  // (see grantsGift below), a free-shipping one zeroes the shipping price (freeShipping).
+  if (coupon.type === "GIFT" || coupon.type === "FREE_SHIPPING") return 0;
   const raw =
     coupon.type === "PERCENT" ? (itemsTotal * Number(coupon.value)) / 100 : Number(coupon.value);
   return Math.min(Math.max(raw, 0), itemsTotal);
@@ -61,6 +61,25 @@ async function assertSecondOrderEligible(client: TxClient, coupon: Coupon, email
   if (alreadyUsed > 0) throw new CheckoutError("Tento kód už jste jednou využili.");
 }
 
+export interface CouponResult {
+  code: string;
+  discountAmount: number;
+  grantsGift: boolean;
+  freeShipping: boolean;
+  /** Set when the gift coupon is for one specific product rather than the generic gift list. */
+  giftProductId: string | null;
+}
+
+function toResult(coupon: Coupon, discountAmount: number): CouponResult {
+  return {
+    code: coupon.code,
+    discountAmount,
+    grantsGift: coupon.type === "GIFT",
+    freeShipping: coupon.type === "FREE_SHIPPING",
+    giftProductId: coupon.type === "GIFT" ? coupon.giftProductId : null,
+  };
+}
+
 async function loadValidCoupon(
   client: TxClient,
   code: string,
@@ -82,6 +101,11 @@ async function loadValidCoupon(
       `Slevový kód platí od objednávky ${Number(coupon.minOrderValue).toLocaleString("cs-CZ")} Kč.`,
     );
   }
+  // A personal (loyalty reward) coupon only works for its owner. The cart-side preview has no e-mail, so
+  // it is checked for real at order time (validateCoupon) — a stranger typing someone's code is stopped there.
+  if (coupon.ownerEmail && email !== undefined && coupon.ownerEmail !== email.trim().toLowerCase()) {
+    throw new CheckoutError("Tento kód patří jinému zákazníkovi.");
+  }
   // The cart-side preview has no e-mail yet (see /api/coupons/validate) — the
   // per-e-mail check always runs for real in validateCoupon at order time.
   if ((coupon.secondOrderOnly || coupon.code === REVIEW_COUPON_CODE) && email !== undefined) {
@@ -90,17 +114,9 @@ async function loadValidCoupon(
   return coupon;
 }
 
-export async function previewCoupon(
-  code: string,
-  itemsTotal: number,
-  email?: string,
-): Promise<{ code: string; discountAmount: number; grantsGift: boolean }> {
+export async function previewCoupon(code: string, itemsTotal: number, email?: string): Promise<CouponResult> {
   const coupon = await loadValidCoupon(prisma, code, itemsTotal, email);
-  return {
-    code: coupon.code,
-    discountAmount: computeDiscount(coupon, itemsTotal),
-    grantsGift: coupon.type === "GIFT",
-  };
+  return toResult(coupon, computeDiscount(coupon, itemsTotal));
 }
 
 export async function validateCoupon(
@@ -108,7 +124,7 @@ export async function validateCoupon(
   code: string,
   itemsTotal: number,
   email: string,
-): Promise<{ code: string; discountAmount: number; grantsGift: boolean }> {
+): Promise<CouponResult> {
   const coupon = await loadValidCoupon(tx, code, itemsTotal, email);
   const discountAmount = computeDiscount(coupon, itemsTotal);
 
@@ -123,5 +139,5 @@ export async function validateCoupon(
     throw new CheckoutError("Slevový kód už byl vyčerpán.");
   }
 
-  return { code: coupon.code, discountAmount, grantsGift: coupon.type === "GIFT" };
+  return toResult(coupon, discountAmount);
 }

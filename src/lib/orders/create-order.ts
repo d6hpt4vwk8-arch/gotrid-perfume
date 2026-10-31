@@ -62,7 +62,7 @@ export async function createOrder(
     }
   }
 
-  const shippingPrice = getShippingPrice(input.shippingMethod, itemsTotal, settings, input.shippingCountry);
+  const standardShippingPrice = getShippingPrice(input.shippingMethod, itemsTotal, settings, input.shippingCountry);
   const codSurcharge = getCodSurcharge(input.paymentMethod, settings);
 
   // The gift is re-checked here rather than trusted from the checkout form:
@@ -74,9 +74,9 @@ export async function createOrder(
   let giftProduct: (typeof products)[number] | null = null;
   if (input.giftProductId) {
     const requested = await prisma.product.findFirst({
-      where: { id: input.giftProductId, giftEligible: true, stock: { gt: 0 } },
+      where: { id: input.giftProductId, stock: { gt: 0 } },
     });
-    if (requested && isSampleGiftCode(requested.code)) {
+    if (requested && requested.giftEligible && isSampleGiftCode(requested.code)) {
       // Free sample gifts (sample-gifts.ts) need no coupon, only a qualifying cart —
       // K-beauty or Arabic perfume among the items — re-checked here, not trusted from the form.
       if (!(await isSampleGiftAllowedForCart(requested.code, productIds))) {
@@ -91,7 +91,12 @@ export async function createOrder(
       if (!couponPreview?.grantsGift) {
         throw new CheckoutError("Zadaný slevový kód neopravňuje k výběru dárku zdarma.");
       }
-      giftProduct = requested && requested.visible ? requested : null;
+      // A loyalty-reward gift coupon is for one specific product (any catalog product, not just
+      // the giftEligible ones); the generic gift coupon takes any giftEligible product.
+      const allowed = couponPreview.giftProductId
+        ? requested?.id === couponPreview.giftProductId
+        : requested?.giftEligible === true;
+      giftProduct = requested && requested.visible && allowed ? requested : null;
       if (!giftProduct) {
         throw new CheckoutError("Vybraný dárek už bohužel není dostupný, zvolte prosím jiný.");
       }
@@ -165,10 +170,13 @@ export async function createOrder(
 
         let couponCode: string | undefined;
         let discountAmount = 0;
+        // A FREE_SHIPPING coupon (loyalty reward) zeroes the shipping price.
+        let shippingPrice = standardShippingPrice;
         if (input.couponCode) {
           const result = await validateCoupon(tx, input.couponCode, itemsTotal, input.email);
           couponCode = result.code;
           discountAmount = result.discountAmount;
+          if (result.freeShipping) shippingPrice = 0;
         }
 
         // Re-validated against the real ledger balance inside this same

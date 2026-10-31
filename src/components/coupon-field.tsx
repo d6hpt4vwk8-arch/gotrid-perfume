@@ -10,6 +10,10 @@ export interface AppliedCoupon {
   discountAmount: number;
   /** GIFT-type coupon — no discount, unlocks the free-gift picker instead. */
   grantsGift: boolean;
+  /** FREE_SHIPPING coupon — the order's shipping price becomes 0. */
+  freeShipping: boolean;
+  /** Gift coupon for one specific product (loyalty reward) instead of the generic list. */
+  giftProductId: string | null;
 }
 
 /**
@@ -82,7 +86,9 @@ export function CouponField({ onApplied }: { onApplied?: (coupon: AppliedCoupon 
           <span>
             {tr("Kód")} <strong>{applied.code}</strong> {tr("uplatněn")}
             {applied.grantsGift ? (
-              ` — ${tr("vyberte si dárek zdarma níže")}`
+              ` — ${applied.giftProductId ? tr("dárek zdarma najdete níže") : tr("vyberte si dárek zdarma níže")}`
+            ) : applied.freeShipping ? (
+              ` — ${tr("doprava zdarma")}`
             ) : (
               <> — {tr("sleva")} {price(applied.discountAmount)}</>
             )}

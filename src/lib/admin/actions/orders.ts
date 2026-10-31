@@ -82,6 +82,14 @@ export async function updateOrderStatus(id: string, formData: FormData) {
     const isReversed = order.status === "CANCELLED" || order.status === "REFUNDED";
     if (wasReversed !== isReversed) {
       const sign = isReversed ? 1 : -1;
+      // A personal loyalty-reward coupon (single use) goes back to its owner when the order falls through,
+      // and is spent again if the order is reactivated.
+      if (order.couponCode) {
+        await prisma.coupon.updateMany({
+          where: { code: order.couponCode, ownerEmail: { not: null }, usedCount: isReversed ? { gt: 0 } : { gte: 0 } },
+          data: { usedCount: { increment: -sign } },
+        });
+      }
       for (const item of order.items) {
         if (!item.productId) continue;
         // `stock` of supplier-synced products (SPV-/PWH- codes) is the

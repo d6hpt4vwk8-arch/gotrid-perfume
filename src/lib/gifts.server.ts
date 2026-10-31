@@ -13,6 +13,8 @@ export async function getActiveGiftCoupon(): Promise<Coupon | null> {
     where: {
       type: "GIFT",
       active: true,
+      // Never announce a personal loyalty-reward coupon (its code belongs to one customer).
+      ownerEmail: null,
       OR: [{ expiresAt: null }, { expiresAt: { gt: new Date() } }],
     },
     orderBy: { createdAt: "desc" },
@@ -59,6 +61,23 @@ export async function getGiftOptions(): Promise<GiftOption[]> {
     image: p.images[0]?.url ?? null,
     value: Number(p.price),
   }));
+}
+
+/** The one product a loyalty-reward gift coupon is for (any visible in-stock product, not only giftEligible ones). */
+export async function getGiftOptionForProduct(productId: string): Promise<GiftOption | null> {
+  const p = await prisma.product.findFirst({
+    where: { id: productId, visible: true, stock: { gt: 0 } },
+    select: {
+      id: true,
+      name: true,
+      nameSk: true,
+      price: true,
+      images: { orderBy: { sortOrder: "asc" }, take: 1, select: { url: true } },
+    },
+  });
+  return p
+    ? { productId: p.id, name: p.name, nameSk: p.nameSk, image: p.images[0]?.url ?? null, value: Number(p.price) }
+    : null;
 }
 
 /** Gift triggers earned by a cart (or a single product): K-beauty and/or Arabic perfume present. */
