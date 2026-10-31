@@ -2,18 +2,6 @@ import type { FeedProduct } from "./get-feed-products";
 import { cdata, escapeXml, isValidEan } from "./xml";
 import { SEO_URL } from "@/lib/site";
 
-// Promotional text in a title ("… + kartáček zdarma", "70+10 zdarma") is not allowed in Google/Meta feeds.
-// Only the feed title is cleaned — the product name on the site stays as it is.
-export function stripPromoFromTitle(name: string): string {
-  if (!/zdarma/i.test(name)) return name;
-  let t = name
-    .replace(/\s*\+\s*\d+\s*ks\s+zdarma\b/iu, "") // "10 ks + 4 ks ZDARMA"
-    .replace(/\+\d+\s+zdarma\b/iu, "") // "70+10 zdarma" -> "70"
-    .replace(/\s*\+[\p{L}\s+]*?\bzdarma\b/iu, ""); // "+kartáček+mezizubní kartáček zdarma"
-  t = t.replace(/\s*\bzdarma\b/iu, "").replace(/\s+/g, " ").trim();
-  return t || name;
-}
-
 /**
  * One offer per GTIN: the same product is sometimes imported twice (Tamda and SP Venture) with slightly
  * different prices, and Google then sees two items claiming one identity. Keep the one that is in stock,
@@ -50,7 +38,7 @@ export function buildGoogleShoppingRss(products: FeedProduct[]): string {
 
       return `    <item>
       <g:id>${escapeXml(p.code)}</g:id>
-      <title>${escapeXml(stripPromoFromTitle(p.name))}</title>
+      <title>${escapeXml(p.name)}</title>
       <description>${cdata(p.description)}</description>
       <link>${escapeXml(url)}</link>
       ${image ? `<g:image_link>${escapeXml(image)}</g:image_link>` : ""}
