@@ -19,9 +19,11 @@ export interface ShopSettings {
   codSurcharge: number;
   // Extra the carrier bills us on a COD parcel — added to the shipping cost of COD orders in profit figures.
   shippingCostCod: number;
-  // Card-gateway fee in profit figures: percent of the order total + fixed Kč per transaction, both ex-VAT.
+  // Card-gateway fee in profit figures: percent of the order total + fixed Kč per transaction, for CZ and SK orders.
   paymentFeeCardPercent: number;
   paymentFeeCardFixed: number;
+  paymentFeeCardPercentSk: number;
+  paymentFeeCardFixedSk: number;
   czkToEurRate: number;
   loyaltyEarnPercent: number;
   loyaltyRedeemCapPercent: number;
@@ -78,6 +80,8 @@ export const getSettings = unstable_cache(
       shippingCostCod: Number(row.shippingCostCod),
       paymentFeeCardPercent: Number(row.paymentFeeCardPercent),
       paymentFeeCardFixed: Number(row.paymentFeeCardFixed),
+      paymentFeeCardPercentSk: Number(row.paymentFeeCardPercentSk),
+      paymentFeeCardFixedSk: Number(row.paymentFeeCardFixedSk),
       czkToEurRate: Number(row.czkToEurRate),
       loyaltyEarnPercent: row.loyaltyEarnPercent,
       loyaltyRedeemCapPercent: row.loyaltyRedeemCapPercent,

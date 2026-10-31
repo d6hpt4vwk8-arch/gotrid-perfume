@@ -147,7 +147,7 @@ export default async function AdminDashboardPage() {
         0,
       );
       const shippingCost = getShippingCost(order.shippingMethod, settings, order.shippingCountry, order.paymentMethod);
-      const paymentFee = getPaymentFee(order.paymentMethod, Number(order.total), settings);
+      const paymentFee = getPaymentFee(order.paymentMethod, Number(order.total), order.shippingCountry, settings);
       return sum + Number(order.total) - costOfGoods - shippingCost - paymentFee;
     }, 0);
   const revenueOf = (list: { total: unknown }[]) => list.reduce((sum, o) => sum + Number(o.total), 0);

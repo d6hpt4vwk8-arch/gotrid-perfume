@@ -933,11 +933,13 @@ model Settings {
   // Extra the carrier bills us on a cash-on-delivery parcel (Zásilkovna: 21 Kč
   // + 21 % VAT) — added to the shipping cost of COD orders in the profit figures.
   shippingCostCod          Decimal @default(25.41) @db.Decimal(10, 2)
-  // Card-gateway (Comgate) fee for the net-profit figures: % of the order total + fixed amount per
-  // transaction, ex-VAT (VAT is added while the seller is not a VAT payer). Default = Comgate Profi CZK 2026
-  // standard rate for consumer EU cards (0,67 % + 1 Kč), i.e. what applies after the 3-month promo (0,47 % + 1 Kč).
-  paymentFeeCardPercent    Decimal @default(0.67) @db.Decimal(6, 3)
-  paymentFeeCardFixed      Decimal @default(1) @db.Decimal(10, 2)
+  // Card-gateway (Comgate) fee for the net-profit figures, card orders only: % of the order total + a fixed
+  // amount per transaction (Kč, as the owner wants it — no VAT or tier logic), one pair for Czech and one
+  // for Slovak orders. Defaults = Comgate Profi CZK standard rate 0,67 % + 1 Kč incl. 21 % VAT.
+  paymentFeeCardPercent    Decimal @default(0.81) @db.Decimal(6, 3)
+  paymentFeeCardFixed      Decimal @default(1.21) @db.Decimal(10, 2)
+  paymentFeeCardPercentSk  Decimal @default(0.81) @db.Decimal(6, 3)
+  paymentFeeCardFixedSk    Decimal @default(1.21) @db.Decimal(10, 2)
 
   // "Come back and order again" email campaign — days after a customer's
   // (only) order before we email them. Every email gets the same shared

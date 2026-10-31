@@ -165,11 +165,12 @@ export default async function AdminSettingsPage() {
           Poplatek platební brány (Comgate)
         </div>
         <p className="-mt-2 text-xs text-accent-2">
-          Do čistého zisku u plateb kartou. Zadejte běžnou sazbu platnou po skončení úvodní slevy
-          (ne akční), bez DPH — DPH se přičte automaticky, dokud nejste plátce.
+          Jen pro čistý zisk u plateb kartou: procento z objednávky + pevná částka za transakci,
+          zvlášť pro Česko a Slovensko. Zadejte, kolik to chcete počítat (včetně DPH) — nic dalšího
+          se nepřičítá.
         </p>
         <label className="flex flex-col gap-1 text-sm">
-          Poplatek z částky (%)
+          Česko — poplatek z částky (%)
           <input
             name="paymentFeeCardPercent"
             type="number"
@@ -179,12 +180,32 @@ export default async function AdminSettingsPage() {
           />
         </label>
         <label className="flex flex-col gap-1 text-sm">
-          Pevný poplatek za transakci (Kč)
+          Česko — pevný poplatek za transakci (Kč)
           <input
             name="paymentFeeCardFixed"
             type="number"
             step="0.01"
             defaultValue={settings.paymentFeeCardFixed}
+            className="rounded-sm border border-line px-3 py-2"
+          />
+        </label>
+        <label className="flex flex-col gap-1 text-sm">
+          Slovensko — poplatek z částky (%)
+          <input
+            name="paymentFeeCardPercentSk"
+            type="number"
+            step="0.001"
+            defaultValue={settings.paymentFeeCardPercentSk}
+            className="rounded-sm border border-line px-3 py-2"
+          />
+        </label>
+        <label className="flex flex-col gap-1 text-sm">
+          Slovensko — pevný poplatek za transakci (Kč)
+          <input
+            name="paymentFeeCardFixedSk"
+            type="number"
+            step="0.01"
+            defaultValue={settings.paymentFeeCardFixedSk}
             className="rounded-sm border border-line px-3 py-2"
           />
         </label>

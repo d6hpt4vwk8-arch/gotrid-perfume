@@ -1,19 +1,23 @@
-import { currentSeller } from "@/lib/business-identity";
 import type { ShopSettings } from "@/lib/settings.server";
 
-const VAT_RATE = 0.21;
-
 /**
- * What the card gateway (Comgate) keeps from one online card payment, for the net-profit figures. The rate in
- * settings is the standard one after the introductory discount, entered ex-VAT; a seller that isn't a VAT payer
- * can't reclaim the VAT on the fee, so it is added here. Only card orders pay it.
+ * What the card gateway (Comgate) keeps from one online card payment, for the net-profit figures: a flat
+ * percentage of the order total plus a fixed Kč amount per transaction, with one pair of values for Czech and
+ * one for Slovak orders (settings, entered as the owner wants them counted — deliberately no VAT or tier logic).
+ * Only card orders pay it.
  */
 export function getPaymentFee(
   paymentMethod: string,
   orderTotal: number,
-  settings: Pick<ShopSettings, "paymentFeeCardPercent" | "paymentFeeCardFixed">,
+  shippingCountry: string,
+  settings: Pick<
+    ShopSettings,
+    "paymentFeeCardPercent" | "paymentFeeCardFixed" | "paymentFeeCardPercentSk" | "paymentFeeCardFixedSk"
+  >,
 ): number {
   if (paymentMethod !== "CARD") return 0;
-  const net = (orderTotal * settings.paymentFeeCardPercent) / 100 + settings.paymentFeeCardFixed;
-  return currentSeller().vatPayer ? net : net * (1 + VAT_RATE);
+  const sk = shippingCountry === "SK";
+  const percent = sk ? settings.paymentFeeCardPercentSk : settings.paymentFeeCardPercent;
+  const fixed = sk ? settings.paymentFeeCardFixedSk : settings.paymentFeeCardFixed;
+  return (orderTotal * percent) / 100 + fixed;
 }

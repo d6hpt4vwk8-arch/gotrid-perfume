@@ -57,7 +57,7 @@ export default async function OrderSourcesPage({
     );
     const shippingCost = getShippingCost(order.shippingMethod, settings, order.shippingCountry, order.paymentMethod);
     const revenue = Number(order.total);
-    const paymentFee = getPaymentFee(order.paymentMethod, revenue, settings);
+    const paymentFee = getPaymentFee(order.paymentMethod, revenue, order.shippingCountry, settings);
     const key = trafficChannel(order.trafficSource);
     const row = channels.get(key) ?? { orders: 0, revenue: 0, profit: 0 };
     row.orders += 1;

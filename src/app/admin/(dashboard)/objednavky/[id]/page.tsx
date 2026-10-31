@@ -42,7 +42,7 @@ export default async function AdminOrderDetailPage({
     0,
   );
   const shippingCost = getShippingCost(order.shippingMethod, settings, order.shippingCountry, order.paymentMethod);
-  const paymentFee = getPaymentFee(order.paymentMethod, Number(order.total), settings);
+  const paymentFee = getPaymentFee(order.paymentMethod, Number(order.total), order.shippingCountry, settings);
   const netProfit = Number(order.total) - costOfGoods - shippingCost - paymentFee;
 
   return (
@@ -282,7 +282,7 @@ export default async function AdminOrderDetailPage({
           </div>
         </div>
         <p className="mt-2 text-xs text-accent-2">
-          Poplatek za platbu kartou se bere z Nastavení (sazba po skončení úvodní slevy). Náklady na zboží počítány z aktuální nákupní ceny
+          Poplatek za platbu kartou se počítá z Nastavení (% + pevná částka, zvlášť CZ a SK). Náklady na zboží počítány z aktuální nákupní ceny
           produktu (ne z ceny v době objednávky).
         </p>
       </div>
