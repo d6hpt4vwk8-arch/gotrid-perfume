@@ -5,6 +5,9 @@ import { getSettings } from "@/lib/settings.server";
 import { emailBenefits, emailButton, emailProductGrid, renderEmailLayout } from "./layout";
 import { getMailContext, type MailContext } from "./locale";
 
+// Customer-typed names go straight into the HTML.
+const escapeHtml = (v: string) => v.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;");
+
 const INK = "#131110";
 const MUTED = "#8a857e";
 const OK = "#4b6b4f";
@@ -57,7 +60,7 @@ export async function renderWeeklyNewsletterHtml(
         : tr("Zobrazit celou kategorii");
 
   const inner = `
-      <h1>${tr("Ahoj")}${plan.firstName ? ` ${plan.firstName}` : ""}!</h1>
+      <h1>${tr("Ahoj")}${plan.firstName ? ` ${escapeHtml(plan.firstName)}` : ""}!</h1>
       <p>${tr("Vybrali jsme pro vás pár kousků podle toho, co jste u nás nakupovali.")}</p>
       ${emailProductGrid(tr("Pro vás tento týden"), plan.picks, ctx, rate)}
       ${emailProductGrid(complementHeading, plan.complements, ctx, rate)}

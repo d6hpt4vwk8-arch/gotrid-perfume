@@ -1,7 +1,9 @@
 // Creates an ADDITIONAL Zásilkovna packet for an order that is shipped in two boxes, next to the existing one
 // (order.packetaId stays the first packet). The packet "number" gets a -2 suffix. Saves the label PDFs to ops/labels/.
 //
-//   npx tsx --env-file=.env scripts/create-extra-zasilkovna-packet.ts <orderNumber> --weight 1.0 --value 759 [--suffix 2]
+//   npx tsx --env-file=.env scripts/create-extra-zasilkovna-packet.ts <orderNumber> --weight 1.0 --value 759 [--suffix 2] [--no-cod]
+// COD orders are refused unless --no-cod is given: the extra packet is then sent without cash on delivery
+// (the first packet keeps the whole COD amount).
 import { mkdir, writeFile } from "node:fs/promises";
 import { prisma } from "../src/lib/prisma";
 import { createPacket, fetchLabelPdf } from "../src/lib/packeta";
@@ -20,7 +22,7 @@ async function main() {
   const order = await prisma.order.findFirst({ where: { number } });
   if (!order) throw new Error(`order ${number} not found`);
   if (order.shippingMethod !== "ZASILKOVNA" || !order.pickupPointId) throw new Error("only pickup-point Zásilkovna orders are supported");
-  if (order.paymentMethod === "CASH_ON_DELIVERY") throw new Error("COD orders need a manual split of the COD amount");
+  if (order.paymentMethod === "CASH_ON_DELIVERY" && !process.argv.includes("--no-cod")) throw new Error("COD orders need a manual split of the COD amount");
   const value = Number(arg("value") ?? Number(order.total) / 2);
 
   const packetId = await createPacket({
