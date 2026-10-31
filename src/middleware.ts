@@ -15,6 +15,8 @@ const PUBLIC_PATHS = new Set(["/admin/login", "/api/admin/login", "/api/admin/lo
 // don't support strict-dynamic yet.
 const isDev = process.env.NODE_ENV !== "production";
 
+// connect-src lists the Heureka conversion SDK's harvester endpoints (heureka.cz/ocm/harvest plus its fallback):
+// without them the browser silently blocked the order POST, so Heureka recorded 0 conversions (found 2026-10-31).
 function buildCsp(nonce: string): string {
   return [
     "default-src 'self'",
@@ -22,7 +24,7 @@ function buildCsp(nonce: string): string {
     "style-src 'self' 'unsafe-inline'",
     "img-src 'self' data: https:",
     "font-src 'self' data:",
-    "connect-src 'self' https://connect.facebook.net https://widget.packeta.com https://*.packeta.com https://*.tile.openstreetmap.org https://c.seznam.cz https://h.seznam.cz https://*.clarity.ms",
+    "connect-src 'self' https://connect.facebook.net https://widget.packeta.com https://*.packeta.com https://*.tile.openstreetmap.org https://c.seznam.cz https://h.seznam.cz https://*.clarity.ms https://heureka.cz https://harvester.ocm.heureka.group",
     "frame-src 'self' https://widget.packeta.com https://ps-maps.gls-czech.com https://cz.im9.cz",
     "frame-ancestors 'self'",
     "base-uri 'self'",
