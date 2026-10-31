@@ -5,7 +5,7 @@
 // visitor arrived via Heureka) and the order confirmation page
 // (src/components/heureka-conversion.tsx, reports the actual sale). Both
 // share the same `window.heureka` queue-stub, reproduced here exactly per
-// Heureka's own snippet — the stub queues calls made before the real script
+// Heureka's own snippet (including window.ROIDataObject) — the stub queues calls made before the real script
 // finishes downloading, so callers don't need to wait for a load event.
 
 declare global {
@@ -22,10 +22,17 @@ export function loadHeurekaScript(page: "product_detail" | "thank_you"): void {
 
   const w = window as unknown as Record<string, unknown>;
   const key = "heureka";
+  // The SDK finds its call queue through window.ROIDataObject (the name of the
+  // global) — Heureka's snippet sets it first, and without it every queued call
+  // is silently ignored (2026-10-30: 0 conversions recorded in 14 days against
+  // ~86 real Heureka orders). The stub also queues the `arguments` object
+  // exactly like the snippet, rather than a rest-param array.
+  w.ROIDataObject = key;
   if (!w[key]) {
-    const stub = ((...args: unknown[]) => {
-      (stub.q = stub.q || []).push(args);
-    }) as Window["heureka"] & { q: unknown[] };
+    const stub = function (this: unknown) {
+      // eslint-disable-next-line prefer-rest-params
+      (stub.q = stub.q || []).push(arguments);
+    } as unknown as Window["heureka"] & { q: unknown[] };
     stub.q = [];
     w[key] = stub;
   }
