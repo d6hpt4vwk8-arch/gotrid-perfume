@@ -3,6 +3,7 @@ import { prisma } from "@/lib/prisma";
 import { formatPrice } from "@/lib/format";
 import { getSettings } from "@/lib/settings.server";
 import { getShippingCost } from "@/lib/shipping";
+import { getPaymentFee } from "@/lib/payment-fee";
 import { purchaseCost } from "@/lib/cost-of-goods";
 import { NO_SOURCE, trafficChannel } from "@/lib/admin/traffic-channel";
 
@@ -56,11 +57,12 @@ export default async function OrderSourcesPage({
     );
     const shippingCost = getShippingCost(order.shippingMethod, settings, order.shippingCountry, order.paymentMethod);
     const revenue = Number(order.total);
+    const paymentFee = getPaymentFee(order.paymentMethod, revenue, settings);
     const key = trafficChannel(order.trafficSource);
     const row = channels.get(key) ?? { orders: 0, revenue: 0, profit: 0 };
     row.orders += 1;
     row.revenue += revenue;
-    row.profit += revenue - costOfGoods - shippingCost;
+    row.profit += revenue - costOfGoods - shippingCost - paymentFee;
     channels.set(key, row);
   }
 

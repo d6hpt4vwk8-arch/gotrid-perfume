@@ -4,6 +4,7 @@ import { prisma } from "@/lib/prisma";
 import { formatPrice, formatEurAmount } from "@/lib/format";
 import { getSettings } from "@/lib/settings.server";
 import { SHIPPING_LABELS, PAYMENT_LABELS, getShippingCost } from "@/lib/shipping";
+import { getPaymentFee } from "@/lib/payment-fee";
 import { purchaseCost } from "@/lib/cost-of-goods";
 import { ShippingIcon } from "@/components/shipping-icons";
 import { ORDER_STATUS_LABELS } from "@/lib/orders/status-labels";
@@ -41,7 +42,8 @@ export default async function AdminOrderDetailPage({
     0,
   );
   const shippingCost = getShippingCost(order.shippingMethod, settings, order.shippingCountry, order.paymentMethod);
-  const netProfit = Number(order.total) - costOfGoods - shippingCost;
+  const paymentFee = getPaymentFee(order.paymentMethod, Number(order.total), settings);
+  const netProfit = Number(order.total) - costOfGoods - shippingCost - paymentFee;
 
   return (
     <div className="flex max-w-3xl flex-col gap-6">
@@ -266,6 +268,12 @@ export default async function AdminOrderDetailPage({
             <span>Skutečné náklady na dopravu ({SHIPPING_LABELS[order.shippingMethod]})</span>
             <span>−{formatPrice(shippingCost)}</span>
           </div>
+          {paymentFee > 0 && (
+            <div className="flex justify-between text-accent-2">
+              <span>Poplatek platební brány (karta)</span>
+              <span>−{formatPrice(paymentFee)}</span>
+            </div>
+          )}
           <div className="mt-1 flex justify-between border-t border-line pt-1 font-semibold">
             <span>Čistý zisk</span>
             <span className={netProfit >= 0 ? "text-ok" : "text-red-600"}>
@@ -274,7 +282,7 @@ export default async function AdminOrderDetailPage({
           </div>
         </div>
         <p className="mt-2 text-xs text-accent-2">
-          Nezahrnuje poplatky za platbu kartou. Náklady na zboží počítány z aktuální nákupní ceny
+          Poplatek za platbu kartou se bere z Nastavení (sazba po skončení úvodní slevy). Náklady na zboží počítány z aktuální nákupní ceny
           produktu (ne z ceny v době objednávky).
         </p>
       </div>

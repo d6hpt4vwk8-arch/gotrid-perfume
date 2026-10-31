@@ -42,6 +42,8 @@ const settingsSchema = z.object({
   // order detail page, kept separate from the shippingPriceX fields above
   // (what the customer is charged).
   shippingCostCod: z.coerce.number().min(0).max(10_000),
+  paymentFeeCardPercent: z.coerce.number().min(0).max(20),
+  paymentFeeCardFixed: z.coerce.number().min(0).max(1_000),
   shippingCostZasilkovna: z.coerce.number().min(0).max(10_000),
   shippingCostPpl: z.coerce.number().min(0).max(10_000),
   shippingCostDpd: z.coerce.number().min(0).max(10_000),

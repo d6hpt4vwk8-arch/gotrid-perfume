@@ -1,5 +1,6 @@
 import { getShippingCost } from "@/lib/shipping";
 import { purchaseCost } from "@/lib/cost-of-goods";
+import { getPaymentFee } from "@/lib/payment-fee";
 import Link from "next/link";
 import { prisma } from "@/lib/prisma";
 import { formatPrice } from "@/lib/format";
@@ -81,7 +82,7 @@ export default async function AdminDashboardPage() {
     // Same window/status filter as revenue above — items+purchasePrice and
     // shippingMethod are the two extra things needed for the net-profit
     // figure, same formula as the order detail page (see there for caveats:
-    // current purchasePrice, no card-fee deduction).
+    // current purchasePrice; card fee from settings).
     prisma.order.findMany({
       where: { status: { in: [...REVENUE_STATUSES] }, createdAt: { gte: thirtyDaysAgo } },
       select: {
@@ -146,7 +147,8 @@ export default async function AdminDashboardPage() {
         0,
       );
       const shippingCost = getShippingCost(order.shippingMethod, settings, order.shippingCountry, order.paymentMethod);
-      return sum + Number(order.total) - costOfGoods - shippingCost;
+      const paymentFee = getPaymentFee(order.paymentMethod, Number(order.total), settings);
+      return sum + Number(order.total) - costOfGoods - shippingCost - paymentFee;
     }, 0);
   const revenueOf = (list: { total: unknown }[]) => list.reduce((sum, o) => sum + Number(o.total), 0);
 
