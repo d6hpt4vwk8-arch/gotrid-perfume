@@ -4,7 +4,6 @@
 // Czech company, so the contract is still governed by Czech law — the texts
 // below add the Slovak consumer-protection contacts and keep the consumer's
 // mandatory rights under Slovak law untouched.
-import Image from "next/image";
 import NextLink from "next/link";
 import { Link } from "@/i18n/navigation";
 import type { SellerIdentity } from "@/lib/business-identity";
@@ -487,72 +486,44 @@ export function OchranaUdajovSk({ seller }: { seller: SellerIdentity }) {
   );
 }
 
-export function ONasSk() {
+export function ONasSk({ seller, register }: { seller: SellerIdentity; register: string | null }) {
   return (
     <>
-      <div className="not-prose mb-2 flex flex-col items-center gap-4 sm:flex-row sm:items-start">
-        <Image
-          src="/o-nas-pavel.jpg"
-          alt="Pavel Hrytsan, zakladateľ Gotrid Perfume"
-          width={800}
-          height={800}
-          className="h-36 w-36 shrink-0 rounded-sm border border-line object-cover sm:h-44 sm:w-44"
-        />
-        <p className="text-sm leading-relaxed text-ink/80">
-          Volám sa Pavel (Pavlo) Hrytsan a Gotrid Perfume som založil v roku 2023.
-        </p>
-      </div>
       <p>
-        Začínal som v malom — predával som výpredajové a outletové parfumy: testery bez škatuliek,
-        fľaše s mierne nižším objemom alebo inak drobne použité kusy, vždy však za naozaj dobrú cenu.
-        Bol to skôr experiment, na ktorom som nazbieral veľa skúseností a naučil sa, ako tento odbor
-        skutočne funguje.
-      </p>
-      <p>
-        Skúšal som aj ďalšie cesty — s kamarátom sme napríklad na čas prevádzkovali automat na parfumy
-        v obchodnom centre na Smíchove. Bol to ďalší experiment, z ktorého som si odniesol ďalšie
-        skúsenosti.
-      </p>
-      <figure className="not-prose my-2 flex flex-col items-center gap-2">
-        <Image
-          src="/o-nas-automat.png"
-          alt="Parfumový automat Gotrid Perfume v obchodnom centre na Smíchove"
-          width={1179}
-          height={2074}
-          className="h-auto w-full max-w-[220px] rounded-sm border border-line"
-        />
-        <figcaption className="text-xs text-accent-2">
-          Náš parfumový automat v obchodnom centre na Smíchove
-        </figcaption>
-      </figure>
-      <p>
-        Pri parfumérii som zostal, pretože ma táto oblasť jednoducho baví, a obchod som postupne
-        rozvíjal ďalej. Dnes už máme oveľa širší a stabilnejší sortiment — parfumy aj kozmetiku. Okrem
-        e-shopu zásobujeme aj dve kamenné predajne a venujeme sa veľkoobchodnému predaju po celej
-        Európe. Stále sa však držíme rovnakého princípu, s ktorým som začínal: poctivá cena bez
-        zbytočnej maloobchodnej prirážky a 100 % originálny tovar priamo od distribútorov.
+        Gotrid Perfume prevádzkuje spoločnosť {seller.legalName}, IČO {seller.ico}, so sídlom {seller.street},{" "}
+        {seller.city}. Špecializujeme sa na arabské parfumy a kórejskú kozmetiku. V ponuke nájdete aj ďalšie
+        parfumy, starostlivosť o pleť, telo a vlasy, starostlivosť o zuby, vonné sviečky, difúzery a vône do
+        auta.
       </p>
 
-      <h2>Čo ponúkame</h2>
-      <ul>
-        <li>parfumy a kozmetiku popredných značiek,</li>
-        <li>100 % originálne produkty so zárukou originality,</li>
-        <li>pravidelne aktualizovaný sortiment.</li>
-      </ul>
-
-      <h2>Ako fungujeme</h2>
+      <h2>Odkiaľ tovar pochádza</h2>
       <p>
-        Tovar starostlivo vyberáme a kontrolujeme pred odoslaním. Objednávky spracúvame čo
-        najrýchlejšie, aby bolo doručenie v čo najkratšom čase.
+        Tovar nakupujeme od overených distribútorov v Českej republike a Európskej únii a odosielame ho z nášho
+        skladu v Prahe. K dodávkam máme nákupné doklady a na požiadanie radi doložíme pôvod konkrétneho
+        produktu — stačí napísať na {CONTACT.email}. Podrobnosti nájdete na stránke{" "}
+        <Link href="/garance-originality-produktu">Záruka originality produktov</Link>.
+      </p>
+
+      <h2>Ako nakupovať</h2>
+      <p>
+        Objednávky spracúvame čo najrýchlejšie a tovar pred odoslaním kontrolujeme. Možnosti{" "}
+        <Link href="/doprava-a-platba">dopravy a platby</Link> aj{" "}
+        <Link href="/podminky-vraceni-zbozi">podmienky vrátenia tovaru</Link> (14 dní) sú popísané na samostatných
+        stránkach.
       </p>
 
       <h2>Kontakt</h2>
       <p>
+        {seller.legalName}, IČO {seller.ico}
+        {seller.dic ? `, DIČ ${seller.dic}` : ""}
+        <br />
+        {register}
+        <br />
         E-mail: {CONTACT.email}
         <br />
         Telefón: {CONTACT.phone}
         <br />
-        Adresa: {PICKUP_ADDRESS}, Česká republika
+        Sklad a osobný odber: {PICKUP_ADDRESS}, Česká republika
       </p>
 
       <h2>Prevádzková doba</h2>

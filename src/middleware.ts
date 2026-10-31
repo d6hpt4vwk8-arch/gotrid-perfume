@@ -32,6 +32,13 @@ function buildCsp(nonce: string): string {
 
 const intlMiddleware = createIntlMiddleware(routing);
 
+// The same app also answers on the .eu domain and the production *.vercel.app alias with a full 200 site
+// (found in the 2026-10-31 Google audit) — duplicate content and conflicting hreflang signals for Google.
+// They 308 to the canonical host, keeping path and query. /api is left alone so cron calls and webhooks
+// that may still use one of these hosts keep working.
+const CANONICAL_ORIGIN = "https://www.gotridperfume.cz";
+const REDIRECT_HOSTS = new Set(["gotridperfume.eu", "www.gotridperfume.eu", "gotrid-perfume.vercel.app"]);
+
 // next-intl's middleware builds its own NextResponse internally (rewrite
 // for the default locale, redirect for prefixed locales), so the usual
 // `NextResponse.next({ request: { headers } })` shortcut can't be used to
@@ -57,6 +64,11 @@ function overrideRequestHeaders(response: NextResponse, headers: Headers): NextR
 
 export async function middleware(req: NextRequest) {
   const { pathname } = req.nextUrl;
+
+  const host = (req.headers.get("host") ?? "").split(":")[0]!.toLowerCase();
+  if (REDIRECT_HOSTS.has(host) && !pathname.startsWith("/api/")) {
+    return NextResponse.redirect(new URL(pathname + req.nextUrl.search, CANONICAL_ORIGIN), 308);
+  }
 
   const nonce = crypto.randomUUID();
   const csp = buildCsp(nonce);

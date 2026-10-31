@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
-import { CONTACT } from "@/lib/business-identity";
+import { CONTACT, currentSeller } from "@/lib/business-identity";
 import { PICKUP_ADDRESS } from "@/lib/shipping";
-import Image from "next/image";
+import { Link } from "@/i18n/navigation";
 import { LegalPage } from "@/components/legal-page";
 import { getCurrentLocale, getTr } from "@/i18n/tr.server";
 import { ONasSk } from "@/content-sk/legal-sk";
@@ -15,78 +15,50 @@ export async function generateMetadata({ params }: { params: Promise<{ locale: s
 
 export default async function ONasPage() {
   const [tr, locale] = await Promise.all([getTr(), getCurrentLocale()]);
+  const seller = currentSeller();
   if (locale === "sk") {
     return (
       <LegalPage title={tr("O nás")}>
-        <ONasSk />
+        <ONasSk seller={seller} register={seller.commercialRegister ? tr(seller.commercialRegister) : null} />
       </LegalPage>
     );
   }
   return (
     <LegalPage title="O nás">
-      <div className="not-prose mb-2 flex flex-col items-center gap-4 sm:flex-row sm:items-start">
-        <Image
-          src="/o-nas-pavel.jpg"
-          alt="Pavel Hrytsan, zakladatel Gotrid Perfume"
-          width={800}
-          height={800}
-          className="h-36 w-36 shrink-0 rounded-sm border border-line object-cover sm:h-44 sm:w-44"
-        />
-        <p className="text-sm leading-relaxed text-ink/80">
-          Jmenuji se Pavel (Pavlo) Hrytsan a Gotrid Perfume jsem založil v roce 2023.
-        </p>
-      </div>
       <p>
-        Začínal jsem v malém — prodával jsem výprodejové a outletové parfémy: testery bez
-        krabiček, flakony s mírně nižším objemem nebo jinak drobně použité kusy, vždy ale za
-        opravdu dobrou cenu. Byl to spíš experiment, na kterém jsem nasbíral spoustu zkušeností
-        a naučil se, jak tenhle obor skutečně funguje.
-      </p>
-      <p>
-        Zkoušel jsem i další cesty — s kamarádem jsme třeba na čas provozovali automat na
-        parfémy v obchodním centru ve Smíchově. Byl to další experiment, ze kterého jsem si
-        odnesl další zkušenosti.
-      </p>
-      <figure className="not-prose my-2 flex flex-col items-center gap-2">
-        <Image
-          src="/o-nas-automat.png"
-          alt="Parfémový automat Gotrid Perfume v obchodním centru ve Smíchově"
-          width={1179}
-          height={2074}
-          className="h-auto w-full max-w-[220px] rounded-sm border border-line"
-        />
-        <figcaption className="text-xs text-accent-2">
-          Náš parfémový automat v obchodním centru ve Smíchově
-        </figcaption>
-      </figure>
-      <p>
-        U parfumerie jsem zůstal, protože mě tahle oblast prostě baví, a obchod jsem postupně
-        rozvíjel dál. Dnes už máme mnohem širší a stabilnější sortiment — parfémy i kosmetiku.
-        Kromě e-shopu zásobujeme i dvě kamenné prodejny a věnujeme se velkoobchodnímu prodeji
-        po celé Evropě. Pořád se ale držíme stejného principu, na kterém jsem začínal: poctivá
-        cena bez zbytečné maloobchodní přirážky a 100% originální zboží přímo od distributorů.
+        Gotrid Perfume provozuje společnost {seller.legalName}, IČO {seller.ico}, se sídlem {seller.street},{" "}
+        {seller.city}. Specializujeme se na arabské parfémy a korejskou kosmetiku. V nabídce najdete také další
+        parfémy, péči o pleť, tělo a vlasy, péči o zuby, vonné svíčky, difuzéry a vůně do auta.
       </p>
 
-      <h2>Co nabízíme</h2>
-      <ul>
-        <li>parfémy a kosmetiku předních značek,</li>
-        <li>100% originální produkty s garancí originality,</li>
-        <li>pravidelně aktualizovaný sortiment.</li>
-      </ul>
-
-      <h2>Jak fungujeme</h2>
+      <h2>Odkud zboží pochází</h2>
       <p>
-        Zboží pečlivě vybíráme a kontrolujeme před odesláním. Objednávky zpracováváme co
-        nejrychleji, aby bylo doručení v co nejkratším čase.
+        Zboží nakupujeme od ověřených distributorů v České republice a Evropské unii a odesíláme ho z našeho
+        skladu v Praze. Ke dodávkám máme nákupní doklady a na požádání rádi doložíme původ konkrétního produktu —
+        stačí napsat na {CONTACT.email}. Podrobnosti najdete na stránce{" "}
+        <Link href="/garance-originality-produktu">Garance originality produktů</Link>.
+      </p>
+
+      <h2>Jak nakupovat</h2>
+      <p>
+        Objednávky zpracováváme co nejrychleji a zboží před odesláním kontrolujeme. Možnosti{" "}
+        <Link href="/doprava-a-platba">dopravy a platby</Link> i{" "}
+        <Link href="/podminky-vraceni-zbozi">podmínky vrácení zboží</Link> (14 dní) jsou popsané na samostatných
+        stránkách.
       </p>
 
       <h2>Kontakt</h2>
       <p>
+        {seller.legalName}, IČO {seller.ico}
+        {seller.dic ? `, DIČ ${seller.dic}` : ""}
+        <br />
+        {seller.commercialRegister}
+        <br />
         Email: {CONTACT.email}
         <br />
         Telefon: {CONTACT.phone}
         <br />
-        Adresa: {PICKUP_ADDRESS}, Česká republika
+        Sklad a osobní odběr: {PICKUP_ADDRESS}, Česká republika
       </p>
 
       <h2>Provozní doba</h2>
