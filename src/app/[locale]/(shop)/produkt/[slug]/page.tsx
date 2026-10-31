@@ -34,8 +34,8 @@ import { ProductGallery } from "@/components/product-gallery";
 import { ScentNotesPyramid } from "@/components/scent-notes-pyramid";
 import { ProductTrustStrip } from "@/components/product-trust-strip";
 import { ProductDetailsBlocks } from "@/components/product-details-blocks";
-import { ProductFactCards } from "@/components/product-fact-cards";
-import { parseDescriptionFacts } from "@/lib/description-facts";
+import { ProductFactCards, ProductScentCards } from "@/components/product-fact-cards";
+import { parseDescriptionFacts, parseScentFacts } from "@/lib/description-facts";
 import { pickProductDetails } from "@/lib/product-details";
 import { BestsellerPill, EthicsPills, isBestseller } from "@/components/product-badges";
 
@@ -128,6 +128,7 @@ export default async function ProductPage({
   const displayDescription = isSk && product.descriptionSk ? product.descriptionSk : product.description;
   const structuredDetails = pickProductDetails(product.details, isSk ? "sk" : "cs");
   const descriptionFacts = parseDescriptionFacts(displayDescription);
+  const scentFacts = descriptionFacts ? null : parseScentFacts(displayDescription);
   const catName = (name: string) => (isSk ? categoryNameSk(name) : name);
 
   const primaryCategory = product.categories[0]?.category;
@@ -479,10 +480,11 @@ export default async function ProductPage({
           {displayDescription && (
             <div
               className="prose prose-neutral mt-4 max-w-none text-sm leading-relaxed [&_li]:mb-1 [&_p]:mb-3 [&_strong]:font-semibold [&_ul]:mb-3 [&_ul]:list-disc [&_ul]:pl-5"
-              dangerouslySetInnerHTML={{ __html: sanitizeDescription(descriptionFacts?.introHtml ?? displayDescription) }}
+              dangerouslySetInnerHTML={{ __html: sanitizeDescription((descriptionFacts ?? scentFacts)?.introHtml ?? displayDescription) }}
             />
           )}
           {descriptionFacts && <ProductFactCards facts={descriptionFacts} />}
+          {scentFacts && <ProductScentCards facts={scentFacts} />}
 
           {specs.length > 0 && (
             <div className="mt-2">
