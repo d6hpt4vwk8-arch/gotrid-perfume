@@ -102,7 +102,7 @@ export default async function OrderConfirmationPage({
         <div className="flex flex-col gap-2 rounded-sm border border-ok/40 bg-ok/10 p-4 text-sm text-ink">
           <span className="font-semibold">{tr("Sbírejte body za nákupy")}</span>
           <span>
-            {tr("Za každých 100 Kč získáte {n} bodů, které můžete vyměnit za dopravu zdarma, slevu nebo dárek. Stačí si vytvořit zákaznický účet s e-mailem {email}.", { n: loyaltyInvite, email: order.email })}
+            {tr("Za každých 100 Kč získáte {n} bodů, které můžete vyměnit za dárky. Stačí si vytvořit zákaznický účet s e-mailem {email}.", { n: loyaltyInvite, email: order.email })}
           </span>
           <Link href="/registrace" className="w-fit rounded-sm bg-ink px-4 py-2 text-sm font-semibold text-white hover:bg-accent">
             {tr("Vytvořit účet")}

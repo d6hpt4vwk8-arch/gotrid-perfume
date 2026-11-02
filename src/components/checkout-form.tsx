@@ -828,7 +828,7 @@ export function CheckoutForm({
                 ? tr("Za tuto objednávku získáte {n} bodů do věrnostního programu.", {
                     n: Math.max(0, Math.floor(((itemsTotal - (coupon?.discountAmount ?? 0)) * settings.loyaltyEarnPercent) / 100)),
                   })
-                : tr("Se zákaznickým účtem byste za tuto objednávku získali {n} bodů na slevy a dárky. Účet si můžete vytvořit po objednávce.", {
+                : tr("Se zákaznickým účtem byste za tuto objednávku získali {n} bodů na dárky. Účet si můžete vytvořit po objednávce.", {
                     n: Math.max(0, Math.floor(((itemsTotal - (coupon?.discountAmount ?? 0)) * settings.loyaltyEarnPercent) / 100)),
                   })}
             </p>
