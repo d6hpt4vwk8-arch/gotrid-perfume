@@ -17,11 +17,11 @@ const WEBSHOP_ENGINE = "GotridPerfume";
 // A4_4x1's content is authored for a full A4 sheet width, so even with the
 // print dialog's paper size correctly set to the physical label, the content
 // still had to be scaled down (~48% for a 4x6" label) to fit, making the
-// barcode too small to reliably scan. "ShipItThermoPdf" — confirmed live —
-// instead renders a PDF page sized to match an actual thermal label (85×85mm
-// here) with content filling the whole page and a full-width barcode, no
-// scaling-down needed.
-const TYPE_OF_PRINTER = "ShipItThermoPdf";
+// barcode too small to reliably scan. "ShipItThermoPdf" fixed that with an
+// 85×85mm page, but the owner printed MyGLS's own "Connect" test label and
+// preferred its layout (2026-11-02), so new parcels use "Connect". Parcels
+// created earlier keep the PDF stored in glsLabelPdf in their old format.
+const TYPE_OF_PRINTER = "Connect";
 
 // Our own pickup/sender address — same physical address as PICKUP_ADDRESS in
 // shipping.ts, split into GLS's separate Street/HouseNumber fields.
