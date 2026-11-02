@@ -2,6 +2,7 @@
 
 import { useTr, useIsSk } from "@/i18n/use-tr";
 import Image from "next/image";
+import { Link, usePathname } from "@/i18n/navigation";
 import { useEffect, useState } from "react";
 import { useCart } from "@/lib/cart-context";
 import { useCurrency } from "@/lib/currency-context";
@@ -30,6 +31,9 @@ export function GiftPicker({ unlocked, onlyProductId }: { unlocked: boolean; onl
   const tr = useTr();
   const isSk = useIsSk();
   const [gifts, setGifts] = useState<GiftOption[]>([]);
+  // Sample gifts a guest sees but cannot pick until they sign in (see createOrder()).
+  const [lockedGifts, setLockedGifts] = useState<GiftOption[]>([]);
+  const pathname = usePathname();
   const [loaded, setLoaded] = useState(false);
   // Sample gifts depend on what is in the cart, so refetch when the set of products changes.
   const cartKey = items
@@ -54,13 +58,14 @@ export function GiftPicker({ unlocked, onlyProductId }: { unlocked: boolean; onl
             body: JSON.stringify({ productIds }),
           })
             .then((res) => res.json())
-            .then((d: { gifts: GiftOption[] }) => d.gifts)
-            .catch(() => [] as GiftOption[])
-        : Promise.resolve([] as GiftOption[]),
-    ]).then(([couponGifts, sampleGifts]) => {
+            .then((d: { gifts: GiftOption[]; requiresAccount?: boolean }) => ({ gifts: d.gifts, requiresAccount: Boolean(d.requiresAccount) }))
+            .catch(() => ({ gifts: [] as GiftOption[], requiresAccount: false }))
+        : Promise.resolve({ gifts: [] as GiftOption[], requiresAccount: false }),
+    ]).then(([couponGifts, samples]) => {
       if (cancelled) return;
       // One gift per order: coupon gifts and free samples share a single choice.
-      setGifts([...sampleGifts, ...couponGifts]);
+      setGifts(samples.requiresAccount ? couponGifts : [...samples.gifts, ...couponGifts]);
+      setLockedGifts(samples.requiresAccount ? samples.gifts : []);
       setLoaded(true);
     });
     return () => {
@@ -75,9 +80,55 @@ export function GiftPicker({ unlocked, onlyProductId }: { unlocked: boolean; onl
     if (!gifts.some((g) => g.productId === giftProductId)) setGiftProductId(null);
   }, [loaded, gifts, giftProductId, setGiftProductId]);
 
-  if (!loaded || gifts.length === 0) return null;
+  if (!loaded || (gifts.length === 0 && lockedGifts.length === 0)) return null;
+
+  const loginNext = encodeURIComponent(pathname || "/pokladna");
+
+  const lockedBox = lockedGifts.length > 0 && (
+    <div className="flex flex-col gap-2 rounded-sm border border-ok/40 bg-ok/5 p-3">
+      <span className="text-sm font-semibold text-ink">{tr("Dárek zdarma pro registrované zákazníky")}</span>
+      <span className="text-xs leading-snug text-accent-2">
+        {tr("Přihlaste se nebo si vytvořte účet a vyberte si k objednávce jeden z těchto dárků.")}
+      </span>
+      <div className="flex flex-col gap-1.5">
+        {lockedGifts.map((gift) => (
+          <div key={gift.productId} className="flex items-center gap-3 rounded-sm border border-line bg-white/60 p-2 opacity-70">
+            {gift.image && (
+              <span className="relative h-10 w-10 shrink-0 overflow-hidden rounded-sm bg-line/60">
+                <Image src={gift.image} alt="" fill sizes="40px" className="object-cover" />
+              </span>
+            )}
+            <span className="flex flex-1 flex-col gap-0.5">
+              <span className="text-sm text-ink">{isSk && gift.nameSk ? gift.nameSk : gift.name}</span>
+              {(isSk ? gift.blurbSk ?? gift.blurb : gift.blurb) && (
+                <span className="text-xs leading-snug text-accent-2">{isSk ? gift.blurbSk ?? gift.blurb : gift.blurb}</span>
+              )}
+            </span>
+          </div>
+        ))}
+      </div>
+      <div className="flex flex-wrap gap-2">
+        <Link
+          href={`/prihlaseni?next=${loginNext}`}
+          className="rounded-sm bg-ink px-4 py-2 text-sm font-semibold text-white hover:bg-accent"
+        >
+          {tr("Přihlásit se")}
+        </Link>
+        <Link
+          href={`/registrace?next=${loginNext}`}
+          className="rounded-sm border border-ink px-4 py-2 text-sm font-semibold text-ink hover:bg-white"
+        >
+          {tr("Vytvořit účet")}
+        </Link>
+      </div>
+    </div>
+  );
+
+  if (gifts.length === 0) return lockedBox;
 
   return (
+    <>
+    {lockedBox}
     <div className="flex flex-col gap-2 rounded-sm border border-ok/40 bg-ok/5 p-3">
       <span className="text-sm font-semibold text-ink">
         {tr("Dárek zdarma — vyberte si jeden")}
@@ -124,5 +175,6 @@ export function GiftPicker({ unlocked, onlyProductId }: { unlocked: boolean; onl
         </button>
       )}
     </div>
+    </>
   );
 }

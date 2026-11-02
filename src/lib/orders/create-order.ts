@@ -79,6 +79,10 @@ export async function createOrder(
     if (requested && requested.giftEligible && isSampleGiftCode(requested.code)) {
       // Free sample gifts (sample-gifts.ts) need no coupon, only a qualifying cart —
       // K-beauty or Arabic perfume among the items — re-checked here, not trusted from the form.
+      // They are also a reason to register (owner's call, 2026-11-02): guests don't get them.
+      if (!customerId) {
+        throw new CheckoutError("Dárek zdarma je jen pro přihlášené zákazníky — přihlaste se nebo si vytvořte účet.");
+      }
       if (!(await isSampleGiftAllowedForCart(requested.code, productIds))) {
         throw new CheckoutError("Tento dárek k vašemu nákupu bohužel nelze přidat, zvolte prosím jiný.");
       }
