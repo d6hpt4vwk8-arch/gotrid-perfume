@@ -73,16 +73,20 @@ export default async function OrderConfirmationPage({
   return (
     <main className="mx-auto flex max-w-2xl flex-1 flex-col gap-6 px-4 py-10">
       <SklikConversion orderId={order.number} value={sklikConversionValue} />
-      <HeurekaConversion
-        orderId={order.number}
-        items={order.items.map((item) => ({
-          itemId: item.product?.code ?? item.ean ?? item.name,
-          name: item.name,
-          unitPrice: Number(item.unitPrice),
-          qty: item.qty,
-        }))}
-        totalVat={Number(order.total)}
-      />
+      {/* Heureka.cz conversion measurement runs on the Czech shop's key: a Slovak order would be counted as a
+          Heureka.cz sale (and skew its stats). Heureka.sk gets Slovak orders through the order log instead. */}
+      {order.shippingCountry !== "SK" && (
+        <HeurekaConversion
+          orderId={order.number}
+          items={order.items.map((item) => ({
+            itemId: item.product?.code ?? item.ean ?? item.name,
+            name: item.name,
+            unitPrice: Number(item.unitPrice),
+            qty: item.qty,
+          }))}
+          totalVat={Number(order.total)}
+        />
+      )}
       <GlamiConversion
         orderId={order.number}
         itemIds={order.items.map((item) => item.product?.code ?? item.ean ?? item.name)}

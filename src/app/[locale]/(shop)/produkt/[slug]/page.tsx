@@ -237,7 +237,8 @@ export default async function ProductPage({
       <ProductViewTracker
         product={{ id: product.id, code: product.code, name: displayName, price: Number(product.price) }}
       />
-      <HeurekaProductView />
+      {/* Czech Heureka only: its cookie would attribute a later Slovak order to Heureka.cz */}
+      {!isSk && <HeurekaProductView />}
 
       <Breadcrumbs
         items={[
