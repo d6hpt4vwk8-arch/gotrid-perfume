@@ -22,6 +22,8 @@
     "@anthropic-ai/sdk": "^0.120.0",
     "@prisma/client": "^6",
     "@react-pdf/renderer": "^4",
+    "@zxing/browser": "^0.2.1",
+    "@zxing/library": "^0.23.0",
     "bysquare": "^4.1.0",
     "exceljs": "^4",
     "fast-xml-parser": "^5.11.0",

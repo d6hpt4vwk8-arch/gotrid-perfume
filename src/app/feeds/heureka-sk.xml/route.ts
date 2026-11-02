@@ -6,7 +6,7 @@ import { cdata, escapeXml, isValidEan } from "@/lib/feeds/xml";
 import { czkToEur } from "@/lib/format";
 import { categoryBreadcrumbSk, paramNameSk, paramValueSk } from "@/lib/sk-terms";
 import { stripHtml } from "@/lib/feeds/xml";
-import { SITE_URL } from "@/lib/site";
+import { SEO_URL } from "@/lib/site";
 import { hasManufacturerReferencePrice } from "@/lib/reference-price";
 import { getSettings } from "@/lib/settings.server";
 
@@ -44,9 +44,10 @@ export async function GET() {
 
   const items = products
     .map((p) => {
-      // The Slovak storefront (language switcher + EUR prices), not the Czech page.
-      const url = `${SITE_URL}/sk/produkt/${p.slug}`;
-      const images = p.images.map((img) => `${SITE_URL}${img}`);
+      // The Slovak storefront (language switcher + EUR prices), not the Czech page. On the www host — the one
+      // registered as the shop's homepage in Heureka.sk — so clicks don't hop through the apex redirect.
+      const url = `${SEO_URL}/sk/produkt/${p.slug}`;
+      const images = p.images.map((img) => `${SEO_URL}${img}`);
       const [mainImage, ...altImages] = images;
       const deliveryDate = p.stock > 0 ? "0" : "7";
       const productName = p.nameSk!;
