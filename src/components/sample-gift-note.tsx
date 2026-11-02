@@ -31,7 +31,7 @@ export async function SampleGiftNote({ productId }: { productId: string }) {
         <span className="flex min-w-0 flex-1 flex-col">
           <span className="text-sm font-semibold text-ink">🎁 {tr("Dárek zdarma k nákupu")}</span>
           <span className="text-xs text-accent-2">
-            {tr("Vyberte si 1 z {n} vzorků v košíku", { n: String(gifts.length) })}
+            {tr("Pro registrované zákazníky: vyberte si 1 z {n} vzorků v košíku", { n: String(gifts.length) })}
           </span>
         </span>
         <span aria-hidden className="text-accent-2 transition-transform group-open:rotate-180">▾</span>

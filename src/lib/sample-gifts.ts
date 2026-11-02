@@ -6,20 +6,38 @@
 
 export const SAMPLE_GIFT_PREFIX = "GIFT-";
 
-export type GiftTrigger = "kbeauty" | "arabic";
+export type GiftTrigger = "kbeauty" | "arabic" | "perfume" | "cosmetics";
 
 // Category fullSlugs (Category.fullSlug) that trigger each gift group.
 export const TRIGGER_FULL_SLUGS: Record<GiftTrigger, string> = {
   kbeauty: "kosmetika/korejska-kosmetika",
   arabic: "parfemy/arabske-parfemy",
+  // Any perfume / any cosmetics (K-beauty and Arabic perfumes fall under these too).
+  perfume: "parfemy",
+  cosmetics: "kosmetika",
 };
 
 // Which carts a given sample gift is offered to.
 export function sampleGiftTriggers(code: string): GiftTrigger[] {
-  // Nama Fiji is cosmetics too, so it goes with both K-beauty and Arabic perfumes;
-  // the SKIN1004 samples are only for K-beauty carts.
-  return code === "GIFT-NAMA-FIJI" ? ["kbeauty", "arabic"] : ["kbeauty"];
+  // Nama Fiji is cosmetics too, so it goes with both K-beauty and Arabic perfumes.
+  if (code === "GIFT-NAMA-FIJI") return ["kbeauty", "arabic"];
+  // Vials of designer/niche perfume go with any perfume order.
+  if (PERFUME_SAMPLES.has(code)) return ["perfume"];
+  // Palacio sachets and the Iconique hair care go with any cosmetics order (K-beauty included).
+  if (COSMETICS_SAMPLES.has(code)) return ["cosmetics"];
+  // The SKIN1004 / Mizon / vvbetter / Dr. Althea / Village 11 samples are K-beauty only.
+  return ["kbeauty"];
 }
+
+const PERFUME_SAMPLES = new Set(["GIFT-RABANNE-1M-PARFUM", "GIFT-RABANNE-1M-EDT", "GIFT-SCENT-OF-STARS-LYRA"]);
+const COSMETICS_SAMPLES = new Set([
+  "GIFT-PALACIO-TIGER-GEL",
+  "GIFT-PALACIO-SNAKE-SERUM",
+  "GIFT-CANNABELLUM-CANNADREAM",
+  "GIFT-PALACIO-CANNAPROTECT",
+  "GIFT-ICONIQUE-MASK",
+  "GIFT-ICONIQUE-SHAMPOO",
+]);
 
 export function isSampleGiftCode(code: string): boolean {
   return code.startsWith(SAMPLE_GIFT_PREFIX);
@@ -53,6 +71,74 @@ const BLURBS: Record<string, { cs: string; sk: string }> = {
   "GIFT-SKIN1004-SUN-SERUM": {
     cs: "Ochranné sérum SPF50+ s hydratačním účinkem",
     sk: "Ochranné sérum SPF50+ s hydratačným účinkom",
+  },
+  "GIFT-PALACIO-TIGER-GEL": {
+    cs: "Masážní gel s konopím pro uvolnění svalů a kloubů",
+    sk: "Masážny gél s konopou na uvoľnenie svalov a kĺbov",
+  },
+  "GIFT-PALACIO-SNAKE-SERUM": {
+    cs: "Pleťové hadí sérum proti stárnutí pleti",
+    sk: "Pleťové hadie sérum proti starnutiu pleti",
+  },
+  "GIFT-CANNABELLUM-CANNADREAM": {
+    cs: "Noční pleťový krém s CBD pro regeneraci pleti přes noc",
+    sk: "Nočný pleťový krém s CBD na regeneráciu pleti cez noc",
+  },
+  "GIFT-PALACIO-CANNAPROTECT": {
+    cs: "Celoroční pleťový krém SPF 50 s konopím a panthenolem",
+    sk: "Celoročný pleťový krém SPF 50 s konopou a panthenolom",
+  },
+  "GIFT-MIZON-COLLAGEN": {
+    cs: "Zpevňující krém s mořským kolagenem a peptidy",
+    sk: "Spevňujúci krém s morským kolagénom a peptidmi",
+  },
+  "GIFT-MIZON-HYALUGEN": {
+    cs: "Hydratační gelový krém pro zralou pleť",
+    sk: "Hydratačný gélový krém pre zrelú pleť",
+  },
+  "GIFT-VVBETTER-TECA": {
+    cs: "Hydratační krém s peptidy, niacinamidem a centellou",
+    sk: "Hydratačný krém s peptidmi, niacínamidom a centelou",
+  },
+  "GIFT-DRALTHEA-AQUA": {
+    cs: "Lehký hydratační krém s mořskými extrakty",
+    sk: "Ľahký hydratačný krém s morskými extraktmi",
+  },
+  "GIFT-ICONIQUE-MASK": {
+    cs: "Hydratační vlasová maska s olejem babassu",
+    sk: "Hydratačná vlasová maska s olejom babassu",
+  },
+  "GIFT-ICONIQUE-SHAMPOO": {
+    cs: "Hydratační šampon s kyselinou hyaluronovou",
+    sk: "Hydratačný šampón s kyselinou hyalurónovou",
+  },
+  "GIFT-VILLAGE11-AHA-LOTION": {
+    cs: "Exfoliační tělové mléko s 12 % AHA kyselin",
+    sk: "Exfoliačné telové mlieko s 12 % AHA kyselín",
+  },
+  "GIFT-SCENT-OF-STARS-LYRA": {
+    cs: "Parfémovaná voda Scent of Stars Lyra Blossom N°52 (2 ml)",
+    sk: "Parfumovaná voda Scent of Stars Lyra Blossom N°52 (2 ml)",
+  },
+  "GIFT-RABANNE-1M-PARFUM": {
+    cs: "Parfém Rabanne 1 Million Parfum (1,5 ml)",
+    sk: "Parfum Rabanne 1 Million Parfum (1,5 ml)",
+  },
+  "GIFT-RABANNE-1M-EDT": {
+    cs: "Toaletní voda Rabanne 1 Million (1,5 ml)",
+    sk: "Toaletná voda Rabanne 1 Million (1,5 ml)",
+  },
+  "GIFT-SKIN1004-CENTELLA-OIL": {
+    cs: "Lehký čisticí olej s centellou asijskou",
+    sk: "Ľahký čistiaci olej s centelou ázijskou",
+  },
+  "GIFT-VVBETTER-SUN": {
+    cs: "Lehký opalovací krém SPF 50+ PA++++",
+    sk: "Ľahký opaľovací krém SPF 50+ PA++++",
+  },
+  "GIFT-VVBETTER-EYE": {
+    cs: "Zpevňující oční krém s vitaminem C a bakuchiolem",
+    sk: "Spevňujúci očný krém s vitamínom C a bakuchiolom",
   },
 };
 
