@@ -1,3 +1,4 @@
+import Image from "next/image";
 import type { Coupon, LoyaltyReward } from "@prisma/client";
 import { getCurrentLocale, getTr } from "@/i18n/tr.server";
 import { prisma } from "@/lib/prisma";
@@ -47,7 +48,10 @@ export async function LoyaltySection({ email }: { email: string }) {
   ]);
   const productIds = [...rewards.map((r) => r.giftProductId), ...coupons.map((c) => c.giftProductId)].filter((id): id is string => !!id);
   const gifts = productIds.length
-    ? await prisma.product.findMany({ where: { id: { in: productIds } }, select: { id: true, name: true, nameSk: true } })
+    ? await prisma.product.findMany({
+        where: { id: { in: productIds } },
+        select: { id: true, name: true, nameSk: true, price: true, images: { orderBy: { sortOrder: "asc" }, take: 1, select: { url: true } } },
+      })
     : [];
   const giftName = (id: string | null) => {
     const g = gifts.find((p) => p.id === id);
@@ -81,31 +85,68 @@ export async function LoyaltySection({ email }: { email: string }) {
       </div>
 
       {rewards.length > 0 && (
-        <ul className="grid gap-3 sm:grid-cols-2">
+        <ul className="grid gap-4 sm:grid-cols-2">
           {rewards.map((r) => {
             const missing = r.pointsCost - summary.balance;
+            const gift = gifts.find((g) => g.id === r.giftProductId);
+            const image = gift?.images[0]?.url ?? null;
+            const value = gift ? Number(gift.price) : 0;
+            const progress = Math.min(100, Math.round((summary.balance / r.pointsCost) * 100));
             return (
-              <li key={r.id} className="flex flex-col gap-2 rounded-sm border border-line p-4">
-                <span className="font-semibold text-ink">{rewardName(r)}</span>
-                <span className="text-sm text-accent-2">{describe(tr, price, r, giftName(r.giftProductId))}</span>
-                <span className="text-xs text-accent-2">{tr("Platnost kuponu: {n} dní od vyměnění", { n: r.validDays })}</span>
-                <div className="mt-auto flex items-center justify-between gap-3 pt-1">
-                  <span className="text-sm font-bold text-ink">
-                    {r.pointsCost} {tr("bodů")}
-                  </span>
-                  {missing > 0 ? (
-                    <span className="text-xs text-accent-2">{tr("Chybí vám {n} bodů", { n: missing })}</span>
+              <li key={r.id} className="flex flex-col overflow-hidden rounded-sm border border-line bg-white">
+                {gift && (
+                  <div className="relative aspect-[4/3] bg-[#f4f4f2]">
+                    {image && (
+                      <Image src={image} alt={rewardName(r)} fill sizes="(min-width: 640px) 320px, 100vw" className="object-contain p-3" />
+                    )}
+                    <span className="absolute top-2 right-2 rounded-full bg-ink px-3 py-1 text-xs font-bold text-white">
+                      {r.pointsCost} {tr("bodů")}
+                    </span>
+                  </div>
+                )}
+                <div className="flex flex-1 flex-col gap-2 p-4">
+                  <span className="font-semibold text-ink">{rewardName(r)}</span>
+                  {gift ? (
+                    <span className="text-sm text-accent-2">
+                      {tr("Dárek zdarma k další objednávce")}
+                      {value > 0 && (
+                        <>
+                          {" · "}
+                          {tr("v hodnotě")} {price(value)}
+                        </>
+                      )}
+                    </span>
                   ) : (
-                    <form action={redeemLoyaltyReward}>
-                      <input type="hidden" name="rewardId" value={r.id} />
-                      <button
-                        type="submit"
-                        className="rounded-sm bg-ink px-4 py-2 text-sm font-semibold text-white hover:bg-accent"
-                      >
-                        {tr("Vyměnit")}
-                      </button>
-                    </form>
+                    <span className="text-sm text-accent-2">{describe(tr, price, r, null)}</span>
                   )}
+                  <div className="mt-auto flex flex-col gap-2 pt-2">
+                    {missing > 0 ? (
+                      <>
+                        <div className="h-2 overflow-hidden rounded-full bg-line" role="progressbar" aria-valuenow={progress} aria-valuemin={0} aria-valuemax={100}>
+                          <div className="h-full rounded-full bg-ok" style={{ width: `${progress}%` }} />
+                        </div>
+                        <span className="text-xs text-accent-2">
+                          {summary.balance} / {r.pointsCost} {tr("bodů")} · {tr("Chybí vám {n} bodů", { n: missing })}
+                        </span>
+                      </>
+                    ) : (
+                      <form action={redeemLoyaltyReward} className="flex items-center justify-between gap-3">
+                        {!gift && (
+                          <span className="text-sm font-bold text-ink">
+                            {r.pointsCost} {tr("bodů")}
+                          </span>
+                        )}
+                        <input type="hidden" name="rewardId" value={r.id} />
+                        <button
+                          type="submit"
+                          className="rounded-sm bg-ink px-4 py-2 text-sm font-semibold text-white hover:bg-accent"
+                        >
+                          {tr("Vyměnit")}
+                        </button>
+                      </form>
+                    )}
+                    <span className="text-xs text-accent-2">{tr("Platnost kuponu: {n} dní od vyměnění", { n: r.validDays })}</span>
+                  </div>
                 </div>
               </li>
             );
