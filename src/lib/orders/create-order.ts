@@ -95,12 +95,12 @@ export async function createOrder(
       if (!couponPreview?.grantsGift) {
         throw new CheckoutError("Zadaný slevový kód neopravňuje k výběru dárku zdarma.");
       }
-      // A loyalty-reward gift coupon is for one specific product (any catalog product, not just
-      // the giftEligible ones); the generic gift coupon takes any giftEligible product.
+      // A loyalty-reward gift coupon is for one specific product (any visible catalog product or a hidden
+      // giftEligible reward item); the generic gift coupon takes any giftEligible product.
       const allowed = couponPreview.giftProductId
         ? requested?.id === couponPreview.giftProductId
         : requested?.giftEligible === true;
-      giftProduct = requested && requested.visible && allowed ? requested : null;
+      giftProduct = requested && (requested.visible || requested.giftEligible) && allowed ? requested : null;
       if (!giftProduct) {
         throw new CheckoutError("Vybraný dárek už bohužel není dostupný, zvolte prosím jiný.");
       }

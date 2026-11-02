@@ -63,10 +63,13 @@ export async function getGiftOptions(): Promise<GiftOption[]> {
   }));
 }
 
-/** The one product a loyalty-reward gift coupon is for (any visible in-stock product, not only giftEligible ones). */
+/**
+ * The one product a loyalty-reward gift coupon is for: any visible in-stock product, or a hidden giftEligible one
+ * (reward-only items such as the toothbrush that is never sold in the shop).
+ */
 export async function getGiftOptionForProduct(productId: string): Promise<GiftOption | null> {
   const p = await prisma.product.findFirst({
-    where: { id: productId, visible: true, stock: { gt: 0 } },
+    where: { id: productId, stock: { gt: 0 }, OR: [{ visible: true }, { giftEligible: true }] },
     select: {
       id: true,
       name: true,

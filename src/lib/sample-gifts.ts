@@ -6,7 +6,7 @@
 
 export const SAMPLE_GIFT_PREFIX = "GIFT-";
 
-export type GiftTrigger = "kbeauty" | "arabic" | "perfume" | "cosmetics";
+export type GiftTrigger = "kbeauty" | "arabic" | "perfume" | "cosmetics" | "dental";
 
 // Category fullSlugs (Category.fullSlug) that trigger each gift group.
 export const TRIGGER_FULL_SLUGS: Record<GiftTrigger, string> = {
@@ -15,6 +15,7 @@ export const TRIGGER_FULL_SLUGS: Record<GiftTrigger, string> = {
   // Any perfume / any cosmetics (K-beauty and Arabic perfumes fall under these too).
   perfume: "parfemy",
   cosmetics: "kosmetika",
+  dental: "zuby",
 };
 
 // Which carts a given sample gift is offered to.
@@ -25,6 +26,8 @@ export function sampleGiftTriggers(code: string): GiftTrigger[] {
   if (PERFUME_SAMPLES.has(code)) return ["perfume"];
   // Palacio sachets and the Iconique hair care go with any cosmetics order (K-beauty included).
   if (COSMETICS_SAMPLES.has(code)) return ["cosmetics"];
+  // Interdental brushes: dental-care orders, and cosmetics orders as a small extra.
+  if (code === "GIFT-CURAPROX-CPS115") return ["dental", "cosmetics"];
   // The SKIN1004 / Mizon / vvbetter / Dr. Althea / Village 11 samples are K-beauty only.
   return ["kbeauty"];
 }
@@ -37,6 +40,7 @@ const COSMETICS_SAMPLES = new Set([
   "GIFT-PALACIO-CANNAPROTECT",
   "GIFT-ICONIQUE-MASK",
   "GIFT-ICONIQUE-SHAMPOO",
+  "GIFT-GARNIER-HYDRA-BOMB",
 ]);
 
 export function isSampleGiftCode(code: string): boolean {
@@ -139,6 +143,14 @@ const BLURBS: Record<string, { cs: string; sk: string }> = {
   "GIFT-VVBETTER-EYE": {
     cs: "Zpevňující oční krém s vitaminem C a bakuchiolem",
     sk: "Spevňujúci očný krém s vitamínom C a bakuchiolom",
+  },
+  "GIFT-GARNIER-HYDRA-BOMB": {
+    cs: "Hydratační textilní pleťová maska s granátovým jablkem a kyselinou hyaluronovou",
+    sk: "Hydratačná textilná pleťová maska s granátovým jablkom a kyselinou hyalurónovou",
+  },
+  "GIFT-CURAPROX-CPS115": {
+    cs: "4 mezizubní kartáčky Curaprox CPS 115 handy (střední velikost)",
+    sk: "4 medzizubné kefky Curaprox CPS 115 handy (stredná veľkosť)",
   },
 };
 
