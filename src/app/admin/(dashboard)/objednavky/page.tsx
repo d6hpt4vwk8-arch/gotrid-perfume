@@ -6,11 +6,25 @@ import { formatPrice, formatEurAmount } from "@/lib/format";
 import { ORDER_STATUS_LABELS } from "@/lib/orders/status-labels";
 import { getCustomerReputationMap } from "@/lib/customer-reputation";
 import { getReturnStatsByMethod } from "@/lib/orders/return-stats.server";
-import { SHIPPING_LABELS } from "@/lib/shipping";
+import { SHIPPING_LABELS, PAYMENT_LABELS } from "@/lib/shipping";
 import { OrderStatusQuickSelect } from "@/components/admin/order-status-quick-select";
-import type { OrderStatus } from "@prisma/client";
+import { OrderHoverRow } from "@/components/admin/order-hover-row";
+import { OrderBulkLabels } from "@/components/admin/order-bulk-labels";
+import type { OrderStatus, ShippingMethod } from "@prisma/client";
 
 const PAGE_SIZE = 30;
+
+// SHIPPING_LABELS carries the full wording (pickup address, "(Slovensko)") — too long for a table cell.
+const SHIPPING_SHORT: Record<ShippingMethod, string> = {
+  ZASILKOVNA: "Zásilkovna",
+  ZASILKOVNA_HD: "Zásilkovna SK",
+  PPL: "PPL",
+  DPD: "DPD",
+  BALIKOVNA: "Balíkovna",
+  GLS: "GLS kurýr",
+  GLS_MISTO: "GLS místo",
+  OSOBNI_ODBER: "Osobní odběr",
+};
 
 export default async function AdminOrdersPage({
   searchParams,
@@ -37,6 +51,7 @@ export default async function AdminOrdersPage({
       orderBy: { createdAt: "desc" },
       skip: (page - 1) * PAGE_SIZE,
       take: PAGE_SIZE,
+      include: { items: { select: { name: true, qty: true, isGift: true }, orderBy: { name: "asc" } } },
     }),
     prisma.order.count({ where }),
     getReturnStatsByMethod(),
@@ -148,20 +163,40 @@ export default async function AdminOrdersPage({
         ))}
       </div>
 
+      <OrderBulkLabels />
+
       <div className="overflow-x-auto rounded-sm border border-line bg-white">
         <table className="w-full min-w-[600px] text-sm">
           <thead className="border-b border-line bg-white text-left text-xs uppercase text-accent-2">
             <tr>
+              <th className="w-8 px-3 py-2" />
               <th className="px-3 py-2">Číslo</th>
               <th className="px-3 py-2">Datum</th>
               <th className="px-3 py-2">Zákazník</th>
               <th className="px-3 py-2">Celkem</th>
+              <th className="px-3 py-2">Doprava</th>
               <th className="px-3 py-2">Stav</th>
             </tr>
           </thead>
           <tbody>
             {orders.map((o) => (
-              <tr key={o.id} className="border-b border-line last:border-0 hover:bg-white">
+              <OrderHoverRow
+                key={o.id}
+                className="border-b border-line last:border-0 hover:bg-white"
+                preview={{
+                  number: o.number,
+                  customer: `${o.firstName} ${o.lastName}`,
+                  items: o.items,
+                  shipping: SHIPPING_LABELS[o.shippingMethod],
+                  payment: PAYMENT_LABELS[o.paymentMethod],
+                  total: formatPrice(o.total),
+                  note: o.customerNote,
+                  tracking: o.trackingNumber,
+                }}
+              >
+                <td className="px-3 py-2">
+                  <input type="checkbox" data-order-select value={o.id} aria-label={`Vybrat ${o.number}`} />
+                </td>
                 <td className="px-3 py-2">
                   <Link href={`/admin/objednavky/${o.id}`} className="font-medium hover:underline">
                     {o.number}
@@ -203,6 +238,16 @@ export default async function AdminOrdersPage({
                   )}
                 </td>
                 <td className="px-3 py-2">
+                  {/* Personal pickups have no label to print and no parcel to hand over, so they're easy to forget — make them stand out. */}
+                  <span
+                    className={`whitespace-nowrap rounded-full px-2 py-0.5 text-xs font-medium ${
+                      o.shippingMethod === "OSOBNI_ODBER" ? "bg-amber-100 text-amber-900" : "bg-stone-100 text-accent"
+                    }`}
+                  >
+                    {SHIPPING_SHORT[o.shippingMethod]}
+                  </span>
+                </td>
+                <td className="px-3 py-2">
                   <div className="flex items-center gap-1.5">
                     <OrderStatusQuickSelect
                       orderId={o.id}
@@ -220,11 +265,11 @@ export default async function AdminOrdersPage({
                     )}
                   </div>
                 </td>
-              </tr>
+              </OrderHoverRow>
             ))}
             {orders.length === 0 && (
               <tr>
-                <td colSpan={5} className="px-3 py-6 text-center text-accent-2">
+                <td colSpan={7} className="px-3 py-6 text-center text-accent-2">
                   {query ? `Žádné objednávky neodpovídají „${query}“.` : "Žádné objednávky."}
                 </td>
               </tr>

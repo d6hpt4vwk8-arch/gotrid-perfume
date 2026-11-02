@@ -3,6 +3,7 @@ import { prisma } from "@/lib/prisma";
 import { createAddressPacket, createPacket, fetchLabelPdf, PacketaError } from "@/lib/packeta";
 import { getSettings } from "@/lib/settings.server";
 import { logAdminActivity } from "@/lib/admin/activity-log";
+import { packetaTrackingNumber } from "@/lib/tracking";
 
 // See the same directive on gls-label/route.ts for why this is needed —
 // without it Next.js can cache this GET (including a failed response) and
@@ -67,13 +68,18 @@ export async function GET(_req: NextRequest, { params }: { params: Promise<{ id:
           codAmount: order.paymentMethod === "CASH_ON_DELIVERY" ? Number(order.total) : null,
         });
       }
-      await prisma.order.update({ where: { id }, data: { packetaId } });
+      await prisma.order.update({ where: { id }, data: { packetaId, trackingNumber: packetaTrackingNumber(packetaId) } });
       await logAdminActivity({
         action: "order.packeta_label_created",
         entityType: "Order",
         entityId: id,
         detail: `${order.number}: vytvořena zásilka Zásilkovna, packet ID ${packetaId}`,
       });
+    }
+
+    // Parcels created before the tracking number was stored: fill it in on the next print.
+    if (!order.trackingNumber && order.packetaId) {
+      await prisma.order.update({ where: { id }, data: { trackingNumber: packetaTrackingNumber(packetaId) } });
     }
 
     const pdf = await fetchLabelPdf(packetaId);

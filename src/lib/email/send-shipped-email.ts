@@ -2,6 +2,7 @@ import type { Order } from "@prisma/client";
 import { emailBenefits, emailButton, renderEmailLayout } from "./layout";
 import { getMailContext, orderMailLocale } from "./locale";
 import { EMAIL_FROM, getResendClient, isEmailConfigured } from "./resend";
+import { trackingUrl } from "@/lib/tracking";
 import { buildInvoiceAttachment, shouldAttachInvoiceToShippedEmail } from "./invoice-attachment";
 
 // Closes a promise the order-confirmation email already makes ("O odeslání
@@ -15,12 +16,13 @@ export async function renderShippedEmailHtml(order: Order): Promise<string> {
   const ctx = await getMailContext(orderMailLocale(order));
   const { tr } = ctx;
   const benefits = await emailBenefits(ctx);
+  const trackUrl = order.trackingNumber ? trackingUrl(order.shippingMethod, order.trackingNumber) : null;
   const inner = `
       <h1>${tr("Ahoj")} ${order.firstName}!</h1>
       <p>${tr("Vaše objednávka")} <strong>${order.number}</strong> ${tr("je na cestě k vám.")}</p>
       ${
         order.trackingNumber
-          ? `<p style="margin-bottom:24px">${tr("Sledovací číslo zásilky")}: <strong>${order.trackingNumber}</strong></p>`
+          ? `<p style="margin-bottom:24px">${tr("Sledovací číslo zásilky")}: <strong>${trackUrl ? `<a href="${trackUrl}" style="color:inherit">${order.trackingNumber}</a>` : order.trackingNumber}</strong></p>`
           : ""
       }
       ${shouldAttachInvoiceToShippedEmail(order) ? `<p>${tr("Fakturu k objednávce najdete v příloze tohoto e-mailu.")}</p>` : ""}

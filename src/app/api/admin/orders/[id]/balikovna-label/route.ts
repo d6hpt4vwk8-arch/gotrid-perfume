@@ -53,7 +53,7 @@ export async function GET(_req: NextRequest, { params }: { params: Promise<{ id:
       });
       parcelCode = result.parcelCode;
       labelPdf = result.labelPdf;
-      await prisma.order.update({ where: { id }, data: { balikovnaParcelCode: parcelCode } });
+      await prisma.order.update({ where: { id }, data: { balikovnaParcelCode: parcelCode, trackingNumber: parcelCode } });
       await logAdminActivity({
         action: "order.balikovna_label_created",
         entityType: "Order",
@@ -61,6 +61,9 @@ export async function GET(_req: NextRequest, { params }: { params: Promise<{ id:
         detail: `${order.number}: vytvořena zásilka Balíkovna, kód ${parcelCode}`,
       });
     } else {
+      if (!order.trackingNumber) {
+        await prisma.order.update({ where: { id }, data: { trackingNumber: parcelCode } });
+      }
       labelPdf = await reprintLabel(parcelCode);
     }
 

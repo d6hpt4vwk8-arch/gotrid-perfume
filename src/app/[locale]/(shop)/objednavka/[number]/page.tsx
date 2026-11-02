@@ -18,6 +18,7 @@ import { localizedItemNames } from "@/lib/orders/item-names";
 import { FACEBOOK_URL, INSTAGRAM_HANDLE, INSTAGRAM_URL, TIKTOK_URL } from "@/lib/site";
 import { getCurrentCustomerId } from "@/lib/customer/get-current-customer";
 import { getSettings } from "@/lib/settings.server";
+import { trackingUrl } from "@/lib/tracking";
 import {
   ADMIN_COOKIE_NAME,
   ORDER_ACCESS_COOKIE_NAME,
@@ -112,9 +113,9 @@ export default async function OrderConfirmationPage({
         {order.trackingNumber && (
           <span>
             {tr("Sledovací číslo zásilky")}:{" "}
-            {order.shippingMethod === "GLS" || order.shippingMethod === "GLS_MISTO" ? (
+            {trackingUrl(order.shippingMethod, order.trackingNumber) ? (
               <a
-                href={`https://gls-group.com/CZ/cs/sledovani-zasilek?match=${order.trackingNumber}`}
+                href={trackingUrl(order.shippingMethod, order.trackingNumber)!}
                 target="_blank"
                 rel="noopener noreferrer"
                 className="font-bold underline"
