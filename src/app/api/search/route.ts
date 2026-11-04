@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { isRateLimited, recordRateLimitHit, getClientIp } from "@/lib/rate-limit";
 import { skScope } from "@/lib/sk-visibility";
+import { getReviewStats } from "@/lib/review-stats.server";
 import {
   buildDescriptionSearchWhere,
   buildExactSearchWhere,
@@ -78,6 +79,9 @@ export async function GET(req: NextRequest) {
     }
   }
 
+  // Stars next to a result only when the product actually has published reviews.
+  const stats = await getReviewStats(products.map((p) => p.id));
+
   return NextResponse.json({
     results: products.map((p) => ({
       slug: p.slug,
@@ -86,6 +90,7 @@ export async function GET(req: NextRequest) {
       brand: p.brand?.name ?? null,
       price: Number(p.price),
       image: p.images[0]?.url ?? null,
+      rating: stats.get(p.id) ?? null,
     })),
   });
 }

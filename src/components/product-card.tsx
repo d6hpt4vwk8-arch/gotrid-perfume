@@ -28,6 +28,8 @@ export interface ProductCardData {
   images: { url: string }[];
   /** In-stock colours of this product's colour-variant group — set only when there are 2+. */
   colorSwatches?: { label: string; color: string }[];
+  /** Published-review rating — set only where the listing wants stars (search results) and the product has reviews. */
+  rating?: { average: number; count: number } | null;
 }
 
 export function ProductCard({
@@ -114,6 +116,13 @@ export function ProductCard({
           {title}
         </span>
         {subtitle && <span className="line-clamp-2 text-xs leading-snug text-accent-2 lg:text-sm">{subtitle}</span>}
+        {product.rating && (
+          <span className="flex items-center gap-1 text-xs text-accent-2 lg:text-sm">
+            <span className="text-amber-500">★</span>
+            <span className="font-medium text-ink">{product.rating.average.toFixed(1).replace(".", ",")}</span>
+            <span>({product.rating.count})</span>
+          </span>
+        )}
         {product.colorSwatches && product.colorSwatches.length > 1 && (
           <div
             className="flex items-center gap-1.5"

@@ -14,6 +14,8 @@ interface SearchResult {
   brand: string | null;
   price: number;
   image: string | null;
+  /** Present only when the product has published reviews. */
+  rating?: { average: number; count: number } | null;
 }
 
 export function SearchBar({ dark = false }: { dark?: boolean }) {
@@ -104,6 +106,13 @@ export function SearchBar({ dark = false }: { dark?: boolean }) {
                   <span className="flex flex-1 flex-col">
                     <span className="line-clamp-1">{isSk && r.nameSk ? r.nameSk : r.name}</span>
                     {r.brand && <span className="text-xs text-neutral-400">{r.brand}</span>}
+                    {r.rating && (
+                      <span className="flex items-center gap-1 text-xs text-neutral-500">
+                        <span className="text-amber-500">★</span>
+                        {r.rating.average.toFixed(1).replace(".", ",")}
+                        <span className="text-neutral-400">({r.rating.count})</span>
+                      </span>
+                    )}
                   </span>
                   <span className="font-medium">{price(r.price)}</span>
                 </Link>
