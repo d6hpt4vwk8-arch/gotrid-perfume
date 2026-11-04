@@ -85,6 +85,9 @@ const MASS_MARKET_BRANDS = new Set(
 export function isPaidAdsEligible(code: string, brandName: string | null): boolean {
   if (code.startsWith("TDE-")) return true;
   if (code.startsWith("GVS-")) return true;
+  // Palacio / Cannabellum direct-from-manufacturer range (2026-11-05): own-brand cosmetics bought straight from the
+  // maker, so no counterfeit-brand fingerprint; the owner advertises them on Heureka and Zboží.
+  if (code.startsWith("PAL-")) return true;
   if (brandName && ARABIC_PERFUME_BRANDS.has(brandName.toLowerCase())) return true;
   if (brandName && MASS_MARKET_BRANDS.has(brandName.toLowerCase())) return true;
   if (ORIGINAL_CATALOG_CODE.test(code)) return true;
