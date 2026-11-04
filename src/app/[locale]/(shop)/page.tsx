@@ -1,3 +1,4 @@
+import { attachReviewRatings } from "@/lib/review-stats.server";
 import { MANUFACTURER_REFERENCE_PRICE_BRANDS } from "@/lib/reference-price";
 import Image from "next/image";
 import { Link } from "@/i18n/navigation";
@@ -60,7 +61,7 @@ export default async function HomePage() {
   const seller = currentSeller();
   const [tr, locale] = await Promise.all([getTr(), getCurrentLocale()]);
   const isSk = locale === "sk";
-  const [rawCategories, saleProducts, koreanCosmetics, arabicPerfumes, latestReviews, settings] =
+  const [rawCategories, rawSaleProducts, rawKoreanCosmetics, rawArabicPerfumes, latestReviews, settings] =
     await Promise.all([
       getCategoryNavTree(),
       prisma.product.findMany({
@@ -109,6 +110,11 @@ export default async function HomePage() {
       getSettings(),
     ]);
   const categories = isSk ? translateCategoryTree(rawCategories) : rawCategories;
+  const [saleProducts, koreanCosmetics, arabicPerfumes] = await Promise.all([
+    attachReviewRatings(rawSaleProducts),
+    attachReviewRatings(rawKoreanCosmetics),
+    attachReviewRatings(rawArabicPerfumes),
+  ]);
 
   return (
     // w-full matters here, not decorative: <body> is flex-col, so <main>

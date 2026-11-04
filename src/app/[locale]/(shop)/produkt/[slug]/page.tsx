@@ -1,3 +1,4 @@
+import { getReviewStats } from "@/lib/review-stats.server";
 import { Link } from "@/i18n/navigation";
 import { notFound } from "next/navigation";
 import type { Metadata } from "next";
@@ -153,6 +154,11 @@ export default async function ProductPage({
       getSameLineProducts(product, 4, isSk),
       getSettings(),
     ]);
+  // Stars on the recommendation cards, only for products that already have published reviews.
+  const recommendationStats = await getReviewStats(
+    [...relatedProducts, ...complementProducts, ...frequentlyBoughtTogether, ...sameLineProducts].map((p) => p.id),
+  );
+  const rated = <T extends { id: string }>(p: T) => ({ ...p, rating: recommendationStats.get(p.id) ?? null });
   const currency = currencyForLocale(locale);
   const price = (czk: Prisma.Decimal | number) => formatPriceIn(czk, currency, settings.czkToEurRate);
 
@@ -523,7 +529,7 @@ export default async function ProductPage({
             <div className="grid grid-cols-2 gap-x-4 gap-y-8 sm:grid-cols-3 md:grid-cols-4">
               {frequentlyBoughtTogether.map((item) => (
                 <div key={item.slug} data-rec-product={item.id}>
-                  <ProductCard product={item} freeShippingThreshold={settings.freeShippingThreshold} />
+                  <ProductCard product={rated(item)} freeShippingThreshold={settings.freeShippingThreshold} />
                 </div>
               ))}
             </div>
@@ -538,7 +544,7 @@ export default async function ProductPage({
             <div className="grid grid-cols-2 gap-x-4 gap-y-8 sm:grid-cols-3 md:grid-cols-4">
               {complementProducts.map((item) => (
                 <div key={item.slug} data-rec-product={item.id}>
-                  <ProductCard product={item} freeShippingThreshold={settings.freeShippingThreshold} />
+                  <ProductCard product={rated(item)} freeShippingThreshold={settings.freeShippingThreshold} />
                 </div>
               ))}
             </div>
@@ -553,7 +559,7 @@ export default async function ProductPage({
             <div className="grid grid-cols-2 gap-x-4 gap-y-8 sm:grid-cols-3 md:grid-cols-4">
               {sameLineProducts.map((item) => (
                 <div key={item.slug} data-rec-product={item.id}>
-                  <ProductCard product={item} freeShippingThreshold={settings.freeShippingThreshold} />
+                  <ProductCard product={rated(item)} freeShippingThreshold={settings.freeShippingThreshold} />
                 </div>
               ))}
             </div>
@@ -599,7 +605,7 @@ export default async function ProductPage({
             <div className="grid grid-cols-2 gap-x-4 gap-y-8 sm:grid-cols-3 md:grid-cols-4">
               {relatedProducts.map((related) => (
                 <div key={related.slug} data-rec-product={related.id}>
-                  <ProductCard product={related} freeShippingThreshold={settings.freeShippingThreshold} />
+                  <ProductCard product={rated(related)} freeShippingThreshold={settings.freeShippingThreshold} />
                 </div>
               ))}
             </div>

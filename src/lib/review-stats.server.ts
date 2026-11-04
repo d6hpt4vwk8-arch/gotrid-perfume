@@ -25,3 +25,11 @@ export async function getReviewStats(productIds: string[]): Promise<Map<string, 
   }
   return stats;
 }
+
+/** Adds `rating` (null when the product has no published reviews) to listing rows so cards can show stars + count. */
+export async function attachReviewRatings<T extends { id: string }>(
+  products: T[],
+): Promise<(T & { rating: ReviewStats | null })[]> {
+  const stats = await getReviewStats(products.map((p) => p.id));
+  return products.map((p) => ({ ...p, rating: stats.get(p.id) ?? null }));
+}

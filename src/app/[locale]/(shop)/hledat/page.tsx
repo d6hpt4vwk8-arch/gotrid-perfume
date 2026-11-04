@@ -27,7 +27,7 @@ import { Pagination } from "@/components/pagination";
 import { getSettings } from "@/lib/settings.server";
 import { getCurrentLocale, getTr } from "@/i18n/tr.server";
 import { skScope } from "@/lib/sk-visibility";
-import { getReviewStats } from "@/lib/review-stats.server";
+import { attachReviewRatings } from "@/lib/review-stats.server";
 
 const PAGE_SIZE = 24;
 
@@ -102,10 +102,8 @@ export default async function SearchPage({
       getCosmeticsFacets(withSk(searchWhere)),
       getSettings(),
     ]);
-  const productsWithSwatches = await attachColorSwatches(rawProducts);
-  // Stars on search result cards, only for products that already have published reviews.
-  const reviewStats = await getReviewStats(productsWithSwatches.map((p) => p.id));
-  const products = productsWithSwatches.map((p) => ({ ...p, rating: reviewStats.get(p.id) ?? null }));
+  // Stars on result cards, only for products that already have published reviews.
+  const products = await attachReviewRatings(await attachColorSwatches(rawProducts));
 
   // Logged after the response is sent — a failed write here must never
   // affect what the visitor actually sees. Only page 1 counts a query as

@@ -1,4 +1,5 @@
 import { attachColorSwatches } from "@/lib/color-swatches.server";
+import { attachReviewRatings } from "@/lib/review-stats.server";
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { findCategoryByFullSlug } from "@/lib/categories.server";
@@ -65,7 +66,7 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ slug
 
   const rawProducts = await findProductsPage({ where, sort: filters.sort, page: filters.page, pageSize: PAGE_SIZE });
 
-  const products = await attachColorSwatches(rawProducts);
+  const products = await attachReviewRatings(await attachColorSwatches(rawProducts));
 
   return NextResponse.json({
     products: products.map((p) => ({
@@ -83,6 +84,7 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ slug
       brand: p.brand ? { name: p.brand.name } : null,
       images: p.images.map((img) => ({ url: img.url })),
       colorSwatches: p.colorSwatches,
+      rating: p.rating,
     })),
   });
 }

@@ -22,6 +22,7 @@ import {
 } from "@/lib/product-filters";
 import { ProductGridLoadMore } from "@/components/product-grid-load-more";
 import { attachColorSwatches } from "@/lib/color-swatches.server";
+import { attachReviewRatings } from "@/lib/review-stats.server";
 import { CategoryFilters } from "@/components/category-filters";
 import { CategoryBanner } from "@/components/category-banner";
 import { WhatsappAdviceButton } from "@/components/whatsapp-advice-button";
@@ -158,8 +159,8 @@ export default async function CategoryPage({
     : 0;
 
   const [products, topProducts] = await Promise.all([
-    attachColorSwatches(rawProducts),
-    attachColorSwatches(rawTopProducts),
+    attachColorSwatches(rawProducts).then(attachReviewRatings),
+    attachColorSwatches(rawTopProducts).then(attachReviewRatings),
   ]);
 
   const totalPages = Math.ceil(total / PAGE_SIZE);

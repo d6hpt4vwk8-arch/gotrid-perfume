@@ -1,4 +1,5 @@
 import { attachColorSwatches } from "@/lib/color-swatches.server";
+import { attachReviewRatings } from "@/lib/review-stats.server";
 import { notFound } from "next/navigation";
 import { prisma } from "@/lib/prisma";
 import { primaryVariantWhere } from "@/lib/product-filters";
@@ -56,7 +57,7 @@ export default async function BrandPage({
     }),
     getSettings(),
   ]);
-  const products = await attachColorSwatches(rawProducts);
+  const products = await attachReviewRatings(await attachColorSwatches(rawProducts));
 
   return (
     <main data-wide className="mx-auto flex max-w-(--page-max) flex-1 flex-col gap-6 px-4 py-10 xl:px-8">
