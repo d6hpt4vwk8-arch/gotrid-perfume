@@ -6,10 +6,16 @@
 
 export const SAMPLE_GIFT_PREFIX = "GIFT-";
 
-export type GiftTrigger = "kbeauty" | "arabic" | "perfume" | "cosmetics" | "dental";
+type CategoryGiftTrigger = "kbeauty" | "arabic" | "perfume" | "cosmetics" | "dental";
+// "palacio" is brand-based, not category-based: Palacio's gels/salts/creams sit under health/bath categories,
+// not under "kosmetika", so the cosmetics trigger never reached them.
+export type GiftTrigger = CategoryGiftTrigger | "palacio";
+
+/** Brand.slug whose products trigger the Palacio sachets. */
+export const PALACIO_BRAND_SLUG = "palacio";
 
 // Category fullSlugs (Category.fullSlug) that trigger each gift group.
-export const TRIGGER_FULL_SLUGS: Record<GiftTrigger, string> = {
+export const TRIGGER_FULL_SLUGS: Record<CategoryGiftTrigger, string> = {
   kbeauty: "kosmetika/korejska-kosmetika",
   arabic: "parfemy/arabske-parfemy",
   // Any perfume / any cosmetics (K-beauty and Arabic perfumes fall under these too).
@@ -24,7 +30,9 @@ export function sampleGiftTriggers(code: string): GiftTrigger[] {
   if (code === "GIFT-NAMA-FIJI") return ["kbeauty", "arabic"];
   // Vials of designer/niche perfume go with any perfume order.
   if (PERFUME_SAMPLES.has(code)) return ["perfume"];
-  // Palacio sachets and the Iconique hair care go with any cosmetics order (K-beauty included).
+  // The Palacio sachets also go with any Palacio product (owner 2026-11-04), besides any cosmetics order.
+  if (PALACIO_SAMPLES.has(code)) return ["cosmetics", "palacio"];
+  // Cannabellum and the Iconique hair care go with any cosmetics order (K-beauty included).
   if (COSMETICS_SAMPLES.has(code)) return ["cosmetics"];
   // Interdental brushes: dental-care orders, and cosmetics orders as a small extra.
   if (code === "GIFT-CURAPROX-CPS115") return ["dental", "cosmetics"];
@@ -33,11 +41,9 @@ export function sampleGiftTriggers(code: string): GiftTrigger[] {
 }
 
 const PERFUME_SAMPLES = new Set(["GIFT-RABANNE-1M-PARFUM", "GIFT-RABANNE-1M-EDT", "GIFT-SCENT-OF-STARS-LYRA"]);
+const PALACIO_SAMPLES = new Set(["GIFT-PALACIO-TIGER-GEL", "GIFT-PALACIO-SNAKE-SERUM", "GIFT-PALACIO-CANNAPROTECT"]);
 const COSMETICS_SAMPLES = new Set([
-  "GIFT-PALACIO-TIGER-GEL",
-  "GIFT-PALACIO-SNAKE-SERUM",
   "GIFT-CANNABELLUM-CANNADREAM",
-  "GIFT-PALACIO-CANNAPROTECT",
   "GIFT-ICONIQUE-MASK",
   "GIFT-ICONIQUE-SHAMPOO",
   "GIFT-GARNIER-HYDRA-BOMB",
@@ -49,7 +55,7 @@ export function isSampleGiftCode(code: string): boolean {
 
 /** Triggers earned by a set of category fullSlugs (a product's own categories or a whole cart's). */
 export function triggersFromFullSlugs(fullSlugs: string[]): GiftTrigger[] {
-  return (Object.keys(TRIGGER_FULL_SLUGS) as GiftTrigger[]).filter((t) =>
+  return (Object.keys(TRIGGER_FULL_SLUGS) as CategoryGiftTrigger[]).filter((t) =>
     fullSlugs.some((s) => s === TRIGGER_FULL_SLUGS[t] || s.startsWith(`${TRIGGER_FULL_SLUGS[t]}/`)),
   );
 }

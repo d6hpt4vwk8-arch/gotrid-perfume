@@ -1,6 +1,6 @@
 import type { Coupon } from "@prisma/client";
 import { prisma } from "@/lib/prisma";
-import { isSampleGiftCode, sampleGiftBlurb, sampleGiftTriggers, SAMPLE_GIFT_PREFIX, triggersFromFullSlugs, type GiftTrigger } from "@/lib/sample-gifts";
+import { isSampleGiftCode, PALACIO_BRAND_SLUG, sampleGiftBlurb, sampleGiftTriggers, SAMPLE_GIFT_PREFIX, triggersFromFullSlugs, type GiftTrigger } from "@/lib/sample-gifts";
 
 /**
  * The GIFT-type coupon currently worth announcing (benefits bar, homepage
@@ -83,14 +83,19 @@ export async function getGiftOptionForProduct(productId: string): Promise<GiftOp
     : null;
 }
 
-/** Gift triggers earned by a cart (or a single product): K-beauty and/or Arabic perfume present. */
+/** Gift triggers earned by a cart (or a single product): category-based ones plus the Palacio brand trigger. */
 export async function getGiftTriggersForProducts(productIds: string[]): Promise<GiftTrigger[]> {
   if (productIds.length === 0) return [];
-  const rows = await prisma.productCategory.findMany({
-    where: { productId: { in: productIds } },
-    select: { category: { select: { fullSlug: true } } },
-  });
-  return triggersFromFullSlugs(rows.map((r) => r.category.fullSlug));
+  const [rows, palacioCount] = await Promise.all([
+    prisma.productCategory.findMany({
+      where: { productId: { in: productIds } },
+      select: { category: { select: { fullSlug: true } } },
+    }),
+    prisma.product.count({ where: { id: { in: productIds }, brand: { slug: PALACIO_BRAND_SLUG } } }),
+  ]);
+  const triggers: GiftTrigger[] = triggersFromFullSlugs(rows.map((r) => r.category.fullSlug));
+  if (palacioCount > 0) triggers.push("palacio");
+  return triggers;
 }
 
 /**
