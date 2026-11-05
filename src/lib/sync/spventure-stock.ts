@@ -48,6 +48,12 @@ const CODE_PREFIX = "SPV-";
 // raises — a lower wholesale price doesn't auto-discount anything.
 const VAT_FACTOR = 1.21;
 const MARKUP = 1.2;
+// Products that are not in the feed (slowerDelivery: stock only confirmed via the
+// site search) ship from another SP Venture warehouse whose wholesale price we
+// never see — the feed price is the main warehouse's, so the stored cost can be
+// stale and jump on the day we actually order (a Zimaya sold at 544 on a cost we
+// no longer knew, 2026-11-05). A bigger buffer on the floor absorbs that jump.
+const MARKUP_OTHER_WAREHOUSE = 1.3;
 // Prices within this share of the floor are left alone — import rounding and
 // small manual tweaks, not a stale price.
 const FLOOR_TOLERANCE = 0.97;
@@ -238,7 +244,7 @@ export async function syncSpVentureStock(dryRun = false, mode: SpVentureSyncMode
     // Price floor, from the freshest wholesale price we know: the feed's when
     // it lists the code, otherwise what we stored last time.
     const wholesale = feedPrice ?? Number(product.purchasePrice);
-    const floorPrice = wholesale > 0 ? Math.round(wholesale * VAT_FACTOR * MARKUP) : 0;
+    const floorPrice = wholesale > 0 ? Math.round(wholesale * VAT_FACTOR * (slowerDelivery ? MARKUP_OTHER_WAREHOUSE : MARKUP)) : 0;
     // Units we hold ourselves (ownStock) were bought at their own cost, which
     // this wholesale-based floor knows nothing about — the owner prices those
     // by hand (e.g. the Club De Nuit Blue Iconic 200 ml at 1 200), so leave them.
@@ -297,7 +303,7 @@ export async function syncSpVentureStock(dryRun = false, mode: SpVentureSyncMode
     await logAdminActivity({
       action: "product.spventure_price_floor",
       entityType: "Product",
-      detail: `SP Venture price floor: ${result.priceRaised.length} sell prices raised to wholesale × 1.21 × 1.2 (${result.priceRaised
+      detail: `SP Venture price floor: ${result.priceRaised.length} sell prices raised to wholesale × 1.21 × 1.2 (× 1.3 for other-warehouse items) (${result.priceRaised
         .slice(0, 5)
         .map((r) => `${r.code} ${r.from}→${r.to}`)
         .join(", ")}${result.priceRaised.length > 5 ? ", …" : ""})`,
