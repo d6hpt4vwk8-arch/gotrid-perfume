@@ -1,7 +1,11 @@
 import type { ShippingMethod } from "@prisma/client";
 import type { ShopSettings } from "@/lib/settings.server";
 
+// Warehouse and return address (returns form, legal pages, sender data).
 export const PICKUP_ADDRESS = "Na Jarově 2425/4, 130 00 Praha 3-Žižkov";
+
+// Where customers collect "Osobní odběr" orders (a partner shop, not the warehouse).
+export const PERSONAL_PICKUP_ADDRESS = "Super Sam Potraviny, Hartigova 2496/223, 130 00 Praha 3-Žižkov";
 
 export const SHIPPING_LABELS: Record<ShippingMethod, string> = {
   ZASILKOVNA: "Zásilkovna — výdejní místo",
@@ -11,7 +15,7 @@ export const SHIPPING_LABELS: Record<ShippingMethod, string> = {
   GLS: "GLS kurýr",
   GLS_MISTO: "GLS — výdejní místo",
   ZASILKOVNA_HD: "Zásilkovna — na adresu (Slovensko)",
-  OSOBNI_ODBER: `Osobní odběr — ${PICKUP_ADDRESS}`,
+  OSOBNI_ODBER: `Osobní odběr — ${PERSONAL_PICKUP_ADDRESS}`,
 };
 
 export const PAYMENT_LABELS: Record<string, string> = {

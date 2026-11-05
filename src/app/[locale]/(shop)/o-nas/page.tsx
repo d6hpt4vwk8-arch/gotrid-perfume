@@ -58,7 +58,7 @@ export default async function ONasPage() {
         <br />
         Telefon: {CONTACT.phone}
         <br />
-        Sklad a osobní odběr: {PICKUP_ADDRESS}, Česká republika
+        Sklad a adresa pro vrácení zboží: {PICKUP_ADDRESS}, Česká republika
       </p>
 
       <h2>Provozní doba</h2>

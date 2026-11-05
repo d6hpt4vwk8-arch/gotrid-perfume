@@ -8,7 +8,7 @@ import NextLink from "next/link";
 import { Link } from "@/i18n/navigation";
 import type { SellerIdentity } from "@/lib/business-identity";
 import { CONTACT } from "@/lib/business-identity";
-import { PICKUP_ADDRESS } from "@/lib/shipping";
+import { PERSONAL_PICKUP_ADDRESS, PICKUP_ADDRESS } from "@/lib/shipping";
 
 export function ObchodnePodmienkySk({ seller, register }: { seller: SellerIdentity; register: string | null }) {
   return (
@@ -523,7 +523,7 @@ export function ONasSk({ seller, register }: { seller: SellerIdentity; register:
         <br />
         Telefón: {CONTACT.phone}
         <br />
-        Sklad a osobný odber: {PICKUP_ADDRESS}, Česká republika
+        Sklad a adresa pre vrátenie tovaru: {PICKUP_ADDRESS}, Česká republika
       </p>
 
       <h2>Prevádzková doba</h2>
@@ -595,7 +595,7 @@ export function DopravaPlatbaSk({ price, freeFrom, codSurcharge, codLimit, price
         </li>
       </ul>
       <p>
-        Doprava zdarma pri objednávke nad {price(freeFrom)}. Osobný odber ({PICKUP_ADDRESS}, Praha) je
+        Doprava zdarma pri objednávke nad {price(freeFrom)}. Osobný odber ({PERSONAL_PICKUP_ADDRESS}) je
         dostupný len pre doručenie v Českej republike.
       </p>
 

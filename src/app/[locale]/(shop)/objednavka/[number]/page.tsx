@@ -9,7 +9,7 @@ import { calculateSklikConversionValue } from "@/lib/sklik";
 import { SklikConversion } from "@/components/sklik-conversion";
 import { HeurekaConversion } from "@/components/heureka-conversion";
 import { GlamiConversion } from "@/components/glami-conversion";
-import { PAYMENT_LABELS, PICKUP_ADDRESS, SHIPPING_LABELS } from "@/lib/shipping";
+import { PAYMENT_LABELS, PERSONAL_PICKUP_ADDRESS, SHIPPING_LABELS } from "@/lib/shipping";
 import { ShippingIcon } from "@/components/shipping-icons";
 import { ORDER_STATUS_LABELS, canDownloadInvoice } from "@/lib/orders/status-labels";
 import { bankQrDataUrl, getBankPayment } from "@/lib/payments/bank-details";
@@ -223,7 +223,7 @@ export default async function OrderConfirmationPage({
 
       {order.shippingMethod === "OSOBNI_ODBER" && (
         <p className="bg-line/30 p-4 text-sm text-ink/80">
-          {tr("Zboží si vyzvednete osobně na adrese")} <strong className="text-ink">{PICKUP_ADDRESS}</strong>.{" "}
+          {tr("Zboží si vyzvednete osobně na adrese")} <strong className="text-ink">{PERSONAL_PICKUP_ADDRESS}</strong>.{" "}
           {tr("Jakmile bude objednávka připravená, ozveme se vám s termínem vyzvednutí.")}
         </p>
       )}

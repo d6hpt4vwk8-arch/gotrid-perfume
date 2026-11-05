@@ -7,7 +7,7 @@ import { currencyForLocale } from "@/lib/currency";
 import { getCurrentLocale, getTr } from "@/i18n/tr.server";
 import { DopravaPlatbaSk } from "@/content-sk/legal-sk";
 import { localeAlternates } from "@/lib/seo";
-import { PICKUP_ADDRESS } from "@/lib/shipping";
+import { PERSONAL_PICKUP_ADDRESS } from "@/lib/shipping";
 import { ComgatePaymentInfo } from "@/components/comgate-payment-info";
 import { isComgateConfigured } from "@/lib/payments/comgate";
 
@@ -68,7 +68,7 @@ export default async function DopravaAPlatbaPage() {
           1–3 pracovní dny,
         </li>
         <li>
-          Osobní odběr — {PICKUP_ADDRESS}: zdarma, po předchozí domluvě termínu.
+          Osobní odběr — {PERSONAL_PICKUP_ADDRESS}: zdarma, po předchozí domluvě termínu.
         </li>
       </ul>
       <p>

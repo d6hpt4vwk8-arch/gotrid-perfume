@@ -9,7 +9,7 @@ import { useCurrency } from "@/lib/currency-context";
 import { useTr } from "@/i18n/use-tr";
 import {
   PAYMENT_LABELS,
-  PICKUP_ADDRESS,
+  PERSONAL_PICKUP_ADDRESS,
   SHIPPING_LABELS,
   canUseCod,
   getCodSurcharge,
@@ -617,7 +617,7 @@ export function CheckoutForm({
             </div>
           ) : isPersonalPickup ? (
             <p className="rounded-sm bg-line/30 p-3 text-sm text-ink/80">
-              {tr("Zboží si vyzvednete osobně na adrese")} <strong>{PICKUP_ADDRESS}</strong> —{" "}
+              {tr("Zboží si vyzvednete osobně na adrese")} <strong>{PERSONAL_PICKUP_ADDRESS}</strong> —{" "}
               {tr("po vyřízení objednávky vás budeme kontaktovat na dohodnutí termínu.")}
             </p>
           ) : (
