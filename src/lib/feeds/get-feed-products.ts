@@ -72,6 +72,25 @@ async function buildCategoryBreadcrumbs(): Promise<Map<string, string>> {
   return breadcrumb;
 }
 
+// The marketplaces rate a one-level CATEGORYTEXT ("Vonné svíčky") as weak (Glami's
+// feed report, 2026-11-05), so the most specific category of a product wins; the
+// Výprodej shelf only counts when it is the product's only category.
+function deepestBreadcrumb(paths: { path: string; isClearance: boolean }[]): string | null {
+  const usable = paths.filter((c) => c.path);
+  const preferred = usable.filter((c) => !c.isClearance);
+  const pool = preferred.length > 0 ? preferred : usable;
+  let best: string | null = null;
+  let bestDepth = 0;
+  for (const { path } of pool) {
+    const depth = path.split(" | ").length;
+    if (depth > bestDepth) {
+      best = path;
+      bestDepth = depth;
+    }
+  }
+  return best;
+}
+
 type ProductForParams = {
   name: string;
   brand: { name: string } | null;
@@ -126,8 +145,8 @@ export async function getFeedProducts(): Promise<FeedProduct[]> {
         // Not take:1 — a Výprodej product also keeps its real perfume
         // category (see admin/actions for defective items), and Google's
         // ads-exclusion below needs to see both regardless of which one
-        // Prisma happens to return first. categoryBreadcrumb still only
-        // ever uses categories[0], unchanged from before.
+        // Prisma happens to return first. categoryBreadcrumb uses the deepest
+        // of them (see deepestBreadcrumb), not just categories[0].
         categories: { include: { category: true } },
         scentFamilies: { include: { scentFamily: true } },
         skinTypes: { include: { skinType: true } },
@@ -148,9 +167,9 @@ export async function getFeedProducts(): Promise<FeedProduct[]> {
     ean: p.ean,
     brandName: p.brand?.name ?? null,
     images: p.images.map((i) => i.url),
-    categoryBreadcrumb: p.categories[0]
-      ? (breadcrumbs.get(p.categories[0].categoryId) ?? null)
-      : null,
+    categoryBreadcrumb: deepestBreadcrumb(
+      p.categories.map((c) => ({ path: breadcrumbs.get(c.categoryId) ?? "", isClearance: c.category.fullSlug === "vyprodej" })),
+    ),
     excludeFromHeureka: p.excludeFromHeureka,
     heurekaName: p.heurekaName,
     nameSk: p.nameSk,

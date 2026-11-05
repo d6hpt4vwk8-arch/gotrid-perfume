@@ -54,7 +54,7 @@ export async function GET() {
   const items = products
     .map((p) => {
       const url = `${SITE_URL}/produkt/${p.slug}`;
-      const image = p.images[0] ? `${SITE_URL}${p.images[0]}` : null;
+      const [image, ...altImages] = p.images.map((img) => `${SITE_URL}${img}`);
       // DELIVERY_DATE is days from order to dispatch, not total delivery
       // time — Zboží buckets 0 as "skladem"/"ihned" and 1-3 as "do 3 dnů".
       // An in-stock item (dispatched same/next business day, per the
@@ -68,6 +68,7 @@ export async function GET() {
     <DESCRIPTION>${cdata(p.description)}</DESCRIPTION>
     <URL>${escapeXml(url)}</URL>
     ${image ? `<IMGURL>${escapeXml(image)}</IMGURL>` : ""}
+${altImages.map((img) => `    <IMGURL_ALTERNATIVE>${escapeXml(img)}</IMGURL_ALTERNATIVE>`).join("\n")}
     <PRICE_VAT>${p.price.toFixed(2)}</PRICE_VAT>
     ${p.brandName ? `<MANUFACTURER>${escapeXml(p.brandName)}</MANUFACTURER>` : ""}
     ${p.ean && isValidEan(p.ean) ? `<EAN>${escapeXml(p.ean)}</EAN>` : ""}
