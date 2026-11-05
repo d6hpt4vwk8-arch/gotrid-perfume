@@ -6,6 +6,7 @@ import { CookieBanner } from "@/components/cookie-banner";
 import { MetaPixel } from "@/components/meta-pixel";
 import { AttributionTracker } from "@/components/attribution-tracker";
 import { SklikPixel } from "@/components/sklik-pixel";
+import { SemPixel } from "@/components/sem-pixel";
 import { GlamiPixel } from "@/components/glami-pixel";
 import { Clarity } from "@/components/clarity";
 import { HeurekaCertificateWidget } from "@/components/heureka-certificate-widget";
@@ -85,6 +86,7 @@ export default async function ShopLayout({ children }: { children: React.ReactNo
         <AttributionTracker />
         <MetaPixel />
         <SklikPixel />
+        <SemPixel />
         <GlamiPixel />
         <Clarity />
         {/* Heureka.cz certificate — meaningless on the Slovak storefront (Heureka.sk has its own). */}

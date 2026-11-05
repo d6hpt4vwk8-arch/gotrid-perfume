@@ -1,3 +1,5 @@
+import { exVat, semTrack } from "@/lib/sem";
+
 declare global {
   interface Window {
     fbq?: (...args: unknown[]) => void;
@@ -55,6 +57,21 @@ function trackGlami(eventName: "ViewContent" | "AddToCart", data: Record<string,
 // content_ids/item_ids here must match that or the catalog can never
 // resolve the event to a product (confirmed live: GLAMI's dashboard showed
 // these as "nespárované produkty", unmatched to any feed item).
+// Seznam Event Measurement (src/lib/sem.ts): value ex VAT, item unit_price incl. VAT, CZK only. Like GLAMI it is a
+// no-op until SemPixel has loaded the script, which only happens after marketing consent.
+function trackSem(
+  eventName: "ViewContent" | "AddToCart",
+  product: { code: string; name: string; price: number },
+  qty: number,
+) {
+  semTrack(eventName, {
+    content_type: "product",
+    currency: "CZK",
+    value: exVat(product.price * qty),
+    contents: [{ id: product.code, content_name: product.name, quantity: qty, unit_price: product.price }],
+  });
+}
+
 export function trackViewContent(product: { code: string; name: string; price: number }) {
   trackEvent("ViewContent", {
     content_ids: [product.code],
@@ -69,6 +86,7 @@ export function trackViewContent(product: { code: string; name: string; price: n
     currency: "CZK",
     value: product.price,
   });
+  trackSem("ViewContent", product, 1);
 }
 
 export function trackAddToCart(product: { code: string; name: string; price: number; qty: number }) {
@@ -84,4 +102,5 @@ export function trackAddToCart(product: { code: string; name: string; price: num
     currency: "CZK",
     value: product.price * product.qty,
   });
+  trackSem("AddToCart", product, product.qty);
 }

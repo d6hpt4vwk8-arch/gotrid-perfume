@@ -7,6 +7,7 @@ import { prisma } from "@/lib/prisma";
 import { getCurrentLocale, getTr } from "@/i18n/tr.server";
 import { calculateSklikConversionValue } from "@/lib/sklik";
 import { SklikConversion } from "@/components/sklik-conversion";
+import { SemPurchase } from "@/components/sem-purchase";
 import { HeurekaConversion } from "@/components/heureka-conversion";
 import { GlamiConversion } from "@/components/glami-conversion";
 import { PAYMENT_LABELS, PERSONAL_PICKUP_ADDRESS, SHIPPING_LABELS } from "@/lib/shipping";
@@ -60,6 +61,31 @@ export default async function OrderConfirmationPage({
     Number(order.discountAmount),
   );
 
+  // Seznam Event Measurement Purchase: `value` ex VAT after discount (same as the Sklik conversion above),
+  // value_tax the VAT inside it, shipping and the COD surcharge incl. VAT, item prices incl. VAT.
+  const semPayment = { CARD: "karta", BANK_TRANSFER: "prevod", CASH_ON_DELIVERY: "dobirka" } as const;
+  const semPurchase = {
+    orderId: order.number,
+    value: sklikConversionValue,
+    valueTax:
+      Math.round(
+        (Math.max(0, order.items.reduce((s, i) => s + Number(i.unitPrice) * i.qty, 0) - Number(order.discountAmount)) -
+          sklikConversionValue) *
+          100,
+      ) / 100,
+    deliveryPrice: Number(order.shippingPrice),
+    otherCosts: Number(order.codSurcharge),
+    paymentType: semPayment[order.paymentMethod as keyof typeof semPayment] ?? "karta",
+    contents: order.items
+      .filter((item) => Number(item.unitPrice) > 0)
+      .map((item) => ({
+        id: item.product?.code ?? item.ean ?? item.name,
+        content_name: item.name,
+        quantity: item.qty,
+        unit_price: Number(item.unitPrice),
+      })),
+  };
+
   // Points need an account: invite a guest (no password-protected Customer row for this e-mail) to register.
   const [loyaltySettings, orderCustomer] = await Promise.all([
     getSettings(),
@@ -73,6 +99,7 @@ export default async function OrderConfirmationPage({
   return (
     <main className="mx-auto flex max-w-2xl flex-1 flex-col gap-6 px-4 py-10">
       <SklikConversion orderId={order.number} value={sklikConversionValue} />
+      <SemPurchase data={semPurchase} />
       {/* Heureka.cz conversion measurement runs on the Czech shop's key: a Slovak order would be counted as a
           Heureka.cz sale (and skew its stats). Heureka.sk gets Slovak orders through the order log instead. */}
       {order.shippingCountry !== "SK" && (
