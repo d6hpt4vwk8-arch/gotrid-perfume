@@ -3,7 +3,13 @@ import { z } from "zod";
 export const checkoutSchema = z
   .object({
     email: z.string().max(320).email("Zadejte platný e-mail."),
-    phone: z.string().min(9, "Zadejte platné telefonní číslo.").max(30),
+    // Digits plus the usual separators, at least 9 digits. A bare min(9) let a customer put their e-mail in this
+    // field (GT261103-5958) and GLS then refused to print the label for want of a valid ContactPhone.
+    phone: z
+      .string()
+      .trim()
+      .max(30)
+      .refine((v) => /^\+?[\d\s().\/-]+$/.test(v) && v.replace(/\D/g, "").length >= 9, "Zadejte platné telefonní číslo."),
     firstName: z.string().min(1, "Zadejte jméno.").max(100),
     lastName: z.string().min(1, "Zadejte příjmení.").max(100),
     // "Nakupuji na firmu" — companyName+ico become required together (see
