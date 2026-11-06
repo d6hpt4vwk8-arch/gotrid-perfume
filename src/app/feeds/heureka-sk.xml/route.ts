@@ -2,7 +2,7 @@ import { NextResponse } from "next/server";
 import { getFeedProducts } from "@/lib/feeds/get-feed-products";
 import { isPaidAdsEligible } from "@/lib/feeds/paid-ads-eligibility";
 import { isConditionFlagged } from "@/lib/feeds/condition-flagged";
-import { cdata, escapeXml, isValidEan } from "@/lib/feeds/xml";
+import { cdata, escapeXml, heurekaEan } from "@/lib/feeds/xml";
 import { czkToEur } from "@/lib/format";
 import { categoryBreadcrumbSk, paramNameSk, paramValueSk } from "@/lib/sk-terms";
 import { stripHtml } from "@/lib/feeds/xml";
@@ -13,9 +13,9 @@ import { getSettings } from "@/lib/settings.server";
 // Slovak counterpart of heureka.xml — separate Heureka.sk shop account/feed
 // registration from Heureka.cz, same reasoning throughout: EUR prices (every
 // DB price is CZK, converted here with Settings.czkToEurRate — see
-// checkout-form.tsx for the same conversion at checkout), and only
-// Zásilkovna as a delivery method since that's the only carrier with a real
-// Slovak network today (checkout-schema.ts enforces this at order time too).
+// checkout-form.tsx for the same conversion at checkout), and only the
+// carriers with a real Slovak network — Zásilkovna and GLS (checkout-schema.ts
+// enforces this at order time too).
 // Heureka.sk requires the feed itself to be in Slovak (their registration
 // help), so only products with a Slovak name AND description
 // (Product.nameSk/descriptionSk, filled by scripts/sk-import.ts) are listed;
@@ -31,6 +31,10 @@ export async function GET() {
     rate,
   );
   const codSurchargeEur = czkToEur(settings.codSurcharge, rate);
+  // GLS also reaches Slovensko (checkout-schema.ts: Zásilkovna or GLS; GLS has no COD there). Same Heureka carrier ids
+  // as in heureka.xml: GLS_PARCELSHOP = GLS pickup points/boxes, GLS = courier to the address.
+  const glsParcelshopEur = czkToEur(settings.shippingPriceGlsMistoSk ?? settings.shippingPrices.GLS_MISTO, rate);
+  const glsCourierEur = czkToEur(settings.shippingPriceGlsSk ?? settings.shippingPrices.GLS, rate);
 
   const allProducts = await getFeedProducts();
   const products = allProducts.filter(
@@ -67,13 +71,21 @@ ${altImages.map((img) => `    <IMGURL_ALTERNATIVE>${escapeXml(img)}</IMGURL_ALTE
     <PRICE_VAT>${priceEur.toFixed(2)}</PRICE_VAT>
     ${priceBeforeEur !== null ? `<PRICE_BEFORE>${priceBeforeEur.toFixed(2)}</PRICE_BEFORE>` : ""}
     ${p.brandName ? `<MANUFACTURER>${escapeXml(p.brandName)}</MANUFACTURER>` : ""}
-    ${p.ean && isValidEan(p.ean) ? `<EAN>${escapeXml(p.ean)}</EAN>` : ""}
+    ${heurekaEan(p.ean) ? `<EAN>${escapeXml(heurekaEan(p.ean)!)}</EAN>` : ""}
     ${p.categoryBreadcrumb ? `<CATEGORYTEXT>${escapeXml(categoryBreadcrumbSk(p.categoryBreadcrumb))}</CATEGORYTEXT>` : ""}
     <DELIVERY_DATE>${deliveryDate}</DELIVERY_DATE>
     <DELIVERY>
       <DELIVERY_ID>ZASILKOVNA</DELIVERY_ID>
       <DELIVERY_PRICE>${shippingPriceEur.toFixed(2)}</DELIVERY_PRICE>
       <DELIVERY_PRICE_COD>${(shippingPriceEur + codSurchargeEur).toFixed(2)}</DELIVERY_PRICE_COD>
+    </DELIVERY>
+    <DELIVERY>
+      <DELIVERY_ID>GLS_PARCELSHOP</DELIVERY_ID>
+      <DELIVERY_PRICE>${glsParcelshopEur.toFixed(2)}</DELIVERY_PRICE>
+    </DELIVERY>
+    <DELIVERY>
+      <DELIVERY_ID>GLS</DELIVERY_ID>
+      <DELIVERY_PRICE>${glsCourierEur.toFixed(2)}</DELIVERY_PRICE>
     </DELIVERY>
 ${p.params
   .map(

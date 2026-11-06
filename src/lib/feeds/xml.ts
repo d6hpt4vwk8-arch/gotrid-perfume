@@ -57,3 +57,11 @@ export function isValidEan(ean: string): boolean {
   const formatOk = /^\d{8}$/.test(ean) || /^\d{12,14}$/.test(ean);
   return formatOk && hasValidEanChecksum(ean);
 }
+
+// Heureka's catalogue matches on EAN-13 and flags a 12-digit UPC-A as "neplatný formát" (17 offers in the Heureka.sk
+// feed check of 2026-11-06). A UPC-A is an EAN-13 with a leading zero and the same check digit, so padding is lossless.
+export function heurekaEan(ean: string | null | undefined): string | null {
+  if (!ean) return null;
+  const padded = /^\d{12}$/.test(ean) ? `0${ean}` : ean;
+  return isValidEan(padded) ? padded : null;
+}

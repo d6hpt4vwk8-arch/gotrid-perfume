@@ -2,9 +2,7 @@
 
 import { useEffect } from "react";
 import { useConsent } from "@/lib/consent-context";
-import { loadHeurekaScript } from "@/lib/heureka-conversion";
-
-const CONVERSION_KEY = process.env.NEXT_PUBLIC_HEUREKA_CONVERSION_KEY;
+import { HEUREKA_CONVERSION_KEYS, loadHeurekaScript, type HeurekaCountry } from "@/lib/heureka-conversion";
 
 interface HeurekaOrderItem {
   itemId: string;
@@ -33,23 +31,27 @@ export function HeurekaConversion({
   orderId,
   items,
   totalVat,
+  country = "cz",
 }: {
   orderId: string;
   items: HeurekaOrderItem[];
   totalVat: number;
+  /** "sk" reports to Heureka.sk's own SDK/key; amounts must then be in EUR (unitPrice and totalVat). */
+  country?: HeurekaCountry;
 }) {
   const { consent } = useConsent();
+  const conversionKey = HEUREKA_CONVERSION_KEYS[country];
 
   useEffect(() => {
-    if (!consent?.analytics || !CONVERSION_KEY) return;
-    loadHeurekaScript("thank_you");
-    window.heureka?.("authenticate", CONVERSION_KEY);
+    if (!consent?.analytics || !conversionKey) return;
+    loadHeurekaScript("thank_you", country);
+    window.heureka?.("authenticate", conversionKey);
     window.heureka?.("set_order_id", orderId);
     for (const item of items) {
       window.heureka?.("add_product", item.itemId, item.name, item.unitPrice, item.qty);
     }
     window.heureka?.("set_total_vat", totalVat);
-    window.heureka?.("set_currency", "CZK");
+    window.heureka?.("set_currency", country === "sk" ? "EUR" : "CZK");
     window.heureka?.("send", "Order");
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [consent?.analytics, orderId]);

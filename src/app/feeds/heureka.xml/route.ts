@@ -2,7 +2,7 @@ import { NextResponse } from "next/server";
 import { getFeedProducts } from "@/lib/feeds/get-feed-products";
 import { isPaidAdsEligible } from "@/lib/feeds/paid-ads-eligibility";
 import { isConditionFlagged } from "@/lib/feeds/condition-flagged";
-import { cdata, escapeXml, isValidEan } from "@/lib/feeds/xml";
+import { cdata, escapeXml, heurekaEan } from "@/lib/feeds/xml";
 import { SITE_URL } from "@/lib/site";
 import { hasManufacturerReferencePrice } from "@/lib/reference-price";
 import { getSettings } from "@/lib/settings.server";
@@ -79,7 +79,7 @@ ${altImages.map((img) => `    <IMGURL_ALTERNATIVE>${escapeXml(img)}</IMGURL_ALTE
     <PRICE_VAT>${p.price.toFixed(2)}</PRICE_VAT>
     ${p.compareAtPrice && !hasManufacturerReferencePrice(p.brandName) ? `<PRICE_BEFORE>${p.compareAtPrice.toFixed(2)}</PRICE_BEFORE>` : ""}
     ${p.brandName ? `<MANUFACTURER>${escapeXml(p.brandName)}</MANUFACTURER>` : ""}
-    ${p.ean && isValidEan(p.ean) ? `<EAN>${escapeXml(p.ean)}</EAN>` : ""}
+    ${heurekaEan(p.ean) ? `<EAN>${escapeXml(heurekaEan(p.ean)!)}</EAN>` : ""}
     ${p.categoryBreadcrumb ? `<CATEGORYTEXT>${escapeXml(p.categoryBreadcrumb)}</CATEGORYTEXT>` : ""}
     <DELIVERY_DATE>${deliveryDate}</DELIVERY_DATE>
 ${DELIVERY_METHODS.map(

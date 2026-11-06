@@ -14,7 +14,7 @@ import { PAYMENT_LABELS, PERSONAL_PICKUP_ADDRESS, SHIPPING_LABELS } from "@/lib/
 import { ShippingIcon } from "@/components/shipping-icons";
 import { ORDER_STATUS_LABELS, canDownloadInvoice } from "@/lib/orders/status-labels";
 import { bankQrDataUrl, getBankPayment } from "@/lib/payments/bank-details";
-import { orderMoney } from "@/lib/orders/order-money";
+import { orderIsEur, orderMoney } from "@/lib/orders/order-money";
 import { localizedItemNames } from "@/lib/orders/item-names";
 import { FACEBOOK_URL, INSTAGRAM_HANDLE, INSTAGRAM_URL, TIKTOK_URL } from "@/lib/site";
 import { getCurrentCustomerId } from "@/lib/customer/get-current-customer";
@@ -96,13 +96,30 @@ export default async function OrderConfirmationPage({
   const bank = getBankPayment(order);
   const qrDataUrl = bank ? await bankQrDataUrl(bank) : null;
 
+  // Slovak orders go to Heureka.sk's own conversion measurement, in EUR: at the amount actually charged for a card
+  // order in EUR (same ratio as the receipt, see orderMoney), otherwise at the current CZK→EUR rate.
+  const heurekaEurRatio = orderIsEur(order) ? Number(order.chargedAmount) / Number(order.total) : 1 / loyaltySettings.czkToEurRate;
+  const toEur = (czk: number) => Math.round(czk * heurekaEurRatio * 100) / 100;
+
   return (
     <main className="mx-auto flex max-w-2xl flex-1 flex-col gap-6 px-4 py-10">
       <SklikConversion orderId={order.number} value={sklikConversionValue} />
       <SemPurchase data={semPurchase} />
-      {/* Heureka.cz conversion measurement runs on the Czech shop's key: a Slovak order would be counted as a
-          Heureka.cz sale (and skew its stats). Heureka.sk gets Slovak orders through the order log instead. */}
-      {order.shippingCountry !== "SK" && (
+      {/* Heureka.cz and Heureka.sk are separate shops with their own SDK host and key: a Slovak order is reported to
+          Heureka.sk in EUR and never to Heureka.cz (it would be counted as a Czech sale and skew its stats). */}
+      {order.shippingCountry === "SK" ? (
+        <HeurekaConversion
+          country="sk"
+          orderId={order.number}
+          items={order.items.map((item) => ({
+            itemId: item.product?.code ?? item.ean ?? item.name,
+            name: item.name,
+            unitPrice: toEur(Number(item.unitPrice)),
+            qty: item.qty,
+          }))}
+          totalVat={toEur(Number(order.total))}
+        />
+      ) : (
         <HeurekaConversion
           orderId={order.number}
           items={order.items.map((item) => ({
