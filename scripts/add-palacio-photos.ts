@@ -48,6 +48,10 @@ async function download(url: string): Promise<Buffer | null> {
 
 // Difference hashes (9x8 greyscale, one bit per left>right neighbour) in three framings, so the same picture still
 // matches when one source serves it portrait and the other square (stretched, centre-cropped or padded on white).
+// BigInt() instead of 0n/1n literals: the project's tsconfig targets below ES2020, and `next build` type-checks scripts/ too.
+const ZERO = BigInt(0);
+const ONE = BigInt(1);
+
 async function dhash(buf: Buffer): Promise<bigint[]> {
   const fits = [
     sharp(buf).flatten({ background: "#ffffff" }).resize(9, 8, { fit: "fill" }),
@@ -57,8 +61,8 @@ async function dhash(buf: Buffer): Promise<bigint[]> {
   const out: bigint[] = [];
   for (const f of fits) {
     const px = await f.greyscale().raw().toBuffer();
-    let h = 0n;
-    for (let y = 0; y < 8; y++) for (let x = 0; x < 8; x++) h = (h << 1n) | (px[y * 9 + x] > px[y * 9 + x + 1] ? 1n : 0n);
+    let h = ZERO;
+    for (let y = 0; y < 8; y++) for (let x = 0; x < 8; x++) h = (h << ONE) | (px[y * 9 + x] > px[y * 9 + x + 1] ? ONE : ZERO);
     out.push(h);
   }
   return out;
@@ -68,8 +72,8 @@ function bits(a: bigint, b: bigint): number {
   let x = a ^ b;
   let n = 0;
   while (x) {
-    n += Number(x & 1n);
-    x >>= 1n;
+    n += Number(x & ONE);
+    x >>= ONE;
   }
   return n;
 }
