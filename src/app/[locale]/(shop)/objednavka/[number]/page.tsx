@@ -100,6 +100,10 @@ export default async function OrderConfirmationPage({
   // order in EUR (same ratio as the receipt, see orderMoney), otherwise at the current CZK→EUR rate.
   const heurekaEurRatio = orderIsEur(order) ? Number(order.chargedAmount) / Number(order.total) : 1 / loyaltySettings.czkToEurRate;
   const toEur = (czk: number) => Math.round(czk * heurekaEurRatio * 100) / 100;
+  // Heureka's order check (PRICE_DONT_MATCH, 30 CZ orders flagged in a week) wants set_total_vat to equal the sum of
+  // the add_product lines, so shipping, the COD surcharge and discounts must not be in it.
+  const heurekaItemsTotal = order.items.reduce((sum, item) => sum + Number(item.unitPrice) * item.qty, 0);
+  const heurekaItemsTotalEur = order.items.reduce((sum, item) => sum + toEur(Number(item.unitPrice)) * item.qty, 0);
 
   return (
     <main className="mx-auto flex max-w-2xl flex-1 flex-col gap-6 px-4 py-10">
@@ -117,7 +121,7 @@ export default async function OrderConfirmationPage({
             unitPrice: toEur(Number(item.unitPrice)),
             qty: item.qty,
           }))}
-          totalVat={toEur(Number(order.total))}
+          totalVat={Math.round(heurekaItemsTotalEur * 100) / 100}
         />
       ) : (
         <HeurekaConversion
@@ -128,7 +132,7 @@ export default async function OrderConfirmationPage({
             unitPrice: Number(item.unitPrice),
             qty: item.qty,
           }))}
-          totalVat={Number(order.total)}
+          totalVat={heurekaItemsTotal}
         />
       )}
       <GlamiConversion
