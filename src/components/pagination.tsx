@@ -1,7 +1,8 @@
 "use client";
 
 import { Link } from "@/i18n/navigation";
-import { useState } from "react";
+import { useEffect, useState } from "react";
+import { GRID_PAGE_EVENT } from "@/lib/grid-page-event";
 
 const INITIAL_PAGES = 9;
 const REVEAL_BATCH = 9;
@@ -26,6 +27,24 @@ export function Pagination({
   queryString: string;
 }) {
   const [visibleCount, setVisibleCount] = useState(() => Math.max(INITIAL_PAGES, currentPage));
+  // The page highlighted: the one the URL opened with, then the last one appended by "Zobrazit další produkty".
+  const [activePage, setActivePage] = useState(currentPage);
+
+  useEffect(() => {
+    setActivePage(currentPage);
+  }, [currentPage, basePath, queryString]);
+
+  useEffect(() => {
+    const onLoadMore = (e: Event) => {
+      const page = (e as CustomEvent<number>).detail;
+      if (typeof page === "number") {
+        setActivePage(page);
+        setVisibleCount((c) => Math.max(c, page));
+      }
+    };
+    window.addEventListener(GRID_PAGE_EVENT, onLoadMore);
+    return () => window.removeEventListener(GRID_PAGE_EVENT, onLoadMore);
+  }, []);
 
   if (totalPages <= 1) return null;
 
@@ -51,7 +70,7 @@ export function Pagination({
           key={p}
           href={hrefFor(p)}
           className={`rounded-sm px-3 py-1 text-sm ${
-            p === currentPage ? "bg-ink text-white" : "border border-line text-ink hover:border-accent"
+            p === activePage ? "bg-ink text-white" : "border border-line text-ink hover:border-accent"
           }`}
         >
           {p}

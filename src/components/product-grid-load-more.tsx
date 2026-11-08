@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { ProductCard, type ProductCardData } from "@/components/product-card";
 import { useTr } from "@/i18n/use-tr";
+import { GRID_PAGE_EVENT } from "@/lib/grid-page-event";
 
 /**
  * Renders the initial server-fetched page of products, then appends
@@ -41,6 +42,9 @@ export function ProductGridLoadMore({
       const data: { products: ProductCardData[] } = await res.json();
       setProducts((prev) => [...prev, ...data.products]);
       setNextPage((p) => p + 1);
+      // The numbered Pagination below sits outside this component: tell it which page the customer has reached, so the
+      // highlighted number follows "Zobrazit další produkty" instead of staying on the page the URL opened with.
+      window.dispatchEvent(new CustomEvent(GRID_PAGE_EVENT, { detail: nextPage }));
     } catch {
       setError(tr("Načtení dalších produktů se nezdařilo, zkuste to prosím znovu."));
     } finally {
