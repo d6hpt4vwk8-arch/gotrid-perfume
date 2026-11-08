@@ -9,6 +9,7 @@ import { checkZasilkovnaVolumeMilestone } from "@/lib/marketing/zasilkovna-volum
 import { expireInactiveLoyaltyPoints } from "@/lib/loyalty";
 import { refreshInstagramToken } from "@/lib/instagram";
 import { sendSupplierWatchDigest } from "@/lib/marketing/supplier-watch-digest";
+import { runDelayedOrderNotices } from "@/lib/marketing/delayed-orders-notice";
 
 // Triggered by Vercel Cron (see vercel.json) — same auth pattern as
 // src/app/api/cron/sync-spventure-stock/route.ts. Bundles the daily
@@ -54,6 +55,7 @@ export async function GET(req: NextRequest) {
     couponCleanup,
     instagramToken,
     supplierWatch,
+    delayNotices,
   ] = await Promise.all([
     // Second-order discount mail switched off 2026-10-18 (owner's call: 207 sent,
     // 0 coupon uses, 10 unsubscribes, and too many marketing mails per customer).
@@ -69,6 +71,8 @@ export async function GET(req: NextRequest) {
     cleanupExpiredSecondOrderCoupons(),
     refreshInstagramToken(),
     sendSupplierWatchDigest(),
+    // Delay mail for orders whose promised date has passed (sends only when DELAY_NOTICE_ENABLED=true, else counts).
+    runDelayedOrderNotices(),
   ]);
 
   return NextResponse.json({
@@ -83,5 +87,6 @@ export async function GET(req: NextRequest) {
     couponCleanup,
     instagramToken,
     supplierWatch,
+    delayNotices,
   });
 }

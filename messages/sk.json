@@ -664,5 +664,12 @@
  "Dárek zdarma pro registrované zákazníky": "Darček zadarmo pre registrovaných zákazníkov",
  "Přihlaste se nebo si vytvořte účet a vyberte si k objednávce jeden z těchto dárků.": "Prihláste sa alebo si vytvorte účet a vyberte si k objednávke jeden z týchto darčekov.",
  "Pro registrované zákazníky: vyberte si 1 z {n} vzorků v košíku": "Pre registrovaných zákazníkov: vyberte si 1 z {n} vzoriek v košíku",
- "Dárek zdarma k další objednávce": "Darček zadarmo k ďalšej objednávke"
+ "Dárek zdarma k další objednávce": "Darček zadarmo k ďalšej objednávke",
+ "chceme, abyste to věděli hned od nás: vaše objednávka {number} nedorazí v termínu, který jsme uváděli. Opravdu se omlouváme.": "chceme, aby ste to vedeli hneď od nás: vaša objednávka {number} nedorazí v termíne, ktorý sme uvádzali. Úprimne sa ospravedlňujeme.",
+ "Původně uváděný termín doručení": "Pôvodne uvádzaný termín doručenia",
+ "Na vaší objednávce pracujeme. Jakmile ji předáme dopravci, hned vám pošleme e-mail s číslem zásilky, kterou si budete moct sledovat.": "Na vašej objednávke pracujeme. Hneď ako ju odovzdáme prepravcovi, pošleme vám e-mail s číslom zásielky, ktorú si budete môcť sledovať.",
+ "Děkujeme za trpělivost.": "Ďakujeme za trpezlivosť.",
+ "Objednávka {number}: dáváme vám vědět, že odeslání potrvá o něco déle.": "Objednávka {number}: dávame vám vedieť, že odoslanie potrvá o niečo dlhšie.",
+ "Vaše objednávka {number}: omlouváme se za zdržení": "Vaša objednávka {number}: ospravedlňujeme sa za zdržanie",
+ "Pokud máte jakýkoli dotaz, napište nám na {email}, rádi pomůžeme.": "Ak máte akúkoľvek otázku, napíšte nám na {email}, radi pomôžeme."
 }

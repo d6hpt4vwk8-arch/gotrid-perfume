@@ -141,7 +141,7 @@ function inlineProseStyles(html: string): string {
 
 export function renderEmailLayout(
   innerHtml: string,
-  opts?: { preheader?: string; footerNote?: string; ctx?: MailContext },
+  opts?: { preheader?: string; footerNote?: string; ctx?: MailContext; hidePhone?: boolean },
 ): string {
   const seller = currentSeller();
   const ctx = opts?.ctx ?? CS_MAIL;
@@ -180,7 +180,7 @@ ${opts?.preheader ? `<div style="display:none;max-height:0;overflow:hidden;opaci
         <tr>
           <td style="border-top:1px solid ${LINE};padding:24px 20px;">
             <p style="font-size:13px;line-height:19px;color:${MUTED};margin:0 0 8px;-webkit-text-size-adjust:100%;text-size-adjust:100%;">
-              ${CONTACT.phone} · <a href="mailto:${CONTACT.email}" style="color:${MUTED};">${CONTACT.email}</a> · ${ctx.tr(CONTACT.supportHours)}
+              ${opts?.hidePhone ? "" : `${CONTACT.phone} · `}<a href="mailto:${CONTACT.email}" style="color:${MUTED};">${CONTACT.email}</a> · ${ctx.tr(CONTACT.supportHours)}
             </p>
             <p style="font-size:12px;line-height:18px;color:${MUTED};margin:0;-webkit-text-size-adjust:100%;text-size-adjust:100%;">${sellerLine(seller)}</p>
             ${opts?.footerNote ? `<p style="font-size:12px;line-height:18px;color:${MUTED};margin:8px 0 0;-webkit-text-size-adjust:100%;text-size-adjust:100%;">${opts.footerNote}</p>` : ""}
