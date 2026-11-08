@@ -30,6 +30,7 @@ import { parseVolumeMl, formatVolumeLabel } from "@/lib/parse-volume";
 import { parseShadeLabel, SHADE_SWATCH_COLORS } from "@/lib/parse-shade";
 import { estimateDeliveryDate, formatDeliveryEstimate } from "@/lib/delivery-estimate";
 import { getSettings } from "@/lib/settings.server";
+import { SEO_URL } from "@/lib/site";
 import { ReviewForm } from "@/components/review-form";
 import { ProductGallery } from "@/components/product-gallery";
 import { ScentNotesPyramid } from "@/components/scent-notes-pyramid";
@@ -193,23 +194,70 @@ export default async function ProductPage({
   const deliveryEstimate =
     product.stock > 0 ? estimateDeliveryDate((isPerfume ? 4 : 3) + (product.slowerDelivery ? 1 : 0)) : null;
 
+  // Merchant-listing structured data (Search Console, 2026-11-07: hasMerchantReturnPolicy, shippingDetails and
+  // description missing). The cheapest real option is quoted — GLS pickup point/box — and free above the threshold;
+  // everything else is set in Merchant Center. Slovak pages quote the SK price in EUR.
+  const jsonLdCountry = isSk ? "SK" : "CZ";
+  const jsonLdPriceCzk = Number(product.price);
+  const jsonLdShippingCzk =
+    jsonLdPriceCzk >= settings.freeShippingThreshold
+      ? 0
+      : isSk
+        ? (settings.shippingPriceGlsMistoSk ?? settings.shippingPrices.GLS_MISTO)
+        : settings.shippingPrices.GLS_MISTO;
+  const jsonLdShippingValue = currency === "EUR" ? Math.round((jsonLdShippingCzk / settings.czkToEurRate) * 100) / 100 : jsonLdShippingCzk;
+  const jsonLdDescription =
+    htmlToPlainText(displayDescription) || [displayName, product.brand?.name].filter(Boolean).join(" – ");
+  const jsonLdEan = product.ean?.replace(/\D/g, "") ?? "";
+  const jsonLdGtin =
+    jsonLdEan.length === 13
+      ? { gtin13: jsonLdEan }
+      : jsonLdEan.length === 12
+        ? { gtin12: jsonLdEan }
+        : jsonLdEan.length === 8
+          ? { gtin8: jsonLdEan }
+          : {};
+
   const jsonLd = {
     "@context": "https://schema.org",
     "@type": "Product",
     name: displayName,
-    image: product.images.map((i) => i.url),
-    description: htmlToPlainText(displayDescription) || undefined,
+    // Absolute URLs: relative /uploads/… paths are not valid image values for Merchant Center.
+    image: product.images.map((i) => `${SEO_URL}${i.url}`),
+    description: jsonLdDescription,
     sku: product.code,
-    gtin13: product.ean ?? undefined,
+    ...jsonLdGtin,
     brand: product.brand ? { "@type": "Brand", name: product.brand.name } : undefined,
     offers: {
       "@type": "Offer",
+      url: `${SEO_URL}${localePath(locale, `/produkt/${product.slug}`)}`,
       priceCurrency: currency,
       price: currency === "EUR" ? Math.round((Number(product.price) / settings.czkToEurRate) * 100) / 100 : Number(product.price),
+      itemCondition: "https://schema.org/NewCondition",
       availability:
         product.stock > 0
           ? "https://schema.org/InStock"
           : "https://schema.org/OutOfStock",
+      seller: { "@type": "Organization", name: "Gotrid s.r.o." },
+      shippingDetails: {
+        "@type": "OfferShippingDetails",
+        shippingRate: { "@type": "MonetaryAmount", value: jsonLdShippingValue, currency },
+        shippingDestination: { "@type": "DefinedRegion", addressCountry: jsonLdCountry },
+        deliveryTime: {
+          "@type": "ShippingDeliveryTime",
+          handlingTime: { "@type": "QuantitativeValue", minValue: 0, maxValue: 1, unitCode: "DAY" },
+          transitTime: { "@type": "QuantitativeValue", minValue: 1, maxValue: 3, unitCode: "DAY" },
+        },
+      },
+      // /podminky-vraceni-zbozi: 14 days from receipt, the buyer pays the return shipping.
+      hasMerchantReturnPolicy: {
+        "@type": "MerchantReturnPolicy",
+        applicableCountry: jsonLdCountry,
+        returnPolicyCategory: "https://schema.org/MerchantReturnFiniteReturnWindow",
+        merchantReturnDays: 14,
+        returnMethod: "https://schema.org/ReturnByMail",
+        returnFees: "https://schema.org/ReturnShippingFees",
+      },
     },
     ...(avgRating && {
       aggregateRating: {
