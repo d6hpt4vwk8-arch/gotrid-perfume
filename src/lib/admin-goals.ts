@@ -9,7 +9,10 @@ export interface MonthlyGoal {
   orders: number | null;
 }
 
-const GOALS: Record<string, MonthlyGoal> = {};
+const GOALS: Record<string, MonthlyGoal> = {
+  // Owner's target for November 2026: 30 000 Kč net profit (no order-count target set).
+  "2026-11": { profit: 30000, orders: null },
+};
 
 const DEFAULT_GOAL: MonthlyGoal = { profit: null, orders: null };
 
