@@ -115,6 +115,104 @@ export function zboziExtraParams(p: FeedProduct): FeedParam[] {
 
   if (p.isVegan || /(?<!\p{L})vegan\p{L}*/iu.test(p.name)) add("vegan", "ano");
 
+  // --- Category dictionaries read from Centrum prodejce on 2026-11-08 (masážní gely/masti, soli do koupele, tělové a pleťové
+  // krémy, šampony, zubní pasty). Every flag below fires only on a claim that is in our own name/description or one of
+  // our structured concerns — a value is never invented. ---
+  const concerns = new Set(p.params.filter((x) => x.name === "Účel").map((x) => x.value));
+  const claim = (name: string, re: RegExp, extra = false) => {
+    if (extra || re.test(`${p.name} ${p.description}`)) add(name, "ano");
+  };
+
+  claim("relaxační", /relax/i, concerns.has("Stres, napětí a spánek") || concerns.has("Bolest svalů, zad a kloubů"));
+  claim("chladivý účinek", /chladiv|cooling/i, concerns.has("Chladivý účinek"));
+  claim("hřejivý", /hřejiv|zahřív/i, concerns.has("Hřejivý účinek"));
+  claim("regenerační", /regenera/i, concerns.has("Rány, jizvy a regenerace pokožky") || concerns.has("Popraskané paty a suché ruce"));
+  claim("konopná", /konop|cannabis|hemp/i);
+  claim("detoxikační", /detox/i);
+  claim("na nachlazení", /nachlazení/i);
+  claim("zpevňující", /zpevň/i);
+  claim("proti vráskám", /vrásk|proti stárnutí|anti-?age/i, concerns.has("Vrásky a stárnutí pleti"));
+  claim("proti akné", /\bakné|nečistot/i, concerns.has("Akné a nečistoty"));
+  claim("proti pigmentaci", /pigment|tmavých skvrn/i, concerns.has("Pigmentace a tmavé skvrny"));
+  claim("rozjasňující", /rozjasň|brightening/i, concerns.has("Rozjasnění pleti"));
+  claim("s kyselinou hyaluronovou", /hyaluron/i);
+  claim("s kolagenem", /kolagen/i);
+  claim("na jizvy", /jizv/i);
+  claim("bez alkoholu", /bez alkoholu/i);
+  claim("bez sulfátů", /bez sulfát/i);
+  claim("bez cukru", /bez cukru/i);
+  claim("bez fluoru", /bez fluor/i);
+
+  const spf = /(?<!\p{L})SPF\s?(\d{1,2})/iu.exec(p.name)?.[1];
+  if (spf) {
+    add("ochranný faktor SPF", spf);
+    add("SPF", "ano");
+  }
+  const night = /noční/i.test(p.name);
+  const day = /denní/i.test(p.name);
+  if (night || day) add("doba použití", night && day ? "denní/noční" : night ? "noční" : "denní");
+
+  // Face creams use "typ pleti" with its own value list next to the body-product "typ pokožky" (already added above).
+  for (const x of out.filter((o) => o.name === "typ pokožky")) {
+    add("typ pleti", x.value === "pro všechny typy pokožky" ? "všechny typy" : x.value);
+  }
+
+  // Massage gels/ointments: critical "typ masážního gelu/masti" — the body part from the name, otherwise the whole body.
+  const massage = /(masážní|hadí)\s+(gel|mast|balzám)|(gel|mast)\s+masážní/i.exec(p.name);
+  if (massage) {
+    const part = /nohy|nohou/i.test(p.name) ? "na nohy" : /záda|zad\b/i.test(p.name) ? "na záda" : /ruce|rukou/i.test(p.name) ? "na ruce" : "celé tělo";
+    add(/mast/i.test(massage[0]) ? "typ masážní masti" : "typ masážního gelu", part);
+  }
+
+  // Bath salts: "druh soli" from the salt named in the product.
+  if (/sůl do koupele/i.test(p.name)) {
+    const salt = /himaláj/i.test(p.name)
+      ? "himalájská"
+      : /mrtvého moře/i.test(p.name)
+        ? "z Mrtvého moře"
+        : /magnes|epsom|hořeč/i.test(p.name)
+          ? "epsomská"
+          : /jodobrom/i.test(p.name)
+            ? "jodobromová"
+            : /mořsk/i.test(p.name)
+              ? "mořská"
+              : null;
+    if (salt) add("druh soli", salt);
+  }
+
+  // Shampoos.
+  if (/šampon/i.test(p.name)) {
+    claim("pro růst vlasů", /růst vlasů/i);
+    claim("proti lupům", /(?<!\p{L})lup\p{L}*|proti lupům/iu);
+    claim("proti padání vlasů", /padání vlasů/i);
+    claim("zvětšení objemu vlasů", /zvětšen\p{L}* objemu|volume|volumiz|objemový/iu);
+    claim("silver šampon", /silver/i);
+    claim("s keratinem", /keratin/i);
+    claim("kofeinový", /kofein/i);
+    claim("česnekový", /česnek/i);
+    claim("proti svědění", /svěd/i);
+    claim("na seboreu", /sebore/i);
+    claim("s kondicionérem", /2v1|s kondicionér/i);
+    add("forma šamponu", /suchý šampon|dry shampoo|sprej/i.test(p.name) ? "suchý" : /tuhý šampon|solid/i.test(p.name) ? "tuhý" : "tekutý");
+  }
+
+  // Toothpastes.
+  if (/zubní pasta|zubní gel/i.test(p.name)) {
+    claim("bělící", /bělíc|bělen|whitening/i);
+    claim("proti krvácení dásní", /krvácen/i);
+    claim("s propolisem", /propolis/i);
+    claim("na paradentózu", /paradent|parodont/i);
+    claim("ochrana před zubním kazem", /zubní kaz|proti kazu|před kazem/i);
+    claim("ochrana před zubním kamenem", /zubní kámen|zubního kamene/i);
+    claim("pro citlivé zuby", /citliv\p{L}* zub|sensitive/iu);
+    claim("na obnažené krčky", /krčk/i);
+    claim("pro kuřáky", /kuřák|smoker/i);
+  }
+  if (CHILD.test(p.name)) {
+    add("dětské", "ano");
+    add("dětská", "ano");
+  }
+
   // Claims that are literally in our own name/description.
   const text = `${p.name} ${p.description}`;
   if (/\baloe\b/i.test(text)) add("s aloe vera", "ano");
