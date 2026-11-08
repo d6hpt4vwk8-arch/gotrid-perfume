@@ -31,6 +31,8 @@ export interface FeedProduct {
   isPerfume: boolean;
   /** True if the product is (also) filed under Výprodej — see google-exclusions.ts. */
   isOnClearance: boolean;
+  /** Product.isVegan — only ever true for the Korean cosmetics where the owner confirmed it. */
+  isVegan: boolean;
   /**
    * PARAM pairs for the marketplace feeds. These are what put an offer into
    * the comparison sites' category filters ("Objem 100 ml", "Pro koho
@@ -177,6 +179,7 @@ export async function getFeedProducts(): Promise<FeedProduct[]> {
     isDefective: p.isDefective,
     isPerfume: p.categories.some((c) => c.category.fullSlug.startsWith("parfemy")),
     isOnClearance: p.categories.some((c) => c.category.fullSlug === "vyprodej"),
+    isVegan: p.isVegan,
     params: buildParams(p),
   }));
 

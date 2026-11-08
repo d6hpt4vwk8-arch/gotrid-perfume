@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { getFeedProducts } from "@/lib/feeds/get-feed-products";
 import { isPaidAdsEligible } from "@/lib/feeds/paid-ads-eligibility";
 import { isConditionFlagged } from "@/lib/feeds/condition-flagged";
+import { zboziExtraParams } from "@/lib/feeds/zbozi-params";
 import { cdata, escapeXml, isValidEan } from "@/lib/feeds/xml";
 import { SITE_URL } from "@/lib/site";
 import { getSettings } from "@/lib/settings.server";
@@ -74,7 +75,7 @@ ${altImages.map((img) => `    <IMGURL_ALTERNATIVE>${escapeXml(img)}</IMGURL_ALTE
     ${p.ean && isValidEan(p.ean) ? `<EAN>${escapeXml(p.ean)}</EAN>` : ""}
     ${p.categoryBreadcrumb ? `<CATEGORYTEXT>${escapeXml(p.categoryBreadcrumb)}</CATEGORYTEXT>` : ""}
     <DELIVERY_DATE>${deliveryDate}</DELIVERY_DATE>
-${p.params
+${[...p.params, ...zboziExtraParams(p)]
   .map(
     (param) =>
       `    <PARAM><PARAM_NAME>${escapeXml(param.name)}</PARAM_NAME><VAL>${escapeXml(param.value)}</VAL></PARAM>`,
