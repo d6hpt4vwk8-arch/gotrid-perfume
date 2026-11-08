@@ -17,7 +17,7 @@
 // exact fingerprint that got the previous store's Ads account suspended
 // for counterfeit goods. Keeping Google/Meta to the same eligible set
 // avoids reproducing that on the next account.
-const ARABIC_PERFUME_BRANDS = new Set(
+export const ARABIC_PERFUME_BRANDS = new Set(
   [
     "Fragrance World", "French Avenue", "Gulf Orchid", "Khadlaj", "Emir",
     "Arabiyat Prestige", "Maison Asrar", "Auraa Desire", "Rayhaan",
