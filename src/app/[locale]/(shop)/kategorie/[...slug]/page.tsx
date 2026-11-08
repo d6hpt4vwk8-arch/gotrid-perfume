@@ -35,7 +35,8 @@ import { Pagination } from "@/components/pagination";
 import { getSettings } from "@/lib/settings.server";
 import type { Metadata } from "next";
 import { jsonLdScript } from "@/lib/json-ld";
-import { breadcrumbJsonLd, htmlToPlainText, localeAlternates, localePath, truncateAtWord } from "@/lib/seo";
+import { breadcrumbJsonLd, collectionJsonLd, htmlToPlainText, localeAlternates, localePath, ogMeta, truncateAtWord } from "@/lib/seo";
+import { getListingStats, listingDescription, listingTitle } from "@/lib/listing-seo.server";
 import { getCurrentLocale, getTr } from "@/i18n/tr.server";
 import { categoryNameSk } from "@/lib/sk-terms";
 import { CATEGORY_CONTENT_SK, CATEGORY_DESCRIPTION_SK } from "@/lib/category-content-sk";
@@ -57,37 +58,40 @@ export async function generateMetadata({
 }): Promise<Metadata> {
   const { slug, locale } = await params;
   const isSk = locale === "sk";
-  const tr = await getTr();
   const query = await searchParams;
   const fullSlug = slug.join("/");
   const category = await findCategoryByFullSlug(fullSlug);
   if (!category) return {};
 
   const categoryIds = await getDescendantCategoryIds(category.id);
-  const productCount = await prisma.product.count({
-    where: skScope({ visible: true, stock: { gt: 0 }, categories: { some: { categoryId: { in: categoryIds } } } }, isSk),
-  });
+  const stats = await getListingStats(
+    skScope({ categories: { some: { categoryId: { in: categoryIds } } } }, isSk),
+  );
+  const productCount = stats.count;
 
   const categoryName = isSk ? categoryNameSk(category.name) : category.name;
   const intro = htmlToPlainText(isSk ? CATEGORY_DESCRIPTION_SK[fullSlug] : category.description);
-  const description = truncateAtWord(
-    intro ||
-      (isSk
-        ? `${categoryName} – ${tr("originální značkové zboží skladem")}${productCount > 0 ? ` (${tr("{n} produktů", { n: productCount })})` : ""}. ${tr("Vrácení do 14 dnů.")} Gotrid Perfume.`
-        : `${category.name} – originální značkové zboží skladem${productCount > 0 ? ` (${productCount} produktů)` : ""}. Doprava od 59 Kč, vrácení do 14 dnů. Gotrid Perfume.`),
-  );
+  const description = await listingDescription({
+    name: categoryName,
+    stats,
+    isSk,
+    lead: intro ? truncateAtWord(intro, 110) : undefined,
+  });
+  const title = await listingTitle({ name: categoryName, stats, isSk });
 
   const isFiltered = Object.keys(query).some((k) => !NON_FILTER_PARAMS.has(k) && query[k] !== undefined);
   const pageNumber = Math.max(1, Number(Array.isArray(query.page) ? query.page[0] : query.page) || 1);
   const basePath = `/kategorie/${fullSlug}`;
 
+  const canonicalPath = localePath(locale, !isFiltered && pageNumber > 1 ? `${basePath}?page=${pageNumber}` : basePath);
   return {
-    title: `${categoryName} – ${tr("originální a skladem")} | Gotrid Perfume`,
+    title,
     description,
     alternates: {
       ...localeAlternates(locale, basePath),
-      canonical: localePath(locale, !isFiltered && pageNumber > 1 ? `${basePath}?page=${pageNumber}` : basePath),
+      canonical: canonicalPath,
     },
+    ...ogMeta({ title, description, path: canonicalPath, locale, image: category.bannerImage }),
     // Filtered views and empty categories (e.g. a hidden branch whose products were
     // all switched off) stay out of the index.
     ...(isFiltered || productCount === 0 ? { robots: { index: false, follow: true } } : {}),
@@ -201,6 +205,21 @@ export default async function CategoryPage({
               categoryBreadcrumb.map((c) => ({ name: catName(c.name), path: localePath(locale, `/kategorie/${c.fullSlug}`) })),
               { home: tr("Domů"), homePath: localePath(locale, "/") },
             ),
+          ),
+        }}
+      />
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{
+          __html: jsonLdScript(
+            collectionJsonLd({
+              name: catName(category.name),
+              path: localePath(locale, `/kategorie/${fullSlug}`),
+              items: products.map((p) => {
+                const sk = isSk && !!p.nameSk;
+                return { name: sk ? p.nameSk! : p.name, path: localePath(sk ? "sk" : "cs", `/produkt/${p.slug}`) };
+              }),
+            }),
           ),
         }}
       />

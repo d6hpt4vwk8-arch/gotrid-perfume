@@ -14,7 +14,7 @@ import { ProductViewTracker } from "@/components/product-view-tracker";
 import { HeurekaProductView } from "@/components/heureka-product-view";
 import { sanitizeDescription } from "@/lib/sanitize-description";
 import { jsonLdScript } from "@/lib/json-ld";
-import { breadcrumbJsonLd, htmlToPlainText, localeAlternates, localePath, truncateAtWord } from "@/lib/seo";
+import { breadcrumbJsonLd, htmlToPlainText, localeAlternates, localePath, ogMeta, truncateAtWord } from "@/lib/seo";
 import { ProductCard } from "@/components/product-card";
 import { WishlistButton } from "@/components/wishlist-button";
 import { StockAlertForm } from "@/components/stock-alert-form";
@@ -102,14 +102,21 @@ export async function generateMetadata({
   const facts = isSk
     ? `${nameWithBrand} ${tr("za")} ${formatPriceIn(product.price, "EUR", settings.czkToEurRate)}. ${product.stock > 0 ? `${tr("Skladem")}, ` : ""}${tr("vrácení do 14 dní.")} ${tr("Originálny tovar")}, Gotrid Perfume.`
     : `${nameWithBrand} za ${price} Kč. ${product.stock > 0 ? "Skladem, " : ""}doprava od 59 Kč, vrácení do 14 dnů. Originální zboží, Gotrid Perfume.`;
+  const productTitle = `${displayName} | Gotrid Perfume`;
+  const productDescription = truncateAtWord(text.length >= 60 ? text : `${facts}${text ? ` ${text}` : ""}`);
+  // A product without Slovak copy keeps the Czech page as its only canonical version.
+  const skFallback = isSk && !product.nameSk;
   return {
-    title: `${displayName} | Gotrid Perfume`,
-    description: truncateAtWord(text.length >= 60 ? text : `${facts}${text ? ` ${text}` : ""}`),
-    // A product without Slovak copy keeps the Czech page as its only canonical version.
-    alternates:
-      isSk && !product.nameSk
-        ? { canonical: `/produkt/${product.slug}` }
-        : localeAlternates(locale, `/produkt/${product.slug}`),
+    title: productTitle,
+    description: productDescription,
+    alternates: skFallback ? { canonical: `/produkt/${product.slug}` } : localeAlternates(locale, `/produkt/${product.slug}`),
+    ...ogMeta({
+      title: productTitle,
+      description: productDescription,
+      path: skFallback ? `/produkt/${product.slug}` : localePath(locale, `/produkt/${product.slug}`),
+      locale: skFallback ? "cs" : locale,
+      image: product.images[0]?.url,
+    }),
   };
 }
 

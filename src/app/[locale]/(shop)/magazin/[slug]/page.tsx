@@ -3,6 +3,8 @@ import { Link } from "@/i18n/navigation";
 import { notFound } from "next/navigation";
 import type { Metadata } from "next";
 import { prisma } from "@/lib/prisma";
+import { absoluteUrl, breadcrumbJsonLd, DEFAULT_OG_IMAGE, ogMeta } from "@/lib/seo";
+import { jsonLdScript } from "@/lib/json-ld";
 import { sanitizeDescription } from "@/lib/sanitize-description";
 import { WhatsappAdviceButton } from "@/components/whatsapp-advice-button";
 import { ProductCard } from "@/components/product-card";
@@ -26,9 +28,21 @@ export async function generateMetadata({
   const { slug } = await params;
   const post = await getPost(slug);
   if (!post || !post.published) return {};
+  const title = `${post.title} | Gotrid Perfume`;
   return {
-    title: `${post.title} | Gotrid Perfume`,
+    title,
     description: post.excerpt,
+    alternates: { canonical: `/magazin/${post.slug}` },
+    ...ogMeta({
+      title,
+      description: post.excerpt,
+      path: `/magazin/${post.slug}`,
+      locale: "cs",
+      image: post.coverImage,
+      type: "article",
+      publishedTime: post.createdAt,
+      modifiedTime: post.updatedAt,
+    }),
   };
 }
 
@@ -84,8 +98,37 @@ export default async function BlogPostPage({
   const readNext = [...related.filter((p) => p.category === post.category), ...related.filter((p) => p.category !== post.category)].slice(0, 3);
   const categoryLabel = CATEGORY_LABELS[post.category] ?? post.category;
 
+  const coverUrl = post.coverImage
+    ? post.coverImage.startsWith("http") ? post.coverImage : absoluteUrl(post.coverImage)
+    : absoluteUrl(DEFAULT_OG_IMAGE);
+  const articleJsonLd = {
+    "@context": "https://schema.org",
+    "@type": "Article",
+    mainEntityOfPage: { "@type": "WebPage", "@id": absoluteUrl(`/magazin/${post.slug}`) },
+    headline: post.title.slice(0, 110),
+    description: post.excerpt,
+    image: [coverUrl],
+    datePublished: post.createdAt.toISOString(),
+    dateModified: post.updatedAt.toISOString(),
+    inLanguage: "cs-CZ",
+    author: { "@type": "Organization", name: "Gotrid Perfume", url: absoluteUrl("/") },
+    publisher: {
+      "@type": "Organization",
+      name: "Gotrid Perfume",
+      url: absoluteUrl("/"),
+      logo: { "@type": "ImageObject", url: absoluteUrl("/logo-512.png") },
+    },
+  };
+
   return (
     <main className="flex-1">
+      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: jsonLdScript(articleJsonLd) }} />
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{
+          __html: jsonLdScript(breadcrumbJsonLd([{ name: "Magazín", path: "/magazin" }, { name: post.title, path: `/magazin/${post.slug}` }])),
+        }}
+      />
       <nav
         aria-label="Drobečková navigace"
         className="border-b border-line font-mono text-[11px] tracking-[0.14em] text-accent-2 uppercase"

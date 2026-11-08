@@ -2,10 +2,17 @@ import { Link } from "@/i18n/navigation";
 import Image from "next/image";
 import type { Metadata } from "next";
 import { prisma } from "@/lib/prisma";
+import { ogMeta } from "@/lib/seo";
 
+const TITLE = "Magazín | Gotrid Perfume";
+const DESCRIPTION = "Rady s výběrem parfémů a kosmetiky, novinky a příběhy značek, které máme rádi.";
+
+// Czech-only section: no /sk version, and ?category= filters point back to the clean list.
 export const metadata: Metadata = {
-  title: "Magazín | Gotrid Perfume",
-  description: "Rady s výběrem parfémů a kosmetiky, novinky a příběhy značek, které máme rádi.",
+  title: TITLE,
+  description: DESCRIPTION,
+  alternates: { canonical: "/magazin" },
+  ...ogMeta({ title: TITLE, description: DESCRIPTION, path: "/magazin", locale: "cs" }),
 };
 
 const CATEGORY_LABELS: Record<string, string> = {

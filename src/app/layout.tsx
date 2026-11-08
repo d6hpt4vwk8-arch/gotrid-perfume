@@ -3,6 +3,7 @@ import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
 import { getLocale } from "next-intl/server";
 import { SEO_URL } from "@/lib/site";
+import { ogMeta } from "@/lib/seo";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -21,13 +22,17 @@ export const dynamic = "force-dynamic";
 
 export async function generateMetadata(): Promise<Metadata> {
   const sk = (await getLocale()) === "sk";
+  const title = sk ? "Gotrid Perfume — originálna značková parfumeria" : "Gotrid Perfume — originální značková parfumerie";
+  const description = sk
+    ? "Originálna značková parfuméria, kozmetika a starostlivosť za poctivú cenu, bez maloobchodnej prirážky."
+    : "Originální brandová parfumerie, kosmetika a péče za poctivou cenu, bez maloobchodní přirážky.";
   return {
     // Resolves relative canonical/Open Graph URLs against the public (www) host.
     metadataBase: new URL(SEO_URL),
-    title: sk ? "Gotrid Perfume — originálna značková parfumeria" : "Gotrid Perfume — originální značková parfumerie",
-    description: sk
-      ? "Originálna značková parfuméria, kozmetika a starostlivosť za poctivú cenu, bez maloobchodnej prirážky."
-      : "Originální brandová parfumerie, kosmetika a péče za poctivou cenu, bez maloobchodní přirážky.",
+    title,
+    description,
+    // Default share card for pages that don't set their own (legal pages, cart, …).
+    ...ogMeta({ title, description, path: sk ? "/sk" : "/", locale: sk ? "sk" : "cs" }),
   };
 }
 

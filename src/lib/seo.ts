@@ -52,6 +52,83 @@ export function breadcrumbJsonLd(
   };
 }
 
+export const DEFAULT_OG_IMAGE = "/og-default.png";
+
+/**
+ * Open Graph + Twitter card for a page. Next replaces (not merges) a layout's openGraph with the page's,
+ * so every page that sets its own title/description needs a complete object — build it here.
+ */
+export function ogMeta(opts: {
+  title: string;
+  description: string;
+  /** Path without host, already locale-prefixed (the canonical path). */
+  path: string;
+  locale: string;
+  image?: string | null;
+  type?: "website" | "article";
+  publishedTime?: Date;
+  modifiedTime?: Date;
+}) {
+  const image = opts.image || DEFAULT_OG_IMAGE;
+  const imageUrl = image.startsWith("http") ? image : absoluteUrl(image);
+  return {
+    openGraph: {
+      type: opts.type ?? "website",
+      siteName: "Gotrid Perfume",
+      locale: opts.locale === "sk" ? "sk_SK" : "cs_CZ",
+      title: opts.title,
+      description: opts.description,
+      url: absoluteUrl(opts.path),
+      images: [{ url: imageUrl }],
+      ...(opts.type === "article"
+        ? {
+            publishedTime: opts.publishedTime?.toISOString(),
+            modifiedTime: opts.modifiedTime?.toISOString(),
+          }
+        : {}),
+    },
+    twitter: {
+      card: "summary_large_image" as const,
+      title: opts.title,
+      description: opts.description,
+      images: [imageUrl],
+    },
+  };
+}
+
+/** "od 27 Kč" / "od 1,10 €" for a meta description (plain space, no NBSP). */
+export function priceFromLabel(minCzk: number, isSk: boolean, eurRate: number, from: string): string {
+  if (isSk) return `${from} ${(minCzk / eurRate).toFixed(2).replace(".", ",")} €`;
+  return `${from} ${Math.max(1, Math.floor(minCzk))} Kč`;
+}
+
+/** CollectionPage + ItemList for a listing page (first page of products only). */
+export function collectionJsonLd(opts: {
+  name: string;
+  description?: string;
+  path: string;
+  items: { name: string; path: string }[];
+}) {
+  return {
+    "@context": "https://schema.org",
+    "@type": "CollectionPage",
+    name: opts.name,
+    ...(opts.description ? { description: opts.description } : {}),
+    url: absoluteUrl(opts.path),
+    isPartOf: { "@type": "WebSite", name: "Gotrid Perfume", url: absoluteUrl("/") },
+    mainEntity: {
+      "@type": "ItemList",
+      numberOfItems: opts.items.length,
+      itemListElement: opts.items.map((it, i) => ({
+        "@type": "ListItem",
+        position: i + 1,
+        url: absoluteUrl(it.path),
+        name: it.name,
+      })),
+    },
+  };
+}
+
 /** Locale-prefixed path: "/produkt/x" → "/sk/produkt/x" on the Slovak storefront. */
 export function localePath(locale: string, path: string): string {
   if (locale !== "sk") return path;

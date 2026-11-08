@@ -12,7 +12,7 @@ import { getHeurekaShopReviews } from "@/lib/heureka-reviews";
 import { getSettings } from "@/lib/settings.server";
 import type { Metadata } from "next";
 import { jsonLdScript } from "@/lib/json-ld";
-import { absoluteUrl, localeAlternates } from "@/lib/seo";
+import { absoluteUrl, localeAlternates, ogMeta } from "@/lib/seo";
 import { getCurrentLocale, getTr } from "@/i18n/tr.server";
 import { translateCategoryTree } from "@/lib/sk-terms";
 import { skScope } from "@/lib/sk-visibility";
@@ -21,7 +21,12 @@ import { BRAND_PROFILE_URLS } from "@/components/social-links";
 
 export async function generateMetadata({ params }: { params: Promise<{ locale: string }> }): Promise<Metadata> {
   const { locale } = await params;
-  return { ...baseMetadata, alternates: localeAlternates(locale, "/") };
+  const sk = locale === "sk";
+  const title = sk ? "Gotrid Perfume — originálna značková parfumeria" : "Gotrid Perfume — originální značková parfumerie";
+  const description = sk
+    ? "Originálna značková parfuméria, kozmetika a starostlivosť za poctivú cenu, bez maloobchodnej prirážky."
+    : "Originální brandová parfumerie, kosmetika a péče za poctivou cenu, bez maloobchodní přirážky.";
+  return { ...baseMetadata, alternates: localeAlternates(locale, "/"), ...ogMeta({ title, description, path: sk ? "/sk" : "/", locale }) };
 }
 
 const baseMetadata: Metadata = {

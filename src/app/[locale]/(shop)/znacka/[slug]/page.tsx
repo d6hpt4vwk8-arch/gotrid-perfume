@@ -7,7 +7,8 @@ import { ProductCard } from "@/components/product-card";
 import { getSettings } from "@/lib/settings.server";
 import type { Metadata } from "next";
 import { jsonLdScript } from "@/lib/json-ld";
-import { breadcrumbJsonLd, localeAlternates, localePath } from "@/lib/seo";
+import { breadcrumbJsonLd, collectionJsonLd, localeAlternates, localePath, ogMeta } from "@/lib/seo";
+import { getListingStats, listingDescription, listingTitle } from "@/lib/listing-seo.server";
 import { getCurrentLocale, getTr } from "@/i18n/tr.server";
 import { skScope } from "@/lib/sk-visibility";
 
@@ -17,25 +18,24 @@ export async function generateMetadata({
   params: Promise<{ slug: string; locale: string }>;
 }): Promise<Metadata> {
   const { slug, locale } = await params;
+  const isSk = locale === "sk";
   const tr = await getTr();
   const brand = await prisma.brand.findUnique({ where: { slug } });
   if (!brand) return {};
-  const productCount = await prisma.product.count({
-    where: skScope({ visible: true, brandId: brand.id, ...primaryVariantWhere, stock: { gt: 0 } }, locale === "sk"),
-  });
+  const stats = await getListingStats(skScope({ brandId: brand.id }, isSk));
+  const title = await listingTitle({ name: brand.name, stats, isSk });
+  const description =
+    stats.count > 0
+      ? await listingDescription({ name: brand.name, stats, isSk })
+      : `${brand.name} – ${tr("značka v nabídce Gotrid Perfume.")}`;
+  const path = localePath(locale, `/znacka/${brand.slug}`);
   return {
-    title: `${brand.name} – ${tr("originální produkty")} | Gotrid Perfume`,
-    description:
-      locale === "sk"
-        ? productCount > 0
-          ? `${brand.name}: ${tr("{n} originálnych produktov skladom.", { n: productCount })} ${tr("Vrácení do 14 dnů.")} Gotrid Perfume.`
-          : `${brand.name} – ${tr("značka v ponuke Gotrid Perfume.")}`
-        : productCount > 0
-          ? `${brand.name}: ${productCount} originálních produktů skladem. Doprava od 59 Kč, vrácení do 14 dnů. Gotrid Perfume.`
-          : `${brand.name} – značka v nabídce Gotrid Perfume.`,
+    title,
+    description,
     alternates: localeAlternates(locale, `/znacka/${brand.slug}`),
+    ...ogMeta({ title, description, path, locale }),
     // A brand page with nothing in stock is an empty shell — don't ask Google to index it.
-    ...(productCount === 0 ? { robots: { index: false, follow: true } } : {}),
+    ...(stats.count === 0 ? { robots: { index: false, follow: true } } : {}),
   };
 }
 
@@ -72,6 +72,21 @@ export default async function BrandPage({
               ],
               { home: tr("Domů"), homePath: localePath(locale, "/") },
             ),
+          ),
+        }}
+      />
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{
+          __html: jsonLdScript(
+            collectionJsonLd({
+              name: brand.name,
+              path: localePath(locale, `/znacka/${brand.slug}`),
+              items: products.slice(0, 24).map((p) => {
+                const sk = locale === "sk" && !!p.nameSk;
+                return { name: sk ? p.nameSk! : p.name, path: localePath(sk ? "sk" : "cs", `/produkt/${p.slug}`) };
+              }),
+            }),
           ),
         }}
       />

@@ -3,15 +3,18 @@ import type { Metadata } from "next";
 import { prisma } from "@/lib/prisma";
 import { getCurrentLocale, getTr } from "@/i18n/tr.server";
 import { SK_ONLY_WHERE } from "@/lib/sk-visibility";
-import { localeAlternates } from "@/lib/seo";
+import { localeAlternates, localePath, ogMeta } from "@/lib/seo";
 
 export async function generateMetadata({ params }: { params: Promise<{ locale: string }> }): Promise<Metadata> {
   const { locale } = await params;
   const tr = await getTr();
+  const title = `${tr("Značky")} | Gotrid Perfume`;
+  const description = tr("Přehled všech značek parfémů, kosmetiky a drogerie, které nabízíme.");
   return {
-    title: `${tr("Značky")} | Gotrid Perfume`,
-    description: tr("Přehled všech značek parfémů, kosmetiky a drogerie, které nabízíme."),
+    title,
+    description,
     alternates: localeAlternates(locale, "/znacky"),
+    ...ogMeta({ title, description, path: localePath(locale, "/znacky"), locale }),
   };
 }
 
