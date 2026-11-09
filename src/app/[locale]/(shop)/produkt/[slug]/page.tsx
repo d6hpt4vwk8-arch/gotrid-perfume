@@ -213,6 +213,13 @@ export default async function ProductPage({
         ? (settings.shippingPriceGlsMistoSk ?? settings.shippingPrices.GLS_MISTO)
         : settings.shippingPrices.GLS_MISTO;
   const jsonLdShippingValue = currency === "EUR" ? Math.round((jsonLdShippingCzk / settings.czkToEurRate) * 100) / 100 : jsonLdShippingCzk;
+  // Return shipping is paid by the buyer (cheapest pickup-point price is the realistic floor; Search Console 2026-11-09
+  // flagged returnShippingFeesAmount as missing). Never zero: free outbound shipping above the threshold says nothing
+  // about the return.
+  const jsonLdReturnFeeCzk = isSk
+    ? (settings.shippingPriceGlsMistoSk ?? settings.shippingPrices.GLS_MISTO)
+    : settings.shippingPrices.GLS_MISTO;
+  const jsonLdReturnFeeValue = currency === "EUR" ? Math.round((jsonLdReturnFeeCzk / settings.czkToEurRate) * 100) / 100 : jsonLdReturnFeeCzk;
   const jsonLdDescription =
     htmlToPlainText(displayDescription) || [displayName, product.brand?.name].filter(Boolean).join(" – ");
   const jsonLdEan = product.ean?.replace(/\D/g, "") ?? "";
@@ -264,6 +271,7 @@ export default async function ProductPage({
         merchantReturnDays: 14,
         returnMethod: "https://schema.org/ReturnByMail",
         returnFees: "https://schema.org/ReturnShippingFees",
+        returnShippingFeesAmount: { "@type": "MonetaryAmount", value: jsonLdReturnFeeValue, currency },
       },
     },
     ...(avgRating && {
