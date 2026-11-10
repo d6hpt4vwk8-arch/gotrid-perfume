@@ -71,6 +71,7 @@ export function DobropisDocument({
             <Text>IČO: {seller.ico}</Text>
             {seller.dic && <Text>DIČ: {seller.dic}</Text>}
             <Text>{tr(seller.vatNote)}</Text>
+            {seller.commercialRegister && <Text style={{ fontSize: 8, color: "#666", maxWidth: 220 }}>{tr(seller.commercialRegister)}</Text>}
           </View>
           <View style={styles.col}>
             <Text style={styles.label}>{tr("Odběratel")}</Text>

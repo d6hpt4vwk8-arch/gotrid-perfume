@@ -72,6 +72,8 @@ export function FakturaDocument({
             <Text>IČO: {seller.ico}</Text>
             {seller.dic && <Text>DIČ: {seller.dic}</Text>}
             <Text>{tr(seller.vatNote)}</Text>
+            {/* Business documents of a company entered in obchodní rejstřík must show the court and file number (§ 435 NOZ). */}
+            {seller.commercialRegister && <Text style={{ fontSize: 8, color: "#666", maxWidth: 220 }}>{tr(seller.commercialRegister)}</Text>}
           </View>
           <View style={styles.col}>
             <Text style={styles.label}>{tr("Odběratel")}</Text>
