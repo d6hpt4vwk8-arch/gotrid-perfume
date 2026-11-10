@@ -10,7 +10,19 @@ import { SHIPPING_LABELS, PAYMENT_LABELS } from "@/lib/shipping";
 import { OrderStatusQuickSelect } from "@/components/admin/order-status-quick-select";
 import { OrderHoverRow } from "@/components/admin/order-hover-row";
 import { OrderBulkLabels } from "@/components/admin/order-bulk-labels";
+import { ParcelDot, ParcelIndicatorBadge } from "@/components/admin/parcel-dot";
+import { getParcelIndicator, PARCEL_HOLDER_LABELS } from "@/lib/orders/parcel-indicator";
 import type { OrderStatus, ShippingMethod } from "@prisma/client";
+
+// Parcel filters offered as chips: who holds the parcel (me / carrier / customer) or everything urgent (red flag).
+const PARCEL_FILTERS = ["urgent", "me", "carrier", "customer"] as const;
+type ParcelFilter = (typeof PARCEL_FILTERS)[number];
+const PARCEL_FILTER_LABELS: Record<ParcelFilter, string> = {
+  urgent: "❗ Řešit hned",
+  me: `📦 ${PARCEL_HOLDER_LABELS.me}`,
+  carrier: `🚚 ${PARCEL_HOLDER_LABELS.carrier}`,
+  customer: `📍 ${PARCEL_HOLDER_LABELS.customer}`,
+};
 
 const PAGE_SIZE = 30;
 
@@ -29,11 +41,45 @@ const SHIPPING_SHORT: Record<ShippingMethod, string> = {
 export default async function AdminOrdersPage({
   searchParams,
 }: {
-  searchParams: Promise<{ status?: string; page?: string; q?: string }>;
+  searchParams: Promise<{ status?: string; page?: string; q?: string; parcel?: string }>;
 }) {
-  const { status, page: pageParam, q } = await searchParams;
+  const { status, page: pageParam, q, parcel: parcelParam } = await searchParams;
   const page = Math.max(1, Number(pageParam) || 1);
   const query = q?.trim() ?? "";
+  const parcelFilter = PARCEL_FILTERS.find((t) => t === parcelParam);
+
+  // Parcel lights for every order still in play (not delivered / cancelled), computed in memory: a few hundred rows.
+  const now = new Date();
+  const activeOrders = await prisma.order.findMany({
+    where: {
+      status: { in: ["NEW", "PAID", "PROCESSING", "SHIPPED"] },
+      createdAt: { gte: new Date(now.getTime() - 90 * 86_400_000) },
+    },
+    select: {
+      id: true,
+      status: true,
+      paymentMethod: true,
+      shippingMethod: true,
+      createdAt: true,
+      trackingNumber: true,
+      glsParcelNumber: true,
+      packetaId: true,
+      balikovnaParcelCode: true,
+    },
+  });
+  const filterCounts = new Map<ParcelFilter, number>();
+  const idsByFilter = new Map<ParcelFilter, string[]>();
+  const addTo = (f: ParcelFilter, id: string) => {
+    filterCounts.set(f, (filterCounts.get(f) ?? 0) + 1);
+    idsByFilter.set(f, [...(idsByFilter.get(f) ?? []), id]);
+  };
+  for (const o of activeOrders) {
+    const ind = getParcelIndicator(o, now);
+    if (!ind || ind.holder === "closed") continue;
+    addTo(ind.holder, o.id);
+    if (ind.urgent) addTo("urgent", o.id);
+  }
+  const parcelWhere: Prisma.OrderWhereInput = parcelFilter ? { id: { in: idsByFilter.get(parcelFilter) ?? [] } } : {};
 
   const statusFilter: Prisma.OrderWhereInput =
     status && status in ORDER_STATUS_LABELS ? { status: status as OrderStatus } : {};
@@ -43,7 +89,7 @@ export default async function AdminOrdersPage({
   const searchFilter: Prisma.OrderWhereInput = query
     ? { id: { in: await findOrderIdsBySearch(query) } }
     : {};
-  const where: Prisma.OrderWhereInput = { AND: [statusFilter, searchFilter] };
+  const where: Prisma.OrderWhereInput = { AND: [statusFilter, searchFilter, parcelWhere] };
 
   const [orders, total, returnStats] = await Promise.all([
     prisma.order.findMany({
@@ -65,7 +111,11 @@ export default async function AdminOrdersPage({
   const totalPages = Math.max(1, Math.ceil(total / PAGE_SIZE));
   // Carries status (but never page — a new search/status always starts back
   // at page 1) forward through the pagination links below.
-  const baseParams = { ...(status ? { status } : {}), ...(query ? { q: query } : {}) };
+  const baseParams = {
+    ...(status ? { status } : {}),
+    ...(query ? { q: query } : {}),
+    ...(parcelFilter ? { parcel: parcelFilter } : {}),
+  };
 
   return (
     <div className="flex flex-col gap-4">
@@ -81,6 +131,7 @@ export default async function AdminOrdersPage({
 
       <form method="get" className="flex gap-2">
         {status && <input type="hidden" name="status" value={status} />}
+        {parcelFilter && <input type="hidden" name="parcel" value={parcelFilter} />}
         <input
           type="search"
           name="q"
@@ -163,6 +214,35 @@ export default async function AdminOrdersPage({
         ))}
       </div>
 
+      <div className="flex flex-wrap items-center gap-2 text-sm">
+        <span className="text-xs font-semibold uppercase text-accent-2">Zásilky:</span>
+        {PARCEL_FILTERS.map((f) => {
+          const count = filterCounts.get(f) ?? 0;
+          const active = parcelFilter === f;
+          return (
+            <Link
+              key={f}
+              href={
+                active
+                  ? `/admin/objednavky${query ? `?q=${encodeURIComponent(query)}` : ""}`
+                  : `/admin/objednavky?${new URLSearchParams({ parcel: f, ...(query ? { q: query } : {}) })}`
+              }
+              className={`inline-flex items-center gap-1.5 rounded-full border px-3 py-1 ${
+                active ? "border-ink bg-ink text-white" : f === "urgent" && count > 0 ? "border-red-300 bg-red-50 font-semibold text-red-800" : "border-line"
+              }`}
+            >
+              {PARCEL_FILTER_LABELS[f]} ({count})
+            </Link>
+          );
+        })}
+        <span className="flex flex-wrap items-center gap-x-3 gap-y-1 px-1 text-xs text-accent-2">
+          <span className="inline-flex items-center gap-1.5"><ParcelDot tone="red" /> řešit hned</span>
+          <span className="inline-flex items-center gap-1.5"><ParcelDot tone="amber" /> je na mně</span>
+          <span className="inline-flex items-center gap-1.5"><ParcelDot tone="slate" /> čeká (dopravce / zákazník)</span>
+          <span className="inline-flex items-center gap-1.5"><ParcelDot tone="green" /> doručeno</span>
+        </span>
+      </div>
+
       <OrderBulkLabels />
 
       <div className="overflow-x-auto rounded-sm border border-line bg-white">
@@ -175,6 +255,7 @@ export default async function AdminOrdersPage({
               <th className="px-3 py-2">Zákazník</th>
               <th className="px-3 py-2">Celkem</th>
               <th className="px-3 py-2">Doprava</th>
+              <th className="px-3 py-2">Zásilka</th>
               <th className="px-3 py-2">Stav</th>
             </tr>
           </thead>
@@ -248,6 +329,9 @@ export default async function AdminOrdersPage({
                   </span>
                 </td>
                 <td className="px-3 py-2">
+                  <ParcelIndicatorBadge indicator={getParcelIndicator(o, now)} />
+                </td>
+                <td className="px-3 py-2">
                   <div className="flex items-center gap-1.5">
                     <OrderStatusQuickSelect
                       orderId={o.id}
@@ -269,7 +353,7 @@ export default async function AdminOrdersPage({
             ))}
             {orders.length === 0 && (
               <tr>
-                <td colSpan={7} className="px-3 py-6 text-center text-accent-2">
+                <td colSpan={8} className="px-3 py-6 text-center text-accent-2">
                   {query ? `Žádné objednávky neodpovídají „${query}“.` : "Žádné objednávky."}
                 </td>
               </tr>
