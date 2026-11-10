@@ -2,12 +2,11 @@
 
 import { useEffect } from "react";
 import { useConsent } from "@/lib/consent-context";
-
-const PIXEL_KEY = process.env.NEXT_PUBLIC_GLAMI_PIXEL_KEY;
+import { GLAMI_PIXEL_KEYS, type GlamiCountry } from "@/components/glami-pixel";
 
 let pixelLoaded = false;
 
-function loadPixel(apiKey: string) {
+function loadPixel(apiKey: string, country: GlamiCountry) {
   if (pixelLoaded || typeof window === "undefined") return;
   pixelLoaded = true;
 
@@ -24,7 +23,7 @@ function loadPixel(apiKey: string) {
   })(window, document, "script", "//glamipixel.com/js/compiled/pt.js", "glami");
   /* eslint-enable */
 
-  window.glami?.("create", apiKey, "cz", { consent: 1 });
+  window.glami?.("create", apiKey, country, { consent: 1 });
   window.glami?.("track", "PageView", { consent: 1 });
 }
 
@@ -41,17 +40,21 @@ export function GlamiConversion({
   itemIds,
   value,
   createdAt,
+  country = "cz",
 }: {
   orderId: string;
   itemIds: string[];
   value: number;
   /** ISO time the order was placed — a confirmation page reopened later must not report a second sale. */
   createdAt: string;
+  /** Which GLAMI shop the order belongs to: a Slovak order is reported to glami.sk, `value` then in EUR. */
+  country?: GlamiCountry;
 }) {
   const { consent } = useConsent();
 
   useEffect(() => {
-    if (!consent?.marketing || !PIXEL_KEY) return;
+    const pixelKey = GLAMI_PIXEL_KEYS[country];
+    if (!consent?.marketing || !pixelKey) return;
     // GLAMI's own transaction_id de-duplication didn't hold: the 2026-10 stats show the same
     // order totals again on a later day (order page reopened from the e-mail), inflating orders.
     // Report only a fresh order, and only once per browser.
@@ -61,16 +64,16 @@ export function GlamiConversion({
       if (localStorage.getItem(key)) return;
       localStorage.setItem(key, "1");
     } catch {}
-    loadPixel(PIXEL_KEY);
+    loadPixel(pixelKey, country);
     window.glami?.("track", "Purchase", {
       consent: 1,
       item_ids: itemIds,
       value,
-      currency: "CZK",
+      currency: country === "sk" ? "EUR" : "CZK",
       transaction_id: orderId,
     });
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [consent?.marketing, orderId, createdAt]);
+  }, [consent?.marketing, orderId, createdAt, country]);
 
   return null;
 }

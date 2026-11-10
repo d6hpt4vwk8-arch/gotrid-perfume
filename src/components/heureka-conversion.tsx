@@ -31,11 +31,14 @@ export function HeurekaConversion({
   orderId,
   items,
   totalVat,
+  createdAt,
   country = "cz",
 }: {
   orderId: string;
   items: HeurekaOrderItem[];
   totalVat: number;
+  /** ISO time the order was placed — a confirmation page reopened later (e-mail link, reload) must not report the order again. */
+  createdAt: string;
   /** "sk" reports to Heureka.sk's own SDK/key; amounts must then be in EUR (unitPrice and totalVat). */
   country?: HeurekaCountry;
 }) {
@@ -44,6 +47,14 @@ export function HeurekaConversion({
 
   useEffect(() => {
     if (!consent?.analytics || !conversionKey) return;
+    // Heureka flagged DUPLICATE_ORDER_ID (7 orders in a week, 2026-11): the order page was reopened days later and sent
+    // the same order_id again. Report only a fresh order, and only once per browser (same rule as GlamiConversion).
+    if (Date.now() - new Date(createdAt).getTime() > 3 * 60 * 60 * 1000) return;
+    const sentKey = `heureka-order-${country}-${orderId}`;
+    try {
+      if (localStorage.getItem(sentKey)) return;
+      localStorage.setItem(sentKey, "1");
+    } catch {}
     loadHeurekaScript("thank_you", country);
     window.heureka?.("authenticate", conversionKey);
     window.heureka?.("set_order_id", orderId);

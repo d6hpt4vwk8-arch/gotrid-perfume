@@ -122,6 +122,7 @@ export default async function OrderConfirmationPage({
             qty: item.qty,
           }))}
           totalVat={Math.round(heurekaItemsTotalEur * 100) / 100}
+          createdAt={order.createdAt.toISOString()}
         />
       ) : (
         <HeurekaConversion
@@ -133,13 +134,15 @@ export default async function OrderConfirmationPage({
             qty: item.qty,
           }))}
           totalVat={heurekaItemsTotal}
+          createdAt={order.createdAt.toISOString()}
         />
       )}
       <GlamiConversion
         orderId={order.number}
         itemIds={order.items.map((item) => item.product?.code ?? item.ean ?? item.name)}
-        value={Number(order.total)}
+        value={order.shippingCountry === "SK" ? toEur(Number(order.total)) : Number(order.total)}
         createdAt={order.createdAt.toISOString()}
+        country={order.shippingCountry === "SK" ? "sk" : "cz"}
       />
       <h1 className="text-2xl font-bold text-ink">{tr("Děkujeme za objednávku!")}</h1>
       <p className="text-ink/70">

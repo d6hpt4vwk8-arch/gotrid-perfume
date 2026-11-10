@@ -49,7 +49,13 @@ function trackEvent(eventName: "ViewContent" | "AddToCart", customData: Record<s
 // itself no-ops until that consent is granted, so no separate check needed
 // here — window.glami is simply undefined until then.
 function trackGlami(eventName: "ViewContent" | "AddToCart", data: Record<string, unknown>) {
-  window.glami?.("track", eventName, { consent: 1, ...data });
+  // glami.sk wants EUR: GlamiPixel records the shop's currency and CZK→EUR rate when it creates the pixel.
+  const meta = typeof window !== "undefined" ? window.glamiMeta : undefined;
+  const money =
+    meta?.currency === "EUR" && typeof data.value === "number"
+      ? { currency: "EUR", value: Math.round((data.value / meta.czkPerEur) * 100) / 100 }
+      : {};
+  window.glami?.("track", eventName, { consent: 1, ...data, ...money });
 }
 
 // Both Meta's catalog (google-shopping-rss.ts's <g:id>) and GLAMI's feed

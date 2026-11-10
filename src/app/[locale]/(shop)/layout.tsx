@@ -87,7 +87,7 @@ export default async function ShopLayout({ children }: { children: React.ReactNo
         <MetaPixel />
         <SklikPixel />
         <SemPixel />
-        <GlamiPixel />
+        <GlamiPixel country={isSk ? "sk" : "cz"} czkPerEur={settings.czkToEurRate} />
         <Clarity />
         {/* Heureka.cz certificate — meaningless on the Slovak storefront (Heureka.sk has its own). */}
         {!isSk && <HeurekaCertificateWidget />}

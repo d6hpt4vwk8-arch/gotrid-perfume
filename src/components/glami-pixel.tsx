@@ -4,11 +4,25 @@ import { useEffect } from "react";
 import { usePathname } from "next/navigation";
 import { useConsent } from "@/lib/consent-context";
 
-const PIXEL_KEY = process.env.NEXT_PUBLIC_GLAMI_PIXEL_KEY;
+export type GlamiCountry = "cz" | "sk";
+
+// Two separate GLAMI shops: glami.cz (GotridPerfume.cz) and glami.sk (GotridPerfume.sk, merchant 2697). The pixel key is
+// public by design (GLAMI's snippet embeds it in every page), so the Slovak one is the default and only overridable.
+export const GLAMI_PIXEL_KEYS: Record<GlamiCountry, string | undefined> = {
+  cz: process.env.NEXT_PUBLIC_GLAMI_PIXEL_KEY,
+  sk: process.env.NEXT_PUBLIC_GLAMI_SK_PIXEL_KEY ?? "eb625fbd3b820e0607d5cd49fb499625",
+};
 
 let pixelLoaded = false;
 
-function loadPixel(apiKey: string) {
+declare global {
+  interface Window {
+    /** Set once the pixel is created: ViewContent/AddToCart (client-events.ts) read it to report EUR on the Slovak shop. */
+    glamiMeta?: { currency: "CZK" | "EUR"; czkPerEur: number };
+  }
+}
+
+function loadPixel(apiKey: string, country: GlamiCountry, czkPerEur: number) {
   if (pixelLoaded || typeof window === "undefined") return;
   pixelLoaded = true;
 
@@ -25,7 +39,8 @@ function loadPixel(apiKey: string) {
   })(window, document, "script", "//glamipixel.com/js/compiled/pt.js", "glami");
   /* eslint-enable */
 
-  window.glami?.("create", apiKey, "cz", { consent: 1 });
+  window.glamiMeta = { currency: country === "sk" ? "EUR" : "CZK", czkPerEur };
+  window.glami?.("create", apiKey, country, { consent: 1 });
   window.glami?.("track", "PageView", { consent: 1 });
 }
 
@@ -38,16 +53,17 @@ function loadPixel(apiKey: string) {
  * ViewContent/AddToCart are fired from src/lib/analytics/client-events.ts
  * alongside the existing Meta Pixel calls, once this has run.
  */
-export function GlamiPixel() {
+export function GlamiPixel({ country = "cz", czkPerEur = 25 }: { country?: GlamiCountry; czkPerEur?: number }) {
   const { consent } = useConsent();
   const pathname = usePathname();
   const isOrderPage = pathname?.startsWith("/objednavka");
 
   useEffect(() => {
-    if (consent?.marketing && PIXEL_KEY && !isOrderPage) {
-      loadPixel(PIXEL_KEY);
+    const key = GLAMI_PIXEL_KEYS[country];
+    if (consent?.marketing && key && !isOrderPage) {
+      loadPixel(key, country, czkPerEur);
     }
-  }, [consent?.marketing, isOrderPage]);
+  }, [consent?.marketing, isOrderPage, country, czkPerEur]);
 
   return null;
 }
