@@ -1,3 +1,4 @@
+import { normalizePhone } from "@/lib/phone";
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { createParcel, GlsError } from "@/lib/gls";
@@ -44,7 +45,7 @@ export async function GET(_req: NextRequest, { params }: { params: Promise<{ id:
         recipient: {
           firstName: order.firstName,
           surname: order.lastName,
-          phone: order.phone,
+          phone: normalizePhone(order.phone, order.shippingCountry === "SK" ? "SK" : "CZ") ?? order.phone,
           email: order.email,
         },
         address: {

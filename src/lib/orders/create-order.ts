@@ -1,3 +1,4 @@
+import { normalizePhone } from "@/lib/phone";
 import { Prisma } from "@prisma/client";
 import { prisma } from "@/lib/prisma";
 import { generateOrderNumber } from "./generate-order-number";
@@ -203,7 +204,7 @@ export async function createOrder(
             number,
             customerId: customerId ?? undefined,
             email: input.email,
-            phone: input.phone,
+            phone: normalizePhone(input.phone, input.shippingCountry) ?? input.phone,
             firstName: input.firstName,
             lastName: input.lastName,
             companyName: input.isCompany ? input.companyName?.trim() || null : null,
@@ -297,7 +298,7 @@ export async function createOrder(
               email,
               firstName: input.firstName,
               lastName: input.lastName,
-              phone: input.phone,
+              phone: normalizePhone(input.phone, input.shippingCountry) ?? input.phone,
               marketingOptIn: true,
             },
           });

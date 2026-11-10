@@ -1,15 +1,13 @@
 import { z } from "zod";
+import { normalizePhone } from "@/lib/phone";
 
 export const checkoutSchema = z
   .object({
     email: z.string().max(320).email("Zadejte platný e-mail."),
-    // Digits plus the usual separators, at least 9 digits. A bare min(9) let a customer put their e-mail in this
-    // field (GT261103-5958) and GLS then refused to print the label for want of a valid ContactPhone.
-    phone: z
-      .string()
-      .trim()
-      .max(30)
-      .refine((v) => /^\+?[\d\s().\/-]+$/.test(v) && v.replace(/\D/g, "").length >= 9, "Zadejte platné telefonní číslo."),
+    // Any real phone number (CZ, SK or foreign), checked in superRefine below against the destination country via
+    // normalizePhone — a plain min(9) once let a customer put their e-mail here (GT261103-5958) and GLS then refused
+    // to print the label for want of a valid ContactPhone. The stored value is the canonical +420…/+421… form.
+    phone: z.string().trim().max(30),
     firstName: z.string().min(1, "Zadejte jméno.").max(100),
     lastName: z.string().min(1, "Zadejte příjmení.").max(100),
     // "Nakupuji na firmu" — companyName+ico become required together (see
@@ -59,6 +57,9 @@ export const checkoutSchema = z
       .max(200),
   })
   .superRefine((data, ctx) => {
+    if (!normalizePhone(data.phone, data.shippingCountry)) {
+      ctx.addIssue({ code: z.ZodIssueCode.custom, path: ["phone"], message: "Zadejte platné telefonní číslo (např. +420 602 123 456 nebo +421 905 123 456)." });
+    }
     if (data.isCompany) {
       if (!data.companyName?.trim()) {
         ctx.addIssue({

@@ -1,3 +1,4 @@
+import { normalizePhone } from "@/lib/phone";
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { createAddressPacket, createPacket, fetchLabelPdf, PacketaError } from "@/lib/packeta";
@@ -45,7 +46,7 @@ export async function GET(_req: NextRequest, { params }: { params: Promise<{ id:
           firstName: order.firstName,
           lastName: order.lastName,
           email: order.email,
-          phone: order.phone,
+          phone: normalizePhone(order.phone, order.shippingCountry === "SK" ? "SK" : "CZ") ?? order.phone,
           street: order.shippingStreet!,
           city: order.shippingCity!,
           postalCode: order.shippingPostalCode!,
@@ -61,7 +62,7 @@ export async function GET(_req: NextRequest, { params }: { params: Promise<{ id:
           firstName: order.firstName,
           lastName: order.lastName,
           email: order.email,
-          phone: order.phone,
+          phone: normalizePhone(order.phone, order.shippingCountry === "SK" ? "SK" : "CZ") ?? order.phone,
           pickupPointId: order.pickupPointId!,
           weightKg: Number(order.weight),
           value: Number(order.total),
