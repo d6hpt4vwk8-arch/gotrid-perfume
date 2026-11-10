@@ -1,7 +1,7 @@
 import { prisma } from "@/lib/prisma";
 import { logAdminActivity } from "@/lib/admin/activity-log";
 import { getParcelStatuses, GLS_DELIVERED_STATUS_CODES, GLS_RETURNED_STATUS_CODES } from "@/lib/gls";
-import { runLeftNewEffects } from "@/lib/orders/auto-status-effects";
+import { runDeliveredEffects, runLeftNewEffects } from "@/lib/orders/auto-status-effects";
 
 const sleep = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
 
@@ -82,6 +82,7 @@ export async function syncGlsDeliveryStatus(): Promise<{
       });
       // Same as a manual NEW -> anything change for COD / bank transfer.
       if (order.status === "NEW") await runLeftNewEffects(order.id);
+      await runDeliveredEffects(order.id, order.status);
       delivered++;
     } else if (GLS_RETURNED_STATUS_CODES.includes(status.statusCode)) {
       await prisma.order.update({ where: { id: order.id }, data: { status: "REFUNDED" } });

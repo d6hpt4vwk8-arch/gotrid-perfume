@@ -1,6 +1,8 @@
 {
   "$schema": "https://openapi.vercel.sh/vercel.json",
-  "regions": ["fra1"],
+  "regions": [
+    "fra1"
+  ],
   "crons": [
     {
       "path": "/api/cron/sync-spventure-stock",
@@ -9,6 +11,10 @@
     {
       "path": "/api/cron/daily-tasks",
       "schedule": "0 8 * * *"
+    },
+    {
+      "path": "/api/cron/sync-deliveries",
+      "schedule": "0 7-19/2 * * *"
     }
   ]
 }

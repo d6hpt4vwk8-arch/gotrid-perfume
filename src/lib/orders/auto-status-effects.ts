@@ -1,6 +1,8 @@
 import { prisma } from "@/lib/prisma";
 import { sendHeurekaOrderLog } from "@/lib/analytics/heureka-overeno";
 import { awardPointsForOrder } from "@/lib/loyalty";
+import { sendInvoiceEmail } from "@/lib/email/send-invoice-email";
+import { isCompanyOrder } from "@/lib/email/invoice-attachment";
 
 /**
  * What updateOrderStatus (admin) does when a COD / bank-transfer order leaves
@@ -35,5 +37,31 @@ export async function runLeftNewEffects(orderId: string): Promise<void> {
     await awardPointsForOrder(order.id);
   } catch (err) {
     console.error(`[loyalty] award failed for ${order.number}`, err);
+  }
+}
+
+/**
+ * A company needs its faktura for the books. For a card/bank-transfer order the shipped e-mail carries it, but only when
+ * the owner moved the order to SHIPPED by hand; a COD order's shipped e-mail never does (nothing was paid yet). When the
+ * carrier sync marks such an order DELIVERED without that e-mail having gone out, send the faktura now so a company
+ * never has to ask for it (GT261105-6656, 2026-11-10).
+ */
+export async function runDeliveredEffects(orderId: string, previousStatus: string): Promise<void> {
+  try {
+    const order = await prisma.order.findUnique({ where: { id: orderId } });
+    if (!order || !isCompanyOrder(order)) return;
+    const shippedEmailCarriedInvoice = previousStatus === "SHIPPED" && order.paymentMethod !== "CASH_ON_DELIVERY";
+    if (shippedEmailCarriedInvoice) return;
+    await sendInvoiceEmail(order);
+    await prisma.adminActivityLog.create({
+      data: {
+        action: "order.invoice_emailed",
+        entityType: "Order",
+        entityId: order.id,
+        detail: `${order.number}: faktura odeslána e-mailem na ${order.email} (automaticky při doručení)`,
+      },
+    });
+  } catch (err) {
+    console.error(`[delivered-effects] invoice e-mail failed for order ${orderId}`, err);
   }
 }
