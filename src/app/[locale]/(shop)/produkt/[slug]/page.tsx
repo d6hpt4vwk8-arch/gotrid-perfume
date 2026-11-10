@@ -1,3 +1,4 @@
+import { isValidEan } from "@/lib/feeds/xml";
 import { getReviewStats } from "@/lib/review-stats.server";
 import { Link } from "@/i18n/navigation";
 import { notFound } from "next/navigation";
@@ -222,15 +223,20 @@ export default async function ProductPage({
   const jsonLdReturnFeeValue = currency === "EUR" ? Math.round((jsonLdReturnFeeCzk / settings.czkToEurRate) * 100) / 100 : jsonLdReturnFeeCzk;
   const jsonLdDescription =
     htmlToPlainText(displayDescription) || [displayName, product.brand?.name].filter(Boolean).join(" – ");
-  const jsonLdEan = product.ean?.replace(/\D/g, "") ?? "";
+  // Only a real GTIN: a wrong length or check digit (distributor codes, 14-digit case codes, typos) makes Search Console
+  // report "Invalid global product number (GTIN)", so such a code is simply left out (same rule as the shopping feeds).
+  const rawJsonLdEan = product.ean?.replace(/\D/g, "") ?? "";
+  const jsonLdEan = isValidEan(rawJsonLdEan) ? rawJsonLdEan : "";
   const jsonLdGtin =
-    jsonLdEan.length === 13
-      ? { gtin13: jsonLdEan }
-      : jsonLdEan.length === 12
-        ? { gtin12: jsonLdEan }
-        : jsonLdEan.length === 8
-          ? { gtin8: jsonLdEan }
-          : {};
+    jsonLdEan.length === 14
+      ? { gtin14: jsonLdEan }
+      : jsonLdEan.length === 13
+        ? { gtin13: jsonLdEan }
+        : jsonLdEan.length === 12
+          ? { gtin12: jsonLdEan }
+          : jsonLdEan.length === 8
+            ? { gtin8: jsonLdEan }
+            : {};
 
   const jsonLd = {
     "@context": "https://schema.org",
