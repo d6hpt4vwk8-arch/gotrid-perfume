@@ -15,13 +15,10 @@ import {
   parseFilterParams,
   type CategoryFilterParams,
 } from "@/lib/product-filters";
-import {
-  buildDescriptionSearchWhere,
-  buildExactSearchWhere,
-  findFuzzyProductIds,
-  findTokenProductIds,
-} from "@/lib/product-search";
-import { ProductCard } from "@/components/product-card";
+import { resolveSearchWhere } from "@/lib/search-where.server";
+import { filtersToQuery } from "@/lib/product-listing-query";
+import { ProductGridLoadMore } from "@/components/product-grid-load-more";
+import { toCardJson } from "@/lib/product-card-json";
 import { CategoryFilters } from "@/components/category-filters";
 import { Pagination } from "@/components/pagination";
 import { getSettings } from "@/lib/settings.server";
@@ -54,41 +51,8 @@ export default async function SearchPage({
   const filters = parseFilterParams(rawParams);
   const perfumeCategoryIds = await resolvePerfumeFilterCategoryIds(filters.genderSlugs);
 
-  // Fallback tiers, same order as /api/search: exact name/EAN/brand phrase,
-  // then every word on its own (multi-word queries, Czech word forms,
-  // synonyms like "mastičky"), then the description, then most of the words,
-  // then fuzzy name matching (pg_trgm) for a typo like "Latafa" for
-  // "Lattafa" — each tier only runs if the previous one, combined with the
-  // visitor's own filters, found literally nothing. Whichever tier finally
-  // has results is what facets/pagination below are built from, so a
-  // fallback result page still has working filters.
-  let searchWhere: Prisma.ProductWhereInput = buildExactSearchWhere(query);
-  let usedFallback: "description" | "fuzzy" | "words" | null = null;
-  const hasResults = async (candidate: Prisma.ProductWhereInput) =>
-    (await prisma.product.count({ where: buildProductWhere(withSk(candidate), filters, perfumeCategoryIds) })) > 0;
-
-  if (!(await hasResults(searchWhere))) {
-    const allWordIds = await findTokenProductIds(query, 200, "all");
-    if (allWordIds.length > 0 && (await hasResults({ id: { in: allWordIds } }))) {
-      searchWhere = { id: { in: allWordIds } };
-      usedFallback = "words";
-    } else if (await hasResults(buildDescriptionSearchWhere(query))) {
-      searchWhere = buildDescriptionSearchWhere(query);
-      usedFallback = "description";
-    } else {
-      const mostWordIds = await findTokenProductIds(query, 200, "most");
-      if (mostWordIds.length > 0 && (await hasResults({ id: { in: mostWordIds } }))) {
-        searchWhere = { id: { in: mostWordIds } };
-        usedFallback = "words";
-      } else {
-        const fuzzyIds = await findFuzzyProductIds(query, 100);
-        if (fuzzyIds.length > 0) {
-          searchWhere = { id: { in: fuzzyIds } };
-          usedFallback = "fuzzy";
-        }
-      }
-    }
-  }
+  // Exact phrase first, then the fallback tiers (words, description, fuzzy) — shared with the "Zobrazit další produkty" route.
+  const { searchWhere, usedFallback } = await resolveSearchWhere(query, filters, perfumeCategoryIds, isSk);
 
   const where = buildProductWhere(withSk(searchWhere), filters, perfumeCategoryIds);
 
@@ -121,23 +85,7 @@ export default async function SearchPage({
 
   const totalPages = Math.ceil(total / PAGE_SIZE);
 
-  const paginationQuery = new URLSearchParams();
-  paginationQuery.set("q", query);
-  filters.brandSlugs.forEach((b) => paginationQuery.append("brand", b));
-  filters.scentSlugs.forEach((s) => paginationQuery.append("scent", s));
-  filters.genderSlugs.forEach((g) => paginationQuery.append("gender", g));
-  filters.concentrationSlugs.forEach((c) => paginationQuery.append("concentration", c));
-  filters.occasionSlugs.forEach((o) => paginationQuery.append("occasion", o));
-  filters.kindSlugs.forEach((k) => paginationQuery.append("kind", k));
-  filters.ingredientSlugs.forEach((i) => paginationQuery.append("ingredient", i));
-  if (filters.veganOnly) paginationQuery.set("vegan", "1");
-  if (filters.crueltyFreeOnly) paginationQuery.set("cf", "1");
-  filters.skinTypeSlugs.forEach((s) => paginationQuery.append("skinType", s));
-  filters.concernSlugs.forEach((c) => paginationQuery.append("concern", c));
-  if (filters.priceMin !== null) paginationQuery.set("priceMin", String(filters.priceMin));
-  if (filters.priceMax !== null) paginationQuery.set("priceMax", String(filters.priceMax));
-  if (filters.saleOnly) paginationQuery.set("sale", "1");
-  if (filters.sort !== "newest") paginationQuery.set("sort", filters.sort);
+  const paginationQuery = filtersToQuery(filters, new URLSearchParams({ q: query }));
 
   return (
     <main data-wide className="mx-auto flex max-w-(--page-max) flex-1 flex-col gap-6 px-4 py-10 xl:px-8">
@@ -168,15 +116,15 @@ export default async function SearchPage({
               {tr("Hledáte něco konkrétního? Napište nám na info@gotridperfume.cz a zkusíme to pro vás sehnat.")}
             </p>
           ) : (
-            <div className="grid grid-cols-2 gap-x-4 gap-y-8 sm:grid-cols-3 xl:grid-cols-4">
-              {products.map((product) => (
-                <ProductCard
-                  key={product.slug}
-                  product={product}
-                  freeShippingThreshold={settings.freeShippingThreshold}
-                />
-              ))}
-            </div>
+            <ProductGridLoadMore
+              // Remount whenever the query, filters or page number change — see the category page.
+              key={`${filters.page}-${paginationQuery.toString()}`}
+              initialProducts={toCardJson(products)}
+              totalPages={totalPages}
+              currentPage={filters.page}
+              fetchUrl={`/api/search-products?${paginationQuery.toString()}${isSk ? "&lang=sk" : ""}`}
+              freeShippingThreshold={settings.freeShippingThreshold}
+            />
           )}
 
           <Pagination
