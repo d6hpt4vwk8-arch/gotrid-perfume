@@ -23,6 +23,13 @@ import { getSettings } from "@/lib/settings.server";
 // are translated term by term via src/lib/sk-terms.ts.
 export const dynamic = "force-dynamic";
 
+// Heureka.sk accepts exactly 13 digits in <EAN> ("EAN-13 — presne 13 číslic"; 20 EAN-8 codes were flagged "Neplatný
+// formát" on 2026-11-14) and wants the tag omitted rather than a different number — so EAN-8 is left out.
+const skEan = (ean: string | null | undefined) => {
+  const e = heurekaEan(ean);
+  return e && e.length === 13 ? e : null;
+};
+
 export async function GET() {
   const settings = await getSettings();
   const rate = settings.czkToEurRate;
@@ -71,7 +78,7 @@ ${altImages.map((img) => `    <IMGURL_ALTERNATIVE>${escapeXml(img)}</IMGURL_ALTE
     <PRICE_VAT>${priceEur.toFixed(2)}</PRICE_VAT>
     ${priceBeforeEur !== null ? `<PRICE_BEFORE>${priceBeforeEur.toFixed(2)}</PRICE_BEFORE>` : ""}
     ${p.brandName ? `<MANUFACTURER>${escapeXml(p.brandName)}</MANUFACTURER>` : ""}
-    ${heurekaEan(p.ean) ? `<EAN>${escapeXml(heurekaEan(p.ean)!)}</EAN>` : ""}
+    ${skEan(p.ean) ? `<EAN>${escapeXml(skEan(p.ean)!)}</EAN>` : ""}
     ${p.categoryBreadcrumb ? `<CATEGORYTEXT>${escapeXml(categoryBreadcrumbSk(p.categoryBreadcrumb))}</CATEGORYTEXT>` : ""}
     <DELIVERY_DATE>${deliveryDate}</DELIVERY_DATE>
     <DELIVERY>
