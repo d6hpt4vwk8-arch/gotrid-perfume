@@ -62,7 +62,7 @@ function sleep(ms: number) {
 // air fresheners, car cosmetics. Deliberately excludes the rest of Tamda's
 // catalog (groceries, drinks, toys, cleaning products, tobacco, …) which
 // isn't this store's category.
-const CATEGORY_SLUGS = [
+const DEFAULT_CATEGORY_SLUGS = [
   "skin-care-vi",
   "hair-care-vi",
   "oral-care-vi",
@@ -75,6 +75,10 @@ const CATEGORY_SLUGS = [
   "candles-vi",
   "air-freshener-vi",
 ];
+// --categories=a-vi,b-vi runs only those top-level tabs; --tag=name changes the output file suffix.
+const CATEGORIES_ARG = process.argv.find((a) => a.startsWith("--categories="))?.split("=")[1];
+const CATEGORY_SLUGS = CATEGORIES_ARG ? CATEGORIES_ARG.split(",").filter(Boolean) : DEFAULT_CATEGORY_SLUGS;
+const TAG = process.argv.find((a) => a.startsWith("--tag="))?.split("=")[1];
 
 async function fetchPage(url: string): Promise<string | null> {
   try {
@@ -211,7 +215,7 @@ async function main() {
   }
 
   const dateStr = new Date().toISOString().slice(0, 10);
-  const outPath = `scripts/tamda-data/new-candidates-${dateStr}.json`;
+  const outPath = `scripts/tamda-data/new-candidates-${TAG ? `${TAG}-` : ""}${dateStr}.json`;
   writeFileSync(outPath, JSON.stringify(candidates, null, 2));
   console.log(`\nWrote ${candidates.length} candidates to ${outPath}`);
   console.log(
