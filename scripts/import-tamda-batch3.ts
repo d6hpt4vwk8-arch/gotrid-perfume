@@ -4,8 +4,7 @@
 //
 // Rules (owner, 2026-11-14): only categories that already exist on the site (no new ones); no grave candles; the
 // "fake" perfume lines Sofines and Elode are excluded (already filtered out of the candidate file); decorative
-// candles are in. Items with a Tamda minimum order > 1 are skipped (a forced pack of 6 is dead stock for a
-// singles shop), as are items with too little stock. Price = Tamda price incl. VAT × 1.3 (same as batch 2), cost =
+// candles are in. Items with a Tamda minimum order above 6, or with less stock than the minimum, are skipped. Price = Tamda price incl. VAT × 1.3 (same as batch 2), cost =
 // price / 1.21. Products are created HIDDEN (--visible to override) so the live site never points at image files
 // that are not deployed yet; reveal them after the push with --reveal=<created codes json>.
 //
@@ -24,7 +23,8 @@ const VISIBLE = process.argv.includes("--visible");
 const LIMIT = Number(process.argv.find((a) => a.startsWith("--limit="))?.split("=")[1] ?? "0");
 const CREATED_OUT = process.argv.find((a) => a.startsWith("--created-out="))?.split("=")[1];
 const REVEAL = process.argv.find((a) => a.startsWith("--reveal="))?.split("=")[1];
-const MIN_STOCK = 6;
+// Owner (2026-11-14): a Tamda minimum order of up to 6 pieces is fine, and a handful of units in stock is fine too.
+const MAX_MIN_ORDER = 6;
 const CONCURRENCY = 4;
 const UA = "Mozilla/5.0 (compatible; GotridPerfumeStockCheck/1.0)";
 
@@ -166,8 +166,8 @@ async function main() {
     const v = checkByEan.get(norm(c.ean));
     if (!v || v === "N") { stats.notFound++; continue; }
     const [min, max, price] = v.split("|").map(Number);
-    if (min > 1) { stats.minPack++; continue; }
-    if (max < MIN_STOCK) { stats.lowStock++; continue; }
+    if (min > MAX_MIN_ORDER) { stats.minPack++; continue; }
+    if (max < Math.max(1, min)) { stats.lowStock++; continue; }
     if (!(price > 0)) { stats.noPrice++; continue; }
     if (existingCodes.has(`TDE-${c.tamdaId}`) || existingEans.has(norm(c.ean))) { stats.exists++; continue; }
     const cat = resolveCategory(c);
