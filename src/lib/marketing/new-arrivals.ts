@@ -20,7 +20,7 @@ export const NEW_ARRIVALS_ACTION = "marketing.new_arrivals_email";
 
 const MIN_DAYS_BETWEEN_MAILS = 7;
 const LOOKBACK_DAYS = 30;
-const MAX_PRODUCTS = 6;
+const MAX_PRODUCTS = 9;
 const MAX_PER_BRAND = 2;
 const MIN_PRODUCTS_TO_SEND = 3;
 const SEND_DELAY_MS = 700;

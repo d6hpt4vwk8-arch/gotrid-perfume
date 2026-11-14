@@ -31,6 +31,7 @@ export async function renderNewArrivalsHtml(
       <p>${tr("V nabídce přibylo zboží z kategorií, které si u nás kupujete.")}</p>
       ${emailProductGrid(tr("Nově u nás"), plan.products.slice(0, 3), ctx, settings.czkToEurRate)}
       ${emailProductGrid("", plan.products.slice(3, 6), ctx, settings.czkToEurRate)}
+      ${emailProductGrid("", plan.products.slice(6, 9), ctx, settings.czkToEurRate)}
       ${emailButton(ctx.url(plan.ctaPath), ctaLabel, { large: true })}
       ${benefits}
     `;
