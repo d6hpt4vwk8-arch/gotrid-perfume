@@ -97,7 +97,7 @@ async function fetchPage(url: string): Promise<string | null> {
 // for every single candidate).
 function extractProductIdUrlPairs(html: string): Map<string, string> {
   const ids = [...html.matchAll(/data-product-id="(\d+)"/g)].map((m) => m[1]);
-  const urls = [...html.matchAll(/class="product-title">\s*<a href="([^"]+)"/g)].map((m) => m[1]);
+  const urls = [...html.matchAll(/class="product-title">\s*<a\s+href="([^"]+)"/g)].map((m) => m[1]);
   const pairs = new Map<string, string>();
   const n = Math.min(ids.length, urls.length);
   for (let i = 0; i < n; i++) pairs.set(ids[i], urls[i]);

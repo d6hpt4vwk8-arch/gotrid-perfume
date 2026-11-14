@@ -3,7 +3,7 @@
 //   npx tsx scripts/import-spventure.ts --dry-run          (analysis only, no writes)
 //   npx tsx scripts/import-spventure.ts --limit=20          (real run, capped)
 //   npx tsx scripts/import-spventure.ts                     (real run, everything)
-import { readFileSync } from "node:fs";
+import { readFileSync, writeFileSync } from "node:fs";
 import { prisma } from "../src/lib/prisma";
 import { downloadProductImages } from "../src/lib/import/download-images";
 import { slugify } from "../src/lib/slug";
@@ -13,6 +13,13 @@ const XML_PATH = process.argv.find((a) => a.startsWith("--file="))?.split("=")[1
 const DRY_RUN = process.argv.includes("--dry-run");
 const LIMIT = Number(process.argv.find((a) => a.startsWith("--limit="))?.split("=")[1] ?? "0");
 const CONCURRENCY = 6;
+// Selective mode (2026-11-14): --eans-file=<json array of EANs> creates ONLY those new items (no updates of existing
+// products); --hidden creates them with visible=false so the live site never points at image files that are not
+// deployed yet — flip them on afterwards with --reveal=<created-codes json>.
+const EANS_FILE = process.argv.find((a) => a.startsWith("--eans-file="))?.split("=")[1];
+const HIDDEN = process.argv.includes("--hidden");
+const CREATED_OUT = process.argv.find((a) => a.startsWith("--created-out="))?.split("=")[1];
+const REVEAL = process.argv.find((a) => a.startsWith("--reveal="))?.split("=")[1];
 
 const DEFAULT_VAT_RATE = 21;
 // Owner's call 2026-09-29, after a same-day import (Yankee Candle Golden
@@ -341,6 +348,12 @@ async function processInBatches<T>(items: T[], size: number, fn: (item: T, index
 }
 
 async function main() {
+  if (REVEAL) {
+    const codes = JSON.parse(readFileSync(REVEAL, "utf-8")) as string[];
+    const r = await prisma.product.updateMany({ where: { code: { in: codes }, images: { some: {} } }, data: { visible: true } });
+    console.log(`Revealed ${r.count} of ${codes.length} products`);
+    return;
+  }
   const xml = readFileSync(XML_PATH, "utf-8");
   const all = parseItems(xml);
   console.log(`Parsed ${all.length} items`);
@@ -367,6 +380,10 @@ async function main() {
     (item) => existingByEan.has(item.ean) || item.stock >= MIN_STOCK_FOR_NEW,
   );
   const skippedLowStock = byEan.size - toProcess.length;
+  if (EANS_FILE) {
+    const allow = new Set(JSON.parse(readFileSync(EANS_FILE, "utf-8")) as string[]);
+    toProcess = toProcess.filter((i) => allow.has(i.ean) && !existingByEan.has(i.ean));
+  }
   if (LIMIT > 0) toProcess = toProcess.slice(0, LIMIT);
   console.log(`Will process: ${toProcess.length} (new: ${toProcess.filter((i) => !existingByEan.has(i.ean)).length}, update: ${toProcess.filter((i) => existingByEan.has(i.ean)).length})`);
   console.log(`Skipped (new, but supplier stock < ${MIN_STOCK_FOR_NEW}): ${skippedLowStock}`);
@@ -378,6 +395,7 @@ async function main() {
 
   const categoryCache = new Map<string, string>();
   const brandCache = new Map<string, string>();
+  const createdCodes: string[] = [];
   let created = 0;
   let updated = 0;
   let failed = 0;
@@ -419,7 +437,7 @@ async function main() {
             purchasePrice: item.price,
             vatRate: DEFAULT_VAT_RATE,
             stock: item.stock,
-            visible: imageUrls.length > 0,
+            visible: !HIDDEN && imageUrls.length > 0,
           },
         });
         if (categoryId) {
@@ -430,6 +448,7 @@ async function main() {
             data: { productId: product.id, url: imageUrls[0], sortOrder: 0 },
           });
         }
+        createdCodes.push(code);
         created++;
       }
     } catch (err) {
@@ -443,6 +462,7 @@ async function main() {
     }
   });
 
+  if (CREATED_OUT) writeFileSync(CREATED_OUT, JSON.stringify(createdCodes));
   console.log(`\nDone. Created: ${created}, Updated: ${updated}, Failed: ${failed}`);
 }
 
