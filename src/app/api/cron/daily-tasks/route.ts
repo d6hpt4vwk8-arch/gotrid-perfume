@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { cleanupExpiredSecondOrderCoupons } from "@/lib/marketing/second-order-campaign";
+import { runNewsletterAuto } from "@/lib/marketing/newsletter-auto";
 import { runReviewRequestCampaign } from "@/lib/marketing/review-request-campaign";
 import { runAbandonedCheckoutRecovery } from "@/lib/marketing/abandoned-checkout";
 import { runWishlistCampaign } from "@/lib/marketing/wishlist-campaign";
@@ -56,6 +57,7 @@ export async function GET(req: NextRequest) {
     instagramToken,
     supplierWatch,
     delayNotices,
+    newsletterAuto,
   ] = await Promise.all([
     // Second-order discount mail switched off 2026-10-18 (owner's call: 207 sent,
     // 0 coupon uses, 10 unsubscribes, and too many marketing mails per customer).
@@ -73,6 +75,11 @@ export async function GET(req: NextRequest) {
     sendSupplierWatchDigest(),
     // Delay mail for orders whose promised date has passed (sends only when DELAY_NOTICE_ENABLED=true, else counts).
     runDelayedOrderNotices(),
+    // Subscriber "Novinky" mails + the one-off pick for past buyers; capped per day, sends only when NEWSLETTER_AUTO_ENABLED=true.
+    runNewsletterAuto().catch((err) => {
+      console.error("[newsletter-auto]", err);
+      return { enabled: false, error: String(err) };
+    }),
   ]);
 
   return NextResponse.json({
@@ -88,5 +95,6 @@ export async function GET(req: NextRequest) {
     instagramToken,
     supplierWatch,
     delayNotices,
+    newsletterAuto,
   });
 }

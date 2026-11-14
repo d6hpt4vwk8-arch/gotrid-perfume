@@ -9,7 +9,9 @@ import { planWeeklyNewsletter } from "./weekly-newsletter";
 export const WEEKLY_NEWSLETTER_ACTION = "marketing.weekly_newsletter";
 
 const COUNTABLE_STATUSES = ["NEW", "PAID", "PROCESSING", "SHIPPED", "DELIVERED"] as const;
-// Nobody gets the weekly mail right after buying, and never twice in a week or on top of a wishlist mail.
+// One-off pick (owner's rule, 2026-11-14): a past buyer who did NOT subscribe gets this personalised pick ONCE, ever —
+// never a stream. Subscribers are excluded here because they get the weekly "Novinky" mail instead (new-arrivals.ts).
+// Nobody gets it right after buying (14 days) or on top of a wishlist mail (6 days).
 const MIN_DAYS_SINCE_ORDER = 14;
 const MIN_DAYS_BETWEEN_MAILS = 6;
 const SEND_DELAY_MS = 700;
@@ -22,7 +24,7 @@ export interface WeeklyRecipient {
 
 export interface WeeklySelection {
   recipients: WeeklyRecipient[];
-  skipped: { unsubscribed: number; orderedRecently: number; recentlyMailed: number; slovak: number };
+  skipped: { unsubscribed: number; orderedRecently: number; recentlyMailed: number; slovak: number; alreadyGotOneOff: number; subscribers: number };
 }
 
 /** A first name that is safe and sensible to greet with; anything odd (digits, e-mail, company-like) means no name. */
@@ -45,6 +47,13 @@ export async function selectWeeklyRecipients(): Promise<WeeklySelection> {
   });
   const unsubscribed = new Set((await prisma.newsletterUnsubscribe.findMany({ select: { email: true } })).map((u) => u.email.toLowerCase()));
 
+  const [subscriberRows, everMailedRows] = await Promise.all([
+    prisma.customer.findMany({ where: { marketingOptIn: true }, select: { email: true } }),
+    prisma.adminActivityLog.findMany({ where: { action: WEEKLY_NEWSLETTER_ACTION }, select: { entityId: true } }),
+  ]);
+  const subscribers = new Set(subscriberRows.map((c) => c.email.toLowerCase()));
+  const alreadyGotOneOff = new Set(everMailedRows.flatMap((l) => (l.entityId ? [l.entityId.toLowerCase()] : [])));
+
   const since = new Date(Date.now() - MIN_DAYS_BETWEEN_MAILS * 86400000);
   const recentLogs = await prisma.adminActivityLog.findMany({
     where: { action: { in: [WEEKLY_NEWSLETTER_ACTION, WISHLIST_EMAIL_ACTION] }, createdAt: { gte: since } },
@@ -60,11 +69,13 @@ export async function selectWeeklyRecipients(): Promise<WeeklySelection> {
   const latest = new Map<string, (typeof orders)[number]>();
   for (const o of orders) latest.set(o.email.trim().toLowerCase(), o);
 
-  const skipped = { unsubscribed: 0, orderedRecently: 0, recentlyMailed: 0, slovak: 0 };
+  const skipped = { unsubscribed: 0, orderedRecently: 0, recentlyMailed: 0, slovak: 0, alreadyGotOneOff: 0, subscribers: 0 };
   const recipients: WeeklyRecipient[] = [];
   const now = Date.now();
   for (const [key, o] of latest) {
     if (unsubscribed.has(key)) { skipped.unsubscribed++; continue; }
+    if (subscribers.has(key)) { skipped.subscribers++; continue; }
+    if (alreadyGotOneOff.has(key)) { skipped.alreadyGotOneOff++; continue; }
     if (o.shippingCountry === "SK") { skipped.slovak++; continue; }
     if (now - o.createdAt.getTime() < MIN_DAYS_SINCE_ORDER * 86400000) { skipped.orderedRecently++; continue; }
     if (recentlyMailed.has(key)) { skipped.recentlyMailed++; continue; }

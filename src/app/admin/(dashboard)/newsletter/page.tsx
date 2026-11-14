@@ -4,6 +4,7 @@ import { getNewsletterRecipientCount, sendNewsletterCampaign } from "@/lib/admin
 import { selectWeeklyRecipients, WEEKLY_NEWSLETTER_ACTION } from "@/lib/marketing/weekly-newsletter-campaign";
 import { DELAY_NOTICE_ACTION } from "@/lib/marketing/delayed-orders-notice";
 import { WISHLIST_EMAIL_ACTION } from "@/lib/marketing/wishlist-campaign";
+import { NEW_ARRIVALS_ACTION } from "@/lib/marketing/new-arrivals";
 
 const DAY_MS = 86_400_000;
 const dateFmt = new Intl.DateTimeFormat("cs-CZ", { day: "numeric", month: "numeric", year: "numeric", timeZone: "Europe/Prague" });
@@ -23,7 +24,20 @@ const AUTO_MAILS: AutoMail[] = [
   { action: "marketing.abandoned_checkout_email", name: "Opuštěný košík", when: "několik hodin po opuštění košíku", status: "on" },
   { action: WISHLIST_EMAIL_ACTION, name: "Oblíbené: změna ceny / skladu", when: "při změně ceny nebo skladu oblíbeného zboží", status: "on" },
   { action: DELAY_NOTICE_ACTION, name: "Omluva za zpoždění objednávky", when: "po uplynutí slíbeného termínu", status: process.env.DELAY_NOTICE_ENABLED === "true" ? "on" : "off", note: process.env.DELAY_NOTICE_ENABLED === "true" ? undefined : "vypnuto — chybí DELAY_NOTICE_ENABLED=true" },
-  { action: WEEKLY_NEWSLETTER_ACTION, name: "Týdenní výběr produktů", when: "personalizovaný výběr podle nákupů", status: "manual", note: "spouští se ručně skriptem, ne automaticky" },
+  {
+    action: NEW_ARRIVALS_ACTION,
+    name: "Novinky pro odběratele",
+    when: "1× týdně, jen nové zboží v kategoriích, které kupovali, nikdy dvakrát to samé",
+    status: process.env.NEWSLETTER_AUTO_ENABLED === "true" ? "on" : "off",
+    note: process.env.NEWSLETTER_AUTO_ENABLED === "true" ? undefined : "vypnuto — chybí NEWSLETTER_AUTO_ENABLED=true",
+  },
+  {
+    action: WEEKLY_NEWSLETTER_ACTION,
+    name: "Jednorázový výběr pro dřívější zákazníky",
+    when: "jednou na člověka, ne odběratelé; po částech za den",
+    status: process.env.NEWSLETTER_AUTO_ENABLED === "true" ? "on" : "off",
+    note: process.env.NEWSLETTER_AUTO_ENABLED === "true" ? undefined : "vypnuto — chybí NEWSLETTER_AUTO_ENABLED=true",
+  },
   { action: "marketing.second_order_email", name: "Sleva na druhou objednávku", when: "—", status: "off", note: "vypnuto od 18. 10. 2026" },
 ];
 
@@ -100,8 +114,8 @@ export default async function AdminNewsletterPage() {
       </div>
 
       <div className="grid grid-cols-2 gap-3 md:grid-cols-4">
-        <StatCard label="Odběratelé newsletteru" value={optInCount} hint="registrovaní se souhlasem — dostanou ruční newsletter" />
-        <StatCard label="Týdenní výběr: komu půjde" value={weekly.recipients.length} hint="zákazníci s objednávkou, bez odhlášených a čerstvých kupců" />
+        <StatCard label="Odběratelé newsletteru" value={optInCount} hint="přihlášení k newsletteru — dostávají týdenní Novinky a ruční newslettery" />
+        <StatCard label="Jednorázový výběr: zbývá" value={weekly.recipients.length} hint="dřívější zákazníci, kteří ještě nic nedostali (odběratelé a odhlášení se nepočítají)" />
         <StatCard label="Odhlášeno" value={unsubscribed} hint="těmto adresám se marketing neposílá" />
         <StatCard label="Odesláno za 30 dní" value={sent30} hint="automatické a týdenní e-maily dohromady" />
       </div>
