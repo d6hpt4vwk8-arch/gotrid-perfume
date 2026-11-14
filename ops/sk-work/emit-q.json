@@ -1,0 +1,657 @@
+[
+ {
+  "code": "SPV-0171805",
+  "nameSk": "TePe Normal medzizubné kefky 1,5mm 8ks",
+  "descriptionSk": "<p>TePe Normal sú medzizubné kefky (8 ks) na veľmi jemné a účinné čistenie všetkých medzizubných priestorov.</p><ul><li><strong>Pre koho:</strong> pravidelná medzizubná hygiena</li><li><strong>Použitie:</strong> jemne zaviesť do medzizubného priestoru a posúvať sem a tam; veľkosť 1,5 mm</li><li><strong>Hlavné prínosy:</strong> šetrné k ďasnám, odolné proti ohnutiu, 8 ks</li></ul>"
+ },
+ {
+  "code": "SPV-523143",
+  "nameSk": "Bioderma Sébium Night Peel nočné exfoliačné sérum proti nedokonalostiam pleti 40 ml",
+  "descriptionSk": "<p>Bioderma Sébium Night Peel je nočné exfoliačné sérum proti nedokonalostiam a nežiaducemu lesku pleti. Obsahuje 15 % kyseliny glykolovej prírodného pôvodu.</p><ul><li><strong>Pre koho:</strong> pleť s nedokonalosťami a lesklá pleť</li><li><strong>Použitie:</strong> večer naniesť na čistú pleť, ráno používať SPF</li><li><strong>Hlavné prínosy:</strong> 15 % kyseliny glykolovej, nočná exfoliácia</li></ul>"
+ },
+ {
+  "code": "SPV-0171960",
+  "nameSk": "Dr. Hauschka Cleansing Cream 50 ml",
+  "descriptionSk": "<p>Dr. Hauschka Cleansing Cream je čistiaci krém s jemným zložením, ktorý napriek tomu hlboko čistí pleť. Uvoľňuje a zmäkčuje póry a pleť zanechá prirodzene žiarivú.</p><ul><li><strong>Pre koho:</strong> všetky typy pleti, citlivá pleť</li><li><strong>Použitie:</strong> naniesť na vlhkú pleť, vmasírovať a odstrániť</li><li><strong>Hlavné prínosy:</strong> hĺbkové čistenie, jemné zloženie, prirodzená žiara</li></ul>"
+ },
+ {
+  "code": "SPV-0175599",
+  "nameSk": "Renovality Original Series hyalurónové sérum s vitamínom C a B3 50 ml",
+  "descriptionSk": "<p>Renovality Original Series je hyalurónové sérum s vitamínom C a niacínamidom (B3) na hydratáciu, sviežy vzhľad a rozjasnenie pleti. Nízkomolekulová kyselina hyalurónová.</p><ul><li><strong>Pre koho:</strong> všetky typy pleti, unavená pleť</li><li><strong>Použitie:</strong> ráno a večer aplikovať na čistú pleť</li><li><strong>Hlavné prínosy:</strong> kyselina hyalurónová, vitamín C, niacínamid</li></ul>"
+ },
+ {
+  "code": "SPV-0233521",
+  "nameSk": "Pleva Eye Cream with Honey 15g",
+  "descriptionSk": "<p>Pleva je očný krém s medom a prírodnými zložkami, ktorý zlepšuje napätie a pružnosť oblasti okolo očí a podporuje jej regeneráciu.</p><ul><li><strong>Pre koho:</strong> okolie očí</li><li><strong>Použitie:</strong> ráno a večer jemne vklepkať do okolia očí</li><li><strong>Hlavné prínosy:</strong> med, pružnosť, regenerácia</li></ul>"
+ },
+ {
+  "code": "SPV-0233527",
+  "nameSk": "Pleva Decolletage Cream with Honey 50g",
+  "descriptionSk": "<p>Pleva Decolletage Cream je denný krém, ktorý má spevniť, hydratovať a regenerovať pokožku dekoltu. Okrem medu obsahuje aj ďalšie prírodné zložky.</p><ul><li><strong>Pre koho:</strong> dekolt, zrelšia pokožka</li><li><strong>Použitie:</strong> ráno naniesť na dekolt</li><li><strong>Hlavné prínosy:</strong> med, spevnenie, regenerácia dekoltu</li></ul>"
+ },
+ {
+  "code": "SPV-0226439",
+  "nameSk": "Cosrx BHA Blackhead Power Liquid 100ml",
+  "descriptionSk": "<p>Cosrx BHA Blackhead Power Liquid je exfoliačné tonikum s prírodnou BHA na prevenciu a zmiernenie čiernych bodiek a nedokonalostí. Ultraľahká sérová textúra.</p><ul><li><strong>Pre koho:</strong> mastná pleť s čiernymi bodkami</li><li><strong>Použitie:</strong> po čistení naniesť na pleť a nechať vstrebať</li><li><strong>Hlavné prínosy:</strong> prírodná BHA, hĺbkové čistenie pórov, rozjasnenie</li></ul>"
+ },
+ {
+  "code": "SPV-0226488",
+  "nameSk": "Armaf Beauté Glimmer Highlighter 4,2ml 03 Felis",
+  "descriptionSk": "<p>Armaf Beauté Glimmer je jemný gélový rozjasňovač, ktorý splynie s pokožkou pre žiarivý a rozjasnený vzhľad. Viacúčelový: na líca aj ako žiarivý očný tieň. Odtieň 03 Felis.</p><ul><li><strong>Pre koho:</strong> make-up tváre a očí</li><li><strong>Použitie:</strong> naniesť na výrazné partie tváre a rozotrieť</li><li><strong>Hlavné prínosy:</strong> gélová textúra, žiarivý efekt, viacúčelový</li></ul>"
+ },
+ {
+  "code": "SPV-0235893",
+  "nameSk": "Collistar Anti-Age Toning Lotion 250ml",
+  "descriptionSk": "<p>Collistar Anti-Age Toning Lotion je tonizačná voda pre zrelú pleť, ktorá hydratuje a tonizuje pleť a zanecháva ju revitalizovanú. Je vhodná aj pre citlivú pleť.</p><ul><li><strong>Pre koho:</strong> zrelá pleť</li><li><strong>Použitie:</strong> po čistení naniesť na tampón a pretrieť pleť</li><li><strong>Hlavné prínosy:</strong> talianske bylinné zložky, hydratácia, tonizácia</li></ul>"
+ },
+ {
+  "code": "SPV-0218326",
+  "nameSk": "Chesapeake Bay Strength + Energy voňavá sviečka s 3 knotmi 312 g",
+  "descriptionSk": "<p>Chesapeake Bay Strength + Energy je voňavá sviečka s tromi knotmi (312 g) s energizujúcou ovocnou vôňou šťavnatého ananásu, kokosovej vody, bergamotu a morskej soli.</p><ul><li><strong>Vôňa:</strong> ananás, kokos, bergamot, morská soľ</li><li><strong>Doba horenia:</strong> podľa výrobcu</li><li><strong>Pre koho:</strong> relaxácia, darček, domáca atmosféra</li></ul>"
+ },
+ {
+  "code": "SPV-0237144",
+  "nameSk": "Ziaja BB Cream Normal, Dry & Sensitive Skin BB cream for normal and dry skin SPF 15 50 ml Light",
+  "descriptionSk": "<p>Ziaja BB krém je moderná kombinácia komplexnej starostlivosti a korekcie nedokonalostí pre normálnu a suchú pleť s SPF 15. Účinne nahradí hydratačnú starostlivosť, zjednotí tón pleti a zdôrazní jej prirodzený odtieň.</p><ul><li><strong>Pre koho:</strong> normálna a suchá pleť</li><li><strong>Použitie:</strong> naniesť na čistú pleť namiesto krému</li><li><strong>Hlavné prínosy:</strong> BB krém, SPF 15, zjednotenie tónu</li></ul>"
+ },
+ {
+  "code": "SPV-0235887",
+  "nameSk": "Collistar Idroattiva+ Anti-Pollution BB Cream Tinted Moisturiser tinted moisturizer SPF 30 50 ml 2 Medium",
+  "descriptionSk": "<p>Collistar Idroattiva+ Anti-Pollution je tónovací hydratačný BB krém s SPF 30, ktorý vďaka pigmentom zdokonalí a rozjasní pleť. Poskytuje hlbokú hydratáciu. Odtieň 2 Medium.</p><ul><li><strong>Pre koho:</strong> denný make-up, mestská pleť</li><li><strong>Použitie:</strong> naniesť na čistú pleť namiesto krému</li><li><strong>Hlavné prínosy:</strong> SPF 30, tónovacie pigmenty, ochrana pred znečistením</li></ul>"
+ },
+ {
+  "code": "SPV-0172424",
+  "nameSk": "Vivaco SUN Argan Bronz Oil Glitter Effect After Sun Butter 200 ml",
+  "descriptionSk": "<p>Vivaco SUN Argan Bronz Oil je maslo po opaľovaní so zlatými trblietkami a bio arganovým olejom, ktoré intenzívne hydratuje, vyživuje a regeneruje pokožku po slnení.</p><ul><li><strong>Pre koho:</strong> po opaľovaní</li><li><strong>Použitie:</strong> naniesť na pokožku po opaľovaní</li><li><strong>Hlavné prínosy:</strong> trblietky, arganový olej, predĺženie opálenia</li></ul>"
+ },
+ {
+  "code": "SPV-0246899",
+  "nameSk": "Tangle Teezer The Original Mini Marine Teal & Rosebud",
+  "descriptionSk": "<p>Tangle Teezer The Original Mini Marine Teal & Rosebud je mini verzia rozčesávacej kefy pre malé detské ruky, na rozčesávanie mokrých aj suchých vláskov bez ťahania.</p><ul><li><strong>Pre koho:</strong> deti</li><li><strong>Použitie:</strong> rozčesávať mokré alebo suché vlasy od končekov</li><li><strong>Hlavné prínosy:</strong> bez ťahania, malá veľkosť</li></ul>"
+ },
+ {
+  "code": "SPV-0169279",
+  "nameSk": "Moroccanoil Dry Shampoo Dark Tones 205ml",
+  "descriptionSk": "<p>Moroccanoil Dry Shampoo Dark Tones je suchý šampón špeciálne vytvorený pre tmavé odtiene vlasov. Okamžite odstráni viditeľný maz z vlasov a vráti im objem.</p><ul><li><strong>Pre koho:</strong> tmavé vlasy</li><li><strong>Použitie:</strong> nastriekať na korienky a vyčesať</li><li><strong>Hlavné prínosy:</strong> pre tmavé vlasy, bez bielych stôp, objem</li></ul>"
+ },
+ {
+  "code": "SPV-0247781",
+  "nameSk": "Ziaja Vitamin C.B3 Wake Me Up Face Cream 50ml",
+  "descriptionSk": "<p>Ziaja Vitamin C.B3 Wake Me Up je ľahký pleťový krém so saténovým finišom pre rannú dávku energie. Vitamín C a niacínamid rozjasňujú pleť, redukujú tmavé škvrny.</p><ul><li><strong>Pre koho:</strong> všetky typy pleti, ranná starostlivosť</li><li><strong>Použitie:</strong> ráno naniesť na čistú pleť</li><li><strong>Hlavné prínosy:</strong> vitamín C, niacínamid, saténový finiš</li></ul>"
+ },
+ {
+  "code": "SPV-0235685",
+  "nameSk": "Millefiori Patchouli Smeraldo scented fabric spray 100 ml",
+  "descriptionSk": "<p>Millefiori Patchouli Smeraldo je sprej na textil (100 ml) s vôňou sladkého pomaranča a broskyne a sviežich zelených tónov.</p><ul><li><strong>Vôňa:</strong> pomaranč, broskyňa, pačuli</li><li><strong>Použitie:</strong> nastriekať na bielizeň, textil alebo do ovzdušia</li><li><strong>Pre koho:</strong> domácnosť, bielizeň</li></ul>"
+ },
+ {
+  "code": "SPV-0163515",
+  "nameSk": "La Roche-Posay Toleriane Sensitive prebiotic moisturizing cream to reduce skin sensitivity 40 ml",
+  "descriptionSk": "<p>La Roche-Posay Toleriane Sensitive je prebiotický hydratačný krém na zníženie citlivosti pleti, ktorý hydratuje až na 48 hodín, obnovuje a chráni kožnú bariéru.</p><ul><li><strong>Pre koho:</strong> citlivá pleť</li><li><strong>Použitie:</strong> ráno a večer naniesť na čistú pleť</li><li><strong>Hlavné prínosy:</strong> hydratácia až 48 hodín, prebiotikum, upokojenie</li></ul>"
+ },
+ {
+  "code": "SPV-0235329",
+  "nameSk": "Collistar NOT Game Changer 6,5ml",
+  "descriptionSk": "<p>Collistar NOT Game Changer je balzam na pery s ultraľahkou gélovou textúrou, ktorá sa okamžite vstrebe do pokožky, reaguje s jej pH a behom sekúnd sa zafarbí.</p><ul><li><strong>Pre koho:</strong> pery, prirodzený efekt</li><li><strong>Použitie:</strong> naniesť na pery podľa potreby</li><li><strong>Hlavné prínosy:</strong> reaguje s pH, prirodzená ružová, hydratácia</li></ul>"
+ },
+ {
+  "code": "SPV-0244714",
+  "nameSk": "Erborian Centella Cleansing Oil 180ml",
+  "descriptionSk": "<p>Erborian Centella Cleansing Oil je ultra jemný čistiaci olej, ktorý účinne odstraňuje make-up (vrátane vodeodolného), prebytočný maz a nečistoty a zachováva komfort pleti.</p><ul><li><strong>Pre koho:</strong> všetky typy pleti, odličovanie</li><li><strong>Použitie:</strong> vmasírovať do suchej pleti, pridať vodu a opláchnuť</li><li><strong>Hlavné prínosy:</strong> centella, rastlinné oleje, odstráni vodeodolný make-up</li></ul>"
+ },
+ {
+  "code": "SPV-0173407",
+  "nameSk": "RYOR Koenzym Q10 eye cream 30 ml",
+  "descriptionSk": "<p>RYOR Koenzým Q10 je očný krém, ktorý využíva účinky rastlinných olejov a koenzýmu Q10 na výrazné spomalenie starnutia pleti. Okolie očí je pevnejšie.</p><ul><li><strong>Pre koho:</strong> zrelé okolie očí</li><li><strong>Použitie:</strong> ráno a večer jemne vklepkať do okolia očí</li><li><strong>Hlavné prínosy:</strong> koenzým Q10, rastlinné oleje, pevnosť</li></ul>"
+ },
+ {
+  "code": "SPV-03000796",
+  "nameSk": "L'Oréal Paris True Match Super Blendable Foundation SPF17 liquid makeup 30 ml 1C Rose Ivory",
+  "descriptionSk": "<p>L'Oréal Paris True Match je make-up, ktorý dokonale zodpovedá farbe a štruktúre pleti. Výsledok analýzy zvyklostí žien: 8 odtieňov make-upu verných prirodzenému tónu. Odtieň 1C Rose Ivory.</p><ul><li><strong>Pre koho:</strong> denný make-up</li><li><strong>Použitie:</strong> naniesť na čistú pleť a rozotrieť</li><li><strong>Hlavné prínosy:</strong> prirodzený vzhľad, SPF 17</li></ul>"
+ },
+ {
+  "code": "SPV-0222191",
+  "nameSk": "Piz Buin Tan & Protect Tan Intensifying Sun Oil Spray SPF 15 150 ml",
+  "descriptionSk": "<p>Piz Buin Tan & Protect je opaľovací olej v spreji s SPF 15, ktorý chráni pokožku pred slnkom a zároveň urýchľuje prirodzený proces opaľovania.</p><ul><li><strong>Pre koho:</strong> opaľovanie na slnku</li><li><strong>Použitie:</strong> nastriekať na pokožku pred opaľovaním</li><li><strong>Hlavné prínosy:</strong> SPF 15, urýchlenie opálenia, sprej</li></ul>"
+ },
+ {
+  "code": "SPV-0245888",
+  "nameSk": "AXIS-Y The Mini Glow Trio SET (Toner 12ml + Serum 5ml + Cream 5ml)",
+  "descriptionSk": "<p>AXIS-Y The Mini Glow Trio je mini sada, trojkroková rozjasňujúca rutina zameraná na tmavé škvrny, stopy po akné, matnú pleť a nerovnomerný tón. Obsahuje toner, sérum a krém.</p><ul><li><strong>Pre koho:</strong> na cesty, vyskúšanie značky</li><li><strong>Použitie:</strong> produkty použiť postupne: toner, sérum, krém</li><li><strong>Hlavné prínosy:</strong> 3 kroky, mini formát, rozjasnenie</li></ul>"
+ },
+ {
+  "code": "SPV-0234899",
+  "nameSk": "Organicals KEEPER After Color Leave In Rice & Pomegranate leave-in spray for colored hair 150 ml",
+  "descriptionSk": "<p>Organicals Keeper After Color je bezoplachový sprej s ryžou a granátovým jablkom na starostlivosť o farbené vlasy.</p><ul><li><strong>Pre koho:</strong> farbené vlasy</li><li><strong>Použitie:</strong> nastriekať do vlhkých vlasov a nezmývať</li><li><strong>Hlavné prínosy:</strong> bezoplachový, ryža a granátové jablko</li></ul>"
+ },
+ {
+  "code": "TDE-659488",
+  "nameSk": "Nivea Sun Protect & Care Detský sprej na opaľovanie OF 50+ 250ml",
+  "descriptionSk": "<p>Nivea Sun Kids Protect & Care je detský opaľovací sprej s faktorom 50+.</p><ul><li><strong>Pre koho:</strong> deti, opaľovanie</li><li><strong>Použitie:</strong> nastriekať na pokožku pred opaľovaním a obnovovať</li><li><strong>Hlavné prínosy:</strong> SPF 50+, pre deti, trigger sprej</li></ul>"
+ },
+ {
+  "code": "SPV-589258",
+  "nameSk": "Bioderma Sébium Sensitive intenzívny upokojujúci a hydratačný krém pre aknóznu pleť 30 ml",
+  "descriptionSk": "<p>Bioderma Sébium Sensitive je upokojujúci a hydratačný krém pre pleť s nedokonalosťami.</p><ul><li><strong>Pre koho:</strong> citlivá problematická pleť</li><li><strong>Použitie:</strong> ráno a večer naniesť na čistú pleť</li><li><strong>Hlavné prínosy:</strong> upokojenie, hydratácia</li></ul>"
+ },
+ {
+  "code": "TDE-632060",
+  "nameSk": "Palette Color Shampoo 50ml Stredne hnedý 5-0",
+  "descriptionSk": "<p>Palette Color Shampoo je tónovací šampón v odtieni Stredne hnedý 5-0 (50 ml).</p><ul><li><strong>Pre koho:</strong> domáce tónovanie vlasov</li><li><strong>Použitie:</strong> aplikovať do vlhkých vlasov a po čase pôsobenia opláchnuť</li><li><strong>Hlavné prínosy:</strong> tónovací šampón, stredne hnedý</li></ul>"
+ },
+ {
+  "code": "TDE-404981",
+  "nameSk": "Joanna Naturia 222 Divoký gaštan",
+  "descriptionSk": "<p>Naturia je farba na vlasy v odtieni 222 Wild Chestnut. Dodáva vlasom výrazný odtieň; farbenie vykonávajte podľa návodu v balení.</p><ul><li><strong>Pre koho:</strong> domáce farbenie vlasov</li><li><strong>Použitie:</strong> pripraviť a naniesť podľa návodu v balení, nechať pôsobiť a vymyť</li><li><strong>Hlavné prínosy:</strong> trvalá farba, odtieň 222 Wild Chestnut</li></ul>"
+ },
+ {
+  "code": "SPV-0218549",
+  "nameSk": "Yankee Candle Signature Lakefront Lodge voňavá sviečka 567 g",
+  "descriptionSk": "<p>Yankee Candle Lakefront Lodge je signature sviečka (567 g) inšpirovaná chladnou nocou nad lesom a jazerom.</p><ul><li><strong>Vôňa:</strong> ihličnatý les, chlad</li><li><strong>Doba horenia:</strong> podľa výrobcu</li><li><strong>Pre koho:</strong> relaxácia, darček, domáca atmosféra</li></ul>"
+ },
+ {
+  "code": "SPV-0213823",
+  "nameSk": "Ziaja Cocoa Butter Body Lotion 300 ml",
+  "descriptionSk": "<p>Ziaja Kakaové maslo je výživné telové mlieko s kakaovým maslom na starostlivosť o normálnu až suchú pokožku (300 ml). Bráni nadmernému vysychaniu pokožky.</p><ul><li><strong>Pre koho:</strong> normálna a suchá pokožka</li><li><strong>Použitie:</strong> naniesť na pokožku tela po sprche</li><li><strong>Hlavné prínosy:</strong> kakaové maslo, antioxidanty, výživa</li></ul>"
+ },
+ {
+  "code": "SPV-0231930",
+  "nameSk": "Alcina Lift Cream 50ml",
+  "descriptionSk": "<p>Alcina Lift Cream je krém pre zrelú pleť, ktorý účinne zmäkčuje vrásky a dlhodobo vyhladzuje pleť. Cenné prírodné oleje zbavujú jemne suchú pleť napätia.</p><ul><li><strong>Pre koho:</strong> zrelá pleť</li><li><strong>Použitie:</strong> ráno a večer naniesť na čistú pleť</li><li><strong>Hlavné prínosy:</strong> prírodné oleje, kyselina hyalurónová, lifting</li></ul>"
+ },
+ {
+  "code": "SPV-0244933",
+  "nameSk": "Alcina Cleansing Foam 150ml",
+  "descriptionSk": "<p>Alcina Cleansing Foam je čistiaca pena pre všetky druhy pleti, ktorá jemne čistí a odstraňuje aj dlhotrvajúci make-up. Vydatná krémová konzistencia obohacuje pleť.</p><ul><li><strong>Pre koho:</strong> všetky typy pleti</li><li><strong>Použitie:</strong> vmasírovať do vlhkej pleti a opláchnuť</li><li><strong>Hlavné prínosy:</strong> panthenol, krémová pena, jemné čistenie</li></ul>"
+ },
+ {
+  "code": "SPV-0242726",
+  "nameSk": "Hairburst Longer Stronger Hair Oily Scalp & Roots SET (Shampoo 350ml + Conditioner 350ml)",
+  "descriptionSk": "<p>Hairburst Longer Stronger Hair je sada šampónu a kondicionéra (2×350 ml) pre mastné korienky alebo lupiny. Jedinečná receptúra bez sulfátov, silikónov a parabénov.</p><ul><li><strong>Pre koho:</strong> mastná vlasová pokožka</li><li><strong>Použitie:</strong> šampón a kondicionér použiť pri umývaní vlasov</li><li><strong>Hlavné prínosy:</strong> bez sulfátov a silikónov, sada 2 produktov</li></ul>"
+ },
+ {
+  "code": "SPV-0214314",
+  "nameSk": "TePe Kids Select Compact Zoo toothbrush extra soft",
+  "descriptionSk": "<p>TePe Kids Select Compact Zoo je detská zubná kefka s extra mäkkými štetinami šetrnými k citlivým detským ďasnám a veselým zvieracím motívom.</p><ul><li><strong>Pre koho:</strong> deti</li><li><strong>Použitie:</strong> čistiť zuby dvakrát denne</li><li><strong>Hlavné prínosy:</strong> extra mäkké vlákna, motív zoo</li></ul>"
+ },
+ {
+  "code": "SPV-0171120",
+  "nameSk": "Yankee Candle A Calm & Quiet Place voňavý vosk 22 g",
+  "descriptionSk": "<p>Yankee Candle A Calm & Quiet Place je voňavý vosk (22 g) s meditatívnou vôňou jemného jazmínu, pačuli a hrejivej ambry.</p><ul><li><strong>Vôňa:</strong> jazmín, pačuli, ambra</li><li><strong>Doba horenia:</strong> podľa výrobcu</li><li><strong>Pre koho:</strong> relaxácia, darček, domáca atmosféra</li></ul>"
+ },
+ {
+  "code": "SPV-835052",
+  "nameSk": "TePe Extra Soft interdental brushes 1,1mm 8 ks",
+  "descriptionSk": "<p>TePe Extra Soft sú medzizubné kefky (8 ks) s veľmi jemnými vláknami na šetrnú starostlivosť o citlivé ďasná.</p><ul><li><strong>Pre koho:</strong> pravidelná medzizubná hygiena</li><li><strong>Použitie:</strong> jemne zaviesť do medzizubného priestoru a posúvať sem a tam; veľkosť 1,1 mm</li><li><strong>Hlavné prínosy:</strong> veľmi jemné vlákna, citlivé ďasná, 8 ks</li></ul>"
+ },
+ {
+  "code": "SPV-0136825",
+  "nameSk": "Rimmel Stay Glossy Oh My Lipgloss lip gloss 6,5 ml 160 Stay my rose",
+  "descriptionSk": "<p>Rimmel Stay Glossy Oh My Lipgloss je lesk na pery s oslnivým leskom a farbou až na 6 hodín. Obohatený o arganový olej, ktorý pery vyživuje a hydratuje. Nelepí. Odtieň 160 Stay my rose.</p><ul><li><strong>Pre koho:</strong> denný aj večerný make-up</li><li><strong>Použitie:</strong> naniesť na pery pomocou aplikátora</li><li><strong>Hlavné prínosy:</strong> výdrž až 6 hodín, arganový olej, nelepivý</li></ul>"
+ },
+ {
+  "code": "SPV-0125850",
+  "nameSk": "Max Factor Excess Intensity Longwear Eyeliner eye liners 2 g 05 Silver",
+  "descriptionSk": "<p>Max Factor Excess Intensity je dlhotrvajúca ceruzka na oči vo vodeodolnom prevedení pre bezchybný vzhľad po celý deň. Odtieň 05 Silver.</p><ul><li><strong>Pre koho:</strong> make-up očí</li><li><strong>Použitie:</strong> obtiahnuť očnú linku podľa potreby</li><li><strong>Hlavné prínosy:</strong> vodeodolná, dlhá výdrž, intenzívna farba</li></ul>"
+ },
+ {
+  "code": "SPV-0214337",
+  "nameSk": "Vichy Neovadiol Meno 5 Bi-Serum 30 ml",
+  "descriptionSk": "<p>Vichy Neovadiol Meno 5 je dvojfázové pleťové sérum, ktoré pomáha vyrovnávať vplyv menopauzy na vzhľad pleti. Pôsobí proti 5 znakom starnutia pleti.</p><ul><li><strong>Pre koho:</strong> zrelá pleť, menopauza</li><li><strong>Použitie:</strong> pretrepať a aplikovať na čistú pleť</li><li><strong>Hlavné prínosy:</strong> 5 účinkov, dvojfázová textúra</li></ul>"
+ },
+ {
+  "code": "SPV-0153569",
+  "nameSk": "Renovality Original Series Rosehip Oil with Pump 100ml",
+  "descriptionSk": "<p>Renovality Original Series je olej zo šípky lisovaný za studena z plodov divokej ruže Rosa rubiginosa, s vysokým obsahom vitamínu C a nenasýtených mastných kyselín.</p><ul><li><strong>Pre koho:</strong> regenerácia pleti</li><li><strong>Použitie:</strong> naniesť niekoľko kvapiek na čistú pleť</li><li><strong>Hlavné prínosy:</strong> lisovaný za studena, vitamín C, regenerácia</li></ul>"
+ },
+ {
+  "code": "SPV-0220923",
+  "nameSk": "Chesapeake Bay Reflection + Clarity Oak Moss Amber voňavá sviečka 355 g",
+  "descriptionSk": "<p>Chesapeake Bay Reflection + Clarity je voňavá sviečka s vôňou morskej soli a šalvie muškátovej doplnená dubovým machom a ambrou.</p><ul><li><strong>Vôňa:</strong> morská soľ, šalvia muškátová, dubový mach, ambra</li><li><strong>Doba horenia:</strong> podľa výrobcu</li><li><strong>Pre koho:</strong> relaxácia, darček, domáca atmosféra</li></ul>"
+ },
+ {
+  "code": "SPV-0228604",
+  "nameSk": "Renovality Original Series Face Toner 100ml",
+  "descriptionSk": "<p>Renovality Original Series Face Toner je tonikum, ktoré účinne dokončí čistenie pleti a pripraví ju na ďalšie kroky starostlivosti. Príjemne osviežuje, hydratuje.</p><ul><li><strong>Pre koho:</strong> všetky typy pleti</li><li><strong>Použitie:</strong> po čistení naniesť na tampón a pretrieť pleť</li><li><strong>Hlavné prínosy:</strong> osvieženie, hydratácia, príprava na ďalšiu starostlivosť</li></ul>"
+ },
+ {
+  "code": "SPV-0228195",
+  "nameSk": "HS Milano Protective Mask 1000ml",
+  "descriptionSk": "<p>HS Milano Protective je ochranná maska na vlasy (1000 ml) vo veľkom balení.</p><ul><li><strong>Pre koho:</strong> poškodené vlasy, salóny</li><li><strong>Použitie:</strong> po šampóne naniesť na vlasy a po čase pôsobenia opláchnuť</li><li><strong>Hlavné prínosy:</strong> ochrana, veľké balenie, 1 l</li></ul>"
+ },
+ {
+  "code": "SPV-0235330",
+  "nameSk": "Collistar NOT Granita Scrub 12ml",
+  "descriptionSk": "<p>Collistar NOT Granita Scrub je peeling na pery pre ich perfektný stav, aj keď nepoužívate make-up. Jemne odstraňuje odumreté bunky z pier a pripravuje ich.</p><ul><li><strong>Pre koho:</strong> suché pery</li><li><strong>Použitie:</strong> jemne vmasírovať na pery a zotrieť</li><li><strong>Hlavné prínosy:</strong> jemný peeling, hladké pery</li></ul>"
+ },
+ {
+  "code": "SPV-0233534",
+  "nameSk": "Pleva Body Lotion with Honey 200g",
+  "descriptionSk": "<p>Pleva je voňavé telové mlieko s medom na výživu a regeneráciu pokožky celého tela, vhodné aj pre veľmi suchú pokožku. Med obsahuje bielkoviny, minerály a vitamíny.</p><ul><li><strong>Pre koho:</strong> suchá a veľmi suchá pokožka</li><li><strong>Použitie:</strong> naniesť na pokožku tela po sprche</li><li><strong>Hlavné prínosy:</strong> med, výživa, regenerácia</li></ul>"
+ },
+ {
+  "code": "TDE-792265",
+  "nameSk": "Gillette Series Pena conditioning 250ml",
+  "descriptionSk": "<p>Gillette Series Conditioning je pena na holenie (250 ml) s kondicionérom pre hladké holenie.</p><ul><li><strong>Pre koho:</strong> muži, každodenné holenie</li><li><strong>Použitie:</strong> naniesť na vlhkú pokožku a holiť</li><li><strong>Hlavné prínosy:</strong> kondicionér, 250 ml</li></ul>"
+ },
+ {
+  "code": "SPV-0215817",
+  "nameSk": "RYOR Morské riasy aktívny krém proti vráskam 50 ml",
+  "descriptionSk": "<p>RYOR Morské riasy je aktívny krém proti vráskam s extraktom z morských rias, bambuckým maslom, avokádovým olejom, vitamínom E a kyselinou hyalurónovou.</p><ul><li><strong>Pre koho:</strong> zrelá pleť s vráskami</li><li><strong>Použitie:</strong> ráno a večer naniesť na čistú pleť</li><li><strong>Hlavné prínosy:</strong> morské riasy, kyselina hyalurónová, vitamín E</li></ul>"
+ },
+ {
+  "code": "TDE-486753",
+  "nameSk": "Laura Collini Telové maslo uhorka a zelený čaj 250 ml",
+  "descriptionSk": "<p>Laura Collini Cucumber & Green tea je telové maslo (250 ml) s uhorkou a zeleným čajom na hydratáciu a zjemnenie pokožky.</p><ul><li><strong>Pre koho:</strong> suchá a normálna pokožka</li><li><strong>Použitie:</strong> naniesť na pokožku tela po sprche</li><li><strong>Hlavné prínosy:</strong> hydratácia, hebká pokožka, 250 ml</li></ul>"
+ },
+ {
+  "code": "TDE-399746",
+  "nameSk": "Nivea Sun pleťový krém 40ml SPF50+ Luminous630",
+  "descriptionSk": "<p>Nivea Sun Luminous630 je pleťový opaľovací krém s SPF 50+ (40 ml).</p><ul><li><strong>Pre koho:</strong> leto, dovolenka, opaľovanie</li><li><strong>Použitie:</strong> používať podľa návodu na obale</li><li><strong>Hlavné prínosy:</strong> SPF 50+, ochrana alebo upokojenie pokožky, letná starostlivosť, 40 ml</li></ul>"
+ },
+ {
+  "code": "SPV-0226051",
+  "nameSk": "L'Oréal Professionnel Serie Expert Pre Longer Professional Mask 250ml",
+  "descriptionSk": "<p>L'Oréal Professionnel Pro Longer je profesionálna maska (250 ml) pre dlhé vlasy.</p><ul><li><strong>Pre koho:</strong> dlhé vlasy</li><li><strong>Použitie:</strong> po šampóne naniesť na vlasy a po čase pôsobenia opláchnuť</li><li><strong>Hlavné prínosy:</strong> ochrana dĺžok, 250 ml</li></ul>"
+ },
+ {
+  "code": "SPV-0236329",
+  "nameSk": "Pleva Toothpaste with Propolis for Fresh Breath 75g",
+  "descriptionSk": "<p>Pleva zubná pasta s propolisom (75 g) pre sviežy dych; pravidelné čistenie bráni zubnému kazu, tvorbe zubného kameňa a osviežuje dych mätou.</p><ul><li><strong>Pre koho:</strong> každodenná starostlivosť o zuby</li><li><strong>Použitie:</strong> čistiť zuby dvakrát denne</li><li><strong>Hlavné prínosy:</strong> prevencia zubného kazu a zubného kameňa, sviežy dych, 75 g</li></ul>"
+ },
+ {
+  "code": "SPV-0241782",
+  "nameSk": "L'Oréal Professionnel Série Expert Metal Detox Concentrated Oil 50ml",
+  "descriptionSk": "<p>L'Oréal Professionnel Metal Detox je koncentrovaný olej (50 ml) pre vlasy namáhané kovmi.</p><ul><li><strong>Pre koho:</strong> farbené vlasy</li><li><strong>Použitie:</strong> aplikovať podľa návodu na obale</li><li><strong>Hlavné prínosy:</strong> koncentrovaný olej, 50 ml</li></ul>"
+ },
+ {
+  "code": "SPV-0243996",
+  "nameSk": "Mr&Mrs Fragrance Cesare New Car Car Air Freshener",
+  "descriptionSk": "<p>Mr&Mrs Fragrance Cesare New Car je vôňa do auta v tvare panáčika s ovocnou orientálnou vôňou pomaranča, jazmínu, ambry a pižma.</p><ul><li><strong>Vôňa:</strong> pomaranč, jazmín, ambra, pižmo</li><li><strong>Použitie:</strong> zavesiť alebo umiestniť v interiéri auta podľa návodu</li><li><strong>Pre koho:</strong> vodiči, interiér auta</li></ul>"
+ },
+ {
+  "code": "SPV-0173898",
+  "nameSk": "RYOR Deodorant pre ženy s 48 hodinovým účinkem 50 ml",
+  "descriptionSk": "<p>RYOR je krémový dezodorant pre ženy s dlhotrvajúcou sviežou vôňou. Obsahuje aktívnu látku odvodenú z prírodného minerálu zinku, ktorá zaisťuje účinnosť.</p><ul><li><strong>Pre koho:</strong> ženy, každodenné použitie</li><li><strong>Použitie:</strong> naniesť na čistú a suchú pokožku podpazušia</li><li><strong>Hlavné prínosy:</strong> účinnosť 48 hodín, zinok, sviežia vôňa</li></ul>"
+ },
+ {
+  "code": "SPV-0235680",
+  "nameSk": "Millefiori Gemme d'Agrumi Laundry Spray 200ml",
+  "descriptionSk": "<p>Millefiori Gemme d'Agrumi je sprej na bielizeň (200 ml) s vôňou stredomorského citrusového hája inšpirovanou citrónom a bergamotom.</p><ul><li><strong>Vôňa:</strong> citrón a bergamot</li><li><strong>Použitie:</strong> nastriekať na bielizeň, textil alebo do ovzdušia</li><li><strong>Pre koho:</strong> domácnosť, bielizeň</li></ul>"
+ },
+ {
+  "code": "TDE-419940",
+  "nameSk": "Gliss regeneračný expres balzam 200ml Full Hair Wonder",
+  "descriptionSk": "<p>Schwarzkopf Gliss Full Hair Wonder je regeneračný expresný balzam (200 ml).</p><ul><li><strong>Pre koho:</strong> jemné vlasy</li><li><strong>Použitie:</strong> po šampóne naniesť do vlasov a po chvíli opláchnuť</li><li><strong>Hlavné prínosy:</strong> expresná regenerácia, 200 ml</li></ul>"
+ },
+ {
+  "code": "TDE-502456",
+  "nameSk": "Fructis Sleek&Stay Heat-Activated sérum 50ml",
+  "descriptionSk": "<p>Garnier Fructis Sleek & Stay je tepelne aktivované sérum (50 ml).</p><ul><li><strong>Pre koho:</strong> neposlušné vlasy</li><li><strong>Použitie:</strong> votrieť do vlhkých vlasov pred fúkaním</li><li><strong>Hlavné prínosy:</strong> tepelne aktivované, 50 ml</li></ul>"
+ },
+ {
+  "code": "SPV-0173707",
+  "nameSk": "Renovality Hydro Renobooster pleťový olej 50 ml",
+  "descriptionSk": "<p>Renovality Hydro Renobooster je ľahký hydratačný pleťový olej s vysokým obsahom skvalánu, prirodzenej súčasti pokožky. Rýchlo sa vstrebáva, zmäkčuje.</p><ul><li><strong>Pre koho:</strong> suchá a normálna pleť</li><li><strong>Použitie:</strong> naniesť niekoľko kvapiek na čistú pleť</li><li><strong>Hlavné prínosy:</strong> skvalán, ľahká textúra, rýchle vstrebanie</li></ul>"
+ },
+ {
+  "code": "SPV-0127731",
+  "nameSk": "Max Factor Kohl Pencil eye pencil 1,3 g 080 Cobalt Blue",
+  "descriptionSk": "<p>Max Factor Kohl Pencil je ceruzka na oči, ktorá dokonale zvýrazní oči. Ponúka dlhú výdrž. Odtieň 080 Cobalt Blue. Zobrazený odtieň môže byť orientačný.</p><ul><li><strong>Pre koho:</strong> make-up očí</li><li><strong>Použitie:</strong> obtiahnuť očnú linku alebo spodné viečko</li><li><strong>Hlavné prínosy:</strong> dlhá výdrž, intenzívna farba, odtieň Cobalt Blue</li></ul>"
+ },
+ {
+  "code": "SPV-0127647",
+  "nameSk": "Max Factor Kohl Pencil eye pencil 1,3 g 030 Brown",
+  "descriptionSk": "<p>Max Factor Kohl Pencil je ceruzka na oči v odtieni 030 Brown (1,3 g).</p><ul><li><strong>Pre koho:</strong> make-up očí</li><li><strong>Použitie:</strong> obtiahnuť očnú linku alebo spodné viečko</li><li><strong>Hlavné prínosy:</strong> dlhá výdrž, odtieň Brown</li></ul>"
+ },
+ {
+  "code": "SPV-0224939",
+  "nameSk": "Lattafa Haya EDP W 100ml",
+  "descriptionSk": "<p>Haya od Lattafy je ovocno-kvetinová dámska vôňa o radosti, smiechu a oslavách do rána. Pripomína bublinky ružového šampanského s jahodami a jemným pižmom.</p><ul><li><strong>Hlavné tóny:</strong> šampanské, jahody, ruža</li><li><strong>Kedy ju nosiť:</strong> na večer, oslavy, rande aj jarné a letné dni</li><li><strong>Charakter:</strong> hravá, iskrivá a sladko kvetinová</li></ul>"
+ },
+ {
+  "code": "SPV-0213814",
+  "nameSk": "Ziaja Cocoa Butter Face Cream 50 ml",
+  "descriptionSk": "<p>Ziaja Kakaové maslo je výživný pleťový krém s kakaovým maslom na každodennú starostlivosť o normálnu a suchú pleť. Bráni nadmernému vysychaniu pleti.</p><ul><li><strong>Pre koho:</strong> normálna a suchá pleť</li><li><strong>Použitie:</strong> naniesť na čistú pleť tváre a krku</li><li><strong>Hlavné prínosy:</strong> kakaové maslo, antioxidanty, výživa</li></ul>"
+ },
+ {
+  "code": "SPV-0217836",
+  "nameSk": "RYOR Intensive Care intenzívna hydratačná maska s kyselinou hyalurónovou 100 ml",
+  "descriptionSk": "<p>RYOR Intensive Care je ľahká anti-pollution maska s kyselinou hyalurónovou a extraktom z púčikov čiernej ríbezle pre vynikajúcu hydratáciu a posilnenie ochrannej bariéry.</p><ul><li><strong>Pre koho:</strong> všetky typy pleti, mestské prostredie</li><li><strong>Použitie:</strong> naniesť na čistú pleť a po čase pôsobenia zmyť</li><li><strong>Hlavné prínosy:</strong> kyselina hyalurónová, anti-pollution, hydratácia</li></ul>"
+ },
+ {
+  "code": "SPV-0153574",
+  "nameSk": "Renovality Original Series regenerating oil for hair 100 ml",
+  "descriptionSk": "<p>Renovality Original Series je regeneračný olej na vlasy so zmesou tekvicového, ricínového, levanduľového, cédrového a rozmarínového oleja. Masáž pokožky hlavy.</p><ul><li><strong>Pre koho:</strong> slabé a poškodené vlasy</li><li><strong>Použitie:</strong> vmasírovať do pokožky hlavy a vlasov</li><li><strong>Hlavné prínosy:</strong> zmes rastlinných olejov, masáž pokožky hlavy</li></ul>"
+ },
+ {
+  "code": "TDE-403938",
+  "nameSk": "Strep depilačné pásky na tvár 20ks",
+  "descriptionSk": "<p>Strep sú depilačné pásky na tvár (20 ks).</p><ul><li><strong>Pre koho:</strong> ženy, depilácia tváre</li><li><strong>Použitie:</strong> nahriať v dlaniach, priložiť a strhnúť</li><li><strong>Hlavné prínosy:</strong> depilačné pásky, 20 ks</li></ul>"
+ },
+ {
+  "code": "SPV-0224908",
+  "nameSk": "RYOR Sakura darčeková sada peeling 325 g + sprchový gél 200 ml",
+  "descriptionSk": "<p>RYOR Sakura je darčeková sada s cukrovým peelingom a sprchovým gélom s extraktom z japonskej čerešne a elegantnou vôňou. Gél jemne umýva a zmäkčuje pokožku.</p><ul><li><strong>Pre koho:</strong> ako darček pre ženy</li><li><strong>Použitie:</strong> gél použiť pri sprche, peeling vmasírovať do vlhkej pokožky</li><li><strong>Hlavné prínosy:</strong> sada peeling + gél, vôňa sakury</li></ul>"
+ },
+ {
+  "code": "SPV-0228601",
+  "nameSk": "Renovality Original Series Day Serum 30ml",
+  "descriptionSk": "<p>Renovality Original Series Day Serum je denné pleťové sérum s hubovým komplexom pre intenzívnu hydratáciu. Poskytuje pleti luxusnú starostlivosť a pripravuje ju na krém.</p><ul><li><strong>Pre koho:</strong> každodenná starostlivosť o pleť</li><li><strong>Použitie:</strong> ráno aplikovať na čistú pleť pred krémom</li><li><strong>Hlavné prínosy:</strong> hubový komplex, intenzívna hydratácia</li></ul>"
+ },
+ {
+  "code": "SPV-0171974",
+  "nameSk": "Dr. Hauschka Rose Nurturing Body Oil 75ml",
+  "descriptionSk": "<p>Dr. Hauschka Rose je výživný telový olej obohatený o esenciálny olej z damascénskej ruže, ktorý upokojuje a chráni citlivú pokožku. Hodí sa aj pre aromaterapiu.</p><ul><li><strong>Pre koho:</strong> citlivá pokožka, masáže</li><li><strong>Použitie:</strong> vmasírovať do pokožky tela</li><li><strong>Hlavné prínosy:</strong> damascénska ruža, upokojenie, masáž</li></ul>"
+ },
+ {
+  "code": "SPV-0148087",
+  "nameSk": "Yankee Candle Black Coconut luxusná visačka do auta",
+  "descriptionSk": "<p>Yankee Candle Black Coconut je luxusná voňavá visačka do auta so sladkou vôňou kokosu, cédra a ostrovných kvetov.</p><ul><li><strong>Vôňa:</strong> kokos, céder, ostrovné kvety</li><li><strong>Použitie:</strong> zavesiť alebo umiestniť v interiéri auta podľa návodu</li><li><strong>Pre koho:</strong> vodiči, interiér auta</li></ul>"
+ },
+ {
+  "code": "SPV-0243012",
+  "nameSk": "Vivaco Body Tip Night Cream 50ml",
+  "descriptionSk": "<p>Vivaco Body Tip Night Cream je vyživujúci nočný krém s vysokým obsahom prírodného mandľového oleja a vitamínu E pre zrelú a unavenú pleť. Podporuje nočnú regeneráciu.</p><ul><li><strong>Pre koho:</strong> zrelá a unavená pleť</li><li><strong>Použitie:</strong> večer naniesť na čistú pleť</li><li><strong>Hlavné prínosy:</strong> mandľový olej, vitamín E, nočná regenerácia</li></ul>"
+ },
+ {
+  "code": "SPV-0218591",
+  "nameSk": "Yankee Candle Signature Mango Ice Cream voňavá sviečka 567 g",
+  "descriptionSk": "<p>Yankee Candle Mango Ice Cream je signature sviečka (567 g) s vôňou mangovej zmrzliny.</p><ul><li><strong>Vôňa:</strong> mangová zmrzlina</li><li><strong>Doba horenia:</strong> podľa výrobcu</li><li><strong>Pre koho:</strong> relaxácia, darček, domáca atmosféra</li></ul>"
+ },
+ {
+  "code": "SPV-0235894",
+  "nameSk": "Collistar Make-Up Removing Cleansing Balm 100ml",
+  "descriptionSk": "<p>Collistar Make-Up Removing Cleansing Balm je odličovací balzam, ktorý rozpúšťa aj dlhotrvajúci make-up a opaľovací krém. Pevná textúra bez vody sa na pleti mení na olej a potom na mlieko.</p><ul><li><strong>Pre koho:</strong> všetky typy pleti, odličovanie</li><li><strong>Použitie:</strong> vmasírovať do suchej pleti, pridať vodu a opláchnuť</li><li><strong>Hlavné prínosy:</strong> balzam, olej a mlieko v jednom, odstráni opaľovací krém</li></ul>"
+ },
+ {
+  "code": "SPV-0170717",
+  "nameSk": "Scholl Velvet Smooth Regular Coarse Roller Head with Marine Minerals 2pcs",
+  "descriptionSk": "<p>Scholl Velvet Smooth je náhradná hlavica s morskými minerálmi pre pilník na chodidlá Velvet Smooth. Účinne odstraňuje suchú a zhrubnutú pokožku a chodidlá zostanú hladké.</p><ul><li><strong>Pre koho:</strong> každý, kto používa pilník Scholl Velvet Smooth</li><li><strong>Použitie:</strong> nasadiť na zariadenie a používať na suché chodidlá</li><li><strong>Hlavné prínosy:</strong> morské minerály, hladké chodidlá</li></ul>"
+ },
+ {
+  "code": "SPV-0237138",
+  "nameSk": "Ziaja Jasmine Night Skin Cream 50+ 50ml",
+  "descriptionSk": "<p>Ziaja Jasmine je nočný krém proti vráskam pre zrelú pleť 50+. Receptúra s jazmínovým maslom, mikrokolagénom, vápnikom a kyselinou hyalurónovou poskytne výživu.</p><ul><li><strong>Pre koho:</strong> zrelá pleť 50+</li><li><strong>Použitie:</strong> večer naniesť na čistú pleť</li><li><strong>Hlavné prínosy:</strong> jazmínové maslo, mikrokolagén, kyselina hyalurónová</li></ul>"
+ },
+ {
+  "code": "SPV-0239489",
+  "nameSk": "Hairburst Longer Stronger Hair Conditioner conditioner for hair growth and strengthening 350 ml",
+  "descriptionSk": "<p>Hairburst Longer Stronger Hair je výživný kondicionér, ktorý opravuje, posilňuje a vyživuje vlasy od koreňov po končeky, znižuje lámavosť a zvyšuje lesk.</p><ul><li><strong>Pre koho:</strong> vlasy, ktoré chcú rásť</li><li><strong>Použitie:</strong> po šampóne naniesť do vlasov a opláchnuť</li><li><strong>Hlavné prínosy:</strong> oprava, posilnenie, lesk</li></ul>"
+ },
+ {
+  "code": "SPV-0222617",
+  "nameSk": "California Scents Car Scents Fresh Linen vôňa do auta 42 g",
+  "descriptionSk": "<p>California Scents Fresh Linen je vôňa do auta v malej plechovke (42 g) s krásnou sviežou vôňou čerstvo vypranej bielizne.</p><ul><li><strong>Vôňa:</strong> čerstvá bielizeň</li><li><strong>Použitie:</strong> zavesiť alebo umiestniť v interiéri auta podľa návodu</li><li><strong>Pre koho:</strong> vodiči, interiér auta</li></ul>"
+ },
+ {
+  "code": "SPV-0173402",
+  "nameSk": "RYOR Tea Tree Oil Gel for Intimate Hygiene 200ml",
+  "descriptionSk": "<p>RYOR Tea Tree Oil je veľmi jemný umývací gél na intímnu hygienu s olejom z čajovníka a extraktom zo šalvie, ktoré pomáhajú udržiavať prirodzenú mikroflóru.</p><ul><li><strong>Pre koho:</strong> ženy, denná intímna hygiena</li><li><strong>Použitie:</strong> použiť na vlhkú pokožku a opláchnuť</li><li><strong>Hlavné prínosy:</strong> čajovník, šalvia, bez mydla</li></ul>"
+ },
+ {
+  "code": "SPV-0172797",
+  "nameSk": "Vivaco Body Tip Norkový hydratačný pleťový krém 50 ml",
+  "descriptionSk": "<p>Vivaco Body Tip je pleťový krém s norkovým olejom a vitamínom E, ktorý dokonale hydratuje a uzamyká potrebnú vlhkosť v pleti. Opatrujúce zloženie ošetruje pleť.</p><ul><li><strong>Pre koho:</strong> všetky typy pleti</li><li><strong>Použitie:</strong> ráno a večer naniesť na čistú pleť</li><li><strong>Hlavné prínosy:</strong> norkový olej, vitamín E, hydratácia</li></ul>"
+ },
+ {
+  "code": "SPV-203265",
+  "nameSk": "L'Oréal Paris Mascara Volume Million Lashes So Couture riasenka 9,5 ml Čierna",
+  "descriptionSk": "<p>L'Oréal Paris Volume Million Lashes So Couture je riasenka pre maximálny objem mihalníc od koreňov po končeky. Kefka s tenkými a pružnými vláknami dokonale oddeľuje.</p><ul><li><strong>Pre koho:</strong> make-up očí</li><li><strong>Použitie:</strong> naniesť na mihalnice od koreňov ku končekom</li><li><strong>Hlavné prínosy:</strong> maximálny objem, oddelenie mihalníc, čierna</li></ul>"
+ },
+ {
+  "code": "SPV-0244920",
+  "nameSk": "Alcina Active Peeling 50ml",
+  "descriptionSk": "<p>Alcina Active Peeling je aktívny peeling s mikročasticami oxidu kremičitého, ktoré z pleti odstránia nečistoty a odumreté bunky. Pokožka je jemná, hladká.</p><ul><li><strong>Pre koho:</strong> všetky typy pleti</li><li><strong>Použitie:</strong> vmasírovať do vlhkej pleti a opláchnuť</li><li><strong>Hlavné prínosy:</strong> mikročastice, vyhladenie, príprava pleti</li></ul>"
+ },
+ {
+  "code": "TDE-610841",
+  "nameSk": "Collini Care sprchový gél 250ml Oliva",
+  "descriptionSk": "<p>Collini Care Oliva je sprchový gél s olivou, ktorý pokožku jemne čistí a ošetruje.</p><ul><li><strong>Pre koho:</strong> všetky typy pokožky</li><li><strong>Použitie:</strong> vmasírovať do mokrej pokožky a opláchnuť</li><li><strong>Hlavné prínosy:</strong> olivová vôňa, 250 ml</li></ul>"
+ },
+ {
+  "code": "SPV-0162049",
+  "nameSk": "Max Factor Miracle Glow cream brightener 11 g 30 Deep",
+  "descriptionSk": "<p>Max Factor Miracle Glow je krémový rozjasňovač (11 g) v odtieni 30 Deep pre žiarivý vzhľad pleti.</p><ul><li><strong>Pre koho:</strong> denný aj večerný make-up</li><li><strong>Použitie:</strong> naniesť na výrazné partie tváre</li><li><strong>Hlavné prínosy:</strong> krémová textúra, rozjasnenie</li></ul>"
+ },
+ {
+  "code": "SPV-0227021",
+  "nameSk": "Cosrx Aloe Soothing Sun Cream SPF50+ 50ml",
+  "descriptionSk": "<p>Cosrx Aloe Soothing Sun Cream SPF 50+ je ultrahydratačný hybridný opaľovací krém, ktorý sa rýchlo vstrebáva a chráni pleť pred slnkom. Obsahuje extrakt z aloe.</p><ul><li><strong>Pre koho:</strong> všetky typy pleti, denná ochrana</li><li><strong>Použitie:</strong> ráno naniesť na tvár a obnovovať</li><li><strong>Hlavné prínosy:</strong> SPF 50+, aloe vera, hybridné filtre</li></ul>"
+ },
+ {
+  "code": "SPV-0245809",
+  "nameSk": "Some By Mi Retinol Intense Reactivating Serum 30ml",
+  "descriptionSk": "<p>Some By Mi Retinol Intense Reactivating Serum je silné, ale jemné pleťové sérum určené na zmiernenie znakov starnutia, aj pre osoby s citlivou pleťou.</p><ul><li><strong>Pre koho:</strong> zrelšia pleť, začiatočníci s retinolom</li><li><strong>Použitie:</strong> večer aplikovať na čistú pleť, ráno používať SPF</li><li><strong>Hlavné prínosy:</strong> retinol, jemná formula, anti-aging</li></ul>"
+ },
+ {
+  "code": "SPV-0227704",
+  "nameSk": "Pyunkang Yul Cleansing Foam 150ml",
+  "descriptionSk": "<p>Pyunkang Yul Cleansing Foam je jemná, ale účinná čistiaca pena, ktorá bez námahy odstraňuje nečistoty bez narušenia vlhkostnej bariéry pleti či jej prirodzeného pH.</p><ul><li><strong>Pre koho:</strong> všetky typy pleti</li><li><strong>Použitie:</strong> vmasírovať do vlhkej pleti a opláchnuť</li><li><strong>Hlavné prínosy:</strong> jemné čistenie, zachovanie mikrobiómu</li></ul>"
+ },
+ {
+  "code": "TDE-387160",
+  "nameSk": "Palette farba na vlasy 50ml 12-21 strieborná popolavá",
+  "descriptionSk": "<p>Palette je farba na vlasy v odtieni 12-21 strieborná popolavá (50 ml). Dodáva vlasom výrazný odtieň a pokrýva šedivé vlasy; farbenie vykonávajte podľa návodu v balení.</p><ul><li><strong>Pre koho:</strong> domáce farbenie vlasov</li><li><strong>Použitie:</strong> pripraviť a naniesť podľa návodu v balení, nechať pôsobiť a vymyť</li><li><strong>Hlavné prínosy:</strong> trvalá farba, odtieň 12-21 strieborná popolavá</li></ul>"
+ },
+ {
+  "code": "TDE-405826",
+  "nameSk": "Dettol Soft on Skin Vanilkový kvet antibakteriálne mydlo do bezdotykového dávkovača náhradná náplň 250 ml",
+  "descriptionSk": "<p>Dettol je náplň do bezdotykového dávkovača mydla so sladkou vanilkou (250 ml) na hygienické umývanie rúk.</p><ul><li><strong>Pre koho:</strong> celá rodina, domácnosť</li><li><strong>Použitie:</strong> dať ruky pod dávkovač a speniť mydlo</li><li><strong>Hlavné prínosy:</strong> bezdotykový, sladká vanilka, 250 ml</li></ul>"
+ },
+ {
+  "code": "TDE-486754",
+  "nameSk": "Laura Collini Telové maslo kokos a vanilka 250 ml",
+  "descriptionSk": "<p>Laura Collini Coco & Vanilla je telové maslo (250 ml) s kokosom a vanilkou na hydratáciu a zjemnenie pokožky.</p><ul><li><strong>Pre koho:</strong> suchá a normálna pokožka</li><li><strong>Použitie:</strong> naniesť na pokožku tela po sprche</li><li><strong>Hlavné prínosy:</strong> hydratácia, hebká pokožka, 250 ml</li></ul>"
+ },
+ {
+  "code": "SPV-03000757",
+  "nameSk": "L'Oréal Paris True Match liquid makeup 30 ml 3C Rose Beige",
+  "descriptionSk": "<p>L'Oréal Paris True Match je tekutý make-up (30 ml) v odtieni 3C Rose Beige.</p><ul><li><strong>Pre koho:</strong> denný make-up</li><li><strong>Použitie:</strong> naniesť na čistú pleť a rozotrieť</li><li><strong>Hlavné prínosy:</strong> prirodzený vzhľad, odtieň 3C</li></ul>"
+ },
+ {
+  "code": "SPV-0163518",
+  "nameSk": "La Roche-Posay Redermic C starostlivosť proti starnutiu pre normálnu až zmiešanú citlivú pleť 40 ml",
+  "descriptionSk": "<p>La Roche-Posay Redermic C je starostlivosť proti starnutiu pre normálnu až zmiešanú pleť.</p><ul><li><strong>Pre koho:</strong> normálna a zmiešaná pleť</li><li><strong>Použitie:</strong> ráno a večer naniesť na čistú pleť</li><li><strong>Hlavné prínosy:</strong> vitamín C, proti starnutiu</li></ul>"
+ },
+ {
+  "code": "SPV-WW0715",
+  "nameSk": "WoodWick Solar Ylang scented candle with wooden wick 275 g",
+  "descriptionSk": "<p>WoodWick Solar Ylang je voňavá sviečka s dreveným knotom (275 g) s vôňou bergamotu, jazmínu, tuberózy a ylang-ylangu.</p><ul><li><strong>Vôňa:</strong> bergamot, jazmín, ylang-ylang</li><li><strong>Doba horenia:</strong> podľa výrobcu</li><li><strong>Pre koho:</strong> relaxácia, darček, domáca atmosféra</li></ul>"
+ },
+ {
+  "code": "SPV-0135456",
+  "nameSk": "Artdeco Camouflage Cream waterproof cover cream 4,5 g 7 Deep Whiskey",
+  "descriptionSk": "<p>Artdeco Camouflage Cream je vodeodolný krycí krém (4,5 g) v odtieni 7 Deep Whiskey.</p><ul><li><strong>Pre koho:</strong> krytie nedokonalostí</li><li><strong>Použitie:</strong> naniesť na nedokonalosti a rozotrieť</li><li><strong>Hlavné prínosy:</strong> vodeodolný, vysoké krytie</li></ul>"
+ },
+ {
+  "code": "SPV-0247760",
+  "nameSk": "Dr. Althea Amino Acid Gentle Bubble Cleanser 140ml",
+  "descriptionSk": "<p>Dr. Althea Amino Acid Gentle Bubble Cleanser je čistiaci penivý gél (140 ml) s aminokyselinami.</p><ul><li><strong>Pre koho:</strong> všetky typy pleti</li><li><strong>Použitie:</strong> vmasírovať do vlhkej pleti a opláchnuť</li><li><strong>Hlavné prínosy:</strong> aminokyseliny, jemné čistenie, 140 ml</li></ul>"
+ },
+ {
+  "code": "SPV-WW0021",
+  "nameSk": "WoodWick Fireside scented candle with wooden wick 85 g",
+  "descriptionSk": "<p>WoodWick Fireside je voňavá sviečka s dreveným knotom (85 g) s ambrou, vetiverom a pižmom, ktorá evokuje atmosféru večera pri krbe.</p><ul><li><strong>Vôňa:</strong> ambra, vetiver, pižmo</li><li><strong>Doba horenia:</strong> 30–40 hodín</li><li><strong>Pre koho:</strong> relaxácia, darček, domáca atmosféra</li></ul>"
+ },
+ {
+  "code": "SPV-0172545",
+  "nameSk": "Vichy Minéral 89 Eyes 15 ml",
+  "descriptionSk": "<p>Vichy Minéral 89 Eyes je očný booster s mineralizujúcou termálnou vodou Vichy, kyselinou hyalurónovou prírodného pôvodu a čistým kofeínom. Posilňuje jemnú pokožku okolo očí.</p><ul><li><strong>Pre koho:</strong> okolie očí</li><li><strong>Použitie:</strong> ráno a večer jemne vklepkať do okolia očí</li><li><strong>Hlavné prínosy:</strong> kofeín, kyselina hyalurónová, termálna voda</li></ul>"
+ },
+ {
+  "code": "SPV-0242859",
+  "nameSk": "Biorepair Total Protective Repair Toothpaste 75ml",
+  "descriptionSk": "<p>Biorepair Total Protective Repair je zubná pasta (75 ml), ktorá sklovinu nielen chráni, ale aj aktívne obnovuje vďaka mikročasticiam microRepair®.</p><ul><li><strong>Pre koho:</strong> každodenná starostlivosť o zuby</li><li><strong>Použitie:</strong> čistiť zuby dvakrát denne</li><li><strong>Hlavné prínosy:</strong> obnova skloviny, microRepair, 75 ml</li></ul>"
+ },
+ {
+  "code": "SPV-0171982",
+  "nameSk": "Dr. Hauschka Lip Balm 4,5 ml",
+  "descriptionSk": "<p>Dr. Hauschka Lip Balm je balzam na pery s bohatým prírodným zložením, ktorý intenzívne opatruje suché a popraskané pery. Poskytuje intenzívnu starostlivosť.</p><ul><li><strong>Pre koho:</strong> suché a popraskané pery</li><li><strong>Použitie:</strong> nanášať na pery podľa potreby</li><li><strong>Hlavné prínosy:</strong> prírodné zloženie, dlhodobý účinok</li></ul>"
+ },
+ {
+  "code": "TDE-383574",
+  "nameSk": "Power Air osviežovač Eurosport lopta",
+  "descriptionSk": "<p>Power Air Eurosport je osviežovač do auta v tvare futbalovej lopty.</p><ul><li><strong>Vôňa:</strong> podľa výrobcu</li><li><strong>Použitie:</strong> zavesiť alebo umiestniť v interiéri auta podľa návodu</li><li><strong>Pre koho:</strong> vodiči, interiér auta</li></ul>"
+ },
+ {
+  "code": "SPV-0222390",
+  "nameSk": "Kérastase Resistance Fondant Extentioniste Conditioner 200 ml",
+  "descriptionSk": "<p>Kérastase Resistance Fondant Extentioniste je regeneračný krémový kondicionér, ktorý jemne rozčesáva vlasy bez lámania a zaisťuje jednotný hodvábny vzhľad.</p><ul><li><strong>Pre koho:</strong> dlhé a oslabené vlasy</li><li><strong>Použitie:</strong> po šampóne naniesť do vlasov a po chvíli opláchnuť</li><li><strong>Hlavné prínosy:</strong> kreatín R, ľahká textúra, hodvábny efekt</li></ul>"
+ },
+ {
+  "code": "SPV-0161851",
+  "nameSk": "Nuxe Creme Prodigieuse Boost night regenerating balm with a regenerating effect 50 ml",
+  "descriptionSk": "<p>Nuxe Crème Prodigieuse Boost je nočný regeneračný olejový balzam, ktorý opatruje pleť počas spánku. Účinne pôsobí proti prvým znakom starnutia.</p><ul><li><strong>Pre koho:</strong> pleť 30+, nočná starostlivosť</li><li><strong>Použitie:</strong> večer naniesť na čistú pleť</li><li><strong>Hlavné prínosy:</strong> nočná regenerácia, olejový balzam</li></ul>"
+ },
+ {
+  "code": "SPV-0242727",
+  "nameSk": "Hairburst Longer Stronger Hair Dry & Damaged SET (Shampoo 350ml + Conditioner 350ml)",
+  "descriptionSk": "<p>Hairburst Longer Stronger Hair je sada šampónu a kondicionéra (2×350 ml) pre suché a poškodené vlasy, ktorá posilňuje a hydratuje poškodené vlákna.</p><ul><li><strong>Pre koho:</strong> suché a poškodené vlasy</li><li><strong>Použitie:</strong> šampón a kondicionér použiť pri umývaní vlasov</li><li><strong>Hlavné prínosy:</strong> bez sulfátov a parabénov, regenerácia, sada 2 produktov</li></ul>"
+ },
+ {
+  "code": "1625",
+  "nameSk": "Eyfel Perfume Osviežovač vzduchu do auta Mesačný svit 150 ml",
+  "descriptionSk": "<p>Eyfel Perfume je osviežovač vzduchu do auta (150 ml) s jemnou nenápadnou vôňou Mesačný svit pre dlhotrvajúce osvieženie vozidla.</p><ul><li><strong>Vôňa:</strong> mesačný svit</li><li><strong>Použitie:</strong> zavesiť alebo umiestniť v interiéri auta podľa návodu</li><li><strong>Pre koho:</strong> vodiči, interiér auta</li></ul>"
+ },
+ {
+  "code": "43",
+  "nameSk": "Slava Zaitsev Maroussia EDT 100ml",
+  "descriptionSk": "<p>Maroussia od Slavy Zajceva je toaletná voda s ambrovo-kvetinovým charakterom, určená ženám aj mužom. Vzdáva hold ruskej tradícii.</p><ul><li><strong>Hlavné tóny:</strong> kvety, ambra, pudrové tóny</li><li><strong>Kedy ju nosiť:</strong> na večer, na jeseň a v zime</li><li><strong>Charakter:</strong> ambrová, kvetinová a nostalgická</li></ul>"
+ },
+ {
+  "code": "550",
+  "nameSk": "Jenny Glow Black Cedar 80 ml",
+  "descriptionSk": "<p>Black Cedar od Jenny Glow je vôňa zo série dostupných parfumov, ktorú charakterizuje drevitý, cédrový základ. Hodí sa pre tých, ktorí hľadajú jednoduchú, cenovo dostupnú vôňu.</p><ul><li><strong>Hlavné tóny:</strong> céder, drevité tóny</li><li><strong>Kedy ju nosiť:</strong> na každý deň, na jeseň a v zime</li><li><strong>Charakter:</strong> drevitá a ľahko nositeľná</li></ul>"
+ },
+ {
+  "code": "385",
+  "nameSk": "Mugler Aura darčeková sada",
+  "descriptionSk": "<p>Darčekový set ikonickej dámskej vône Mugler Aura Eau de Parfum v elegantnom balení.\n Sada obsahuje:\n\n\nAura Eau de Parfum 30 ml – plniteľný (refillable) flakón v ikonickom zelenom dizajne v tvare srdca. Zmyselná a výrazná vôňa s kombináciou zelených tónov, vanilky a drevitých akordov.\n\n\nAura telové mlieko (Body Lotion) 50 ml – hydratačné mlieko s vôňou Aura, zanecháva pokožku jemnú a ľahko navoňanú.\n\n\nAura sprchové mlieko (Shower Milk) 50 ml – jemný sprchový prípravok, ktorý čistí pokožku a pripravuje ju na aplikáciu parfumu.</p>"
+ },
+ {
+  "code": "469",
+  "nameSk": "Ted Lapidus Ted Lapidus Creation toaletná voda dámska 3 ml vzorka",
+  "descriptionSk": "<p>Ted Lapidus Creation je klasická dámska toaletná voda s jemnou, ale zároveň výraznou vôňou, ktorá kombinuje ovocné a kvetinové tóny s ľahko drevitým, chypre základom. Tento parfum bol prvýkrát uvedený na trh v roku 1984 a stal sa obľúbeným pre svoju sviežu a ženskú kompozíciu, ideálnu na každodenné nosenie aj zvláštne príležitosti. Vzorka 3 ml.</p>"
+ },
+ {
+  "code": "547",
+  "nameSk": "Jenny Glow Cologne 80 ml",
+  "descriptionSk": "<p>Svieža, a zároveň tajomná. Moderná, a pritom nadčasová. To je unisex parfumovaná voda Jenny Glow Cologne, ktorej voňavá kompozícia sa bude skvele hodiť ženám aj mužom. Bude perfektným sprievodcom vášho každodenného dobrodružstva, či už vás čaká pracovná schôdzka, rande, večierok alebo stretnutie s priateľmi. Jej vôňa vám prinesie dokonalý zmyslový zážitok plný osvieženia, ktorý vám bude pomáhať zdolávať výzvy s ľahkosťou a prehľadom.</p>"
+ },
+ {
+  "code": "622",
+  "nameSk": "Adam Levine Women For Her 50 ml",
+  "descriptionSk": "<p>Či už milujete piesne skupiny Maroon 5, zo speváka Adama Levina sa vám podlamujú kolená, alebo len hľadáte hrejivú vôňu do chladnejších mesiacov, toaletná voda pre ženy Adam Levine Women je pre vás stvorená. Jej orientálne ladená voňavá kompozícia vás roztancuje rovnako, ako hity slávnej hudobnej skupiny.\n\nhrejivá korenistá vôňa s drevitými tónmi a vanilkou\nvznikla v spolupráci so slávnym spevákom Adamom Levinom\nunosíte ju najmä počas chladnejších zimných a jesenných dní\n\nZloženie vône:\nV úvode voňavej kompozície na vás čakajú osviežujúce citrusy, aromatické korenie, nechtík lekársky a vzácny šafrán. Potom sa v srdci vône rozvonia nežný jazmín, romantická ruža a hrejivé santalové drevo. Základ vône stojí na tónoch benzoínu a lahodnej vanilky, ktorá poteší nejedného gurmána.</p>"
+ },
+ {
+  "code": "1360",
+  "nameSk": "Pleťová maska Nama Fiji",
+  "descriptionSk": "<p>Nama Fiji je pleťová maska na pravidelnú starostlivosť o pleť.</p><ul><li><strong>Pre koho:</strong> pravidelná starostlivosť o pleť</li><li><strong>Použitie:</strong> naniesť na čistú pleť a po čase pôsobenia zmyť</li><li><strong>Hlavné prínosy:</strong> pleťová maska, starostlivosť o pleť</li></ul>"
+ },
+ {
+  "code": "697",
+  "nameSk": "Bluebeards Revenge Cuban Blend 100 ml",
+  "descriptionSk": "<p>Toaletná voda Cuban Blend od Bluebeards Revenge je vôňa pre mužov, ktorí hľadajú intenzívny a elegantný parfum s nádychom luxusu. Tento bohatý a hrejivý parfum spája drevité, korenisté a orientálne tóny, ktoré vytvárajú nezabudnuteľný dojem. Cuban Blend je inšpirovaný svetom kubánskych cigár a jeho vôňa odráža bohatstvo a sofistikovanosť tejto tradície.\n\nV úvode vás zaujmú citrusové tóny a jemný korenistý nádych, ktoré postupne prechádzajú do teplých a drevitých akcentov, ktoré zostávajú na pokožke po celý deň. Vôňa obsahuje tabakové, vanilkové a korenisté zložky, ktoré prinášajú pocit elegancie a sebavedomia. Je to ideálna voľba pre mužov, ktorí hľadajú vôňu, ktorá je charizmatická, hrejivá a neotrelá.\n\nToaletná voda Cuban Blend je skvelá na každodenné nosenie, ale aj na večerné príležitosti, kedy chcete urobiť silný dojem.</p>"
+ },
+ {
+  "code": "781",
+  "nameSk": "Reminiscence Rem 50 ml",
+  "descriptionSk": "<p>Nechajte si pomätiť hlavu neobyčajnou vôňou, ktorá podčiarkne vaše ženské prednosti – vôňou dámskej parfumovanej vody Reminiscence Rem. Čaká na vás očarujúca kvetinovo-akvatická voňavá kompozícia zabalená v nemenej očarujúcom flakóne v odtieňoch modrej a zelenej. Parfumovaná voda, ktorú zákazníci hodnotia ako dlhotrvajúcu a intenzívnu, bola uvedená na trh v roku 2015. Hodí sa na denné aj večerné nosenie, takže sa stane nádherným doplnkom do práce aj na romantickú schôdzku pod hviezdnou oblohou.</p>"
+ },
+ {
+  "code": "1366",
+  "nameSk": "Gélové sérum Nama Fiji",
+  "descriptionSk": "<p>Nama Fiji je gélové sérum na hydratáciu a starostlivosť o pleť.</p><ul><li><strong>Pre koho:</strong> všetky typy pleti</li><li><strong>Použitie:</strong> ráno a večer aplikovať na čistú pleť</li><li><strong>Hlavné prínosy:</strong> gélové sérum, hydratácia</li></ul>"
+ },
+ {
+  "code": "1765",
+  "nameSk": "7 Days B.Colour Matný tekutý rúž 02 Pink 2,5 ml",
+  "descriptionSk": "<p>7 Days B.Colour je matný tekutý rúž v odtieni 02 Pink (2,5 ml) s matným finišom.</p><ul><li><strong>Pre koho:</strong> denný aj večerný make-up</li><li><strong>Použitie:</strong> naniesť aplikátorom na pery</li><li><strong>Hlavné prínosy:</strong> matný finiš, odtieň Pink, 2,5 ml</li></ul>"
+ },
+ {
+  "code": "1372",
+  "nameSk": "Čistiaci gél Nama Fiji",
+  "descriptionSk": "<p>Nama Fiji je čistiaci gél na každodenné čistenie pleti.</p><ul><li><strong>Pre koho:</strong> všetky typy pleti</li><li><strong>Použitie:</strong> vmasírovať do vlhkej pleti a opláchnuť</li><li><strong>Hlavné prínosy:</strong> čistiaci gél, jemné čistenie</li></ul>"
+ },
+ {
+  "code": "SPV-0172791",
+  "nameSk": "Renovality Original Series Tea Tree Oil 20ml",
+  "descriptionSk": "<p>Renovality Original Series Tea Tree Oil je olej z listov austrálskeho stromu Melaleuca alternifolia s výraznou vôňou. Používa sa na lokálnu starostlivosť o drobné poranenia.</p><ul><li><strong>Pre koho:</strong> problematická pleť, drobné poranenia</li><li><strong>Použitie:</strong> nanášať lokálne na postihnuté miesta</li><li><strong>Hlavné prínosy:</strong> čajovníkový olej, antiseptické vlastnosti, lokálna starostlivosť</li></ul>"
+ },
+ {
+  "code": "SPV-0173391",
+  "nameSk": "RYOR Body Form Anti-Cellulite Gel with Ivy Extract 200ml",
+  "descriptionSk": "<p>Ryor Body Form je gél proti celulitíde s extraktom z brečtanu a borievky. Pomáha zmierniť prejavy celulitídy, hydratuje pokožku a zvyšuje jej pružnosť.</p><ul><li><strong>Pre koho:</strong> telo, partie so sklonom k celulitíde</li><li><strong>Použitie:</strong> masírovať do pokožky krúživými pohybmi</li><li><strong>Hlavné prínosy:</strong> extrakt z brečtanu a borievky, hydratácia, pružnosť</li></ul>"
+ },
+ {
+  "code": "1596",
+  "nameSk": "Eyfel Perfume Vôňa do auta Melón 10 ml",
+  "descriptionSk": "<p>Eyfel Perfume je vôňa do auta (10 ml) s osviežujúcou ovocnou vôňou melóna.</p><ul><li><strong>Vôňa:</strong> melón</li><li><strong>Použitie:</strong> vložiť do závesného difuzéra do auta</li><li><strong>Pre koho:</strong> vodiči, interiér auta</li></ul>"
+ },
+ {
+  "code": "1357",
+  "nameSk": "Očný krém Nama Fiji",
+  "descriptionSk": "<p>Nama Fiji je očný krém na každodennú starostlivosť o jemnú pokožku okolo očí.</p><ul><li><strong>Pre koho:</strong> okolie očí</li><li><strong>Použitie:</strong> ráno a večer jemne vklepkať do okolia očí</li><li><strong>Hlavné prínosy:</strong> očný krém, každodenná starostlivosť</li></ul>"
+ },
+ {
+  "code": "SPV-0218594",
+  "nameSk": "Yankee Candle Watercolour Skies signature sviečka velká 567 g",
+  "descriptionSk": "<p>Yankee Candle Watercolour Skies je signature sviečka veľká (567 g) s harmóniou kašmíru, jazmínu a pižma.</p><ul><li><strong>Vôňa:</strong> kašmír, jazmín, pižmo</li><li><strong>Doba horenia:</strong> podľa výrobcu</li><li><strong>Pre koho:</strong> relaxácia, darček, domáca atmosféra</li></ul>"
+ },
+ {
+  "code": "1593",
+  "nameSk": "Eyfel Perfume Aróma difuzér Limetka 120 ml",
+  "descriptionSk": "<p>Eyfel Perfume je aróma difuzér (120 ml) s vôňou limetky, ktorý navonia domov alebo kanceláriu dlhotrvajúcou vôňou.</p><ul><li><strong>Vôňa:</strong> limetka</li><li><strong>Použitie:</strong> vložiť tyčinky do fľaštičky a umiestniť v miestnosti</li><li><strong>Pre koho:</strong> domov, relaxácia</li></ul>"
+ },
+ {
+  "code": "1591",
+  "nameSk": "Eyfel Perfume Vôňa do auta Mango 10 ml",
+  "descriptionSk": "<p>Eyfel Perfume je vôňa do auta (10 ml) so sviežou tropickou vôňou manga do závesného difuzéra.</p><ul><li><strong>Vôňa:</strong> mango</li><li><strong>Použitie:</strong> vložiť do závesného difuzéra do auta</li><li><strong>Pre koho:</strong> vodiči, interiér auta</li></ul>"
+ },
+ {
+  "code": "1663",
+  "nameSk": "OGX kondicionér s marulovým olejom 385 ml",
+  "descriptionSk": "<p>OGX kondicionér s marulovým olejom (385 ml) je určený na každodennú starostlivosť o vlasy. V zložení nájdete marulový olej a hodvábne aminokyseliny.</p>"
+ },
+ {
+  "code": "1666",
+  "nameSk": "OGX Orchid Oil kondicionér pre farbené vlasy 385 ml",
+  "descriptionSk": "<p>Farbené vlasy potrebujú špeciálnu starostlivosť, ktorá ochráni sýtosť odtieňa a predĺži jeho životnosť. Tento kondicionér s extraktom z orchideí a olejom z hroznových jadier hydratuje vlasové vlákno, uzatvára jeho štruktúru po každom umytí a dodáva vlasom hladkosť a lesk. Farba zostáva živá dlhšie, vlasy sa ľahšie rozčesávajú.\nVlastnosti: \n\nuľahčuje rozčesávanie\nspomaľuje vyblednutie farby\nchráni farbené vlasy\nhydratuje vlasové vlákno\n\nZloženie: \n\nextrakt z orchideí\nolej z hroznových jadier\nbez sulfátov</p>"
+ },
+ {
+  "code": "1622",
+  "nameSk": "Eyfel Perfume Osviežovač vzduchu do auta Citrón 150 ml",
+  "descriptionSk": "<p>Eyfel Perfume je osviežovač vzduchu do auta (150 ml) s dlhotrvajúcou citrusovou vôňou citróna.</p><ul><li><strong>Vôňa:</strong> citrón</li><li><strong>Použitie:</strong> zavesiť alebo umiestniť v interiéri auta podľa návodu</li><li><strong>Pre koho:</strong> vodiči, interiér auta</li></ul>"
+ },
+ {
+  "code": "1635",
+  "nameSk": "Eyfel Perfume Osviežovač vzduchu v spreji Broskyňa 400 ml",
+  "descriptionSk": "<p>Eyfel Perfume je osviežovač vzduchu v spreji (400 ml) so sladkou ovocnou vôňou broskyne na osvieženie domácnosti aj auta.</p><ul><li><strong>Vôňa:</strong> broskyňa</li><li><strong>Použitie:</strong> rozprášiť do vzduchu</li><li><strong>Pre koho:</strong> domácnosť, interiér</li></ul>"
+ },
+ {
+  "code": "1675",
+  "nameSk": "OGX šampón s orchideovým olejom 385 ml",
+  "descriptionSk": "<p>Farbené a namáhané vlasy si zaslúžia starostlivosť, ktorá čistí a zároveň chráni. Tento šampón s olejom z orchideí šetrne odstraňuje nečistoty, mastnotu aj zvyšky stylingových prípravkov, bez toho aby vlasy vysúšal. Vyhladzuje a zacelí vlasové vlákno, predlžuje životnosť farby a napráva poškodenie spôsobené slanou alebo chlórovanou vodou. Vlasy sú svieže, hydratované a príjemne navoňané.\nVlastnosti:\n\njemné čistenie\npredĺženie životnosti farby\nregenerácia po slanej a chlórovanej vode\nvyhladenie vlasového vlákna\nintenzívna hydratácia\njemná vôňa\n\nZloženie: \n\nbez sulfátov.</p>"
+ },
+ {
+  "code": "1645",
+  "nameSk": "OGX Bonding Plex obnovujúci kondicionér 385 ml",
+  "descriptionSk": "<p>OGX Bonding Plex je obnovujúci kondicionér (385 ml) pre poškodené vlasy.</p><ul><li><strong>Pre koho:</strong> poškodené vlasy</li><li><strong>Použitie:</strong> po šampóne naniesť do vlasov a opláchnuť</li><li><strong>Hlavné prínosy:</strong> obnova vlasov, 385 ml</li></ul>"
+ },
+ {
+  "code": "1672",
+  "nameSk": "OGX Lavender Platinum tónovací šampón pre studené odtiene blond 385 ml",
+  "descriptionSk": "<p>Zdravé, lesklé a vitálne vlasy začínajú dôkladným, ale šetrným očistením. Tento šampón efektívne odstraňuje nečistoty, mastnotu aj zvyšky stylingových prípravkov z vlasov aj pokožky hlavy, zanecháva pocit sviežosti a optimálne pripravuje vlasy na ďalšiu starostlivosť. Jemná levanduľová vôňa príjemne navonia vlasy, aktívne zložky navyše neutralizujú nežiaduce žlté tóny.\nVlastnosti: \n\njemné čistenie vlasov a pokožky hlavy\nintenzívna hydratácia\nneutralizácia žltých tónov\njemná vôňa\n\nZloženie: \n\nbez sulfátov</p>"
+ },
+ {
+  "code": "1771",
+  "nameSk": "Andmetics Micelárna voda pred depiláciou voskom 250 ml",
+  "descriptionSk": "<p>Andmetics je micelárna voda pred depiláciou voskom (250 ml), ktorá pokožku čistí a pripravuje na depiláciu.</p><ul><li><strong>Pre koho:</strong> depilácia voskom</li><li><strong>Použitie:</strong> naniesť na pokožku pred depiláciou</li><li><strong>Hlavné prínosy:</strong> čistenie pokožky, príprava na depiláciu</li></ul>"
+ },
+ {
+  "code": "1809",
+  "nameSk": "Kuchynský vykosťovací nôž Ernesto",
+  "descriptionSk": "<p>Kuchynský vykosťovací nôž Ernesto je praktický nástroj určený na presnú prácu s mäsom. Vďaka úzkej a pevnej čepeli umožňuje jednoduché oddeľovanie mäsa od kostí, porciovanie a detailné spracovanie surovín.\n\nČepeľ je vyrobená z kvalitnej nehrdzavejúcej ocele, ktorá zaisťuje dlhú životnosť, odolnosť proti korózii a jednoduchú údržbu. Ostrie je navrhnuté pre presné a čisté rezy, čo ocenite pri príprave mäsa, hydiny aj rýb.\n\nErgonomicky tvarovaná rukoväť poskytuje pohodlný a bezpečný úchop, vďaka čomu je práca s nožom stabilná a efektívna aj pri dlhšom používaní.\n\nNôž je dodávaný v ochrannom plastovom balení, ktoré zaisťuje bezpečné skladovanie.</p>"
+ }
+]
