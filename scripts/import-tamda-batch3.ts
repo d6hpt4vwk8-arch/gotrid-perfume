@@ -24,7 +24,7 @@ const LIMIT = Number(process.argv.find((a) => a.startsWith("--limit="))?.split("
 const CREATED_OUT = process.argv.find((a) => a.startsWith("--created-out="))?.split("=")[1];
 const REVEAL = process.argv.find((a) => a.startsWith("--reveal="))?.split("=")[1];
 // Owner (2026-11-14): a Tamda minimum order of up to 6 pieces is fine, and a handful of units in stock is fine too.
-const MAX_MIN_ORDER = 6;
+const MAX_MIN_ORDER = Number(process.argv.find((a) => a.startsWith("--max-min="))?.split("=")[1] ?? "6");
 const CONCURRENCY = 4;
 const UA = "Mozilla/5.0 (compatible; GotridPerfumeStockCheck/1.0)";
 
@@ -101,6 +101,35 @@ function resolveCategory(c: Candidate): string | null {
     if (/\bmast\b|bylinn/.test(name)) return "pece-o-zdravi/ostatni";
     if (/kr[ée]m|cream|ple[ťt]|s[ée]rum|maska/.test(name)) return "kosmetika/plet/pletove-kremy";
   }
+  return nameFallback(name);
+}
+
+// Last resort for items Tamda files in odd buckets (cotton buds sit under "condoms & massage gels", foot deodorants
+// under "skin care", …): decide by the name; anything that is not drugstore/cosmetics stays unmapped (skipped).
+function nameFallback(name: string): string | null {
+  if (/zapalova|destilovan|[žz]ehli[čc]|erdal|hasic|herkules|purfix|n[áa]kupn[íi] ta[šs]ka|rozmrazov|ost[řr]ikov|letn[íi] kapalina|zimn[íi] kapalina|pohlcova[čc] vlhkosti|stop vlhkosti|h[řr]bitovn/.test(name)) return null;
+  if (/vatov[ée] ty[čc]|bavln[ěe]n[áa] vata|\bvata\b/.test(name)) return "kosmetika/telo/doplnky";
+  if (/tampon/.test(name)) return "kosmetika/telo/intimni-hygiena";
+  if (/durex/.test(name)) return "pece-o-zdravi/kondomy";
+  if (/odlakova[čc]/.test(name)) return "kosmetika/dekorativni-kosmetika/nehty";
+  if (/inhal[áa]tor|boronasal/.test(name)) return "pece-o-zdravi/ostatni";
+  if (/deodorant|\bdeo\b|\bap\b|antiperspir|na nohy|do bot|z[áa]syp na nohy/.test(name)) return "kosmetika/telo/deodoranty";
+  if (/mighty patch|remover|make-up/.test(name)) return "kosmetika/plet/cisteni-pleti";
+  if (/discovery set/.test(name)) return "kosmetika/telo/darkove-sady";
+  if (/kondicion[ée]r/.test(name)) return "kosmetika/vlasy/kondicionery-a-balzamy";
+  if (/tonik|vlasov[áa] voda/.test(name)) return "kosmetika/vlasy/vlasova-tonika";
+  if (/vlasov[áa] k[úu]ra/.test(name)) return "kosmetika/vlasy/vlasove-masky";
+  if (/s[ée]rum/.test(name)) return "kosmetika/vlasy/vlasova-sera";
+  if (/pantene sprej/.test(name)) return "kosmetika/vlasy/kondicionery-a-balzamy";
+  if (/corega|dentek|p[áa]r[áa]tk|jazyk|rebi dental/.test(name)) return "zuby/doplnky-k-cisteni-zubu";
+  if (/ni[ťt]/.test(name)) return "zuby/zubni-nite";
+  if (/hol[íi]c[íi]|hol[íi]tk|b[řr]it/.test(name)) return "kosmetika/telo/depilace";
+  if (/v[ůu]n[ěe] do auta|pap[íi]rov[ýy] osv[ěe][žz]ova[čc]|extra scent/.test(name)) return "vune-do-auta";
+  if (/n[áa]hradn[íi] n[áa]pl/.test(name)) return "domacnost/osvezovace-vzduchu/naplne";
+  if (/air wick komplet|vonn[ée] krystaly|arola/.test(name)) return "domacnost/osvezovace-vzduchu/pro-pokoje";
+  if (/diffuser|difuz[ée]r/.test(name)) return "aroma-difuzery";
+  if (/vonn[ée] ty[čc]inky/.test(name)) return "vonne-svicky";
+  if (/osv[ěe][žz]ova[čc] vzduchu/.test(name)) return "domacnost/osvezovace-vzduchu/sprej";
   return null;
 }
 
@@ -159,6 +188,7 @@ async function main() {
   const existingEans = new Set((await prisma.product.findMany({ where: { ean: { not: null } }, select: { ean: true } })).map((p) => norm(p.ean!)));
   const existingCodes = new Set((await prisma.product.findMany({ where: { code: { startsWith: "TDE-" } }, select: { code: true } })).map((p) => p.code));
 
+  const unmapped: string[] = [];
   const ready: { c: Candidate; cat: string; price: number; stock: number }[] = [];
   const byCat: Record<string, number> = {};
   for (const c of candidates) {
@@ -171,11 +201,12 @@ async function main() {
     if (!(price > 0)) { stats.noPrice++; continue; }
     if (existingCodes.has(`TDE-${c.tamdaId}`) || existingEans.has(norm(c.ean))) { stats.exists++; continue; }
     const cat = resolveCategory(c);
-    if (!cat) { stats.noCategory++; continue; }
+    if (!cat) { stats.noCategory++; unmapped.push(`${c.breadcrumb.split(" / ").slice(2, 4).join(" > ").slice(0, 24)} | ${c.name.slice(0, 55)} | min ${min}`); continue; }
     ready.push({ c, cat, price, stock: max });
     byCat[cat] = (byCat[cat] ?? 0) + 1;
   }
   console.log("Candidates:", JSON.stringify(stats));
+  if (process.argv.includes("--list-unmapped")) console.log(unmapped.join("\n"));
   console.log(`Ready to create: ${ready.length}`);
   console.log(Object.entries(byCat).sort((a, b) => b[1] - a[1]).map(([k, v]) => `  ${v} ${k}`).join("\n"));
   if (DRY_RUN) return;
