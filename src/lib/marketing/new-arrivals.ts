@@ -20,9 +20,9 @@ export const NEW_ARRIVALS_ACTION = "marketing.new_arrivals_email";
 
 const MIN_DAYS_BETWEEN_MAILS = 7;
 const LOOKBACK_DAYS = 30;
-const MAX_PRODUCTS = 3;
+const MAX_PRODUCTS = 6;
 const MAX_PER_BRAND = 2;
-const MIN_PRODUCTS_TO_SEND = 2;
+const MIN_PRODUCTS_TO_SEND = 3;
 const SEND_DELAY_MS = 700;
 const MAX_CONSECUTIVE_ERRORS = 3;
 const COUNTABLE_STATUSES = ["NEW", "PAID", "PROCESSING", "SHIPPED", "DELIVERED"] as const;
@@ -88,7 +88,7 @@ export async function selectNewArrivalsRecipients(): Promise<NewArrivalsRecipien
 
 /**
  * What one subscriber would get now — computed without sending. Returns null when they are not due yet (mailed in
- * the last 7 days) or fewer than two new, not-yet-shown products fit their categories.
+ * the last 7 days) or fewer than three new, not-yet-shown products fit their categories.
  */
 export async function planNewArrivals(email: string, firstName: string): Promise<NewArrivalsPlan | null> {
   const history = await sentHistory(email);

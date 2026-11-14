@@ -83,7 +83,7 @@ export function emailProductGrid(
     )
     .join("");
   return `
-    <p style="font-size:13px;font-weight:700;text-transform:uppercase;letter-spacing:0.5px;color:${MUTED};margin:0 0 12px;">${heading}</p>
+    ${heading ? `<p style="font-size:13px;font-weight:700;text-transform:uppercase;letter-spacing:0.5px;color:${MUTED};margin:0 0 12px;">${heading}</p>` : ""}
     <table role="presentation" cellpadding="0" cellspacing="0" style="width:100%;margin:0 0 24px;"><tr>${cells}</tr></table>`;
 }
 
