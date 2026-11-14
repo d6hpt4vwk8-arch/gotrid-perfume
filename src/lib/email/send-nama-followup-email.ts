@@ -52,15 +52,20 @@ export async function renderNamaFollowupHtml(p: NamaFollowupParams): Promise<str
   const t = COPY[p.locale === "sk" ? "sk" : "cs"];
   const benefits = await emailBenefits(ctx, p.settings);
   const date = p.expiresAt.toLocaleDateString(p.locale === "sk" ? "sk-SK" : "cs-CZ");
-  // Gemini-made banner (public/email/nama-fiji-banner.jpg): the text sits on the left, over the empty half of the picture.
-  // Outlook desktop ignores CSS background images and shows the beige fallback colour with the same text.
+  // Gemini-made picture (public/email/nama-fiji-banner.jpg, ~1000x865, top edge faded into #eddcc8): a text band in the
+  // same colour sits above it, so the picture is a normal full-width <img> that never gets cropped on a phone.
   const banner = `
-      <table role="presentation" cellpadding="0" cellspacing="0" width="100%" style="margin:0 0 24px;border-radius:6px;overflow:hidden;">
+      <table role="presentation" cellpadding="0" cellspacing="0" width="100%" style="margin:0 0 24px;border-radius:6px;overflow:hidden;background:#eddcc8;">
         <tr>
-          <td background="${SITE_URL}/email/nama-fiji-banner.jpg" bgcolor="#efe1cb" style="background:#efe1cb url('${SITE_URL}/email/nama-fiji-banner.jpg') right center / cover no-repeat;border-radius:6px;padding:30px 44% 30px 22px;">
+          <td align="center" bgcolor="#eddcc8" style="padding:26px 20px 0;">
             <div style="font-size:12px;letter-spacing:3px;text-transform:uppercase;color:#6b5a43;font-weight:700;">Nama Fiji</div>
-            <div style="font-size:38px;line-height:1.05;font-weight:700;color:#131110;margin:6px 0 4px;white-space:nowrap;">−${p.percent} %</div>
-            <div style="font-size:12px;line-height:1.35;color:#4a4033;">${t.bannerSub}</div>
+            <div style="font-size:46px;line-height:1.05;font-weight:700;color:#131110;margin:6px 0 4px;white-space:nowrap;">−${p.percent} %</div>
+            <div style="font-size:13px;line-height:1.35;color:#4a4033;">${t.bannerSub}</div>
+          </td>
+        </tr>
+        <tr>
+          <td bgcolor="#eddcc8" style="line-height:0;font-size:0;">
+            <img src="${SITE_URL}/email/nama-fiji-banner.jpg" alt="Nama Fiji Discovery Box" width="500" style="display:block;width:100%;height:auto;border:0;">
           </td>
         </tr>
       </table>`;
