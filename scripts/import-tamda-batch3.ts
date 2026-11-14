@@ -16,7 +16,7 @@ import { prisma } from "../src/lib/prisma";
 import { downloadProductImages } from "../src/lib/import/download-images";
 import { slugify } from "../src/lib/slug";
 
-const CANDIDATES = "scripts/tamda-data/new-candidates-filtered-2026-11-14.json";
+const CANDIDATES = process.argv.find((x) => x.startsWith("--candidates="))?.split("=")[1] ?? "scripts/tamda-data/new-candidates-filtered-2026-11-14.json";
 const CHECK = process.argv.find((a) => a.startsWith("--check="))?.split("=")[1] ?? "scripts/tamda-data/tamda-check-2026-11-14.json";
 const DRY_RUN = process.argv.includes("--dry-run");
 const VISIBLE = process.argv.includes("--visible");
@@ -130,6 +130,18 @@ function nameFallback(name: string): string | null {
   if (/diffuser|difuz[ée]r/.test(name)) return "aroma-difuzery";
   if (/vonn[ée] ty[čc]inky/.test(name)) return "vonne-svicky";
   if (/osv[ěe][žz]ova[čc] vzduchu/.test(name)) return "domacnost/osvezovace-vzduchu/sprej";
+  // Extra categories run (2026-11-14): baby / kids care, body care, insect repellents, wet wipes.
+  if (/repelent|po bod[ni]|po po[šs]t[íi]ng|bodanec|n[áa]ramek proti|sprej na kom[áa]ry/.test(name)) return "pece-o-zdravi/ostatni";
+  if (/koupelov[áa] bomba|p[ěe]na do koupele|koupel a gel|koupel na t[ěe]lo/.test(name)) return "kosmetika/telo/sprcha-a-koupel";
+  if (/baby olej|dobr[ée] sp[áa]n[íi]/.test(name)) return "kosmetika/telove-oleje";
+  if (/shiny drops/.test(name) && /sprej/.test(name)) return "kosmetika/vlasy/kondicionery-a-balzamy";
+  if (/[šs]ampon|\bsg\b|sprchov/.test(name)) return /sprchov|\bsg\b/.test(name) ? "kosmetika/sprchove-gely" : "kosmetika/vlasy/sampony";
+  if (/krém na ruce|krem na ruce/.test(name)) return "kosmetika/telo/krem-na-ruce";
+  if (/t[ěe]lov[ée] ml[ée]ko|t[ěe]lov[ýy] kr[ée]m/.test(name)) return "kosmetika/telo/telova-mleka";
+  if (/nivea.*kr[ée]m|kr[ée]m \d+ml/.test(name)) return "kosmetika/plet/pletove-kremy";
+  if (/odli[čc]ovac[íi] tampon|make-?up/.test(name)) return "kosmetika/plet/cisteni-pleti";
+  if (/intimn[íi]/.test(name)) return "kosmetika/telo/intimni-hygiena";
+  if (/ubrousk|toalet[nň][íi] pap[íi]r|vlh[čc]en/.test(name)) return "kosmetika/telo/doplnky";
   return null;
 }
 

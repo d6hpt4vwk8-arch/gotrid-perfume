@@ -555,9 +555,9 @@ const ITEMS: Item[] = [
         { name: "Olej z citronové kůry", text: "dodává přípravku svěží vůni." },
       ],
       howToUse: [
-        "Namočte měkký bavlněný tampon do mléka.",
+        "Navlhčete vatový tampon malým množstvím mléka.",
         "Jemně přetřete obličej a dekolt, abyste odstranili nečistoty a make-up.",
-        "Při potřebě opláchněte vlažnou vodou a pokračujte sérem a krémem.",
+        "Podle potřeby opláchněte vlažnou vodou a pokračujte sérem a krémem.",
       ],
       expect: "Pleť je čistá, měkká a pohodlná, bez pocitu stažení nebo mastného filmu.",
       faq: [
@@ -585,9 +585,9 @@ const ITEMS: Item[] = [
         { name: "Olej z citrónovej kôry", text: "dodáva prípravku sviežu vôňu." },
       ],
       howToUse: [
-        "Namočte mäkký bavlnený tampón do mlieka.",
+        "Navlhčite vatový tampón malým množstvom mlieka.",
         "Jemne pretrite tvár a dekolt, aby ste odstránili nečistoty a make-up.",
-        "Pri potrebe opláchnite vlažnou vodou a pokračujte sérom a krémom.",
+        "Podľa potreby opláchnite vlažnou vodou a pokračujte sérom a krémom.",
       ],
       expect: "Pleť je čistá, mäkká a pohodlná, bez pocitu stiahnutia alebo mastného filmu.",
       faq: [
