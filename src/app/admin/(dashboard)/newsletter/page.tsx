@@ -52,7 +52,7 @@ export default async function AdminNewsletterPage() {
   const since30 = new Date(Date.now() - 30 * DAY_MS);
   const actions = AUTO_MAILS.map((m) => m.action);
 
-  const [optInCount, unsubscribed, weekly, totals, last30, campaigns, weeklyLogs] = await Promise.all([
+  const [optInCount, unsubscribed, weekly, totals, last30, campaigns, weeklyLogs, abandoned, abandonedFailed, abandonedSkipped, couponUses, reviewsPublished] = await Promise.all([
     getNewsletterRecipientCount(),
     prisma.newsletterUnsubscribe.count(),
     selectWeeklyRecipients(),
@@ -60,7 +60,18 @@ export default async function AdminNewsletterPage() {
     prisma.adminActivityLog.groupBy({ by: ["action"], where: { action: { in: actions }, createdAt: { gte: since30 } }, _count: true }),
     prisma.newsletterCampaign.findMany({ orderBy: { sentAt: "desc" }, take: 20 }),
     prisma.adminActivityLog.findMany({ where: { action: WEEKLY_NEWSLETTER_ACTION }, select: { createdAt: true } }),
+    prisma.abandonedCheckout.findMany({ select: { emailSentAt: true, recoveredAt: true } }),
+    prisma.adminActivityLog.count({ where: { action: "marketing.abandoned_checkout_email_failed" } }),
+    prisma.adminActivityLog.count({ where: { action: "marketing.abandoned_checkout_skipped_out_of_stock" } }),
+    prisma.coupon.aggregate({ where: { secondOrderOnly: true }, _sum: { usedCount: true } }),
+    prisma.review.count({ where: { published: true } }),
   ]);
+
+  // "Recovered" in the abandoned-cart table also covers people who finished the order on their own; the honest result of
+  // the reminder is: ordered AFTER the reminder was sent.
+  const abandonedEmailed = abandoned.filter((a) => a.emailSentAt);
+  const orderedAfterReminder = abandonedEmailed.filter((a) => a.recoveredAt && a.emailSentAt && a.recoveredAt >= a.emailSentAt).length;
+  const reminderRate = abandonedEmailed.length ? Math.round((orderedAfterReminder / abandonedEmailed.length) * 100) : 0;
 
   const totalBy = new Map(totals.map((t) => [t.action, t]));
   const last30By = new Map(last30.map((t) => [t.action, t._count]));
@@ -138,6 +149,25 @@ export default async function AdminNewsletterPage() {
           Odeslané e-maily s jednotlivými adresami najdete v{" "}
           <Link href="/admin/log" className="underline">
             Logu činností
+          </Link>
+          .
+        </p>
+      </div>
+
+      <div className="flex flex-col gap-3">
+        <h2 className="text-lg font-semibold text-ink">Výsledky automatických e-mailů</h2>
+        <div className="grid grid-cols-2 gap-3 md:grid-cols-4">
+          <StatCard label="Opuštěné košíky" value={abandoned.length} hint="zachyceno celkem (e-mail zadán, objednávka nedokončena)" />
+          <StatCard label="Připomenutí odesláno" value={abandonedEmailed.length} hint={`selhalo ${abandonedFailed}, přeskočeno kvůli skladu ${abandonedSkipped}`} />
+          <StatCard label="Objednali po připomenutí" value={orderedAfterReminder} hint={`${reminderRate} % z odeslaných`} />
+          <StatCard label="Sleva na 2. objednávku" value={`${couponUses._sum.usedCount ?? 0} užití`} hint={`e-mail vypnutý od 18. 10., rozesláno ${totalBy.get("marketing.second_order_email")?._count ?? 0}`} />
+          <StatCard label="Žádost o recenzi" value={totalBy.get("marketing.review_request_email")?._count ?? 0} hint={`publikovaných recenzí celkem: ${reviewsPublished}`} />
+          <StatCard label="Oblíbené (cena/sklad)" value={totalBy.get(WISHLIST_EMAIL_ACTION)?._count ?? 0} hint="odesláno celkem" />
+        </div>
+        <p className="text-xs text-accent-2">
+          Podrobnosti, seznam košíků a náhledy e-mailů:{" "}
+          <Link href="/admin/email-marketing" className="underline">
+            E-mail marketing
           </Link>
           .
         </p>
