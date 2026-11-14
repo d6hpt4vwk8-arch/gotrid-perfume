@@ -6,7 +6,37 @@ import { REVIEW_COUPON_CODE } from "@/lib/email/send-review-request-email";
 
 type TxClient = PrismaClient | Prisma.TransactionClient;
 
-function computeDiscount(coupon: Coupon, itemsTotal: number): number {
+// Brand-scoped personal coupons are recognised by their code prefix (no schema change): NAMA-xxxxxx gives its
+// percentage only on Nama Fiji goods (owner, 2026-11-14: 10 % on the whole Nama Fiji range for 14 days, sent to people
+// who received the free Discovery Box).
+export const BRAND_COUPON_PREFIXES: Record<string, { slug: string; label: string }> = {
+  "NAMA-": { slug: "nama-fiji", label: "Nama Fiji" },
+};
+
+export function couponBrandScope(code: string): { slug: string; label: string } | null {
+  const upper = code.trim().toUpperCase();
+  for (const [prefix, scope] of Object.entries(BRAND_COUPON_PREFIXES)) if (upper.startsWith(prefix)) return scope;
+  return null;
+}
+
+export interface CouponCartItem {
+  productId: string;
+  qty: number;
+}
+
+/** Sum of the cart lines that belong to the brand (prices read from the DB, never trusted from the client). */
+async function brandEligibleTotal(client: TxClient, items: CouponCartItem[] | undefined, brandSlug: string): Promise<number> {
+  if (!items?.length) return 0;
+  const rows = await client.product.findMany({
+    where: { id: { in: items.map((i) => i.productId) }, brand: { slug: brandSlug } },
+    select: { id: true, price: true },
+  });
+  const price = new Map(rows.map((r) => [r.id, Number(r.price)]));
+  return items.reduce((sum, i) => sum + (price.get(i.productId) ?? 0) * i.qty, 0);
+}
+
+function computeDiscount(coupon: Coupon, itemsTotal: number, eligibleTotal?: number): number {
+  if (eligibleTotal !== undefined) itemsTotal = eligibleTotal;
   // GIFT and FREE_SHIPPING coupons carry no discount — a gift one unlocks the free-gift picker
   // (see grantsGift below), a free-shipping one zeroes the shipping price (freeShipping).
   if (coupon.type === "GIFT" || coupon.type === "FREE_SHIPPING") return 0;
@@ -114,9 +144,20 @@ async function loadValidCoupon(
   return coupon;
 }
 
-export async function previewCoupon(code: string, itemsTotal: number, email?: string): Promise<CouponResult> {
+async function scopedEligibleTotal(client: TxClient, coupon: Coupon, items?: CouponCartItem[]): Promise<number | undefined> {
+  const scope = couponBrandScope(coupon.code);
+  if (!scope) return undefined;
+  const eligible = await brandEligibleTotal(client, items, scope.slug);
+  if (eligible <= 0) {
+    throw new CheckoutError(`Tento kód platí jen na produkty značky ${scope.label} — přidejte je do košíku.`);
+  }
+  return eligible;
+}
+
+export async function previewCoupon(code: string, itemsTotal: number, email?: string, items?: CouponCartItem[]): Promise<CouponResult> {
   const coupon = await loadValidCoupon(prisma, code, itemsTotal, email);
-  return toResult(coupon, computeDiscount(coupon, itemsTotal));
+  const eligible = await scopedEligibleTotal(prisma, coupon, items);
+  return toResult(coupon, computeDiscount(coupon, itemsTotal, eligible));
 }
 
 export async function validateCoupon(
@@ -124,9 +165,11 @@ export async function validateCoupon(
   code: string,
   itemsTotal: number,
   email: string,
+  items?: CouponCartItem[],
 ): Promise<CouponResult> {
   const coupon = await loadValidCoupon(tx, code, itemsTotal, email);
-  const discountAmount = computeDiscount(coupon, itemsTotal);
+  const eligible = await scopedEligibleTotal(tx, coupon, items);
+  const discountAmount = computeDiscount(coupon, itemsTotal, eligible);
 
   const updated = await tx.coupon.updateMany({
     where: {

@@ -92,7 +92,7 @@ export async function createOrder(
       if (!input.couponCode) {
         throw new CheckoutError("Dárek zdarma je podmíněný platným slevovým kódem.");
       }
-      const couponPreview = await previewCoupon(input.couponCode, itemsTotal).catch(() => null);
+      const couponPreview = await previewCoupon(input.couponCode, itemsTotal, undefined, input.items).catch(() => null);
       if (!couponPreview?.grantsGift) {
         throw new CheckoutError("Zadaný slevový kód neopravňuje k výběru dárku zdarma.");
       }
@@ -178,7 +178,7 @@ export async function createOrder(
         // A FREE_SHIPPING coupon (loyalty reward) zeroes the shipping price.
         let shippingPrice = standardShippingPrice;
         if (input.couponCode) {
-          const result = await validateCoupon(tx, input.couponCode, itemsTotal, input.email);
+          const result = await validateCoupon(tx, input.couponCode, itemsTotal, input.email, input.items);
           couponCode = result.code;
           discountAmount = result.discountAmount;
           if (result.freeShipping) shippingPrice = 0;

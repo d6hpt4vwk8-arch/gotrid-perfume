@@ -5,6 +5,7 @@ import { selectWeeklyRecipients, WEEKLY_NEWSLETTER_ACTION } from "@/lib/marketin
 import { DELAY_NOTICE_ACTION } from "@/lib/marketing/delayed-orders-notice";
 import { WISHLIST_EMAIL_ACTION } from "@/lib/marketing/wishlist-campaign";
 import { NEW_ARRIVALS_ACTION } from "@/lib/marketing/new-arrivals";
+import { NAMA_FOLLOWUP_ACTION } from "@/lib/marketing/nama-followup";
 
 const DAY_MS = 86_400_000;
 const dateFmt = new Intl.DateTimeFormat("cs-CZ", { day: "numeric", month: "numeric", year: "numeric", timeZone: "Europe/Prague" });
@@ -37,6 +38,13 @@ const AUTO_MAILS: AutoMail[] = [
     when: "jednou na člověka, ne odběratelé; po částech za den",
     status: process.env.NEWSLETTER_AUTO_ENABLED === "true" ? "on" : "off",
     note: process.env.NEWSLETTER_AUTO_ENABLED === "true" ? undefined : "vypnuto — chybí NEWSLETTER_AUTO_ENABLED=true",
+  },
+  {
+    action: NAMA_FOLLOWUP_ACTION,
+    name: "Nama Fiji: sleva po dárku",
+    when: "7 dní po doručení objednávky s dárkem Nama Fiji — osobní kód −10 % na značku, platí 14 dní",
+    status: process.env.NAMA_FOLLOWUP_ENABLED === "true" ? "on" : "off",
+    note: process.env.NAMA_FOLLOWUP_ENABLED === "true" ? undefined : "vypnuto — chybí NAMA_FOLLOWUP_ENABLED=true",
   },
   { action: "marketing.second_order_email", name: "Sleva na druhou objednávku", when: "—", status: "off", note: "vypnuto od 18. 10. 2026" },
 ];

@@ -7,6 +7,8 @@ import { isRateLimited, recordRateLimitHit, getClientIp } from "@/lib/rate-limit
 const bodySchema = z.object({
   code: z.string().trim().min(1).max(50),
   itemsTotal: z.coerce.number().min(0).max(10_000_000),
+  // Needed for brand-scoped codes (NAMA-…): the discount applies to those lines only.
+  items: z.array(z.object({ productId: z.string().max(64), qty: z.coerce.number().int().min(1).max(1000) })).max(100).optional(),
 });
 
 const MAX_ATTEMPTS = 20;
@@ -28,7 +30,7 @@ export async function POST(req: NextRequest) {
   await recordRateLimitHit(rateLimitKey);
 
   try {
-    const result = await previewCoupon(parsed.data.code, parsed.data.itemsTotal);
+    const result = await previewCoupon(parsed.data.code, parsed.data.itemsTotal, undefined, parsed.data.items);
     return NextResponse.json(result);
   } catch (err) {
     if (err instanceof CheckoutError) {

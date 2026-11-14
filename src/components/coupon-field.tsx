@@ -23,7 +23,7 @@ export interface AppliedCoupon {
  * items total — and again server-side at order time.
  */
 export function CouponField({ onApplied }: { onApplied?: (coupon: AppliedCoupon | null) => void }) {
-  const { couponCode, setCouponCode, total: itemsTotal } = useCart();
+  const { couponCode, setCouponCode, total: itemsTotal, items: cartItems } = useCart();
   const { price } = useCurrency();
   const tr = useTr();
   const [input, setInput] = useState("");
@@ -50,7 +50,7 @@ export function CouponField({ onApplied }: { onApplied?: (coupon: AppliedCoupon 
     fetch("/api/coupons/validate", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ code: couponCode, itemsTotal }),
+      body: JSON.stringify({ code: couponCode, itemsTotal, items: cartItems.map((i) => ({ productId: i.productId, qty: i.qty })) }),
     })
       .then(async (res) => {
         const data = await res.json();
