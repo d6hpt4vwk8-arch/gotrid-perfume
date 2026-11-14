@@ -21,7 +21,7 @@ export const NEW_ARRIVALS_ACTION = "marketing.new_arrivals_email";
 const MIN_DAYS_BETWEEN_MAILS = 7;
 const LOOKBACK_DAYS = 30;
 const MAX_PRODUCTS = 9;
-const MAX_PER_BRAND = 2;
+const MAX_PER_BRAND = 3;
 const MIN_PRODUCTS_TO_SEND = 3;
 const SEND_DELAY_MS = 700;
 const MAX_CONSECUTIVE_ERRORS = 3;
@@ -109,16 +109,16 @@ export async function planNewArrivals(email: string, firstName: string): Promise
       visible: true,
       stock: { gt: 0 },
       isDefective: false,
-      createdAt: { gte: since },
       id: { notIn: [...exclude] },
       // A subscriber with no purchases yet has no category to follow: any new product qualifies.
       ...(rootIds.length ? { categories: { some: { categoryId: { in: rootIds } } } } : {}),
       images: { some: {} },
     },
     orderBy: { createdAt: "desc" },
-    take: 60,
+    take: 80,
     select: {
       id: true,
+      createdAt: true,
       name: true,
       nameSk: true,
       slug: true,
@@ -129,17 +129,21 @@ export async function planNewArrivals(email: string, firstName: string): Promise
     },
   });
 
+  // Newest first. The mail is only worth sending when at least MIN_PRODUCTS_TO_SEND products are really new (created in
+  // the last LOOKBACK_DAYS); the rest of the grid is then topped up with the next-newest products of the same categories.
   const perBrand = new Map<string, number>();
   const products: RecommendedProduct[] = [];
+  let fresh = 0;
   for (const p of rows) {
     if (products.length >= MAX_PRODUCTS) break;
     if (isConditionFlagged(p.name, p.isDefective)) continue;
     const key = p.brandId ?? p.id;
     if ((perBrand.get(key) ?? 0) >= MAX_PER_BRAND) continue;
     perBrand.set(key, (perBrand.get(key) ?? 0) + 1);
+    if (p.createdAt >= since) fresh++;
     products.push({ id: p.id, name: p.name, nameSk: p.nameSk, slug: p.slug, price: Number(p.price), imageUrl: p.images[0]?.url ?? null });
   }
-  if (products.length < MIN_PRODUCTS_TO_SEND) return null;
+  if (fresh < MIN_PRODUCTS_TO_SEND) return null;
 
   return {
     email,
