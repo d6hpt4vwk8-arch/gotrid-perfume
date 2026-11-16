@@ -1,3 +1,4 @@
+import { sendOwnerOrderTelegram } from "@/lib/notify/telegram";
 import { NextRequest, NextResponse, after } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { checkoutSchema } from "@/lib/orders/checkout-schema";
@@ -94,6 +95,9 @@ export async function POST(req: NextRequest) {
           entityId: order.id,
           detail: `${order.number}: ${err instanceof Error ? err.message : String(err)}`,
         });
+      }),
+      sendOwnerOrderTelegram(order).catch((err) => {
+        console.error(`[telegram] owner push failed for ${order.number}`, err);
       }),
       sendOwnerNewOrderNotification(order).catch((err) => {
         console.error(`[email] owner notification failed for ${order.number}`, err);
