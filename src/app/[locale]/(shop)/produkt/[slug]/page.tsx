@@ -1,4 +1,5 @@
 import { isValidEan } from "@/lib/feeds/xml";
+import { isGoogleListable } from "@/lib/feeds/google-exclusions";
 import { getReviewStats } from "@/lib/review-stats.server";
 import { Link } from "@/i18n/navigation";
 import { notFound } from "next/navigation";
@@ -238,6 +239,17 @@ export default async function ProductPage({
             ? { gtin8: jsonLdEan }
             : {};
 
+  // Products the Google feed keeps out (designer perfumes, testers, defective, hemp/CBD...) carry no Product markup,
+  // otherwise Merchant Center picks them up on its own from the page.
+  const googleListable = isGoogleListable({
+    code: product.code,
+    name: product.name,
+    isDefective: product.isDefective,
+    brandName: product.brand?.name ?? null,
+    isPerfume: product.categories.some((c) => c.category.fullSlug.startsWith("parfemy")),
+    isOnClearance: product.categories.some((c) => c.category.fullSlug === "vyprodej"),
+  });
+
   const jsonLd = {
     "@context": "https://schema.org",
     "@type": "Product",
@@ -291,10 +303,12 @@ export default async function ProductPage({
 
   return (
     <main data-wide className="mx-auto flex max-w-(--page-max) flex-1 flex-col gap-8 px-4 py-10 xl:px-8">
-      <script
-        type="application/ld+json"
-        dangerouslySetInnerHTML={{ __html: jsonLdScript(jsonLd) }}
-      />
+      {googleListable && (
+        <script
+          type="application/ld+json"
+          dangerouslySetInnerHTML={{ __html: jsonLdScript(jsonLd) }}
+        />
+      )}
       <script
         type="application/ld+json"
         dangerouslySetInnerHTML={{

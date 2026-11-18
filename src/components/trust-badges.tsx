@@ -2,7 +2,7 @@
 
 import { useTr } from "@/i18n/use-tr";
 
-const ITEMS = ["100 % originální produkty", "Vrácení zboží do 14 dnů", "Zabezpečená platba"];
+const ITEMS = ["Zboží nakupujeme přímo od evropských distributorů", "Vrácení zboží do 14 dnů", "Zabezpečená platba"];
 
 export function TrustBadges() {
   const tr = useTr();

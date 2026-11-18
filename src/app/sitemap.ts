@@ -2,6 +2,9 @@ import type { MetadataRoute } from "next";
 import { prisma } from "@/lib/prisma";
 import { SEO_URL } from "@/lib/site";
 
+// Rebuilt at most once an hour: products hidden after a deploy must not stay in the sitemap for days.
+export const revalidate = 3600;
+
 // Every storefront URL exists in Czech (default, no prefix) and Slovak
 // (/sk/...); each entry lists both as hreflang alternates so Google/Seznam
 // treat them as one page in two languages.

@@ -46,7 +46,7 @@ export async function emailBenefits(
   const { tr } = ctx;
   const items = [
     tr("Doprava zdarma od {price}", { price: ctx.price(settings.freeShippingThreshold, settings.czkToEurRate) }),
-    tr("100 % originální produkty"),
+    tr("Zboží nakupujeme přímo od evropských distributorů"),
     tr("Vrácení zboží do 14 dnů"),
     tr("Zabezpečená platba"),
   ];

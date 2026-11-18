@@ -1,8 +1,6 @@
 import { NextResponse } from "next/server";
 import { getFeedProducts } from "@/lib/feeds/get-feed-products";
-import { isConditionFlagged } from "@/lib/feeds/condition-flagged";
-import { isPaidAdsEligible } from "@/lib/feeds/paid-ads-eligibility";
-import { isExcludedFromGoogleAds, isHempRestricted } from "@/lib/feeds/google-exclusions";
+import { isGoogleListable } from "@/lib/feeds/google-exclusions";
 import { buildGoogleShoppingRss } from "@/lib/feeds/google-shopping-rss";
 
 // Rendered per-request rather than ISR-cached — see feeds/heureka.xml/route.ts
@@ -18,13 +16,7 @@ export async function GET() {
   // 2026-09-17 note. isExcludedFromGoogleAds trims a couple more perfume
   // cases (Eyfel's own line, anything on Výprodej) that pass that filter
   // but still shouldn't represent us specifically on Google.
-  const products = allProducts.filter(
-    (p) =>
-      !isConditionFlagged(p.name, p.isDefective) &&
-      isPaidAdsEligible(p.code, p.brandName) &&
-      !isExcludedFromGoogleAds(p) &&
-      !isHempRestricted(p.name),
-  );
+  const products = allProducts.filter((p) => isGoogleListable(p));
   const xml = buildGoogleShoppingRss(products);
 
   return new NextResponse(xml, {

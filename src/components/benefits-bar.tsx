@@ -13,8 +13,8 @@ export async function BenefitsBar() {
 
   const items = [
     tr("Doprava zdarma od {price}", { price: price(settings.freeShippingThreshold) }),
-    tr("Doručení do 2–3 pracovních dnů"),
-    tr("100 % originální produkty"),
+    tr("Doručení do 1–3 pracovních dnů"),
+    tr("Zboží nakupujeme přímo od evropských distributorů"),
     // Public "leak" of the gift promo (see also the homepage hero slide) —
     // deliberately not linked from anywhere else so it still reads as "the
     // customer had to notice this" rather than a popup nobody can miss.

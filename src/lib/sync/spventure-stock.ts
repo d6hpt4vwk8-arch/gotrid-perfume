@@ -28,6 +28,7 @@
 // needs no login. A lookup that fails or comes back ambiguous leaves the
 // stock untouched rather than guessing in either direction.
 import { prisma } from "@/lib/prisma";
+import { isConditionFlagged } from "@/lib/feeds/condition-flagged";
 import { logAdminActivity } from "@/lib/admin/activity-log";
 import { notifyStockAlerts } from "@/lib/stock-alerts";
 import { createSupplierLogRecorder, pruneSupplierLog } from "@/lib/sync/supplier-stock-log";
@@ -222,13 +223,15 @@ export async function syncSpVentureStock(dryRun = false, mode: SpVentureSyncMode
     // of being sold out at SP Venture by the time we go buy it, so it's not
     // worth advertising. Hide at stock 1, restore automatically once it's
     // restocked above that (2026-09-04, per owner request).
+    // Testers / opened / defective listings stay hidden once the owner hid them (2026-11-18, Merchant Center clean-up):
+    // a restock must not bring them back.
     // Own units are real in-hand stock, not a drop-ship gamble — never auto-hide those.
     const desiredVisible =
       product.ownStock > 0
         ? product.visible
         : feedValue === 1
           ? false
-          : feedValue > 1 && product.stock <= 1
+          : feedValue > 1 && product.stock <= 1 && !isConditionFlagged(product.name, product.isDefective)
             ? true
             : product.visible;
 
