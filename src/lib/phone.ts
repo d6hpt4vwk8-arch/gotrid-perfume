@@ -45,3 +45,24 @@ export function normalizePhone(raw: string | null | undefined, defaultCountry: P
   if ((digits.startsWith("420") || digits.startsWith("421")) && digits.length !== 12) return null;
   return "+" + digits;
 }
+
+/**
+ * GLS rejects a parcel-box / ParcelShop (PSD) label whose recipient phone is not a Czech or Slovak number — confirmed live
+ * with a +48 number (GT261117-4125, "[13] Invalid service parameter, Service 'PSD'"). Zásilkovna accepts any country, so this
+ * only applies to the two GLS methods. Returns a Czech customer-facing message when the number cannot be used, else null.
+ * Shared by the checkout form (live hint + submit guard) and the server-side schema so the two cannot drift apart.
+ */
+export const GLS_PHONE_MESSAGE =
+  "Pro doručení přes GLS prosím zadejte české (+420) nebo slovenské (+421) telefonní číslo, nebo zvolte Zásilkovnu.";
+
+export function glsPhoneProblem(
+  raw: string | null | undefined,
+  shippingMethod: string,
+  defaultCountry: PhoneCountry = "CZ",
+): string | null {
+  if (shippingMethod !== "GLS" && shippingMethod !== "GLS_MISTO") return null;
+  const phone = normalizePhone(raw, defaultCountry);
+  // An unparsable number is reported by the generic phone check — don't double up.
+  if (!phone) return null;
+  return phone.startsWith("+420") || phone.startsWith("+421") ? null : GLS_PHONE_MESSAGE;
+}

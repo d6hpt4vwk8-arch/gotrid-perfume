@@ -1,5 +1,5 @@
 import { z } from "zod";
-import { normalizePhone } from "@/lib/phone";
+import { glsPhoneProblem, normalizePhone } from "@/lib/phone";
 
 export const checkoutSchema = z
   .object({
@@ -59,6 +59,10 @@ export const checkoutSchema = z
   .superRefine((data, ctx) => {
     if (!normalizePhone(data.phone, data.shippingCountry)) {
       ctx.addIssue({ code: z.ZodIssueCode.custom, path: ["phone"], message: "Zadejte platné telefonní číslo (např. +420 602 123 456 nebo +421 905 123 456)." });
+    }
+    const glsProblem = glsPhoneProblem(data.phone, data.shippingMethod, data.shippingCountry);
+    if (glsProblem) {
+      ctx.addIssue({ code: z.ZodIssueCode.custom, path: ["phone"], message: glsProblem });
     }
     if (data.isCompany) {
       if (!data.companyName?.trim()) {

@@ -22,6 +22,7 @@ export type PaymentSlipData = {
   bic: string | null;
   amount: string;
   variableSymbol: string;
+  message: string;
   qrDataUrl: string;
   sellerName: string;
   tr: Tr;
@@ -35,6 +36,7 @@ export function PaymentSlipDocument(d: PaymentSlipData) {
     ...(d.bic ? ([["BIC", d.bic]] as [string, string][]) : []),
     [tr("Částka"), d.amount],
     [tr("Variabilní symbol"), d.variableSymbol],
+    [tr("Zpráva pro příjemce"), d.message],
     [tr("Příjemce"), d.sellerName],
   ];
   return (

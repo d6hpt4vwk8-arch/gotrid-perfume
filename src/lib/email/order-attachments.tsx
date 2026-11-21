@@ -73,6 +73,7 @@ async function paymentSlipAttachment(order: Order, ctx: MailContext): Promise<Em
       bic={bank.bic}
       amount={bank.amountLabel}
       variableSymbol={bank.variableSymbol}
+      message={bank.message}
       qrDataUrl={await bankQrDataUrl(bank, 480)}
       sellerName={bank.beneficiary}
       tr={ctx.tr}

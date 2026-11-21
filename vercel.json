@@ -15,6 +15,10 @@
     {
       "path": "/api/cron/sync-deliveries",
       "schedule": "0 7-19/2 * * *"
+    },
+    {
+      "path": "/api/cron/sync-bank-payments",
+      "schedule": "*/15 * * * *"
     }
   ]
 }

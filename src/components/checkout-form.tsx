@@ -27,6 +27,7 @@ import { CheckoutSteps } from "@/components/checkout-steps";
 import { CouponField, type AppliedCoupon } from "@/components/coupon-field";
 import { GiftPicker } from "@/components/gift-picker";
 import type { Customer } from "@prisma/client";
+import { glsPhoneProblem } from "@/lib/phone";
 
 type ShippingMethod = keyof typeof SHIPPING_LABELS;
 type PaymentMethod = keyof typeof PAYMENT_LABELS;
@@ -192,6 +193,9 @@ export function CheckoutForm({
     shippingMethod === "ZASILKOVNA" || shippingMethod === "BALIKOVNA" || shippingMethod === "GLS_MISTO";
   const isPersonalPickup = shippingMethod === "OSOBNI_ODBER";
 
+  // GLS (box / ParcelShop) refuses a non-CZ/SK recipient phone, so stop it here rather than at label time (see lib/phone.ts).
+  const glsPhoneIssue = glsPhoneProblem(phone, shippingMethod, shippingCountry);
+
   const contactDone = Boolean(
     email.trim() &&
       phone.trim() &&
@@ -321,6 +325,10 @@ export function CheckoutForm({
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
     setError(null);
+    if (glsPhoneIssue) {
+      setError(tr(glsPhoneIssue));
+      return;
+    }
     setSubmitting(true);
 
     try {
@@ -429,11 +437,17 @@ export function CheckoutForm({
             type="tel"
             name="tel"
             autoComplete="tel"
-            placeholder={tr("Telefon")}
+            placeholder={`${tr("Telefon")} ${shippingCountry === "SK" ? "+421 900 000 000" : "+420 600 000 000"}`}
+            aria-label={tr("Telefon")}
             value={phone}
             onChange={(e) => setPhone(e.target.value)}
             className="rounded-sm border border-line px-3 py-2 text-sm text-ink"
           />
+          {glsPhoneIssue ? (
+            <p role="alert" className="-mt-1 text-xs text-red-700">
+              {tr(glsPhoneIssue)}
+            </p>
+          ) : null}
           <div className="flex gap-3">
             <input
               required

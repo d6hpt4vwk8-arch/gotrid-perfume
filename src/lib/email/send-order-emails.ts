@@ -61,6 +61,7 @@ function bankTransferBlockHtml(order: Order, ctx: MailContext): string {
                   ${row(tr("Příjemce"), bank.beneficiary)}
                   ${row(tr("Částka"), bank.amountLabel)}
                   ${row(tr("Variabilní symbol"), bank.variableSymbol)}
+                  ${row(tr("Zpráva pro příjemce"), bank.message)}
                 </table>
               </td>
             </tr></table>

@@ -255,6 +255,8 @@ export default async function OrderConfirmationPage({
                   <dd className="font-semibold text-ink">{bank.amountLabel}</dd>
                   <dt>{tr("Variabilní symbol")}</dt>
                   <dd className="font-semibold text-ink">{bank.variableSymbol}</dd>
+                  <dt>{tr("Zpráva pro příjemce")}</dt>
+                  <dd className="font-semibold text-ink">{bank.message}</dd>
                 </dl>
               </div>
             </div>
