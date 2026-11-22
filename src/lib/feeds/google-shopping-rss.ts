@@ -23,6 +23,20 @@ export function dedupeByGtin(products: FeedProduct[]): FeedProduct[] {
   return products.filter((p) => !p.ean || !isValidEan(p.ean) || best.get(p.ean) === p);
 }
 
+
+/**
+ * Google product taxonomy (English path) from our own category breadcrumb. Only set where the mapping is certain —
+ * a wrong category is worse than none, Google then derives one itself.
+ */
+export function googleProductCategory(p: Pick<FeedProduct, "categoryBreadcrumb" | "isPerfume">): string | null {
+  const b = p.categoryBreadcrumb ?? "";
+  if (p.isPerfume || /^Parfémy/i.test(b)) return "Health & Beauty > Personal Care > Cosmetics > Perfume & Cologne";
+  if (/Korejská kosmetika|Pleť/i.test(b)) return "Health & Beauty > Personal Care > Cosmetics > Skin Care";
+  if (/Dekorativní kosmetika/i.test(b)) return "Health & Beauty > Personal Care > Cosmetics > Makeup";
+  if (/\bVlasy\b/i.test(b)) return "Health & Beauty > Personal Care > Hair Care";
+  return null;
+}
+
 /**
  * RSS 2.0 + g: namespace feed — the shared format accepted by both Google
  * Merchant Center and Meta Commerce Manager (Meta explicitly supports the
@@ -35,6 +49,7 @@ export function buildGoogleShoppingRss(products: FeedProduct[]): string {
       const url = `${SEO_URL}/produkt/${p.slug}`;
       const image = p.images[0] ? `${SEO_URL}${p.images[0]}` : null;
       const extraImages = p.images.slice(1, 11).map((img) => `${SEO_URL}${img}`);
+      const category = googleProductCategory(p);
 
       return `    <item>
       <g:id>${escapeXml(p.code)}</g:id>
@@ -48,6 +63,7 @@ ${extraImages.map((img) => `      <g:additional_image_link>${escapeXml(img)}</g:
       <g:condition>new</g:condition>
       ${p.brandName ? `<g:brand>${escapeXml(p.brandName)}</g:brand>` : ""}
       ${p.ean && isValidEan(p.ean) ? `<g:gtin>${escapeXml(p.ean)}</g:gtin>` : ""}
+      ${category ? `<g:google_product_category>${escapeXml(category)}</g:google_product_category>` : ""}
       ${p.categoryBreadcrumb ? `<g:product_type>${escapeXml(p.categoryBreadcrumb)}</g:product_type>` : ""}
       <g:identifier_exists>${p.ean && isValidEan(p.ean) ? "true" : "false"}</g:identifier_exists>
     </item>`;
