@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import { getFeedProducts } from "@/lib/feeds/get-feed-products";
-import { isPaidAdsEligible } from "@/lib/feeds/paid-ads-eligibility";
+import { isCzPriceComparisonEligible } from "@/lib/feeds/paid-ads-eligibility";
 import { isConditionFlagged } from "@/lib/feeds/condition-flagged";
 import { cdata, escapeXml, heurekaEan } from "@/lib/feeds/xml";
 import { SITE_URL } from "@/lib/site";
@@ -46,7 +46,7 @@ export async function GET() {
       p.stock > 0 &&
       !p.excludeFromHeureka &&
       !isConditionFlagged(p.name, p.isDefective) &&
-      isPaidAdsEligible(p.code, p.brandName),
+      isCzPriceComparisonEligible(p.code, p.brandName),
   );
 
   const items = products
