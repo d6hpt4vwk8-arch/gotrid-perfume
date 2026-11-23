@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import { getFeedProducts } from "@/lib/feeds/get-feed-products";
 import { isConditionFlagged } from "@/lib/feeds/condition-flagged";
-import { isPaidAdsEligible } from "@/lib/feeds/paid-ads-eligibility";
+import { isPaidAdsEligibleExceptGoogle } from "@/lib/feeds/paid-ads-eligibility";
 import { isHempRestricted } from "@/lib/feeds/google-exclusions";
 import { buildGoogleShoppingRss } from "@/lib/feeds/google-shopping-rss";
 
@@ -18,7 +18,7 @@ export async function GET() {
   // condition-flagged.ts and paid-ads-eligibility.ts's 2026-09-17 note.
   const products = allProducts.filter(
     (p) =>
-      !isConditionFlagged(p.name, p.isDefective) && isPaidAdsEligible(p.code, p.brandName) && !isHempRestricted(p.name),
+      !isConditionFlagged(p.name, p.isDefective) && isPaidAdsEligibleExceptGoogle(p.code, p.brandName) && !isHempRestricted(p.name),
   );
   const xml = buildGoogleShoppingRss(products);
 

@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import { getFeedProducts } from "@/lib/feeds/get-feed-products";
-import { isCzPriceComparisonEligible } from "@/lib/feeds/paid-ads-eligibility";
+import { isPaidAdsEligibleExceptGoogle } from "@/lib/feeds/paid-ads-eligibility";
 import { isConditionFlagged } from "@/lib/feeds/condition-flagged";
 import { zboziExtraParams } from "@/lib/feeds/zbozi-params";
 import { cdata, escapeXml, isValidEan } from "@/lib/feeds/xml";
@@ -49,7 +49,7 @@ export async function GET() {
     (p) =>
       p.stock > 0 &&
       !isConditionFlagged(p.name, p.isDefective) &&
-      isCzPriceComparisonEligible(p.code, p.brandName),
+      isPaidAdsEligibleExceptGoogle(p.code, p.brandName),
   );
 
   const items = products

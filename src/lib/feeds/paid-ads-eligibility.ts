@@ -95,9 +95,10 @@ export function isPaidAdsEligible(code: string, brandName: string | null): boole
 }
 
 // Trade Concept range (TCN-, added 2026-11-23): home fragrance and gift cosmetics bought straight from the Czech
-// distributor/brand owner, so no counterfeit-brand fingerprint. The owner wants to test demand on the price-comparison
-// CPC channels only — Heureka.cz and Zboží.cz/Sklik. Glami, Meta, Google and Heureka.sk keep the stricter
-// isPaidAdsEligible() above, so this is a separate predicate rather than another prefix in that one.
-export function isCzPriceComparisonEligible(code: string, brandName: string | null): boolean {
+// distributor/brand owner, so no counterfeit-brand fingerprint. The owner wants to test demand on every paid
+// channel except Google (Merchant Center is being rebuilt step by step and has its own curated feed): Heureka.cz/.sk,
+// Zboží/Sklik, Glami and Meta use this predicate. google.xml and google-exclusions.ts keep isPaidAdsEligible(), so
+// the TCN- range stays out of Google.
+export function isPaidAdsEligibleExceptGoogle(code: string, brandName: string | null): boolean {
   return code.startsWith("TCN-") || isPaidAdsEligible(code, brandName);
 }

@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import { getFeedProducts } from "@/lib/feeds/get-feed-products";
-import { isPaidAdsEligible } from "@/lib/feeds/paid-ads-eligibility";
+import { isPaidAdsEligibleExceptGoogle } from "@/lib/feeds/paid-ads-eligibility";
 import { isConditionFlagged } from "@/lib/feeds/condition-flagged";
 import { cdata, escapeXml, isValidEan } from "@/lib/feeds/xml";
 import { stripVolume } from "@/lib/parse-volume";
@@ -40,7 +40,7 @@ export async function GET() {
       p.stock > 0 &&
       p.brandName &&
       !isConditionFlagged(p.name, p.isDefective) &&
-      isPaidAdsEligible(p.code, p.brandName),
+      isPaidAdsEligibleExceptGoogle(p.code, p.brandName),
   );
 
   const items = products
